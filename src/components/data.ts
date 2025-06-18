@@ -1,0 +1,168 @@
+export type Dish = {
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+  tags?: string[];
+  ingredients: string;
+  allergens: string;
+  portion: string;
+  category?: string;
+};
+
+export type MenuItem = Omit<Dish, 'category'> & { category: string };
+
+export const appData = {
+  restaurant: {
+    name: "The Golden Spoon",
+    welcome_message: "Welcome to The Golden Spoon - Our Signature Dishes",
+  },
+  featured_dishes: [
+    {
+      name: "Grilled Salmon",
+      description: "Fresh Atlantic salmon grilled to perfection with herbs and lemon",
+      price: "28.99",
+      image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=400&q=80",
+      tags: ["Chef's Special"],
+      ingredients: "Atlantic salmon, herbs, lemon, olive oil",
+      allergens: "Contains: Fish",
+      portion: "Serves 1",
+      category: "Mains",
+    },
+    {
+      name: "Beef Wellington",
+      description: "Tender beef wrapped in puff pastry with mushroom duxelles",
+      price: "45.99",
+      image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80",
+      tags: ["Premium"],
+      ingredients: "Beef tenderloin, puff pastry, mushrooms, herbs",
+      allergens: "Contains: Gluten, Eggs",
+      portion: "Serves 1",
+      category: "Mains",
+    },
+    {
+      name: "Lobster Thermidor",
+      description: "Classic French lobster dish with creamy sauce and cheese",
+      price: "52.99",
+      image: "https://images.unsplash.com/photo-1559737558-2cc3739e4093?auto=format&fit=crop&w=400&q=80",
+      tags: ["Premium"],
+      ingredients: "Lobster, cream, cheese, herbs, brandy",
+      allergens: "Contains: Shellfish, Dairy",
+      portion: "Serves 1",
+      category: "Mains",
+    },
+    {
+      name: "Truffle Risotto",
+      description: "Creamy Arborio rice with black truffle and parmesan",
+      price: "38.99",
+      image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80",
+      tags: ["Vegetarian"],
+      ingredients: "Arborio rice, black truffle, parmesan, white wine",
+      allergens: "Contains: Dairy",
+      portion: "Serves 1",
+      category: "Mains",
+    },
+    {
+      name: "Chocolate Lava Cake",
+      description: "Warm chocolate cake with molten center",
+      price: "12.99",
+      image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=400&q=80",
+      tags: ["Dessert"],
+      ingredients: "Dark chocolate, eggs, butter, flour, sugar",
+      allergens: "Contains: Gluten, Eggs, Dairy",
+      portion: "Serves 1",
+      category: "Desserts",
+    },
+  ],
+  menu_categories: ["Starters", "Mains", "Desserts", "Drinks"],
+  menu_items: [
+    {
+      category: "Starters",
+      name: "Crispy Calamari",
+      description: "Tender calamari rings lightly battered and fried, served with marinara sauce",
+      price: "14.99",
+      image: "https://images.unsplash.com/photo-1559737558-2cc3739e4093?auto=format&fit=crop&w=400&q=80",
+      tags: ["Seafood"],
+      ingredients: "Calamari, flour, eggs, marinara sauce, herbs",
+      allergens: "Contains: Seafood, Gluten, Eggs",
+      portion: "Serves 1-2",
+    },
+    {
+      category: "Starters",
+      name: "Burrata Salad",
+      description: "Fresh burrata cheese with heirloom tomatoes and basil",
+      price: "16.99",
+      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+      tags: ["Vegetarian"],
+      ingredients: "Burrata, tomatoes, basil, olive oil, balsamic",
+      allergens: "Contains: Dairy",
+      portion: "Serves 1",
+    },
+    {
+      category: "Mains",
+      name: "Grilled Salmon",
+      description: "Fresh Atlantic salmon grilled to perfection with herbs and lemon",
+      price: "28.99",
+      image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=400&q=80",
+      tags: ["Chef's Special"],
+      ingredients: "Atlantic salmon, herbs, lemon, olive oil",
+      allergens: "Contains: Fish",
+      portion: "Serves 1",
+    },
+    {
+      category: "Mains",
+      name: "Ribeye Steak",
+      description: "Prime ribeye steak cooked to your preference",
+      price: "42.99",
+      image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80",
+      tags: ["Premium"],
+      ingredients: "Ribeye steak, herbs, garlic, butter",
+      allergens: "Contains: Dairy",
+      portion: "Serves 1",
+    },
+    {
+      category: "Desserts",
+      name: "Chocolate Lava Cake",
+      description: "Warm chocolate cake with molten center",
+      price: "12.99",
+      image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=400&q=80",
+      tags: ["Dessert"],
+      ingredients: "Dark chocolate, eggs, butter, flour, sugar",
+      allergens: "Contains: Gluten, Eggs, Dairy",
+      portion: "Serves 1",
+    },
+    {
+      category: "Desserts",
+      name: "Tiramisu",
+      description: "Classic Italian dessert with coffee and mascarpone",
+      price: "11.99",
+      image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=400&q=80",
+      tags: ["Classic"],
+      ingredients: "Mascarpone, coffee, ladyfingers, cocoa",
+      allergens: "Contains: Dairy, Eggs, Gluten",
+      portion: "Serves 1",
+    },
+    {
+      category: "Drinks",
+      name: "House Wine",
+      description: "Selection of red and white wines",
+      price: "8.99",
+      image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=400&q=80",
+      tags: ["Alcoholic"],
+      ingredients: "Grapes, sulfites",
+      allergens: "Contains: Sulfites",
+      portion: "5oz glass",
+    },
+    {
+      category: "Drinks",
+      name: "Craft Beer",
+      description: "Local craft beer selection",
+      price: "6.99",
+      image: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=400&q=80",
+      tags: ["Alcoholic"],
+      ingredients: "Hops, barley, yeast",
+      allergens: "Contains: Gluten",
+      portion: "12oz bottle",
+    },
+  ],
+}; 
