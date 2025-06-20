@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import { useTranslation } from "./i18n";
 
 interface SearchBarProps {
   searchTerm: string;
@@ -8,6 +9,7 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarProps) {
+  const { t } = useTranslation();
   const [searchOpen, setSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -56,7 +58,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
         <input
           ref={inputRef}
           type="text"
-          placeholder="Buscar..."
+          placeholder={t("search")}
           className="w-full h-16 px-6 rounded-full bg-white/90 dark:bg-gray-900/90 border-2 border-white dark:border-gray-800 shadow-lg backdrop-blur-md text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 outline-none text-lg"
           style={{ WebkitBackdropFilter: 'blur(12px)' }}
           tabIndex={searchOpen ? 0 : -1}
@@ -68,7 +70,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
       <button
         className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none"
         style={{ WebkitBackdropFilter: 'blur(12px)' }}
-        aria-label="Buscar"
+        aria-label={t("search")}
         onClick={() => setSearchOpen((v) => !v)}
       >
         <svg width="34" height="34" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" className="text-gray-900 dark:text-white">

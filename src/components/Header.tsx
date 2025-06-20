@@ -1,15 +1,17 @@
 "use client";
 
 import React from "react";
+import { useTranslation } from "./i18n";
 
 export default function Header() {
+  const { t } = useTranslation();
   return (
     <header className="header bg-white dark:bg-black shadow-sm py-4">
       <div className="container mx-auto flex items-center justify-between px-4">
         <button
           className="menu-toggle text-2xl p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
           id="menuToggle"
-          aria-label="Open menu"
+          aria-label="Abrir menu"
         >
           <span>≡</span>
         </button>
@@ -17,7 +19,7 @@ export default function Header() {
         <button
           className="share-btn p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
           id="shareBtn"
-          aria-label="Share"
+          aria-label={t("share")}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="18" cy="5" r="3" />
