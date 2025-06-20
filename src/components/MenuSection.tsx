@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { appData, MenuItem } from "./data";
 import DishModal from "./DishModal";
 import { useTranslation } from "./i18n";
+import DishCard from "./DishCard";
 
 interface MenuSectionProps {
   searchTerm?: string;
@@ -113,21 +114,7 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
         </div>
         <div className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map((item) => (
-            <div key={item.name} className="menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-4 cursor-pointer" onClick={() => handleCardClick(item)}>
-              <img src={item.image} alt={item.name} className="w-full h-48 object-cover rounded mb-4" />
-              <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-gray-100">{item.name}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{item.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-primary dark:text-cyan-300">R${item.price}</span>
-                <div className="flex gap-1">
-                  {item.tags?.map((tag) => (
-                    <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" />
           ))}
         </div>
       </div>
