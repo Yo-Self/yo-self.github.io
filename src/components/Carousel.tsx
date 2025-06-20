@@ -2,9 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { appData, Dish } from "./data";
+import DishModal from "./DishModal";
 
 export default function Carousel() {
   const [current, setCurrent] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const featured = appData.featured_dishes;
 
@@ -17,6 +20,11 @@ export default function Carousel() {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [current, featured.length]);
+
+  const handleCardClick = (dish: Dish) => {
+    setSelectedDish(dish);
+    setModalOpen(true);
+  };
 
   return (
     <section className="carousel-section py-8 bg-white dark:bg-black">
@@ -39,7 +47,8 @@ export default function Carousel() {
               {featured.map((dish, idx) => (
                 <div
                   key={dish.name}
-                  className="carousel-card min-w-full flex flex-col items-center bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-4 mx-2"
+                  className="carousel-card min-w-full flex flex-col items-center bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-4 mx-2 cursor-pointer"
+                  onClick={() => handleCardClick(dish)}
                 >
                   <img
                     src={dish.image}
@@ -85,6 +94,7 @@ export default function Carousel() {
           ))}
         </div>
       </div>
+      <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
     </section>
   );
 } 
