@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { appData, Dish } from "./data";
 import DishModal from "./DishModal";
+import Image from "next/image";
 
 function CarouselCard({ dish, onClick }: { dish: Dish; onClick: () => void }) {
   return (
@@ -10,15 +11,19 @@ function CarouselCard({ dish, onClick }: { dish: Dish; onClick: () => void }) {
       className="carousel-card min-w-full flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 mx-2"
       onClick={onClick}
     >
-      <div className="w-full aspect-[4/3] overflow-hidden rounded-lg">
-        <img
+      <div className="w-full aspect-[4/3] overflow-hidden rounded-lg relative">
+        <Image
           src={dish.image}
           alt={dish.name}
+          fill
           className="w-full h-full object-cover"
+          style={{ objectFit: 'cover' }}
+          sizes="(max-width: 768px) 100vw, 400px"
+          priority
         />
-      </div>
-      <div className="w-full text-center font-semibold text-lg mt-3 text-gray-900 dark:text-gray-100">
-        {dish.name}
+        <div className="absolute bottom-0 left-0 w-full bg-black/60 text-white text-center font-semibold text-lg py-2 px-2" style={{backdropFilter: 'blur(2px)'}}>
+          {dish.name}
+        </div>
       </div>
     </div>
   );
