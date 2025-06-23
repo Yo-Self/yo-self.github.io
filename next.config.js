@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // i18n config removed for App Router compatibility
+  output: 'export',
+  // basePath: '/NOME-DO-REPO', // Descomente e ajuste se o projeto não estiver na raiz do domínio
+  // assetPrefix: '/NOME-DO-REPO/',
 };
 
 module.exports = nextConfig; 
