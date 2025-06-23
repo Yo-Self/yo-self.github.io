@@ -3,7 +3,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import { appData, Dish } from "./data";
 import DishModal from "./DishModal";
-import DishCard from "./DishCard";
+
+function CarouselCard({ dish, onClick }: { dish: Dish; onClick: () => void }) {
+  return (
+    <div
+      className="carousel-card min-w-full flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 mx-2"
+      onClick={onClick}
+    >
+      <div className="w-full aspect-[4/3] overflow-hidden rounded-lg">
+        <img
+          src={dish.image}
+          alt={dish.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="w-full text-center font-semibold text-lg mt-3 text-gray-900 dark:text-gray-100">
+        {dish.name}
+      </div>
+    </div>
+  );
+}
 
 export default function Carousel() {
   const [current, setCurrent] = useState(0);
@@ -45,9 +64,9 @@ export default function Carousel() {
               className="flex transition-transform duration-500"
               style={{ transform: `translateX(-${current * 100}%)` }}
             >
-              {featured.map((dish, idx) => (
+              {featured.map((dish) => (
                 <div key={dish.name} className="min-w-full flex justify-center">
-                  <DishCard dish={dish} onClick={() => handleCardClick(dish)} size="small" />
+                  <CarouselCard dish={dish} onClick={() => handleCardClick(dish)} />
                 </div>
               ))}
             </div>
