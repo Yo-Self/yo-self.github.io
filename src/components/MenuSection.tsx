@@ -93,7 +93,7 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
           </button>
         );
       }
-      let label = t(category);
+      const label = t(category);
       return (
         <button
           key={category}
