@@ -13,8 +13,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
-      - run: npm run build
-      - run: npx gh-pages -d out -u "github-actions-bot <support+actions@github.com>" --repo="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+      - run: |
+          npm ci
+          npm run build
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
