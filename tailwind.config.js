@@ -7,7 +7,15 @@ module.exports = {
     './public/index.html',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#06b6d4', // cyan-500 do Tailwind, visível no light e acessível
+      },
+    },
   },
   plugins: [],
+  safelist: [
+    'bg-primary',
+    'text-primary',
+  ],
 }; 
