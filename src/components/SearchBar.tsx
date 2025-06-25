@@ -10,7 +10,8 @@ interface SearchBarProps {
 
 export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarProps) {
   const { t } = useTranslation();
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [ searchOpen, setSearchOpen ] = useState(false);
+  const [ inputFocused, setInputFocused ] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Fecha o campo ao clicar fora
@@ -33,13 +34,13 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
       document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleEsc);
     };
-  }, [searchOpen]);
+  }, [ searchOpen ]);
 
   useEffect(() => {
     if (searchOpen && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [searchOpen]);
+  }, [ searchOpen ]);
 
   // Limpa busca ao fechar
   useEffect(() => {
@@ -47,10 +48,22 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
       onSearchTermChange("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchOpen]);
+  }, [ searchOpen ]);
+
+  // Scroll input into view on focus (fallback)
+  useEffect(() => {
+    if (inputFocused && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+    }
+  }, [ inputFocused ]);
 
   return (
-    <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex items-end gap-2">
+    <div
+      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex items-end gap-2"
+      style={{ transition: 'bottom 0.2s' }}
+    >
       {/* Campo de busca expansível */}
       <div
         className={`transition-all duration-200 flex items-center ${searchOpen ? "w-64 opacity-100 mr-2" : "w-0 opacity-0 mr-0"}`}
@@ -64,6 +77,8 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
           tabIndex={searchOpen ? 0 : -1}
           value={searchTerm}
           onChange={e => onSearchTermChange(e.target.value)}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
         />
       </div>
       {/* Botão de busca */}
