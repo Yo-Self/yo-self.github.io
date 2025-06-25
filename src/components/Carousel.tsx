@@ -82,7 +82,7 @@ export default function Carousel() {
   };
 
   return (
-    <section className="carousel-section py-8 bg-white dark:bg-black">
+    <section className="carousel-section py-2 bg-white dark:bg-black">
       <div className="container mx-auto px-4">
         <div className="relative flex items-center justify-center">
           {/* Área clicável esquerda */}
@@ -122,16 +122,6 @@ export default function Carousel() {
               <polyline points="9,18 15,12 9,6" />
             </svg>
           </div>
-        </div>
-        <div className="carousel-indicators flex justify-center mt-4 gap-2">
-          {featured.map((_, idx) => (
-            <button
-              key={idx}
-              className={`carousel-indicator w-3 h-3 rounded-full ${idx === current ? "bg-primary dark:bg-cyan-400" : "bg-gray-300 dark:bg-gray-700"}`}
-              onClick={() => setCurrent(idx)}
-              aria-label={`Ir para o slide ${idx + 1}`}
-            />
-          ))}
         </div>
       </div>
       <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />

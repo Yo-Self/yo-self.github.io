@@ -85,7 +85,7 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
         return (
           <button
             key="search"
-            className={`category-btn px-4 py-2 rounded-full ${activeCategory === "search" ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
+            className={`category-btn px-4 py-2 rounded-lg ${activeCategory === "search" ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
             onClick={() => handleCategoryClick("search")}
             disabled={activeCategory === "search"}
           >
@@ -97,7 +97,7 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
       return (
         <button
           key={category}
-          className={`category-btn px-4 py-2 rounded-full ${activeCategory === category ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
+          className={`category-btn px-4 py-2 rounded-lg ${activeCategory === category ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
           onClick={() => handleCategoryClick(category)}
         >
           {label}
@@ -107,10 +107,13 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
   };
 
   return (
-    <section className="menu-section py-8 bg-white dark:bg-black">
+    <section className="menu-section py- bg-white dark:bg-black">
       <div className="container mx-auto px-4 pb-20">
-        <div className="category-buttons flex flex-wrap gap-2 mb-6">
-          {renderCategories()}
+        <div className="category-buttons flex flex-col sticky top-0 bg-white dark:bg-black z-30 px-0 py-3">
+          <span className="text-base font-semibold text-gray-900 dark:text-gray-100 mb- px-">Categorias</span>
+          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 scrollbar-hide">
+            {renderCategories()}
+          </div>
         </div>
         <div className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map((item) => (
