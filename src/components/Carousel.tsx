@@ -36,6 +36,10 @@ export default function Carousel() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const featured = appData.featured_dishes;
 
+  // Swipe state
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
   // Auto-rotate
   useEffect(() => {
     timeoutRef.current = setTimeout(() => {
@@ -49,6 +53,32 @@ export default function Carousel() {
   const handleCardClick = (dish: Dish) => {
     setSelectedDish(dish);
     setModalOpen(true);
+  };
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (Math.abs(distance) > 50) {
+      if (distance > 0) {
+        // Swipe left -> next
+        setCurrent((prev) => (prev + 1) % featured.length);
+      } else {
+        // Swipe right -> prev
+        setCurrent((prev) => (prev - 1 + featured.length) % featured.length);
+      }
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   return (
@@ -68,6 +98,9 @@ export default function Carousel() {
             <div
               className="flex transition-transform duration-500"
               style={{ transform: `translateX(-${current * 100}%)` }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               {featured.map((dish) => (
                 <div key={dish.name} className="min-w-full flex justify-center">
