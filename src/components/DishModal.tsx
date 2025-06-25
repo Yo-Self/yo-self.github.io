@@ -13,7 +13,7 @@ export default function DishModal({ open, dish, onClose }: DishModalProps) {
   if (!open || !dish) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-md w-full overflow-hidden relative" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-md w-full overflow-hidden relative mx-4 my-8" onClick={e => e.stopPropagation()}>
         <div className="relative">
           <img src={dish.image} alt={dish.name} className="w-full h-48 object-cover" />
           <button
