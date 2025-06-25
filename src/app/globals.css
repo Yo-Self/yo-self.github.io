@@ -30,3 +30,11 @@ body {
     @apply bg-cyan-500;
   }
 }
+
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+.animate-kenburns {
+  animation: kenburns 8s ease-in-out infinite alternate;
+}

@@ -38,12 +38,6 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
     };
   }, [ searchOpen ]);
 
-  useEffect(() => {
-    if (searchOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [ searchOpen ]);
-
   // Limpa busca ao fechar
   useEffect(() => {
     if (!searchOpen && searchTerm) {

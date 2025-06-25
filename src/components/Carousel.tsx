@@ -16,7 +16,7 @@ function CarouselCard({ dish, onClick }: { dish: Dish; onClick: () => void }) {
           src={dish.image}
           alt={dish.name}
           fill
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover animate-kenburns"
           style={{ objectFit: 'cover' }}
           sizes="(max-width: 768px) 100vw, 400px"
           priority
