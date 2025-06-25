@@ -13,17 +13,19 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
   const [ searchOpen, setSearchOpen ] = useState(false);
   const [ inputFocused, setInputFocused ] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Fecha o campo ao clicar fora
   useEffect(() => {
     if (!searchOpen) return;
     function handleClick(e: MouseEvent) {
       if (
-        inputRef.current &&
-        !inputRef.current.contains(e.target as Node)
+        (inputRef.current && inputRef.current.contains(e.target as Node)) ||
+        (buttonRef.current && buttonRef.current.contains(e.target as Node))
       ) {
-        setSearchOpen(false);
+        return;
       }
+      setSearchOpen(false);
     }
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") setSearchOpen(false);
@@ -59,6 +61,16 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
     }
   }, [ inputFocused ]);
 
+  // Função para alternar o campo de busca corretamente
+  const handleSearchButtonClick = () => {
+    if (searchOpen) {
+      setSearchOpen(false);
+      inputRef.current?.blur();
+    } else {
+      setSearchOpen(true);
+    }
+  };
+
   return (
     <div
       className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex items-end gap-2"
@@ -83,14 +95,15 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
       </div>
       {/* Botão de busca */}
       <button
+        ref={buttonRef}
         className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none"
         style={{ WebkitBackdropFilter: 'blur(12px)' }}
         aria-label={t("search")}
-        onClick={() => setSearchOpen((v) => !v)}
+        onClick={handleSearchButtonClick}
       >
-        <svg width="34" height="34" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" className="text-gray-900 dark:text-white">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        <svg width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="text-gray-900 dark:text-white">
+          <circle cx="10.5" cy="10.5" r="7" />
+          <line x1="21" y1="21" x2="15.5" y2="15.5" strokeLinecap="round" />
         </svg>
       </button>
     </div>
