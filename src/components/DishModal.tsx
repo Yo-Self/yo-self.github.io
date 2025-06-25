@@ -42,7 +42,7 @@ export default function DishModal({ open, dish, onClose }: DishModalProps) {
             <span className="font-semibold text-gray-800 dark:text-gray-200">Porção:</span>
             <span className="ml-1 text-gray-700 dark:text-gray-300">{dish.portion}</span>
           </div>
-          <div className="text-xl font-bold text-primary dark:text-cyan-300 mb-2">${dish.price}</div>
+          <div className="text-xl font-bold text-primary dark:text-cyan-300 mb-2">R${dish.price}</div>
           {dish.tags && (
             <div className="flex gap-2 mt-2">
               {dish.tags.map(tag => (
