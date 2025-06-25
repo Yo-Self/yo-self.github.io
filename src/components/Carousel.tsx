@@ -21,7 +21,7 @@ function CarouselCard({ dish, onClick }: { dish: Dish; onClick: () => void }) {
           sizes="(max-width: 768px) 100vw, 400px"
           priority
         />
-        <div className="absolute bottom-0 left-0 w-full bg-black/60 text-white text-center font-semibold text-lg py-2 px-2" style={{backdropFilter: 'blur(2px)'}}>
+        <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
           {dish.name}
         </div>
       </div>

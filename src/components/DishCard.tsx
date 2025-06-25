@@ -13,13 +13,17 @@ export default function DishCard({ dish, onClick, size = "large" }: DishCardProp
       className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-xs" : ""}`}
       onClick={onClick}
     >
-      <img
-        src={dish.image}
-        alt={dish.name}
-        className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
-      />
+      <div className="relative w-full">
+        <img
+          src={dish.image}
+          alt={dish.name}
+          className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
+        />
+        <div className="absolute bottom-0 left-0 w-full px-4 py-2">
+          <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>
+        </div>
+      </div>
       <div className="w-full p-4">
-        <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-gray-100">{dish.name}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>
         <div className="flex items-center justify-between">
           <span className="font-bold text-primary dark:text-cyan-300">R${dish.price}</span>

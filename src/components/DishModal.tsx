@@ -26,9 +26,11 @@ export default function DishModal({ open, dish, onClose }: DishModalProps) {
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
+          <div className="absolute bottom-0 left-0 w-full px-4 py-2">
+            <h2 className="text-2xl font-bold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h2>
+          </div>
         </div>
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">{dish.name}</h2>
           <p className="mb-2 text-gray-700 dark:text-gray-300">{dish.description}</p>
           <div className="mb-2">
             <span className="font-semibold text-gray-800 dark:text-gray-200">Ingredientes:</span>
