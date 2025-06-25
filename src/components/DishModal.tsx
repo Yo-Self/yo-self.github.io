@@ -17,11 +17,11 @@ export default function DishModal({ open, dish, onClose }: DishModalProps) {
         <div className="relative">
           <img src={dish.image} alt={dish.name} className="w-full h-48 object-cover" />
           <button
-            className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white shadow-lg rounded-full hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 z-10 transition-all"
+            className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white shadow-lg rounded-full hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 z-10 transition-all text-gray-700 dark:text-white"
             onClick={onClose}
             aria-label="Close"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>

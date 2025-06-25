@@ -86,12 +86,12 @@ export default function Carousel() {
       <div className="container mx-auto px-4">
         <div className="relative flex items-center justify-center">
           <button
-            className="carousel-btn carousel-btn--prev absolute left-0 z-10 p-2 bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700"
+            className="carousel-btn carousel-btn--prev absolute left-0 z-10 p-2 bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-white"
             onClick={() => setCurrent((current - 1 + featured.length) % featured.length)}
             aria-label="Anterior"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15,18 9,12 15,6" stroke="white" />
+              <polyline points="15,18 9,12 15,6" />
             </svg>
           </button>
           <div className="overflow-hidden w-full max-w-xl">
@@ -110,12 +110,12 @@ export default function Carousel() {
             </div>
           </div>
           <button
-            className="carousel-btn carousel-btn--next absolute right-0 z-10 p-2 bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700"
+            className="carousel-btn carousel-btn--next absolute right-0 z-10 p-2 bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-white"
             onClick={() => setCurrent((current + 1) % featured.length)}
             aria-label="Próximo"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="9,18 15,12 9,6" stroke="white" />
+              <polyline points="9,18 15,12 9,6" />
             </svg>
           </button>
         </div>
