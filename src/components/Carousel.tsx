@@ -85,15 +85,17 @@ export default function Carousel() {
     <section className="carousel-section py-8 bg-white dark:bg-black">
       <div className="container mx-auto px-4">
         <div className="relative flex items-center justify-center">
-          <button
-            className="carousel-btn carousel-btn--prev absolute left-0 z-10 p-2 bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-white"
+          {/* Área clicável esquerda */}
+          <div
+            className="absolute left-0 top-0 h-full w-1/4 z-10 cursor-pointer flex items-center"
             onClick={() => setCurrent((current - 1 + featured.length) % featured.length)}
             aria-label="Anterior"
+            style={{background: 'transparent'}}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="ml-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] pointer-events-none">
               <polyline points="15,18 9,12 15,6" />
             </svg>
-          </button>
+          </div>
           <div className="overflow-hidden w-full max-w-xl">
             <div
               className="flex transition-transform duration-500"
@@ -109,15 +111,17 @@ export default function Carousel() {
               ))}
             </div>
           </div>
-          <button
-            className="carousel-btn carousel-btn--next absolute right-0 z-10 p-2 bg-white/90 dark:bg-gray-800/90 border-2 border-gray-300 dark:border-white rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-white"
+          {/* Área clicável direita */}
+          <div
+            className="absolute right-0 top-0 h-full w-1/4 z-10 cursor-pointer flex items-center justify-end"
             onClick={() => setCurrent((current + 1) % featured.length)}
             aria-label="Próximo"
+            style={{background: 'transparent'}}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] pointer-events-none">
               <polyline points="9,18 15,12 9,6" />
             </svg>
-          </button>
+          </div>
         </div>
         <div className="carousel-indicators flex justify-center mt-4 gap-2">
           {featured.map((_, idx) => (

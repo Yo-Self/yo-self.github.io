@@ -10,15 +10,15 @@ interface DishCardProps {
 export default function DishCard({ dish, onClick, size = "large" }: DishCardProps) {
   return (
     <div
-      className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-4 cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-xs" : ""}`}
+      className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-xs" : ""}`}
       onClick={onClick}
     >
       <img
         src={dish.image}
         alt={dish.name}
-        className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded mb-4`}
+        className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
       />
-      <div className="w-full">
+      <div className="w-full p-4">
         <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-gray-100">{dish.name}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>
         <div className="flex items-center justify-between">
