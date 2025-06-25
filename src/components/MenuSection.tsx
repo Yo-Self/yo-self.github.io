@@ -108,7 +108,7 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
 
   return (
     <section className="menu-section py-8 bg-white dark:bg-black">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 pb-20">
         <div className="category-buttons flex flex-wrap gap-2 mb-6">
           {renderCategories()}
         </div>
