@@ -109,9 +109,9 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
   return (
     <section className="menu-section py- bg-white dark:bg-black">
       <div className="container mx-auto px-4 pb-20">
-        <div className="category-buttons flex flex-col sticky top-0 bg-white dark:bg-black z-30 px-0 py-3">
-          <span className="text-base font-semibold text-gray-900 dark:text-gray-100 mb- px-">Categorias</span>
-          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 scrollbar-hide">
+        <div className="sticky top-0 bg-white dark:bg-black z-30 px-0 py-3">
+          <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block mb-2">Categorias</span>
+          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 w-full pb-2 bg-white dark:bg-black">
             {renderCategories()}
           </div>
         </div>
