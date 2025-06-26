@@ -10,7 +10,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
-    <div className="min-h-screen bg-background text-text">
+    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100">
       <Header />
       <Carousel />
       <MenuSection searchTerm={searchTerm} />
