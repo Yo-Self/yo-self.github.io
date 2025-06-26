@@ -20,6 +20,7 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
   const categories = ["all", ...appData.menu_categories];
   const isSearching = !!searchTerm.trim();
   const userSelectedCategory = useRef(false);
+  const searchCategoryRef = useRef<HTMLButtonElement | null>(null);
 
   // Sempre que searchTerm mudar, se não for o usuário que mudou a categoria, seleciona 'Busca'
   useEffect(() => {
@@ -36,6 +37,13 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
+
+  useEffect(() => {
+    // Quando a categoria 'search' for ativada, rolar para ela
+    if (isSearching && activeCategory === 'search' && searchCategoryRef.current) {
+      searchCategoryRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [isSearching, activeCategory]);
 
   // Quando o usuário clicar em uma categoria durante a busca, atualize previousCategory
   const handleCategoryClick = (category: string) => {
@@ -85,6 +93,7 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
         return (
           <button
             key="search"
+            ref={searchCategoryRef}
             className={`category-btn px-4 py-2 rounded-lg ${activeCategory === "search" ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
             onClick={() => handleCategoryClick("search")}
             disabled={activeCategory === "search"}
