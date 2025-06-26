@@ -6,8 +6,9 @@ export function generateStaticParams() {
   return restaurants.map(r => ({ id: r.id }));
 }
 
-export default function RestaurantMenuPage({ params }: { params: { id: string } }) {
-  const initialRestaurant = restaurantMap[params.id];
+export default async function RestaurantMenuPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const initialRestaurant = restaurantMap[id];
   if (!initialRestaurant) return notFound();
   return (
     <RestaurantClientPage

@@ -21,6 +21,12 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   const isSearching = !!searchTerm.trim();
   const userSelectedCategory = useRef(false);
   const searchCategoryRef = useRef<HTMLButtonElement | null>(null);
+  const categoryRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
+  // Filtra categorias para mostrar apenas as que possuem produtos
+  const availableCategories = categories.filter(category =>
+    menuItems.some(item => item.category === category)
+  );
 
   useEffect(() => {
     if (isSearching) {
@@ -45,11 +51,11 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   }, [isSearching, activeCategory]);
 
   useEffect(() => {
-    // Quando a categoria 'search' for ativada, rolar para ela
-    if (isSearching && activeCategory === 'search' && searchCategoryRef.current) {
-      searchCategoryRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    // Sempre que a categoria ativa mudar, rolar para ela
+    if (!isSearching && activeCategory !== 'search' && categoryRefs.current[activeCategory]) {
+      categoryRefs.current[activeCategory]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
-  }, [isSearching, activeCategory]);
+  }, [activeCategory, isSearching]);
 
   const handleCategoryClick = (category: string) => {
     if (isSearching) {
@@ -90,7 +96,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   };
 
   const renderCategories = () => {
-    const allCategories = isSearching ? ["all", ...categories, "search"] : ["all", ...categories];
+    const allCategories = isSearching ? ["all", ...availableCategories, "search"] : ["all", ...availableCategories];
     return allCategories.map((category) => {
       if (category === "search") {
         return (
@@ -109,6 +115,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
       return (
         <button
           key={category}
+          ref={el => { categoryRefs.current[category] = el; }}
           className={`category-btn px-4 py-2 rounded-lg ${activeCategory === category ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
           onClick={() => handleCategoryClick(category)}
         >
