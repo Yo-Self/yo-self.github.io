@@ -1,28 +1,27 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { appData, MenuItem } from "./data";
+import { MenuItem } from "./data";
 import DishModal from "./DishModal";
 import { useTranslation } from "./i18n";
 import DishCard from "./DishCard";
 
 interface MenuSectionProps {
   searchTerm?: string;
+  menuItems: MenuItem[];
+  categories: string[];
 }
 
-export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
+export default function MenuSection({ searchTerm = "", menuItems, categories }: MenuSectionProps) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState("all");
   const [previousCategory, setPreviousCategory] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
-  const menuItems = appData.menu_items;
-  const categories = ["all", ...appData.menu_categories];
   const isSearching = !!searchTerm.trim();
   const userSelectedCategory = useRef(false);
   const searchCategoryRef = useRef<HTMLButtonElement | null>(null);
 
-  // Sempre que searchTerm mudar, se não for o usuário que mudou a categoria, seleciona 'Busca'
   useEffect(() => {
     if (isSearching) {
       setPreviousCategory(activeCategory);
@@ -45,7 +44,13 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
     }
   }, [isSearching, activeCategory]);
 
-  // Quando o usuário clicar em uma categoria durante a busca, atualize previousCategory
+  useEffect(() => {
+    // Quando a categoria 'search' for ativada, rolar para ela
+    if (isSearching && activeCategory === 'search' && searchCategoryRef.current) {
+      searchCategoryRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [isSearching, activeCategory]);
+
   const handleCategoryClick = (category: string) => {
     if (isSearching) {
       userSelectedCategory.current = true;
@@ -54,7 +59,6 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
     setActiveCategory(category);
   };
 
-  // Filter logic
   let filteredItems: MenuItem[] = [];
   const term = searchTerm.trim().toLowerCase();
   if (isSearching) {
@@ -85,9 +89,8 @@ export default function MenuSection({ searchTerm = "" }: MenuSectionProps) {
     setModalOpen(true);
   };
 
-  // Render categories: show all categories plus 'Busca' as the last one when searching
   const renderCategories = () => {
-    const allCategories = isSearching ? [...categories, "search"] : categories;
+    const allCategories = isSearching ? ["all", ...categories, "search"] : ["all", ...categories];
     return allCategories.map((category) => {
       if (category === "search") {
         return (

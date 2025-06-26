@@ -2,13 +2,15 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { useTranslation } from "./i18n";
+import { Restaurant } from "./data";
 
 interface SearchBarProps {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
+  restaurants: Restaurant[];
 }
 
-export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarProps) {
+export default function SearchBar({ searchTerm, onSearchTermChange, restaurants }: SearchBarProps) {
   const { t } = useTranslation();
   const [ searchOpen, setSearchOpen ] = useState(false);
   const [ inputFocused, setInputFocused ] = useState(false);
@@ -65,6 +67,17 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
     }
   };
 
+  // Grouped search results (basic logic)
+  const term = searchTerm.trim().toLowerCase();
+  const groupedResults = restaurants.map(r => ({
+    restaurant: r,
+    items: r.menu_items.filter(item =>
+      item.name.toLowerCase().includes(term) ||
+      item.description.toLowerCase().includes(term) ||
+      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term)))
+    )
+  })).filter(group => group.items.length > 0);
+
   return (
     <div
       className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex items-end gap-2"
@@ -100,6 +113,21 @@ export default function SearchBar({ searchTerm, onSearchTermChange }: SearchBarP
           <line x1="21" y1="21" x2="15.5" y2="15.5" strokeLinecap="round" />
         </svg>
       </button>
+      {/* Show grouped search results if open and searching */}
+      {searchOpen && term && groupedResults.length > 0 && (
+        <div className="absolute bottom-20 right-0 bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 w-96 max-h-96 overflow-y-auto z-50">
+          {groupedResults.map(group => (
+            <div key={group.restaurant.id} className="mb-4">
+              <div className="font-bold text-lg mb-2">{group.restaurant.name}</div>
+              <ul>
+                {group.items.map(item => (
+                  <li key={item.name} className="mb-1">{item.name}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 

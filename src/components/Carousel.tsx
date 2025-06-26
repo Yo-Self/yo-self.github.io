@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { appData, Dish } from "./data";
+import { Dish, Restaurant } from "./data";
 import DishModal from "./DishModal";
 import Image from "next/image";
 
@@ -29,12 +29,12 @@ function CarouselCard({ dish, onClick }: { dish: Dish; onClick: () => void }) {
   );
 }
 
-export default function Carousel() {
+export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
   const [current, setCurrent] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const featured = appData.featured_dishes;
+  const featured = restaurant.featured_dishes;
 
   // Swipe state
   const touchStartX = useRef<number | null>(null);
