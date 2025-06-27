@@ -5,20 +5,22 @@ import { Dish, Restaurant } from "./data";
 import DishModal from "./DishModal";
 import Image from "next/image";
 
-function CarouselCard({ dish, onClick }: { dish: Dish; onClick: () => void }) {
+function CarouselCard({ dish, onClick, size }: { dish: Dish; onClick: () => void; size: 'main' | 'side' }) {
   return (
     <div
-      className="carousel-card min-w-full flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 mx-2"
+      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 mx-2 transition-all duration-300 
+        ${size === 'main' ? 'w-[96vw] md:w-[640px] h-[60vw] md:h-[384px] scale-100 z-20' : 'w-[48px] md:w-[72px] h-[60vw] md:h-[384px] scale-90 opacity-60 z-10'}`}
       onClick={onClick}
+      style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
     >
-      <div className="w-full aspect-[4/3] overflow-hidden rounded-lg relative">
+      <div className={`aspect-[4/3] overflow-hidden rounded-2xl relative w-full h-full`}>
         <Image
           src={dish.image}
           alt={dish.name}
           fill
           className="w-full h-full object-cover animate-kenburns"
           style={{ objectFit: 'cover' }}
-          sizes="(max-width: 768px) 100vw, 400px"
+          sizes="(max-width: 768px) 96vw, 640px"
           priority
         />
         <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
@@ -81,47 +83,83 @@ export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
     touchEndX.current = null;
   };
 
+  // Carousel logic for showing side/main/side
+  const getDisplayDishes = () => {
+    const prev = (current - 1 + featured.length) % featured.length;
+    const next = (current + 1) % featured.length;
+    return [
+      { dish: featured[prev], size: 'side' as const, idx: prev },
+      { dish: featured[current], size: 'main' as const, idx: current },
+      { dish: featured[next], size: 'side' as const, idx: next },
+    ];
+  };
+
   return (
     <section className="carousel-section py-2 bg-white dark:bg-black">
       <div className="container mx-auto px-4">
-        <div className="relative flex items-center justify-center">
-          {/* Área clicável esquerda */}
-          <div
-            className="absolute left-0 top-0 h-full w-1/4 z-10 cursor-pointer flex items-center"
-            onClick={() => setCurrent((current - 1 + featured.length) % featured.length)}
-            aria-label="Anterior"
-            style={{background: 'transparent'}}
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="ml-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] pointer-events-none">
-              <polyline points="15,18 9,12 15,6" />
-            </svg>
-          </div>
-          <div className="overflow-hidden w-full max-w-xl">
-            <div
-              className="flex transition-transform duration-500"
-              style={{ transform: `translateX(-${current * 100}%)` }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              {featured.map((dish) => (
-                <div key={dish.name} className="min-w-full flex justify-center">
-                  <CarouselCard dish={dish} onClick={() => handleCardClick(dish)} />
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Área clicável direita */}
-          <div
-            className="absolute right-0 top-0 h-full w-1/4 z-10 cursor-pointer flex items-center justify-end"
-            onClick={() => setCurrent((current + 1) % featured.length)}
-            aria-label="Próximo"
-            style={{background: 'transparent'}}
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="mr-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] pointer-events-none">
-              <polyline points="9,18 15,12 9,6" />
-            </svg>
-          </div>
+        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px]">
+          {featured.length === 1 ? (
+            <CarouselCard
+              key={restaurant.id + '-0'}
+              dish={featured[0]}
+              onClick={() => handleCardClick(featured[0])}
+              size="main"
+            />
+          ) : (
+            <>
+              {/* Área clicável esquerda */}
+              <button
+                className="absolute left-0 top-0 h-full w-[18vw] md:w-[120px] z-20 bg-transparent p-0 cursor-pointer"
+                style={{ outline: 'none', border: 'none' }}
+                aria-label="Retroceder"
+                onClick={() => setCurrent((current - 1 + featured.length) % featured.length)}
+                tabIndex={-1}
+              />
+              <button
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-30 p-0 transition"
+                onClick={() => setCurrent((current - 1 + featured.length) % featured.length)}
+                aria-label="Anterior"
+                style={{ display: current === 0 && featured.length <= 2 ? 'none' : undefined }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] pointer-events-none">
+                  <polyline points="15,18 9,12 15,6" />
+                </svg>
+              </button>
+              <div className="flex items-center justify-center w-full gap-2 md:gap-6 select-none">
+                {getDisplayDishes().map(({ dish, size }) => {
+                  const uniqueIdx = featured.findIndex(
+                    d => d.name === dish.name && d.image === dish.image
+                  );
+                  return (
+                    <CarouselCard
+                      key={restaurant.id + '-' + uniqueIdx}
+                      dish={dish}
+                      onClick={() => size === 'main' && handleCardClick(dish)}
+                      size={size}
+                    />
+                  );
+                })}
+              </div>
+              {/* Área clicável direita */}
+              <button
+                className="absolute right-0 top-0 h-full w-[18vw] md:w-[120px] z-20 bg-transparent p-0 cursor-pointer"
+                style={{ outline: 'none', border: 'none' }}
+                aria-label="Avançar"
+                onClick={() => setCurrent((current + 1) % featured.length)}
+                tabIndex={-1}
+              />
+              <button
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-30 p-0 transition"
+                onClick={() => setCurrent((current + 1) % featured.length)}
+                aria-label="Próximo"
+                style={{ display: current === featured.length - 1 && featured.length <= 2 ? 'none' : undefined }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] pointer-events-none">
+                  <polyline points="9,18 15,12 9,6" />
+                </svg>
+              </button>
+            </>
+          )}
         </div>
       </div>
       <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
