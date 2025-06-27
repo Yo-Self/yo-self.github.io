@@ -29,7 +29,7 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
   }, [open]);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={dropdownRef}>
       <button
         className="relative w-full h-14 rounded-none border-none shadow-none bg-transparent flex items-center justify-center overflow-hidden"
         onClick={() => setOpen(o => !o)}
@@ -37,15 +37,10 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
         aria-expanded={open}
         style={{ padding: 0 }}
       >
-        <div className="relative w-full h-14">
-          <img src={current?.image} alt={current?.name} className="object-cover w-full h-full" />
-          <span className="absolute inset-0 flex items-center justify-center w-full h-full">
-            <span className="flex items-center gap-2 bg-black/30 rounded px-3 py-1">
-              <span className="text-white text-2xl font-bold drop-shadow-lg text-center">{current?.name}</span>
-              <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1.5px 4px rgba(0,0,0,0.7))' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-            </span>
-          </span>
-        </div>
+        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center w-full flex items-center justify-center gap-2">
+          {current?.name}
+          <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1.5px 4px rgba(0,0,0,0.7))' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+        </span>
       </button>
       {open && (
         <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 max-w-xs bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 p-3 flex flex-col gap-3 animate-fade-in">
