@@ -9,7 +9,7 @@ function CarouselCard({ dish, onClick, size }: { dish: Dish; onClick: () => void
   return (
     <div
       className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 mx-2 transition-all duration-300 
-        ${size === 'main' ? 'w-[96vw] md:w-[640px] h-[60vw] md:h-[384px] scale-100 z-20' : 'w-[48px] md:w-[72px] h-[60vw] md:h-[384px] scale-90 opacity-60 z-10'}`}
+        ${size === 'main' ? 'w-full max-w-full h-[60vw] md:h-[340px] scale-100 z-20' : 'w-[32px] md:w-[48px] h-[60vw] md:h-[340px] scale-90 opacity-60 z-10'}`}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
     >
@@ -20,7 +20,7 @@ function CarouselCard({ dish, onClick, size }: { dish: Dish; onClick: () => void
           fill
           className="w-full h-full object-cover animate-kenburns"
           style={{ objectFit: 'cover' }}
-          sizes="(max-width: 768px) 96vw, 640px"
+          sizes="100vw"
           priority
         />
         <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
@@ -96,15 +96,19 @@ export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
 
   return (
     <section className="carousel-section py-2 bg-white dark:bg-black">
-      <div className="container mx-auto px-4">
-        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px]">
+      <div className="container mx-auto px-4 overflow-x-hidden">
+        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] overflow-x-hidden">
           {featured.length === 1 ? (
-            <CarouselCard
-              key={restaurant.id + '-0'}
-              dish={featured[0]}
-              onClick={() => handleCardClick(featured[0])}
-              size="main"
-            />
+            <div className="flex items-center justify-center w-full">
+              <div className="max-w-[480px] w-full mx-auto">
+                <CarouselCard
+                  key={restaurant.id + '-0'}
+                  dish={featured[0]}
+                  onClick={() => handleCardClick(featured[0])}
+                  size="main"
+                />
+              </div>
+            </div>
           ) : (
             <>
               {/* Área clicável esquerda */}
@@ -125,20 +129,22 @@ export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
                   <polyline points="15,18 9,12 15,6" />
                 </svg>
               </button>
-              <div className="flex items-center justify-center w-full gap-2 md:gap-6 select-none">
-                {getDisplayDishes().map(({ dish, size }) => {
-                  const uniqueIdx = featured.findIndex(
-                    d => d.name === dish.name && d.image === dish.image
-                  );
-                  return (
-                    <CarouselCard
-                      key={restaurant.id + '-' + uniqueIdx}
-                      dish={dish}
-                      onClick={() => size === 'main' && handleCardClick(dish)}
-                      size={size}
-                    />
-                  );
-                })}
+              <div className="flex items-center justify-center w-full gap-2 md:gap-6 select-none overflow-x-hidden">
+                <div className="flex items-center justify-center w-full max-w-[480px] mx-auto">
+                  {getDisplayDishes().map(({ dish, size }) => {
+                    const uniqueIdx = featured.findIndex(
+                      d => d.name === dish.name && d.image === dish.image
+                    );
+                    return (
+                      <CarouselCard
+                        key={restaurant.id + '-' + uniqueIdx}
+                        dish={dish}
+                        onClick={() => size === 'main' && handleCardClick(dish)}
+                        size={size}
+                      />
+                    );
+                  })}
+                </div>
               </div>
               {/* Área clicável direita */}
               <button

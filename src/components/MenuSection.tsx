@@ -54,6 +54,20 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
     // Sempre que a categoria ativa mudar, rolar para ela
     if (!isSearching && activeCategory !== 'search' && categoryRefs.current[activeCategory]) {
       categoryRefs.current[activeCategory]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      // Corrigir scroll lateral: garantir que o scroll do container pai não seja afetado
+      if (categoryRefs.current[activeCategory]) {
+        const el = categoryRefs.current[activeCategory];
+        const parent = el?.parentElement;
+        if (parent) {
+          const parentRect = parent.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          if (elRect.right > parentRect.right) {
+            parent.scrollLeft += elRect.right - parentRect.right;
+          } else if (elRect.left < parentRect.left) {
+            parent.scrollLeft -= parentRect.left - elRect.left;
+          }
+        }
+      }
     }
   }, [activeCategory, isSearching]);
 
@@ -125,12 +139,21 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
     });
   };
 
+  React.useEffect(() => {
+    document.documentElement.style.overflowX = 'hidden';
+    document.body.style.overflowX = 'hidden';
+    return () => {
+      document.documentElement.style.overflowX = '';
+      document.body.style.overflowX = '';
+    };
+  }, []);
+
   return (
     <section className="menu-section py- bg-white dark:bg-black">
-      <div className="container mx-auto px-4 pb-20">
+      <div className="container mx-auto px-4 pb-20 overflow-x-hidden">
         <div className="sticky top-0 bg-white dark:bg-black z-30 px-0 py-3">
           <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block mb-2">Categorias</span>
-          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 w-full pb-2 bg-white dark:bg-black">
+          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-2 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
             {renderCategories()}
           </div>
         </div>
