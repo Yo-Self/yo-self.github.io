@@ -31,7 +31,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         searchTerm={searchTerm}
       />
       <SearchBar
-        restaurants={restaurants}
+        restaurant={selectedRestaurant}
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
       />

@@ -2,18 +2,21 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { useTranslation } from "./i18n";
-import { Restaurant } from "./data";
+import { Restaurant, Dish } from "./data";
+import DishModal from "./DishModal";
 
 interface SearchBarProps {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
-  restaurants: Restaurant[];
+  restaurant: Restaurant;
 }
 
-export default function SearchBar({ searchTerm, onSearchTermChange, restaurants }: SearchBarProps) {
+export default function SearchBar({ searchTerm, onSearchTermChange, restaurant }: SearchBarProps) {
   const { t } = useTranslation();
   const [ searchOpen, setSearchOpen ] = useState(false);
   const [ inputFocused, setInputFocused ] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDish, setSelectedDish] = useState(null as Dish | null);
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -40,14 +43,6 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurants 
     };
   }, [ searchOpen ]);
 
-  // Limpa busca ao fechar
-  useEffect(() => {
-    if (!searchOpen && searchTerm) {
-      onSearchTermChange("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ searchOpen ]);
-
   // Scroll input into view on focus (fallback)
   useEffect(() => {
     if (inputFocused && inputRef.current) {
@@ -67,16 +62,13 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurants 
     }
   };
 
-  // Grouped search results (basic logic)
+  // Grouped search results (now only for current restaurant)
   const term = searchTerm.trim().toLowerCase();
-  const groupedResults = restaurants.map(r => ({
-    restaurant: r,
-    items: r.menu_items.filter(item =>
-      item.name.toLowerCase().includes(term) ||
-      item.description.toLowerCase().includes(term) ||
-      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term)))
-    )
-  })).filter(group => group.items.length > 0);
+  const filteredItems = restaurant.menu_items.filter(item =>
+    item.name.toLowerCase().includes(term) ||
+    item.description.toLowerCase().includes(term) ||
+    (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term)))
+  );
 
   return (
     <div
@@ -113,21 +105,6 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurants 
           <line x1="21" y1="21" x2="15.5" y2="15.5" strokeLinecap="round" />
         </svg>
       </button>
-      {/* Show grouped search results if open and searching */}
-      {searchOpen && term && groupedResults.length > 0 && (
-        <div className="absolute bottom-20 right-0 bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 w-96 max-h-96 overflow-y-auto z-50">
-          {groupedResults.map(group => (
-            <div key={group.restaurant.id} className="mb-4">
-              <div className="font-bold text-lg mb-2">{group.restaurant.name}</div>
-              <ul>
-                {group.items.map(item => (
-                  <li key={item.name} className="mb-1">{item.name}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 } 
