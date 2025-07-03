@@ -97,7 +97,11 @@ export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
   return (
     <section className="carousel-section py-2 bg-white dark:bg-black">
       <div className="container mx-auto px-4 overflow-x-hidden">
-        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] overflow-x-hidden">
+        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] overflow-x-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {featured.length === 1 ? (
             <div className="flex items-center justify-center w-full">
               <div className="max-w-[480px] w-full mx-auto">

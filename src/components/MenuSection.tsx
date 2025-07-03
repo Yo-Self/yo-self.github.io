@@ -22,6 +22,8 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   const userSelectedCategory = useRef(false);
   const searchCategoryRef = useRef<HTMLButtonElement | null>(null);
   const categoryRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [showFloatingCategories, setShowFloatingCategories] = useState(false);
+  const categoriesRef = useRef<HTMLDivElement>(null);
 
   // Filtra categorias para mostrar apenas as que possuem produtos
   const availableCategories = categories.filter(category =>
@@ -70,6 +72,16 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
       }
     }
   }, [activeCategory, isSearching]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!categoriesRef.current) return;
+      const rect = categoriesRef.current.getBoundingClientRect();
+      setShowFloatingCategories(rect.top < 0);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleCategoryClick = (category: string) => {
     if (isSearching) {
@@ -150,8 +162,18 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
 
   return (
     <section className="menu-section py- bg-white dark:bg-black">
+      {/* Floating header de categorias */}
+      {showFloatingCategories && (
+        <div className="fixed top-0 left-0 w-screen z-50 bg-white dark:bg-black px-4 py-3" style={{ minWidth: '100vw' }}>
+          <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block mb-2">Categorias</span>
+          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-2 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
+            {renderCategories()}
+          </div>
+        </div>
+      )}
       <div className="container mx-auto px-4 pb-20 overflow-x-hidden">
-        <div className="sticky top-0 bg-white dark:bg-black z-30 px-0 py-3">
+        {/* Barra normal de categorias (sticky para UX melhor) */}
+        <div ref={categoriesRef} className="sticky top-0 z-40 bg-white dark:bg-black px-0 py-3">
           <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block mb-2">Categorias</span>
           <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-2 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
             {renderCategories()}
