@@ -164,9 +164,8 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
     <section className="menu-section py- bg-white dark:bg-black">
       {/* Floating header de categorias */}
       {showFloatingCategories && (
-        <div className="fixed top-0 left-0 w-screen z-50 bg-white dark:bg-black px-4 py-3" style={{ minWidth: '100vw' }}>
-          <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block mb-2">Categorias</span>
-          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-2 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
+        <div className="fixed top-0 left-0 w-screen z-50 bg-white dark:bg-black px-4 py-1" style={{ minWidth: '100vw' }}>
+          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
             {renderCategories()}
           </div>
         </div>
