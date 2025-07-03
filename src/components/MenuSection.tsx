@@ -30,31 +30,33 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
     menuItems.some(item => item.category === category)
   );
 
+  // Remove lógica de categoria 'search' ao buscar
   useEffect(() => {
-    if (isSearching) {
-      setPreviousCategory(activeCategory);
-      setActiveCategory("search");
-    }
-    if (!isSearching && activeCategory === "search") {
-      setActiveCategory(previousCategory);
-      userSelectedCategory.current = false;
-    }
     if (!isSearching && !userSelectedCategory.current) {
       setActiveCategory("all");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
+  // Seleciona categoria 'search' ao receber evento do bottom sheet
+  useEffect(() => {
+    function handleSelectSearchCategory() {
+      setActiveCategory("search");
+    }
+    window.addEventListener('select-search-category', handleSelectSearchCategory);
+    return () => window.removeEventListener('select-search-category', handleSelectSearchCategory);
+  }, []);
+
   useEffect(() => {
     // Quando a categoria 'search' for ativada, rolar para ela
-    if (isSearching && activeCategory === 'search' && searchCategoryRef.current) {
+    if (activeCategory === 'search' && searchCategoryRef.current) {
       searchCategoryRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
   }, [isSearching, activeCategory]);
 
   useEffect(() => {
     // Sempre que a categoria ativa mudar, rolar para ela
-    if (!isSearching && activeCategory !== 'search' && categoryRefs.current[activeCategory]) {
+    if (activeCategory !== 'search' && categoryRefs.current[activeCategory]) {
       categoryRefs.current[activeCategory]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       // Corrigir scroll lateral: garantir que o scroll do container pai não seja afetado
       if (categoryRefs.current[activeCategory]) {
@@ -84,36 +86,21 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   }, []);
 
   const handleCategoryClick = (category: string) => {
-    if (isSearching) {
-      userSelectedCategory.current = true;
-      setPreviousCategory(category);
-    }
     setActiveCategory(category);
   };
 
   let filteredItems: MenuItem[] = [];
   const term = searchTerm.trim().toLowerCase();
-  if (isSearching) {
-    if (activeCategory === "search") {
-      filteredItems = menuItems.filter(item =>
-        item.name.toLowerCase().includes(term) ||
-        item.description.toLowerCase().includes(term) ||
-        (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term)))
-      );
-    } else {
-      filteredItems = menuItems.filter(item => {
-        const matchesCategory = activeCategory === "all" || item.category === activeCategory;
-        const matchesSearch =
-          item.name.toLowerCase().includes(term) ||
-          item.description.toLowerCase().includes(term) ||
-          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term)));
-        return matchesCategory && matchesSearch;
-      });
-    }
+  if (activeCategory === "search") {
+    filteredItems = menuItems.filter(item =>
+      item.name.toLowerCase().includes(term) ||
+      item.description.toLowerCase().includes(term) ||
+      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term)))
+    );
+  } else if (activeCategory === "all") {
+    filteredItems = menuItems;
   } else {
-    filteredItems = activeCategory === "all"
-      ? menuItems
-      : menuItems.filter(item => item.category === activeCategory);
+    filteredItems = menuItems.filter(item => item.category === activeCategory);
   }
 
   const handleCardClick = (item: MenuItem) => {
@@ -122,7 +109,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   };
 
   const renderCategories = () => {
-    const allCategories = isSearching ? ["all", ...availableCategories, "search"] : ["all", ...availableCategories];
+    const allCategories = ["all", ...availableCategories, "search"];
     return allCategories.map((category) => {
       if (category === "search") {
         return (
