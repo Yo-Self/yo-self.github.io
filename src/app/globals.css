@@ -38,3 +38,44 @@ body {
 .animate-kenburns {
   animation: kenburns 8s ease-in-out infinite alternate;
 }
+
+/* Efeito glow animado para o botão de busca - borda colorida, centro transparente/opaco */
+.search-glow-btn {
+  position: relative;
+  z-index: 1;
+  background: rgba(255,255,255,0.85); /* opaco */
+}
+.search-glow-btn::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  z-index: -1;
+  border-radius: 9999px;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    #06b6d4 0deg,
+    #818cf8 90deg,
+    #f472b6 180deg,
+    #facc15 270deg,
+    #06b6d4 360deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 80%, black 88%);
+  mask: radial-gradient(circle, transparent 80%, black 88%);
+  filter: blur(1px) brightness(1.2);
+  opacity: 0.9;
+  animation: spin-glow 2.5s linear infinite;
+  transition: opacity 0.2s;
+}
+@keyframes spin-glow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-gradient {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-spin-gradient {
+  animation: spin-gradient 2.5s linear infinite;
+}

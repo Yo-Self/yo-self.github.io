@@ -253,14 +253,35 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       {/* Botão de busca */}
       <button
         ref={buttonRef}
-        className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none"
+        className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group"
         style={{ WebkitBackdropFilter: 'blur(12px)' }}
         aria-label={t("search")}
         onClick={() => setShowSheet(true)}
       >
-        <svg width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="text-gray-900 dark:text-white">
-          <circle cx="10.5" cy="10.5" r="7" />
-          <line x1="21" y1="21" x2="15.5" y2="15.5" strokeLinecap="round" />
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+          <defs>
+            <linearGradient id="lupa-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#06b6d4">
+                <animate attributeName="stop-color" values="#06b6d4;#818cf8;#f472b6;#facc15;#06b6d4" dur="2.5s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#facc15">
+                <animate attributeName="stop-color" values="#facc15;#06b6d4;#818cf8;#f472b6;#facc15" dur="2.5s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+            <clipPath id="lupa-clip">
+              <circle cx="10.5" cy="10.5" r="7" />
+              <rect x="15.5" y="15.5" width="7" height="2.5" rx="1.25" transform="rotate(-45 15.5 15.5)" />
+            </clipPath>
+          </defs>
+          {/* Fundo branco */}
+          <rect width="24" height="24" fill="" />
+          {/* Gradiente só dentro do círculo e haste da lupa */}
+          <g clipPath="url(#lupa-clip)">
+            <rect width="24" height="24" fill="" />
+          </g>
+          {/* Contorno da lupa (outline) */}
+          <circle cx="10.5" cy="10.5" r="7" stroke="url(#lupa-gradient)" strokeWidth="2.5" fill="" />
+          <line x1="21" y1="21" x2="15.5" y2="15.5" stroke="url(#lupa-gradient)" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       </button>
       {showSheet && renderSheet()}
