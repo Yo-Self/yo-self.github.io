@@ -5,10 +5,10 @@ import { Dish, Restaurant } from "./data";
 import DishModal from "./DishModal";
 import Image from "next/image";
 
-function CarouselCard({ dish, onClick, size }: { dish: Dish; onClick: () => void; size: 'main' | 'side' }) {
+function CarouselCard({ dish, onClick, size, noMargin = false }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean }) {
   return (
     <div
-      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 mx-2 transition-all duration-300 
+      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 ${noMargin ? '' : 'mx-2'} transition-all duration-300 
         ${size === 'main' ? 'w-full max-w-full h-[60vw] md:h-[340px] scale-100 z-20' : 'w-[32px] md:w-[48px] h-[60vw] md:h-[340px] scale-90 opacity-60 z-10'}`}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
@@ -95,7 +95,7 @@ export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
   };
 
   return (
-    <section className="carousel-section py-2 bg-white dark:bg-black">
+    <section className="carousel-section py-0 bg-white dark:bg-black">
       <div className="container mx-auto px-0 overflow-x-hidden">
         <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] overflow-x-hidden"
           onTouchStart={handleTouchStart}
@@ -103,13 +103,14 @@ export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
           onTouchEnd={handleTouchEnd}
         >
           {featured.length === 1 ? (
-            <div className="flex items-center justify-center w-full">
-              <div className="max-w-[480px] w-full mx-auto">
+            <div className="flex justify-center w-full px-4">
+              <div className="max-w-[480px] w-full">
                 <CarouselCard
                   key={restaurant.id + '-0'}
                   dish={featured[0]}
                   onClick={() => handleCardClick(featured[0])}
                   size="main"
+                  noMargin={true}
                 />
               </div>
             </div>
