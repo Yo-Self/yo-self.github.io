@@ -38,25 +38,9 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
-  // Seleciona categoria 'search' ao receber evento do bottom sheet
-  useEffect(() => {
-    function handleSelectSearchCategory() {
-      setActiveCategory("search");
-    }
-    window.addEventListener('select-search-category', handleSelectSearchCategory);
-    return () => window.removeEventListener('select-search-category', handleSelectSearchCategory);
-  }, []);
-
-  useEffect(() => {
-    // Quando a categoria 'search' for ativada, rolar para ela
-    if (activeCategory === 'search' && searchCategoryRef.current) {
-      searchCategoryRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-  }, [isSearching, activeCategory]);
-
   useEffect(() => {
     // Sempre que a categoria ativa mudar, rolar para ela
-    if (activeCategory !== 'search' && categoryRefs.current[activeCategory]) {
+    if (categoryRefs.current[activeCategory]) {
       categoryRefs.current[activeCategory]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       // Corrigir scroll lateral: garantir que o scroll do container pai não seja afetado
       if (categoryRefs.current[activeCategory]) {
@@ -91,13 +75,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
 
   let filteredItems: MenuItem[] = [];
   const term = searchTerm.trim().toLowerCase();
-  if (activeCategory === "search") {
-    filteredItems = menuItems.filter(item =>
-      item.name.toLowerCase().includes(term) ||
-      item.description.toLowerCase().includes(term) ||
-      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term)))
-    );
-  } else if (activeCategory === "all") {
+  if (activeCategory === "all") {
     filteredItems = menuItems;
   } else {
     filteredItems = menuItems.filter(item => item.category === activeCategory);
@@ -109,21 +87,8 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   };
 
   const renderCategories = () => {
-    const allCategories = ["all", ...availableCategories, "search"];
+    const allCategories = ["all", ...availableCategories];
     return allCategories.map((category) => {
-      if (category === "search") {
-        return (
-          <button
-            key="search"
-            ref={searchCategoryRef}
-            className={`category-btn px-4 py-2 rounded-lg ${activeCategory === "search" ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
-            onClick={() => handleCategoryClick("search")}
-            disabled={activeCategory === "search"}
-          >
-            {t("searchCategory")}
-          </button>
-        );
-      }
       const label = t(category);
       return (
         <button
