@@ -157,15 +157,14 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
           </div>
         </div>
       )}
-      <div className="container mx-auto px-4 pb-20 overflow-x-hidden">
+      <div className="container mx-auto px-0 pb-20 overflow-x-hidden">
         {/* Barra normal de categorias (sticky para UX melhor) */}
-        <div ref={categoriesRef} className="sticky top-0 z-40 bg-white dark:bg-black px-0 py-3">
-          <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block mb-2">Categorias</span>
-          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-2 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
+        <div ref={categoriesRef} className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4">
+          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
             {renderCategories()}
           </div>
         </div>
-        <div className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4">
           {filteredItems.map((item) => (
             <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" />
           ))}

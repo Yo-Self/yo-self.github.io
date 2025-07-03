@@ -31,7 +31,7 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
-        className="relative w-full h-14 rounded-none border-none shadow-none bg-transparent flex items-center justify-center overflow-hidden"
+        className="relative w-full h-8 rounded-none border-none shadow-none bg-transparent flex items-center justify-center overflow-hidden"
         onClick={() => setOpen(o => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -64,8 +64,8 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   const { t } = useTranslation();
   if (restaurants && restaurants.length > 1 && restaurant) {
     return (
-      <header className="header bg-white dark:bg-black shadow-sm p-0">
-        <div className="container mx-auto flex flex-col items-center justify-center px-0 gap-0">
+      <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
+        <div className="container mx-auto flex flex-col items-center justify-center px-0 m-0">
           <RestaurantDropdown
             restaurants={restaurants}
             selectedRestaurantId={selectedRestaurantId}
@@ -78,8 +78,8 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   }
   // fallback: single restaurant
   return (
-    <header className="header bg-white dark:bg-black shadow-sm py-1">
-      <div className="container mx-auto flex items-center justify-center px-4">
+    <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
+      <div className="container mx-auto flex items-center justify-center px-4 m-0">
         <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100">{restaurant?.name}</h1>
       </div>
     </header>
