@@ -43,28 +43,48 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
     };
   }, [showSheet]);
 
-  // Foca o input ao abrir o sheet
+  // Foca o input ao abrir o sheet e garante visibilidade usando scrollIntoView
   useEffect(() => {
     if (showSheet && inputRef.current) {
       setTimeout(() => {
         inputRef.current?.focus();
+        // Garante que o input fique visível mesmo com o teclado aberto
+        inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 200);
     }
   }, [showSheet]);
 
-  // Ajuste dinâmico do bottom sheet para iOS usando Visual Viewport API
+  // Ajuste dinâmico do bottom sheet para iOS/Android usando Visual Viewport API ou fallback
   useEffect(() => {
-    if (!window.visualViewport || !sheetRef.current) return;
-    const vv = window.visualViewport;
+    if (!sheetRef.current) return;
+    const vv: VisualViewport | undefined = window.visualViewport === null ? undefined : window.visualViewport;
     const fixSheet = () => {
-      if (sheetRef.current) {
+      if (!sheetRef.current) return;
+      if (vv) {
+        // Ajusta altura e posição do sheet para não ser coberto pelo teclado
         sheetRef.current.style.maxHeight = vv.height + 'px';
         sheetRef.current.style.bottom = (window.innerHeight - vv.height - vv.offsetTop) + 'px';
+      } else {
+        // Fallback para browsers sem visualViewport
+        sheetRef.current.style.maxHeight = window.innerHeight + 'px';
+        sheetRef.current.style.bottom = '0px';
       }
     };
-    vv.addEventListener('resize', fixSheet);
+    if (vv) {
+      vv.addEventListener('resize', fixSheet);
+      vv.addEventListener('scroll', fixSheet);
+    } else {
+      window.addEventListener('resize', fixSheet);
+    }
     fixSheet();
-    return () => vv.removeEventListener('resize', fixSheet);
+    return () => {
+      if (vv) {
+        vv.removeEventListener('resize', fixSheet);
+        vv.removeEventListener('scroll', fixSheet);
+      } else {
+        window.removeEventListener('resize', fixSheet);
+      }
+    };
   }, [showSheet]);
 
   // Função para alternar o campo de busca corretamente
