@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Restaurant, Dish } from "./data";
 import CardJornal from "./CardJornal";
+import DishModal from "./DishModal";
 
 interface JournalViewProps {
   open: boolean;
@@ -32,28 +33,17 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
       },
     ];
   }
-  // Flatten para paginação: cada página pode conter até 3 pratos, mas mantém cabeçalho de categoria
-  const flat: Array<{ type: 'category'; category: string } | { type: 'dish'; dish: Dish }> = [];
-  grouped.forEach(group => {
-    flat.push({ type: 'category', category: group.category });
-    group.items.forEach(dish => flat.push({ type: 'dish', dish }));
-  });
-  // Nova lógica: cada página contém ou só o nome da categoria (transição), ou até 3 cards de uma mesma categoria
-  let pages: Array<Array<{ type: 'category'; category: string } | { type: 'dish'; dish: Dish }>> = [];
+  // Nova lógica: cada página contém até 3 cards de uma mesma categoria, sem tela cheia de header
+  let pages: Array<Array<{ dish: Dish; category: string }>> = [];
   if (selectedCategory === 'all') {
     grouped.forEach(group => {
-      // Página só com o nome da categoria
-      pages.push([{ type: 'category', category: group.category }]);
-      // Páginas com até 3 pratos dessa categoria
       for (let i = 0; i < group.items.length; i += 3) {
-        pages.push(group.items.slice(i, i + 3).map(dish => ({ type: 'dish', dish })));
+        pages.push(group.items.slice(i, i + 3).map(dish => ({ dish, category: group.category })));
       }
     });
   } else {
-    // Categoria única
-    pages.push([{ type: 'category', category: grouped[0].category }]);
     for (let i = 0; i < grouped[0].items.length; i += 3) {
-      pages.push(grouped[0].items.slice(i, i + 3).map(dish => ({ type: 'dish', dish })));
+      pages.push(grouped[0].items.slice(i, i + 3).map(dish => ({ dish, category: grouped[0].category })));
     }
   }
   const totalPages = pages.length;
@@ -120,58 +110,88 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
     };
   }, [open]);
 
+  // --- NOVA LÓGICA DE INDICADOR DE CATEGORIA ---
+  // Lista de categorias únicas na ordem de exibição
+  const categoryList = grouped.map(g => g.category);
+
+  // Para cada página, descobrir a qual categoria ela pertence (agora só há páginas de pratos)
+  let pageToCategoryIdx: number[] = [];
+  if (selectedCategory === 'all') {
+    let catIdx = 0;
+    grouped.forEach(group => {
+      const nPages = Math.ceil(group.items.length / 3);
+      for (let i = 0; i < nPages; i++) {
+        pageToCategoryIdx.push(catIdx);
+      }
+      catIdx++;
+    });
+  } else {
+    for (let i = 0; i < pages.length; i++) {
+      pageToCategoryIdx.push(0);
+    }
+  }
+  // Índice da categoria atual
+  const currentCategoryIdx = pageToCategoryIdx[page] || 0;
+  const currentCategory = categoryList[currentCategoryIdx];
+
+  // Estado para modal de detalhes do prato
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white dark:bg-gray-900 animate-fade-in-fast select-none"
+    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white dark:bg-gray-900 animate-fade-in-fast select-none pt-8"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Áreas clicáveis para avançar/retroceder página */}
       <button
-        className="fixed left-0 top-0 h-full w-1/4 z-30 bg-transparent p-0 m-0 border-none outline-none"
+        className="fixed left-0 top-0 h-full w-1/4 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Retroceder"
         onClick={() => page > 0 && setPage(page - 1)}
         tabIndex={-1}
       />
       <button
-        className="fixed right-0 top-0 h-full w-1/4 z-30 bg-transparent p-0 m-0 border-none outline-none"
+        className="fixed right-0 top-0 h-full w-1/4 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Avançar"
         onClick={() => page < totalPages - 1 && setPage(page + 1)}
         tabIndex={-1}
       />
-      {/* Indicador de página no topo, estilo stories */}
-      <div className="flex gap-2 mt-6 mb-4 w-full justify-center z-20">
-        {Array.from({ length: totalPages }).map((_, idx) => (
-          <span key={idx} className={`flex-1 h-1 rounded-full ${idx === page ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'}`} style={{ minWidth: 24, maxWidth: 64 }}></span>
-        ))}
+      {/* Indicador de categoria no topo + botão de fechar alinhados */}
+      <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-6 mb-0 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
+        <div className="flex gap-2 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
+          {categoryList.map((cat, idx) => (
+            idx === currentCategoryIdx ? (
+              <span key={cat} className="text-sm font-semibold text-primary dark:text-cyan-400 text-center leading-tight flex items-center" style={{maxWidth: 96, overflow: 'hidden', wordBreak: 'break-word', whiteSpace: 'normal', lineClamp: 2, WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', display: '-webkit-box', minHeight: 8}}>{cat}</span>
+            ) : (
+              <span key={cat} className="h-2 w-8 rounded-full bg-gray-300 dark:bg-gray-700 scale-100 transition-all duration-200 flex-shrink-0" style={{minWidth: 32, maxWidth: 64, display: 'inline-block'}}></span>
+            )
+          ))}
+        </div>
+        <button
+          className="w-12 h-12 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0 -mt-4"
+          onClick={onClose}
+          aria-label="Fechar jornal"
+          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </button>
       </div>
-      {/* Cards de pratos, todos do mesmo tamanho, centralizados, sem scroll */}
+      {/* Cards de pratos, todos do mesmo tamanho, centralizados, sem header de categoria em tela cheia */}
       <div className="flex flex-col items-center justify-center w-full flex-1 gap-4">
         {pages[page]?.map((item, idx) => (
-          item.type === 'category' ? (
-            <div key={item.category + '-header'} className="w-full max-w-md text-2xl font-bold text-gray-700 dark:text-gray-200 flex items-center justify-center h-40">
-              {item.category}
+          <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
+            <div className="max-w-md min-w-[320px] mx-auto">
+              <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} />
             </div>
-          ) : (
-            <div key={item.dish.name + item.dish.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
-              <div className="max-w-md min-w-[320px] mx-auto">
-                <CardJornal dish={item.dish} size="small" />
-              </div>
-            </div>
-          )
+          </div>
         ))}
       </div>
-      {/* Botão de fechar */}
-      <button
-        className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center shadow-lg border border-gray-200 dark:border-gray-700 z-40"
-        onClick={onClose}
-        aria-label="Fechar jornal"
-      >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-      </button>
+      {/* Modal de detalhes do prato */}
+      <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
     </div>
   );
 } 
