@@ -37,7 +37,7 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
         aria-expanded={open}
         style={{ padding: 0 }}
       >
-        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center w-full flex items-center justify-center gap-2">
+        <span data-tutorial="restaurant-switch" className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2">
           {current?.name}
           <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1.5px 4px rgba(0,0,0,0.7))' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
         </span>

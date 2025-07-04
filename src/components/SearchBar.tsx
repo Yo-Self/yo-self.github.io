@@ -273,6 +273,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       {/* Botão modo jornal */}
       <button
         className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
+        data-tutorial="journal-button"
         style={{ WebkitBackdropFilter: 'blur(12px)' }}
         aria-label={t("Modo jornal")}
         onClick={() => setJournalOpen(true)}
@@ -283,6 +284,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       <button
         ref={buttonRef}
         className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group"
+        data-tutorial="search-button"
         style={{ WebkitBackdropFilter: 'blur(12px)' }}
         aria-label={t("search")}
         onClick={() => setShowSheet(true)}
