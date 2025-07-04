@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import CategoriesBar from "./CategoriesBar";
+import useSwipeCategory from "./useSwipeCategory";
 import { MenuItem } from "./data";
 import DishModal from "./DishModal";
 import { useTranslation } from "./i18n";
@@ -25,47 +27,12 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   const [showFloatingCategories, setShowFloatingCategories] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
 
-  // Swipe state para pratos
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-
-  // Função para mudar categoria por swipe
-  const handleSwipeCategory = (direction: 'left' | 'right') => {
-    const allCategories = ["all", ...availableCategories];
-    const currentIdx = allCategories.indexOf(activeCategory);
-    if (direction === 'left' && currentIdx < allCategories.length - 1) {
-      setActiveCategory(allCategories[currentIdx + 1]);
-    } else if (direction === 'right' && currentIdx > 0) {
-      setActiveCategory(allCategories[currentIdx - 1]);
-    }
-  };
-
-  // Handlers de touch para swipe
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchEndX.current = null;
-  };
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-  const handleTouchEnd = () => {
-    if (touchStartX.current === null || touchEndX.current === null) return;
-    const distance = touchStartX.current - touchEndX.current;
-    if (Math.abs(distance) > 40) {
-      if (distance > 0) {
-        handleSwipeCategory('left');
-      } else {
-        handleSwipeCategory('right');
-      }
-    }
-    touchStartX.current = null;
-    touchEndX.current = null;
-  };
-
   // Filtra categorias para mostrar apenas as que possuem produtos
   const availableCategories = categories.filter(category =>
     menuItems.some(item => item.category === category)
   );
+
+  const { handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeCategory(activeCategory, setActiveCategory, availableCategories);
 
   // Remove lógica de categoria 'search' ao buscar
   useEffect(() => {
@@ -123,23 +90,6 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
     setModalOpen(true);
   };
 
-  const renderCategories = () => {
-    const allCategories = ["all", ...availableCategories];
-    return allCategories.map((category) => {
-      const label = t(category);
-      return (
-        <button
-          key={category}
-          ref={el => { categoryRefs.current[category] = el; }}
-          className={`category-btn px-4 py-2 rounded-lg ${activeCategory === category ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
-          onClick={() => handleCategoryClick(category)}
-        >
-          {label}
-        </button>
-      );
-    });
-  };
-
   React.useEffect(() => {
     document.documentElement.style.overflowX = 'hidden';
     document.body.style.overflowX = 'hidden';
@@ -154,12 +104,13 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
       {/* Floating header de categorias */}
       {showFloatingCategories && (
         <div className="fixed top-0 left-0 w-screen z-50 bg-white dark:bg-black px-4 py-1" style={{ minWidth: '100vw' }}>
-          <div
-            className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 no-scrollbar max-w-full overflow-x-auto"
-            style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}
-          >
-            {renderCategories()}
-          </div>
+          <CategoriesBar
+            allCategories={["all", ...availableCategories]}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+            categoryRefs={categoryRefs}
+            t={t}
+          />
         </div>
       )}
       <div className="container mx-auto px-0 pb-20 overflow-x-hidden">
@@ -168,9 +119,13 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
           ref={categoriesRef}
           className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4"
         >
-          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
-            {renderCategories()}
-          </div>
+          <CategoriesBar
+            allCategories={["all", ...availableCategories]}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
+            categoryRefs={categoryRefs}
+            t={t}
+          />
         </div>
         <div
           className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4"
