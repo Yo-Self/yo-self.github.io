@@ -5,6 +5,7 @@ import { useTranslation } from "./i18n";
 import { Restaurant, Dish, MenuItem } from "./data";
 import DishModal from "./DishModal";
 import DishCard from "./DishCard";
+import JournalView from "./JournalView";
 
 interface SearchBarProps {
   searchTerm: string;
@@ -244,12 +245,34 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
     window.dispatchEvent(event);
   };
 
-  // O botão de busca continua igual, mas ao focar/clicar no input abre o bottom sheet
+  // Novo estado para o modo jornal
+  const [journalOpen, setJournalOpen] = useState(false);
+
+  // Ícone SVG de jornal (inline, simples)
+  const NewspaperIcon = () => (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2" fill="white" stroke="currentColor" />
+      <line x1="7" y1="8" x2="17" y2="8" />
+      <line x1="7" y1="12" x2="17" y2="12" />
+      <line x1="7" y1="16" x2="13" y2="16" />
+      <rect x="4.5" y="5.5" width="4" height="4" rx="1" fill="#e5e7eb" stroke="currentColor" />
+    </svg>
+  );
+
   return (
     <div
-      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex items-end gap-2"
+      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex flex-col items-end gap-2"
       style={{ transition: 'bottom 0.2s' }}
     >
+      {/* Botão modo jornal */}
+      <button
+        className="w-14 h-14 mb-2 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group"
+        style={{ WebkitBackdropFilter: 'blur(12px)' }}
+        aria-label={t("Modo jornal")}
+        onClick={() => setJournalOpen(true)}
+      >
+        <NewspaperIcon />
+      </button>
       {/* Botão de busca */}
       <button
         ref={buttonRef}
@@ -285,6 +308,8 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
         </svg>
       </button>
       {showSheet && renderSheet()}
+      {/* Modal modo jornal */}
+      <JournalView open={journalOpen} onClose={() => setJournalOpen(false)} restaurant={restaurant} />
     </div>
   );
 } 
