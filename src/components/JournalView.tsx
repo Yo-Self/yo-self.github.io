@@ -78,20 +78,15 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
     if (touchStartX.current === null || touchEndX.current === null) return;
     const distance = touchStartX.current - touchEndX.current;
     if (Math.abs(distance) > 50) {
+      let newDirection: 'next' | 'prev' | null = null;
       if (distance > 0 && page < totalPages - 1) {
+        newDirection = 'next';
         setFlipDirection('next');
-        setAnimating(true);
-        setTimeout(() => {
-          setPage(page + 1);
-          setAnimating(false);
-        }, 600);
+        setPage(prev => prev + 1);
       } else if (distance < 0 && page > 0) {
+        newDirection = 'prev';
         setFlipDirection('prev');
-        setAnimating(true);
-        setTimeout(() => {
-          setPage(page - 1);
-          setAnimating(false);
-        }, 600);
+        setPage(prev => prev - 1);
       }
     }
     touchStartX.current = null;
@@ -155,14 +150,24 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         className="fixed left-0 top-0 h-full w-1/4 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Retroceder"
-        onClick={() => page > 0 && setPage(page - 1)}
+        onClick={() => {
+          if (page > 0) {
+            setFlipDirection('prev');
+            setPage(prev => prev - 1);
+          }
+        }}
         tabIndex={-1}
       />
       <button
         className="fixed right-0 top-0 h-full w-1/4 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Avançar"
-        onClick={() => page < totalPages - 1 && setPage(page + 1)}
+        onClick={() => {
+          if (page < totalPages - 1) {
+            setFlipDirection('next');
+            setPage(prev => prev + 1);
+          }
+        }}
         tabIndex={-1}
       />
       {/* Indicador de categoria no topo + botão de fechar alinhados */}
