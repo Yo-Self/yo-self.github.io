@@ -20,8 +20,6 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const isSearching = !!searchTerm.trim();
-  const userSelectedCategory = useRef(false);
-  const categoryRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const [showFloatingCategories, setShowFloatingCategories] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
 
@@ -34,7 +32,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
 
   // Remove lógica de categoria 'search' ao buscar
   useEffect(() => {
-    if (!isSearching && !userSelectedCategory.current) {
+    if (!isSearching) {
       setActiveCategory("all");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,23 +40,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
 
   useEffect(() => {
     // Sempre que a categoria ativa mudar, rolar para ela
-    if (categoryRefs.current[activeCategory]) {
-      categoryRefs.current[activeCategory]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      // Corrigir scroll lateral: garantir que o scroll do container pai não seja afetado
-      if (categoryRefs.current[activeCategory]) {
-        const el = categoryRefs.current[activeCategory];
-        const parent = el?.parentElement;
-        if (parent) {
-          const parentRect = parent.getBoundingClientRect();
-          const elRect = el.getBoundingClientRect();
-          if (elRect.right > parentRect.right) {
-            parent.scrollLeft += elRect.right - parentRect.right;
-          } else if (elRect.left < parentRect.left) {
-            parent.scrollLeft -= parentRect.left - elRect.left;
-          }
-        }
-      }
-    }
+    // Se necessário, implemente scroll para a categoria ativa aqui
   }, [activeCategory, isSearching]);
 
   useEffect(() => {
@@ -76,7 +58,6 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   };
 
   let filteredItems: MenuItem[] = [];
-  const term = searchTerm.trim().toLowerCase();
   if (activeCategory === "all") {
     filteredItems = menuItems;
   } else {
@@ -106,7 +87,6 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
             allCategories={["all", ...availableCategories]}
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
-            categoryRefs={categoryRefs}
             t={t}
           />
         </div>
@@ -121,7 +101,6 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
             allCategories={["all", ...availableCategories]}
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
-            categoryRefs={categoryRefs}
             t={t}
           />
         </div>
