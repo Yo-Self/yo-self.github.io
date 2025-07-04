@@ -194,7 +194,23 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         <div className="flex gap-2 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
           {categoryList.map((cat, idx) => (
             idx === currentCategoryIdx ? (
-              <span key={cat} className="text-sm font-semibold text-primary dark:text-cyan-400 text-center leading-tight flex items-center" style={{maxWidth: 96, overflow: 'hidden', wordBreak: 'break-word', whiteSpace: 'normal', lineClamp: 2, WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', display: '-webkit-box', minHeight: 8}}>{cat}</span>
+              <span
+                key={cat}
+                className="text-sm font-semibold text-primary dark:text-cyan-400 text-center leading-tight flex items-center justify-center bg-primary/10 border border-primary/30 dark:border-cyan-700 px-4 py-1 rounded-full shadow-sm"
+                style={{
+                  maxWidth: 160,
+                  overflow: 'hidden',
+                  wordBreak: 'break-word',
+                  whiteSpace: 'normal',
+                  lineClamp: 2,
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  display: '-webkit-box',
+                  minHeight: 8
+                }}
+              >
+                {cat}
+              </span>
             ) : (
               <span key={cat} className="h-2 w-8 rounded-full bg-gray-300 dark:bg-gray-700 scale-100 transition-all duration-200 flex-shrink-0" style={{minWidth: 32, maxWidth: 64, display: 'inline-block'}}></span>
             )
