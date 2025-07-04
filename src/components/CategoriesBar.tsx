@@ -14,7 +14,9 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
   useEffect(() => {
     const idx = allCategories.indexOf(activeCategory);
     if (idx !== -1 && btnRefs.current[idx] && containerRef.current) {
-      btnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      setTimeout(() => {
+        btnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, 10);
     }
   }, [activeCategory, allCategories]);
 
@@ -29,7 +31,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
         return (
           <button
             key={category}
-            ref={el => btnRefs.current[idx] = el}
+            ref={el => { btnRefs.current[idx] = el; }}
             className={`category-btn px-4 py-2 rounded-lg ${activeCategory === category ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
             onClick={() => setActiveCategory(category)}
           >
