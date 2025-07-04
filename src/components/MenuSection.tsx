@@ -79,23 +79,12 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   }, []);
 
   return (
-    <section className="menu-section py- bg-white dark:bg-black">
-      {/* Floating header de categorias */}
-      {showFloatingCategories && (
-        <div className="fixed top-0 left-0 w-screen z-50 bg-white dark:bg-black px-4 py-1" style={{ minWidth: '100vw' }}>
-          <CategoriesBar
-            allCategories={["all", ...availableCategories]}
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            t={t}
-          />
-        </div>
-      )}
-      <div className="container mx-auto px-0 pb-20 overflow-x-hidden">
-        {/* Barra normal de categorias (sticky para UX melhor) */}
+    <section className="menu-section py-0 bg-white dark:bg-black">
+      <div className="container mx-auto px-0 pb-20">
+        {/* Barra de categorias sticky, só gruda no topo ao atingir o topo */}
         <div
           ref={categoriesRef}
-          className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4"
+          className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4 border-b border-gray-100 dark:border-gray-800"
         >
           <CategoriesBar
             allCategories={["all", ...availableCategories]}
@@ -106,9 +95,6 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
         </div>
         <div
           className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
           {filteredItems.map((item) => (
             <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" />
