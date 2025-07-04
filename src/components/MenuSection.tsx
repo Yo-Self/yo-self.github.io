@@ -95,6 +95,9 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
         </div>
         <div
           className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {filteredItems.map((item) => (
             <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" />

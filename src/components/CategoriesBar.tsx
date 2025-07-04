@@ -44,6 +44,38 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
     };
   }, []);
 
+  // Swipe horizontal para trocar de categoria
+  const swipeStart = React.useRef<{x:number,y:number}|null>(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    function onTouchStart(e: TouchEvent) {
+      if (e.touches.length === 1) {
+        swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }
+    function onTouchEnd(e: TouchEvent) {
+      if (!swipeStart.current) return;
+      const dx = e.changedTouches[0].clientX - swipeStart.current.x;
+      const dy = e.changedTouches[0].clientY - swipeStart.current.y;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > 2 * Math.abs(dy)) {
+        const idx = allCategories.indexOf(activeCategory);
+        if (dx < 0 && idx < allCategories.length - 1) {
+          setActiveCategory(allCategories[idx + 1]);
+        } else if (dx > 0 && idx > 0) {
+          setActiveCategory(allCategories[idx - 1]);
+        }
+      }
+      swipeStart.current = null;
+    }
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [activeCategory, allCategories, setActiveCategory]);
+
   useEffect(() => {
     const idx = allCategories.indexOf(activeCategory);
     const container = containerRef.current;
