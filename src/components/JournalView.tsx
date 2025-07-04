@@ -17,7 +17,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
   const categories = Array.from(new Set(restaurant.menu_items.map(item => item.category)));
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   // Estado para modo de visualização: 'list' (3 cards) ou 'grid' (6 cards)
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   // Agrupa pratos por categoria para navegação
   let grouped: { category: string; items: Dish[] }[] = [];
   if (selectedCategory === 'all') {
@@ -166,7 +166,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
     >
       {/* Áreas clicáveis para avançar/retroceder página */}
       <button
-        className="fixed left-0 top-0 h-full w-1/4 z-10 bg-transparent p-0 m-0 border-none outline-none"
+        className="fixed left-0 top-0 h-full w-1/8 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Retroceder"
         onClick={() => {
@@ -178,7 +178,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         tabIndex={-1}
       />
       <button
-        className="fixed right-0 top-0 h-full w-1/4 z-10 bg-transparent p-0 m-0 border-none outline-none"
+        className="fixed right-0 top-0 h-full w-1/8 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Avançar"
         onClick={() => {
