@@ -140,7 +140,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white dark:bg-gray-900 animate-fade-in-fast select-none pt-8"
+    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white dark:bg-gray-900 animate-fade-in-fast select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -161,7 +161,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         tabIndex={-1}
       />
       {/* Indicador de categoria no topo + botão de fechar alinhados */}
-      <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-6 mb-0 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
+      <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-4 mb-0 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
         <div className="flex gap-2 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
           {categoryList.map((cat, idx) => (
             idx === currentCategoryIdx ? (
@@ -172,7 +172,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
           ))}
         </div>
         <button
-          className="w-12 h-12 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0 -mt-4"
+          className="w-12 h-12 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0"
           onClick={onClose}
           aria-label="Fechar jornal"
           style={{ background: 'none', border: 'none', boxShadow: 'none' }}
