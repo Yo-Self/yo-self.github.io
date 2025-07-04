@@ -248,14 +248,20 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
   // Novo estado para o modo jornal
   const [journalOpen, setJournalOpen] = useState(false);
 
-  // Ícone SVG de jornal (inline, simples)
+  // Ícone SVG fornecido pelo usuário para o modo jornal, agora com gradiente animado no fill e maior dentro do círculo
   const NewspaperIcon = () => (
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="16" rx="2" fill="white" stroke="currentColor" />
-      <line x1="7" y1="8" x2="17" y2="8" />
-      <line x1="7" y1="12" x2="17" y2="12" />
-      <line x1="7" y1="16" x2="13" y2="16" />
-      <rect x="4.5" y="5.5" width="4" height="4" rx="1" fill="#e5e7eb" stroke="currentColor" />
+    <svg width="40" height="40" viewBox="-6 -6 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="newspaper-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#06b6d4">
+            <animate attributeName="stop-color" values="#06b6d4;#818cf8;#f472b6;#facc15;#06b6d4" dur="2.5s" repeatCount="indefinite" />
+          </stop>
+          <stop offset="100%" stopColor="#facc15">
+            <animate attributeName="stop-color" values="#facc15;#06b6d4;#818cf8;#f472b6;#facc15" dur="2.5s" repeatCount="indefinite" />
+          </stop>
+        </linearGradient>
+      </defs>
+      <path fill="url(#newspaper-gradient)" d="M55.211 83.321c-.129-.092-12.863-8.956-31.239-8.442a1.411 1.411 0 0 1-1.462-1.325v-.001a1.42 1.42 0 0 1 1.364-1.494c19.386-.57 32.415 8.565 32.976 8.965l-1.639 2.297zm0-9.985c-.129-.092-12.863-8.957-31.239-8.442a1.41 1.41 0 0 1-1.462-1.325 1.42 1.42 0 0 1 1.364-1.494c19.385-.561 32.414 8.565 32.975 8.964l-1.638 2.297zm0-9.984c-.129-.092-12.86-8.958-31.239-8.442a1.41 1.41 0 0 1-1.462-1.325 1.42 1.42 0 0 1 1.364-1.494c19.385-.564 32.415 8.564 32.975 8.964l-1.638 2.297zm0-9.986c-.129-.092-12.862-8.961-31.239-8.442a1.412 1.412 0 0 1-1.463-1.325 1.42 1.42 0 0 1 1.364-1.494c19.385-.566 32.415 8.565 32.975 8.964l-1.637 2.297zm0-9.985c-.129-.092-12.862-8.962-31.239-8.442a1.412 1.412 0 0 1-1.463-1.325 1.42 1.42 0 0 1 1.364-1.494c19.385-.568 32.415 8.565 32.976 8.964l-1.638 2.297zM71.825 83.32l-1.639-2.296c.561-.398 13.595-9.518 32.975-8.963a1.419 1.419 0 0 1 1.364 1.493v.001a1.411 1.411 0 0 1-1.462 1.325c-18.444-.519-31.11 8.348-31.238 8.44zm0-9.985-1.639-2.296c.561-.398 13.595-9.52 32.975-8.964a1.419 1.419 0 0 1 1.364 1.493 1.41 1.41 0 0 1-1.462 1.325c-18.412-.525-31.11 8.35-31.238 8.442zm-.001-9.983-1.638-2.297c.559-.399 13.586-9.533 32.976-8.964a1.418 1.418 0 0 1 1.363 1.493v.001a1.41 1.41 0 0 1-1.462 1.325c-18.392-.52-31.11 8.35-31.239 8.442zm.001-9.987-1.639-2.296c.561-.399 13.595-9.524 32.975-8.964a1.42 1.42 0 0 1 1.364 1.493 1.411 1.411 0 0 1-1.463 1.325c-18.443-.528-31.109 8.351-31.237 8.442zm0-9.985-1.639-2.296c.561-.399 13.595-9.513 32.975-8.963a1.417 1.417 0 0 1 1.364 1.493 1.41 1.41 0 0 1-1.462 1.325c-18.444-.524-31.11 8.35-31.238 8.441zm39.519-22.105v5.007h.014v-5.007h-.014zm4.245-.635v-3.484l-2.045-.07c-28.756-.945-45.807 10.027-49.939 13.06-4.132-3.018-21.169-13.99-49.939-13.06l-2.045.07v3.484H0v86.241h54.65c1.664 2.426 5.218 4.09 9.35 4.09s7.7-1.664 9.364-4.09H128V20.64h-12.411zM5.641 101.24V26.282h5.98v66.919l2.172-.07c.24 0 22.354-.465 40.377 8.109H5.641zm55.454-1.1C44.453 90.112 22.748 88.984 15.852 88.9V21.275c25.992-.367 41.703 9.745 45.243 12.284v66.581zm4.231.493V34.109l.028.028c.169-.141 16.303-13.172 45.99-12.862h.014V88.9c-7.009.098-29.292 1.241-46.032 11.733zm57.033.607H73.04c18.01-8.561 40.123-8.109 40.377-8.109l2.172.056V26.282h6.77v74.958z"/>
     </svg>
   );
 
@@ -266,7 +272,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
     >
       {/* Botão modo jornal */}
       <button
-        className="w-14 h-14 mb-2 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group"
+        className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
         style={{ WebkitBackdropFilter: 'blur(12px)' }}
         aria-label={t("Modo jornal")}
         onClick={() => setJournalOpen(true)}
