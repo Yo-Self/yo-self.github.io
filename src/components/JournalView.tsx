@@ -217,13 +217,15 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
               willChange: 'transform',
             }}
           >
-            {pages[page]?.map((item, idx) => (
-              <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
-                <div className="max-w-md min-w-[320px] mx-auto">
-                  <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} />
+            <div className="flex flex-col gap-4 w-full">
+              {pages[page]?.map((item, idx) => (
+                <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
+                  <div className="max-w-md min-w-[320px] mx-auto">
+                    <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
