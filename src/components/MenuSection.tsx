@@ -25,6 +25,43 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
   const [showFloatingCategories, setShowFloatingCategories] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
 
+  // Swipe state para pratos
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  // Função para mudar categoria por swipe
+  const handleSwipeCategory = (direction: 'left' | 'right') => {
+    const allCategories = ["all", ...availableCategories];
+    const currentIdx = allCategories.indexOf(activeCategory);
+    if (direction === 'left' && currentIdx < allCategories.length - 1) {
+      setActiveCategory(allCategories[currentIdx + 1]);
+    } else if (direction === 'right' && currentIdx > 0) {
+      setActiveCategory(allCategories[currentIdx - 1]);
+    }
+  };
+
+  // Handlers de touch para swipe
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+  };
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (Math.abs(distance) > 40) {
+      if (distance > 0) {
+        handleSwipeCategory('left');
+      } else {
+        handleSwipeCategory('right');
+      }
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
   // Filtra categorias para mostrar apenas as que possuem produtos
   const availableCategories = categories.filter(category =>
     menuItems.some(item => item.category === category)
@@ -117,19 +154,30 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
       {/* Floating header de categorias */}
       {showFloatingCategories && (
         <div className="fixed top-0 left-0 w-screen z-50 bg-white dark:bg-black px-4 py-1" style={{ minWidth: '100vw' }}>
-          <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
+          <div
+            className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 no-scrollbar max-w-full overflow-x-auto"
+            style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}
+          >
             {renderCategories()}
           </div>
         </div>
       )}
       <div className="container mx-auto px-0 pb-20 overflow-x-hidden">
         {/* Barra normal de categorias (sticky para UX melhor) */}
-        <div ref={categoriesRef} className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4">
+        <div
+          ref={categoriesRef}
+          className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4"
+        >
           <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}>
             {renderCategories()}
           </div>
         </div>
-        <div className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4">
+        <div
+          className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {filteredItems.map((item) => (
             <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" />
           ))}
