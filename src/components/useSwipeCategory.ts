@@ -8,6 +8,8 @@ export default function useSwipeCategory(
 ) {
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchEndY = useRef<number | null>(null);
 
   const handleSwipeCategory = (direction: 'left' | 'right') => {
     const allCategories = ["all", ...availableCategories];
@@ -22,15 +24,27 @@ export default function useSwipeCategory(
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = null;
+    touchStartY.current = e.touches[0].clientY;
+    touchEndY.current = null;
   };
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     touchEndX.current = e.touches[0].clientX;
+    touchEndY.current = e.touches[0].clientY;
   };
   const handleTouchEnd = () => {
-    if (touchStartX.current === null || touchEndX.current === null) return;
-    const distance = touchStartX.current - touchEndX.current;
-    if (Math.abs(distance) > 40) {
-      if (distance > 0) {
+    if (
+      touchStartX.current === null ||
+      touchEndX.current === null ||
+      touchStartY.current === null ||
+      touchEndY.current === null
+    ) return;
+    const deltaX = touchStartX.current - touchEndX.current;
+    const deltaY = touchStartY.current - touchEndY.current;
+    if (
+      Math.abs(deltaX) > 40 &&
+      Math.abs(deltaX) > 2 * Math.abs(deltaY)
+    ) {
+      if (deltaX > 0) {
         handleSwipeCategory('left');
       } else {
         handleSwipeCategory('right');
@@ -38,6 +52,8 @@ export default function useSwipeCategory(
     }
     touchStartX.current = null;
     touchEndX.current = null;
+    touchStartY.current = null;
+    touchEndY.current = null;
   };
 
   return { handleTouchStart, handleTouchMove, handleTouchEnd };

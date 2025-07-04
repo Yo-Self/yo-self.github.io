@@ -17,12 +17,10 @@ interface MenuSectionProps {
 export default function MenuSection({ searchTerm = "", menuItems, categories }: MenuSectionProps) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState("all");
-  const [previousCategory, setPreviousCategory] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const isSearching = !!searchTerm.trim();
   const userSelectedCategory = useRef(false);
-  const searchCategoryRef = useRef<HTMLButtonElement | null>(null);
   const categoryRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const [showFloatingCategories, setShowFloatingCategories] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
