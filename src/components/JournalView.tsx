@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Restaurant, Dish } from "./data";
 import CardJornal from "./CardJornal";
 import DishModal from "./DishModal";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface JournalViewProps {
   open: boolean;
@@ -78,17 +79,19 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
     const distance = touchStartX.current - touchEndX.current;
     if (Math.abs(distance) > 50) {
       if (distance > 0 && page < totalPages - 1) {
+        setFlipDirection('next');
         setAnimating(true);
         setTimeout(() => {
           setPage(page + 1);
           setAnimating(false);
-        }, 300);
+        }, 600);
       } else if (distance < 0 && page > 0) {
+        setFlipDirection('prev');
         setAnimating(true);
         setTimeout(() => {
           setPage(page - 1);
           setAnimating(false);
-        }, 300);
+        }, 600);
       }
     }
     touchStartX.current = null;
@@ -137,6 +140,8 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
   // Estado para modal de detalhes do prato
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+  // Estado para direção da animação
+  const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
 
   if (!open) return null;
   return (
@@ -181,14 +186,46 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         </button>
       </div>
       {/* Cards de pratos, todos do mesmo tamanho, centralizados, sem header de categoria em tela cheia */}
-      <div className="flex flex-col items-center justify-center w-full flex-1 gap-4">
-        {pages[page]?.map((item, idx) => (
-          <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
-            <div className="max-w-md min-w-[320px] mx-auto">
-              <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} />
-            </div>
-          </div>
-        ))}
+      <div className="flex flex-col items-center justify-center w-full flex-1 gap-4 relative" style={{perspective: 1200, minHeight: 320}}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={page}
+            initial={{
+              x: flipDirection === 'next' ? 300 : -300,
+              opacity: 0.7,
+            }}
+            animate={{
+              x: 0,
+              opacity: 1,
+              transition: { duration: 0.15, ease: [0.77,0,0.175,1] }
+            }}
+            exit={{
+              x: flipDirection === 'next' ? -300 : 300,
+              opacity: 0.7,
+              transition: { duration: 0.15, ease: [0.77,0,0.175,1] }
+            }}
+            style={{
+              width: '100%',
+              height: '100%',
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              willChange: 'transform',
+            }}
+          >
+            {pages[page]?.map((item, idx) => (
+              <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
+                <div className="max-w-md min-w-[320px] mx-auto">
+                  <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} />
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
       </div>
       {/* Modal de detalhes do prato */}
       <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />

@@ -1,0 +1,43 @@
+/* Efeito de virar página estilo livro/Kindle */
+.pageflip-next-enter {
+  transform: rotateY(90deg);
+  opacity: 0;
+}
+.pageflip-next-enter-active {
+  transform: rotateY(0deg);
+  opacity: 1;
+  transition: transform 0.6s cubic-bezier(0.77,0,0.175,1), opacity 0.4s;
+}
+.pageflip-next-exit {
+  transform: rotateY(0deg);
+  opacity: 1;
+}
+.pageflip-next-exit-active {
+  transform: rotateY(-90deg);
+  opacity: 0;
+  transition: transform 0.6s cubic-bezier(0.77,0,0.175,1), opacity 0.4s;
+}
+
+.pageflip-prev-enter {
+  transform: rotateY(-90deg);
+  opacity: 0;
+}
+.pageflip-prev-enter-active {
+  transform: rotateY(0deg);
+  opacity: 1;
+  transition: transform 0.6s cubic-bezier(0.77,0,0.175,1), opacity 0.4s;
+}
+.pageflip-prev-exit {
+  transform: rotateY(0deg);
+  opacity: 1;
+}
+.pageflip-prev-exit-active {
+  transform: rotateY(90deg);
+  opacity: 0;
+  transition: transform 0.6s cubic-bezier(0.77,0,0.175,1), opacity 0.4s;
+}
+
+/* Garante que o elemento animado fique acima dos outros durante a transição */
+.pageflip-next-enter, .pageflip-prev-enter, .pageflip-next-exit-active, .pageflip-prev-exit-active {
+  z-index: 10;
+} 
