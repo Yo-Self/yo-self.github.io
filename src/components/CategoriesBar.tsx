@@ -111,19 +111,14 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
   }, [activeCategory]);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 py-4 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto px-2"
-      style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}
-    >
-      {/* Botão grid */}
+    <div className="flex flex-row items-center gap-1 py-4 bg-white dark:bg-black px-1">
+      {/* Botão grid fixo */}
       <button
         className={`relative flex items-center justify-center min-w-[56px] w-14 h-16 rounded-xl overflow-hidden shadow transition ring-offset-2 focus:outline-none border-2 ${activeCategory === 'grid' ? 'ring-2 ring-cyan-500 border-cyan-500 bg-cyan-100 dark:bg-cyan-900' : 'border-transparent bg-gray-100 dark:bg-gray-800'}`}
         onClick={() => {
           if (onGridClick) onGridClick();
           setActiveCategory('grid');
         }}
-        style={{ flex: '0 0 auto' }}
         aria-label="Ver categorias em grid"
       >
         <svg className="w-7 h-7 text-cyan-600 dark:text-cyan-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -133,25 +128,32 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
           <rect x="3" y="14" width="7" height="7" rx="2"/>
         </svg>
       </button>
-      {categoriesWithAll.map((category, idx) => {
-        const isAll = category === "all";
-        const label = isAll ? t("Todos") : t(category);
-        const images = isAll
-          ? [fallbackImage]
-          : menuItems.filter(item => item.category === category).map(item => item.image || fallbackImage);
-        // Se não houver nenhuma imagem, usa a foto de capa do restaurante
-        const imagesToUse = images.length > 0 ? images : [fallbackImage];
-        return (
-          <CategoryBarCard
-            key={category}
-            ref={el => { btnRefs.current[idx] = el; }}
-            label={label}
-            images={imagesToUse}
-            active={activeCategory === category}
-            onClick={() => setActiveCategory(category)}
-          />
-        );
-      })}
+      {/* Container de categorias com scroll horizontal */}
+      <div
+        ref={containerRef}
+        className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full"
+        style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}
+      >
+        {categoriesWithAll.map((category, idx) => {
+          const isAll = category === "all";
+          const label = isAll ? t("Todos") : t(category);
+          const images = isAll
+            ? [fallbackImage]
+            : menuItems.filter(item => item.category === category).map(item => item.image || fallbackImage);
+          // Se não houver nenhuma imagem, usa a foto de capa do restaurante
+          const imagesToUse = images.length > 0 ? images : [fallbackImage];
+          return (
+            <CategoryBarCard
+              key={category}
+              ref={el => { btnRefs.current[idx] = el; }}
+              label={label}
+              images={imagesToUse}
+              active={activeCategory === category}
+              onClick={() => setActiveCategory(category)}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -175,21 +177,22 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
   return (
     <button
       ref={ref}
-      className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-2 focus:outline-none border-2 ${active ? "ring-2 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
+      className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none border-2 ${active ? "ring-2 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
       onClick={onClick}
       style={{ flex: '0 0 auto' }}
     >
       <img
         src={imgSrc}
         alt={label}
-        className="object-cover w-full h-full transition-all duration-500"
+        className="object-cover w-full h-full rounded-xl transition-all duration-500"
         onError={e => (e.currentTarget.src = images[0])}
       />
-      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+      <span className="absolute inset-0 bg-black/40 rounded-xl z-0 pointer-events-none"></span>
+      <span className="absolute inset-0 flex items-center justify-center z-10">
         <span className="text-white text-base font-bold drop-shadow-lg text-center px-2 truncate">
           {label}
         </span>
-      </div>
+      </span>
     </button>
   );
 }); 
