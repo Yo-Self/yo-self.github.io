@@ -65,7 +65,7 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   if (restaurants && restaurants.length > 1 && restaurant) {
     return (
       <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
-        <div className="container mx-auto flex flex-col items-center justify-center px-0 m-0">
+        <div className="container mx-auto flex flex-col items-center justify-center px-0 m-0 pt-3">
           <RestaurantDropdown
             restaurants={restaurants}
             selectedRestaurantId={selectedRestaurantId}
@@ -79,7 +79,7 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   // fallback: single restaurant
   return (
     <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
-      <div className="container mx-auto flex items-center justify-center px-4 m-0">
+      <div className="container mx-auto flex items-center justify-center px-4 m-0 pt-6">
         <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100">{restaurant?.name}</h1>
       </div>
     </header>
