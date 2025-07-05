@@ -1,13 +1,17 @@
 import React, { useEffect, useRef } from "react";
+import { MenuItem } from "./data";
 
 type CategoriesBarProps = {
   allCategories: string[];
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
   t: (key: string) => string;
+  menuItems: MenuItem[];
+  fallbackImage: string;
+  onGridClick?: () => void;
 };
 
-export default function CategoriesBar({ allCategories, activeCategory, setActiveCategory, t }: CategoriesBarProps) {
+export default function CategoriesBar({ allCategories, activeCategory, setActiveCategory, t, menuItems, fallbackImage, onGridClick }: CategoriesBarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -95,25 +99,97 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
     }
   }, [activeCategory, allCategories]);
 
+  // Monta lista de categorias com 'Todos' no início
+  const categoriesWithAll = ["all", ...allCategories];
+
+  useEffect(() => {
+    const idx = categoriesWithAll.indexOf(activeCategory);
+    const btn = btnRefs.current[idx];
+    if (btn) {
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [activeCategory]);
+
   return (
     <div
       ref={containerRef}
-      className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-1 pb-1 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto"
+      className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 py-4 bg-white dark:bg-black no-scrollbar max-w-full overflow-x-auto px-2"
       style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}
     >
-      {allCategories.map((category, idx) => {
-        const label = t(category);
+      {/* Botão grid */}
+      <button
+        className={`relative flex items-center justify-center min-w-[56px] w-14 h-16 rounded-xl overflow-hidden shadow transition ring-offset-2 focus:outline-none border-2 ${activeCategory === 'grid' ? 'ring-2 ring-cyan-500 border-cyan-500 bg-cyan-100 dark:bg-cyan-900' : 'border-transparent bg-gray-100 dark:bg-gray-800'}`}
+        onClick={() => {
+          if (onGridClick) onGridClick();
+          setActiveCategory('grid');
+        }}
+        style={{ flex: '0 0 auto' }}
+        aria-label="Ver categorias em grid"
+      >
+        <svg className="w-7 h-7 text-cyan-600 dark:text-cyan-300" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="2"/>
+          <rect x="14" y="3" width="7" height="7" rx="2"/>
+          <rect x="14" y="14" width="7" height="7" rx="2"/>
+          <rect x="3" y="14" width="7" height="7" rx="2"/>
+        </svg>
+      </button>
+      {categoriesWithAll.map((category, idx) => {
+        const isAll = category === "all";
+        const label = isAll ? t("Todos") : t(category);
+        const images = isAll
+          ? [fallbackImage]
+          : menuItems.filter(item => item.category === category).map(item => item.image || fallbackImage);
+        // Se não houver nenhuma imagem, usa a foto de capa do restaurante
+        const imagesToUse = images.length > 0 ? images : [fallbackImage];
         return (
-          <button
+          <CategoryBarCard
             key={category}
             ref={el => { btnRefs.current[idx] = el; }}
-            className={`category-btn px-4 py-2 rounded-lg ${activeCategory === category ? "bg-primary text-white dark:bg-cyan-700" : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700"}`}
+            label={label}
+            images={imagesToUse}
+            active={activeCategory === category}
             onClick={() => setActiveCategory(category)}
-          >
-            {label}
-          </button>
+          />
         );
       })}
     </div>
   );
-} 
+}
+
+// Novo componente para card animado
+const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
+  label: string;
+  images: string[];
+  active: boolean;
+  onClick: () => void;
+}>(({ label, images, active, onClick }, ref) => {
+  const [current, setCurrent] = React.useState(0);
+  React.useEffect(() => {
+    if (images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % images.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [images.length]);
+  const imgSrc = images[current];
+  return (
+    <button
+      ref={ref}
+      className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-2 focus:outline-none border-2 ${active ? "ring-2 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
+      onClick={onClick}
+      style={{ flex: '0 0 auto' }}
+    >
+      <img
+        src={imgSrc}
+        alt={label}
+        className="object-cover w-full h-full transition-all duration-500"
+        onError={e => (e.currentTarget.src = images[0])}
+      />
+      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+        <span className="text-white text-base font-bold drop-shadow-lg text-center px-2 truncate">
+          {label}
+        </span>
+      </div>
+    </button>
+  );
+}); 

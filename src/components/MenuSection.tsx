@@ -13,11 +13,13 @@ interface MenuSectionProps {
   menuItems: MenuItem[];
   categories: string[];
   fallbackImage: string;
+  initialCategory?: string;
+  onGridClick?: () => void;
 }
 
-export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage }: MenuSectionProps) {
+export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, initialCategory, onGridClick }: MenuSectionProps) {
   const { t } = useTranslation();
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(initialCategory || "all");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const isSearching = !!searchTerm.trim();
@@ -38,6 +40,13 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
+
+  // Atualiza categoria ativa se initialCategory mudar
+  useEffect(() => {
+    if (initialCategory) {
+      setActiveCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   useEffect(() => {
     // Sempre que a categoria ativa mudar, rolar para ela
@@ -88,10 +97,13 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
           className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4 border-b border-gray-100 dark:border-gray-800"
         >
           <CategoriesBar
-            allCategories={["all", ...availableCategories]}
+            allCategories={availableCategories}
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
             t={t}
+            menuItems={menuItems}
+            fallbackImage={fallbackImage}
+            onGridClick={onGridClick}
           />
         </div>
         <div

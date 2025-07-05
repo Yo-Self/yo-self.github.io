@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Carousel from "@/components/Carousel";
 import MenuSection from "@/components/MenuSection";
 import SearchBar from "@/components/SearchBar";
+import CategoryGrid from "@/components/CategoryGrid";
 
 interface RestaurantClientPageProps {
   initialRestaurant: Restaurant;
@@ -114,7 +115,28 @@ function FirstTimeTutorial() {
 export default function RestaurantClientPage({ initialRestaurant, restaurants }: RestaurantClientPageProps) {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState(initialRestaurant.id);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid"|"list">("grid");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
+
+  // Quando uma categoria é selecionada no grid, muda para o modo lista e seleciona a categoria
+  const handleSelectCategory = (category: string) => {
+    setSelectedCategory(category);
+    setViewMode("list");
+  };
+
+  // Função para voltar ao grid de categorias
+  const handleGridClick = () => {
+    setViewMode("grid");
+    setSelectedCategory("grid");
+  };
+
+  // Quando muda de restaurante, volta para o grid
+  useEffect(() => {
+    setViewMode("grid");
+    setSelectedCategory(null);
+    setSearchTerm("");
+  }, [selectedRestaurantId]);
 
   // Tutorial de primeira vez
   // Adiciona data-tutorial nos elementos alvo
@@ -129,19 +151,32 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         data-tutorial="restaurant-switch"
       />
       <Carousel restaurant={selectedRestaurant} />
-      <MenuSection
-        menuItems={selectedRestaurant.menu_items}
-        categories={selectedRestaurant.menu_categories}
-        searchTerm={searchTerm}
-        fallbackImage={selectedRestaurant.image}
-      />
-      <SearchBar
-        restaurant={selectedRestaurant}
-        restaurants={restaurants}
-        searchTerm={searchTerm}
-        onSearchTermChange={setSearchTerm}
-        data-tutorial-search
-      />
+      {viewMode === "grid" ? (
+        <CategoryGrid
+          categories={selectedRestaurant.menu_categories}
+          menuItems={selectedRestaurant.menu_items}
+          onSelectCategory={handleSelectCategory}
+          fallbackImage={selectedRestaurant.image}
+        />
+      ) : (
+        <>
+          <MenuSection
+            menuItems={selectedRestaurant.menu_items}
+            categories={selectedRestaurant.menu_categories}
+            searchTerm={searchTerm}
+            fallbackImage={selectedRestaurant.image}
+            initialCategory={selectedCategory || undefined}
+            onGridClick={handleGridClick}
+          />
+          <SearchBar
+            restaurant={selectedRestaurant}
+            restaurants={restaurants}
+            searchTerm={searchTerm}
+            onSearchTermChange={setSearchTerm}
+            data-tutorial-search
+          />
+        </>
+      )}
     </div>
   );
 } 
