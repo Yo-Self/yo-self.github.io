@@ -1,0 +1,55 @@
+{
+  "id": "chinese",
+  "name": "Estilo Chinês",
+  "welcome_message": "Welcome to Chinese Style - Our Signature Dishes",
+  "image": "https://media.istockphoto.com/id/636542084/photo/traditonal-chinese-alacarte-restaurant-setting.jpg?s=612x612&w=0&k=20&c=lPis-gTFpZP-qjbGk6rMEbu-GOn-5aPSkuKgSMFJ3Ac=",
+  "menu_categories": [
+    "Starters",
+    "Main Dishes",
+    "Desserts",
+    "Drinks"
+  ],
+  "featured_dishes": [
+    {
+      "name": "Peking Duck",
+      "description": "Crispy duck served with pancakes and hoisin sauce.",
+      "price": "29.99",
+      "image": "https://www.luvaduck.com.au/wp-content/uploads/2025/03/Disegno-LAD-Socials-10_2024_185-1200x900.jpg",
+      "tags": [
+        "Classic"
+      ],
+      "ingredients": "Duck, pancakes, hoisin sauce, cucumber, scallion",
+      "allergens": "Gluten, Soy",
+      "portion": "Serves 2",
+      "category": "Main Dishes"
+    }
+  ],
+  "menu_items": [
+    {
+      "category": "Starters",
+      "name": "Spring Rolls",
+      "description": "Crispy rolls with vegetables and pork.",
+      "price": "6.99",
+      "image": "https://www.giallozafferano.com/images/276-27601/Chinese-Spring-Rolls_1200x800.jpg",
+      "tags": [
+        "Popular"
+      ],
+      "ingredients": "Vegetables, pork, flour, oil",
+      "allergens": "Gluten",
+      "portion": "2 pieces"
+    },
+    {
+      "category": "Main Dishes",
+      "name": "Peking Duck",
+      "description": "Crispy duck served with pancakes and hoisin sauce.",
+      "price": "29.99",
+      "image": "https://www.luvaduck.com.au/wp-content/uploads/2025/03/Disegno-LAD-Socials-10_2024_185-1200x900.jpg",
+      "tags": [
+        "Classic"
+      ],
+      "ingredients": "Duck, pancakes, hoisin sauce, cucumber, scallion",
+      "allergens": "Gluten, Soy",
+      "portion": "Serves 2"
+    }
+  ]
+}

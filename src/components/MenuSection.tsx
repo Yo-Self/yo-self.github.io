@@ -101,7 +101,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
           onTouchEnd={handleTouchEnd}
         >
           {filteredItems.map((item) => (
-            <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" fallbackImage={fallbackImage} />
+            <DishCard key={`${item.name}-${item.category}`} dish={item} onClick={() => handleCardClick(item)} size="large" fallbackImage={fallbackImage} />
           ))}
         </div>
       </div>

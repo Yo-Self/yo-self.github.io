@@ -1,0 +1,55 @@
+{
+  "id": "japanese",
+  "name": "Estilo Japonês",
+  "welcome_message": "Welcome to Japanese Style - Our Signature Dishes",
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVxzDFr2rfqCgADeZcpEIRKpqAo5OdnsBYPA&s",
+  "menu_categories": [
+    "Starters",
+    "Main Dishes",
+    "Desserts",
+    "Drinks"
+  ],
+  "featured_dishes": [
+    {
+      "name": "Sushi Platter",
+      "description": "Assorted fresh sushi and sashimi.",
+      "price": "22.99",
+      "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/4d/06/af/esse-prato-no-cardapio.jpg?w=900&h=500&s=1",
+      "tags": [
+        "Chef's Choice"
+      ],
+      "ingredients": "Rice, fish, seaweed, vegetables",
+      "allergens": "Fish, Soy",
+      "portion": "Serves 1",
+      "category": "Main Dishes"
+    }
+  ],
+  "menu_items": [
+    {
+      "category": "Starters",
+      "name": "Edamame",
+      "description": "Steamed soybeans with sea salt.",
+      "price": "4.99",
+      "image": "https://djapa.com.br/wp-content/uploads/2020/03/edamame.jpg",
+      "tags": [
+        "Vegan"
+      ],
+      "ingredients": "Soybeans, salt",
+      "allergens": "Soy",
+      "portion": "Small bowl"
+    },
+    {
+      "category": "Main Dishes",
+      "name": "Sushi Platter",
+      "description": "Assorted fresh sushi and sashimi.",
+      "price": "22.99",
+      "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/4d/06/af/esse-prato-no-cardapio.jpg?w=900&h=500&s=1",
+      "tags": [
+        "Chef's Choice"
+      ],
+      "ingredients": "Rice, fish, seaweed, vegetables",
+      "allergens": "Fish, Soy",
+      "portion": "Serves 1"
+    }
+  ]
+}
