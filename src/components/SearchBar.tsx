@@ -202,7 +202,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
                     {currentResults.map(item => (
                       <div key={item.name + item.category} className="w-full flex justify-center" onClick={() => { setSelectedDish(item); setModalOpen(true); }}>
                         <div className="w-full max-w-lg">
-                          <DishCard dish={item} size="large" />
+                          <DishCard dish={item} size="large" fallbackImage={restaurant.image} />
                         </div>
                       </div>
                     ))}
@@ -220,7 +220,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
                     {group.items.map(item => (
                       <div key={item.name + item.category} className="w-full flex justify-center" onClick={() => { setSelectedDish(item); setModalOpen(true); }}>
                         <div className="w-full max-w-lg">
-                          <DishCard dish={item} size="large" />
+                          <DishCard dish={item} size="large" fallbackImage={group.restaurant.image} />
                         </div>
                       </div>
                     ))}

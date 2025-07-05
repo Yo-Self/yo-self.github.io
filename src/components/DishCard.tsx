@@ -7,7 +7,8 @@ interface DishCardProps {
   size?: "large" | "small";
 }
 
-export default function DishCard({ dish, onClick, size = "large" }: DishCardProps) {
+export default function DishCard({ dish, onClick, size = "large", fallbackImage }: DishCardProps & { fallbackImage: string }) {
+  const [imgSrc, setImgSrc] = React.useState(dish.image);
   return (
     <div
       className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-xs" : ""}`}
@@ -15,9 +16,10 @@ export default function DishCard({ dish, onClick, size = "large" }: DishCardProp
     >
       <div className="relative w-full">
         <img
-          src={dish.image}
+          src={imgSrc}
           alt={dish.name}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
+          onError={() => setImgSrc(fallbackImage)}
         />
         <div className="absolute bottom-0 left-0 w-full px-4 py-2">
           <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>

@@ -12,9 +12,10 @@ interface MenuSectionProps {
   searchTerm?: string;
   menuItems: MenuItem[];
   categories: string[];
+  fallbackImage: string;
 }
 
-export default function MenuSection({ searchTerm = "", menuItems, categories }: MenuSectionProps) {
+export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage }: MenuSectionProps) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -100,7 +101,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories }: 
           onTouchEnd={handleTouchEnd}
         >
           {filteredItems.map((item) => (
-            <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" />
+            <DishCard key={item.name} dish={item} onClick={() => handleCardClick(item)} size="large" fallbackImage={fallbackImage} />
           ))}
         </div>
       </div>

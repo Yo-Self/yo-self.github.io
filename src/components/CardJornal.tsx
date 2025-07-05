@@ -6,9 +6,11 @@ interface CardJornalProps {
   onClick?: () => void;
   size?: "large" | "small";
   gridMode?: boolean;
+  fallbackImage?: string;
 }
 
-export default function CardJornal({ dish, onClick, size = "small", gridMode = false }: CardJornalProps) {
+export default function CardJornal({ dish, onClick, size = "small", gridMode = false, fallbackImage }: CardJornalProps) {
+  const [imgSrc, setImgSrc] = React.useState(dish.image);
   return (
     <div
       className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-xs" : ""}`}
@@ -17,9 +19,10 @@ export default function CardJornal({ dish, onClick, size = "small", gridMode = f
     >
       <div className="relative w-full">
         <img
-          src={dish.image}
+          src={imgSrc}
           alt={dish.name}
           className={`w-full ${size === "small" ? "h-36" : "h-48"} object-cover rounded-t-lg min-h-[9rem]`}
+          onError={() => fallbackImage && setImgSrc(fallbackImage)}
         />
         {/* Tag no canto superior esquerdo */}
         {dish.tags && dish.tags.length > 0 && (

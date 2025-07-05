@@ -133,6 +133,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         menuItems={selectedRestaurant.menu_items}
         categories={selectedRestaurant.menu_categories}
         searchTerm={searchTerm}
+        fallbackImage={selectedRestaurant.image}
       />
       <SearchBar
         restaurant={selectedRestaurant}

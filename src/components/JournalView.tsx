@@ -295,7 +295,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
                 {pages[page]?.map((item, idx) => (
                   <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
                     <div className="max-w-md min-w-[320px] mx-auto">
-                      <CardJornal dish={item.dish} size="small" gridMode={false} onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} />
+                      <CardJornal dish={item.dish} size="small" gridMode={false} onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
                     </div>
                   </div>
                 ))}
@@ -305,7 +305,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
                 {pages[page]?.map((item, idx) => (
                   <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center">
                     <div className="w-full max-w-xs">
-                      <CardJornal dish={item.dish} size="small" gridMode={true} onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} />
+                      <CardJornal dish={item.dish} size="small" gridMode={true} onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
                     </div>
                   </div>
                 ))}
