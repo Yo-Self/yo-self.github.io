@@ -13,18 +13,19 @@ interface MenuSectionProps {
   menuItems: MenuItem[];
   categories: string[];
   fallbackImage: string;
-  initialCategory?: string;
+  activeCategory: string;
+  setActiveCategory: (cat: string) => void;
   onGridClick?: () => void;
 }
 
-export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, initialCategory, onGridClick }: MenuSectionProps) {
+export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, activeCategory, setActiveCategory, onGridClick }: MenuSectionProps) {
   const { t } = useTranslation();
-  const [activeCategory, setActiveCategory] = useState(initialCategory || "all");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const isSearching = !!searchTerm.trim();
   const [showFloatingCategories, setShowFloatingCategories] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
+  const prevSearchTerm = useRef(searchTerm);
 
   // Filtra categorias para mostrar apenas as que possuem produtos
   const availableCategories = categories.filter(category =>
@@ -33,20 +34,13 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
 
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeCategory(activeCategory, setActiveCategory, availableCategories);
 
-  // Remove lógica de categoria 'search' ao buscar
+  // Só força 'all' quando sair do modo busca
   useEffect(() => {
-    if (!isSearching) {
+    if (prevSearchTerm.current && !searchTerm) {
       setActiveCategory("all");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
-
-  // Atualiza categoria ativa se initialCategory mudar
-  useEffect(() => {
-    if (initialCategory) {
-      setActiveCategory(initialCategory);
-    }
-  }, [initialCategory]);
+    prevSearchTerm.current = searchTerm;
+  }, [searchTerm, setActiveCategory]);
 
   useEffect(() => {
     // Sempre que a categoria ativa mudar, rolar para ela

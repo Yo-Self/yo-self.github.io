@@ -116,7 +116,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [selectedRestaurantId, setSelectedRestaurantId] = useState(initialRestaurant.id);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid"|"list">("grid");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
 
   // Quando uma categoria é selecionada no grid, muda para o modo lista e seleciona a categoria
@@ -134,7 +134,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   // Quando muda de restaurante, volta para o grid
   useEffect(() => {
     setViewMode("grid");
-    setSelectedCategory(null);
+    setSelectedCategory("all");
     setSearchTerm("");
   }, [selectedRestaurantId]);
 
@@ -165,7 +165,8 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
             categories={selectedRestaurant.menu_categories}
             searchTerm={searchTerm}
             fallbackImage={selectedRestaurant.image}
-            initialCategory={selectedCategory || undefined}
+            activeCategory={selectedCategory}
+            setActiveCategory={setSelectedCategory}
             onGridClick={handleGridClick}
           />
           <SearchBar
