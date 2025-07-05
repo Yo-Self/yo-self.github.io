@@ -8,8 +8,11 @@ import Image from "next/image";
 function CarouselCard({ dish, onClick, size, noMargin = false }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean }) {
   return (
     <div
-      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 ${noMargin ? '' : 'mx-2'} transition-all duration-300 
-        ${size === 'main' ? 'w-full max-w-full h-[60vw] md:h-[340px] scale-100 z-20' : 'w-[32px] md:w-[48px] h-[60vw] md:h-[340px] scale-90 opacity-60 z-10'}`}
+      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 ${noMargin ? '' : 'mx-2'} transition-all duration-300
+        ${size === 'main'
+          ? 'w-full max-w-full h-[60vw] md:h-[340px] scale-100 z-20'
+          : 'w-[32px] h-[60vw] scale-90 opacity-60 z-10 md:w-full md:max-w-full md:h-[340px]'}
+      `}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
     >
