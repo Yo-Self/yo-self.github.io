@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "./i18n";
 import { Restaurant } from "./data";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 interface HeaderProps {
   restaurant?: Restaurant;
@@ -16,6 +17,8 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasMultiple = searchParams.has("multiple");
 
   // Fecha ao clicar fora
   useEffect(() => {
@@ -39,7 +42,9 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
       >
         <span data-tutorial="restaurant-switch" className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2">
           {current?.name}
-          <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1.5px 4px rgba(0,0,0,0.7))' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+          {hasMultiple && (
+            <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1.5px 4px rgba(0,0,0,0.7))' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+          )}
         </span>
       </button>
       {open && (
