@@ -13,6 +13,59 @@ interface HeaderProps {
   onSelectRestaurant?: (id: string) => void;
 }
 
+// Extracted DropdownToggleButton for clarity and reusability
+function DropdownToggleButton({
+  open,
+  hasMultiple,
+  currentName,
+  onClick
+}: {
+  open: boolean;
+  hasMultiple: boolean;
+  currentName?: string;
+  onClick: () => void;
+}) {
+  // Extracted variables for clarity
+  const buttonClass = "relative w-full h-8 rounded-none border-none shadow-none bg-transparent flex items-center justify-center overflow-hidden";
+  const spanClass = "text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2";
+  const svgClass = `w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`;
+  const svgStyle = { filter: 'drop-shadow(0 1.5px 4px rgba(0,0,0,0.7))' };
+  const ariaLabel = hasMultiple ? 'Select restaurant' : currentName || 'Restaurant';
+
+  return (
+    <button
+      className={buttonClass}
+      onClick={onClick}
+      aria-haspopup="listbox"
+      aria-expanded={open}
+      aria-label={ariaLabel}
+      style={{ padding: 0 }}
+      tabIndex={0}
+      type="button"
+    >
+      <span
+        data-tutorial="restaurant-switch"
+        className={spanClass}
+      >
+        {currentName}
+        {hasMultiple && (
+          <svg
+            className={svgClass}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            viewBox="0 0 24 24"
+            style={svgStyle}
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </span>
+    </button>
+  );
+}
+
 function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, current }: { restaurants: Restaurant[], selectedRestaurantId?: string, onSelect: (id: string) => void, current?: Restaurant }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -33,20 +86,12 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      <button
-        className="relative w-full h-8 rounded-none border-none shadow-none bg-transparent flex items-center justify-center overflow-hidden"
-        onClick={() => setOpen(o => !o)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        style={{ padding: 0 }}
-      >
-        <span data-tutorial="restaurant-switch" className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2">
-          {current?.name}
-          {hasMultiple && (
-            <svg className={`w-6 h-6 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1.5px 4px rgba(0,0,0,0.7))' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-          )}
-        </span>
-      </button>
+      <DropdownToggleButton
+        open={open}
+        hasMultiple={hasMultiple}
+        currentName={current?.name}
+        onClick={() => hasMultiple && setOpen(o => !o)}
+      />
       {open && (
         <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 max-w-xs bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 p-3 flex flex-col gap-3 animate-fade-in">
           {restaurants.map(r => (
