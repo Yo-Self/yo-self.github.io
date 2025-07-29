@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Restaurant } from "@/components/data";
 import Header from "@/components/Header";
 import Carousel from "@/components/Carousel";
@@ -245,8 +245,10 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [journalTutorialDone, setJournalTutorialDone] = React.useState(false);
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100">
-      {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} />}
-      {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} />}
+      <Suspense fallback={null}>
+        {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} />}
+        {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} />}
+      </Suspense>
       <Header
         restaurant={selectedRestaurant}
         restaurants={restaurants}
