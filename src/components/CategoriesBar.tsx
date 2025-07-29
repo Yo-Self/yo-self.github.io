@@ -132,7 +132,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
       {/* Container de categorias com scroll horizontal */}
       <div
         ref={containerRef}
-        className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full"
+        className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full py-1"
         style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}
       >
         {categoriesWithAll.map((category, idx) => {
@@ -165,7 +165,8 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
   images: string[];
   active: boolean;
   onClick: () => void;
-}>(({ label, images, active, onClick }, ref) => {
+}>(
+  ({ label, images, active, onClick }, ref) => {
   const [current, setCurrent] = React.useState(0);
   React.useEffect(() => {
     if (images.length <= 1) return;
@@ -178,7 +179,7 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
   return (
     <button
       ref={ref}
-      className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none border-2 ${active ? "ring-2 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
+      className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
       onClick={onClick}
       style={{ flex: '0 0 auto' }}
     >
