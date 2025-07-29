@@ -11,16 +11,17 @@ interface CategoryGridProps {
 export default function CategoryGrid({ categories, menuItems, onSelectCategory, fallbackImage }: CategoryGridProps) {
   // Filtra categorias que possuem pelo menos um prato
   const filteredCategories = categories.filter(category => menuItems.some(item => item.category === category));
+  const allCard = (
+    <CategoryCard
+      key="all"
+      category="Todos"
+      images={[fallbackImage]}
+      onClick={() => onSelectCategory('all')}
+      fallbackImage={fallbackImage}
+    />
+  );
   return (
     <div className="grid grid-cols-2 gap-4 px-4 py-8">
-      {/* Card 'Todos' */}
-      <CategoryCard
-        key="all"
-        category="Todos"
-        images={[fallbackImage]}
-        onClick={() => onSelectCategory('all')}
-        fallbackImage={fallbackImage}
-      />
       {filteredCategories.map((category) => {
         const items = menuItems.filter(item => item.category === category);
         const images = items.map(item => item.image || fallbackImage);
@@ -35,6 +36,7 @@ export default function CategoryGrid({ categories, menuItems, onSelectCategory, 
           />
         );
       })}
+      {allCard}
     </div>
   );
 }

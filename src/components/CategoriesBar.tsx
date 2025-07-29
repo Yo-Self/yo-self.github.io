@@ -9,9 +9,10 @@ type CategoriesBarProps = {
   menuItems: MenuItem[];
   fallbackImage: string;
   onGridClick?: () => void;
+  isHome?: boolean;
 };
 
-export default function CategoriesBar({ allCategories, activeCategory, setActiveCategory, t, menuItems, fallbackImage, onGridClick }: CategoriesBarProps) {
+export default function CategoriesBar({ allCategories, activeCategory, setActiveCategory, t, menuItems, fallbackImage, onGridClick, isHome = false }: CategoriesBarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -99,8 +100,8 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
     }
   }, [activeCategory, allCategories]);
 
-  // Monta lista de categorias com 'Todos' no início
-  const categoriesWithAll = ["all", ...allCategories];
+  // Monta lista de categorias com 'Todos' no início ou fim dependendo da página
+  const categoriesWithAll = isHome ? [...allCategories, "all"] : ["all", ...allCategories];
 
   useEffect(() => {
     const idx = categoriesWithAll.indexOf(activeCategory);
