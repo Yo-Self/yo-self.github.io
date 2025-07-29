@@ -152,12 +152,19 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
       />
       <Carousel restaurant={selectedRestaurant} />
       {viewMode === "grid" ? (
-        <CategoryGrid
-          categories={selectedRestaurant.menu_categories}
-          menuItems={selectedRestaurant.menu_items}
-          onSelectCategory={handleSelectCategory}
-          fallbackImage={selectedRestaurant.image}
-        />
+        <>
+          <div className="flex items-center px-4 mt-4" style={{marginBottom: '0.2em'}}>
+            <div className="flex-1 border-t border-gray-300 dark:border-gray-700" style={{marginTop: '0.2em'}}></div>
+            <span className="text-xl font-bold text-gray-900 dark:text-gray-100 mx-3 whitespace-nowrap text-center">Categorias</span>
+            <div className="flex-1 border-t border-gray-300 dark:border-gray-700" style={{marginTop: '0.2em'}}></div>
+          </div>
+          <CategoryGrid
+            categories={selectedRestaurant.menu_categories}
+            menuItems={selectedRestaurant.menu_items}
+            onSelectCategory={handleSelectCategory}
+            fallbackImage={selectedRestaurant.image}
+          />
+        </>
       ) : (
         <>
           <MenuSection

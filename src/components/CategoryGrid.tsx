@@ -21,7 +21,7 @@ export default function CategoryGrid({ categories, menuItems, onSelectCategory, 
     />
   );
   return (
-    <div className="grid grid-cols-2 gap-4 px-4 py-8">
+    <div className="grid grid-cols-2 gap-4 px-4 pt-4 pb-8">
       {filteredCategories.map((category) => {
         const items = menuItems.filter(item => item.category === category);
         const images = items.map(item => item.image || fallbackImage);
