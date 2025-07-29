@@ -141,7 +141,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
           const images = isAll
             ? [fallbackImage]
             : menuItems.filter(item => item.category === category).map(item => item.image || fallbackImage);
-          // Se não houver nenhuma imagem, usa a foto de capa do restaurante
+          // Garante que sempre haja pelo menos o fallbackImage
           const imagesToUse = images.length > 0 ? images : [fallbackImage];
           return (
             <CategoryBarCard
@@ -151,6 +151,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
               images={imagesToUse}
               active={activeCategory === category}
               onClick={() => setActiveCategory(category)}
+              fallbackImage={fallbackImage}
             />
           );
         })}
@@ -165,36 +166,76 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
   images: string[];
   active: boolean;
   onClick: () => void;
+  fallbackImage: string;
 }>(
-  ({ label, images, active, onClick }, ref) => {
-  const [current, setCurrent] = React.useState(0);
-  React.useEffect(() => {
-    if (images.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % images.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [images.length]);
-  const imgSrc = images[current];
-  return (
-    <button
-      ref={ref}
-      className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
-      onClick={onClick}
-      style={{ flex: '0 0 auto' }}
-    >
-      <img
-        src={imgSrc}
-        alt={label}
-        className="object-cover w-full h-full rounded-xl transition-all duration-500"
-        onError={e => (e.currentTarget.src = images[0])}
-      />
-      <span className="absolute inset-0 bg-black/40 rounded-xl z-0 pointer-events-none"></span>
-      <span className="absolute inset-0 flex items-center justify-center z-10">
-        <span className="text-white text-base font-bold drop-shadow-lg text-center px-2 truncate">
-          {label}
+  ({ label, images, active, onClick, fallbackImage }, ref) => {
+    // Garante que sempre haja pelo menos o fallbackImage
+    const imagesToUse = images.length > 0 ? images : [fallbackImage];
+    const [current, setCurrent] = React.useState(0);
+    const [next, setNext] = React.useState<number|null>(null);
+    const [showNext, setShowNext] = React.useState(false);
+    const [imgError, setImgError] = React.useState(false);
+
+    React.useEffect(() => {
+      setImgError(false); // resetar erro ao trocar categoria
+    }, [imagesToUse, label]);
+
+    React.useEffect(() => {
+      if (imagesToUse.length <= 1) return;
+      const interval = setInterval(() => {
+        const nextIdx = (current + 1) % imagesToUse.length;
+        setNext(nextIdx);
+        setShowNext(true);
+        setTimeout(() => {
+          setCurrent(nextIdx);
+          setShowNext(false);
+          setNext(null);
+        }, 1000); // duração do fade-in
+      }, 4000);
+      return () => clearInterval(interval);
+    }, [imagesToUse.length, current]);
+
+    const currentImg = !imgError && imagesToUse[current] ? imagesToUse[current] : fallbackImage;
+    const nextImg = next !== null ? (imagesToUse[next] || fallbackImage) : null;
+
+    return (
+      <button
+        ref={ref}
+        className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
+        onClick={onClick}
+        style={{ flex: '0 0 auto' }}
+      >
+        {/* Imagem base (sempre visível) */}
+        <img
+          src={currentImg}
+          alt={label}
+          className="object-cover w-full h-full rounded-xl absolute inset-0 z-0"
+          draggable={false}
+          onError={e => { setImgError(true); e.currentTarget.src = fallbackImage; }}
+        />
+        {/* Próxima imagem faz fade-in por cima */}
+        {showNext && nextImg && (
+          <img
+            src={nextImg}
+            alt={label}
+            className="object-cover w-full h-full rounded-xl absolute inset-0 z-10 transition-opacity duration-1000 opacity-0 animate-fadein"
+            style={{animation: 'fadein 1s forwards'}}
+            draggable={false}
+            onError={e => { setImgError(true); e.currentTarget.src = fallbackImage; }}
+          />
+        )}
+        <span className="absolute inset-0 flex items-center justify-center z-10">
+          <span className="text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate">
+            {label}
+          </span>
         </span>
-      </span>
-    </button>
-  );
-}); 
+        <style jsx>{`
+          @keyframes fadein {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+        `}</style>
+      </button>
+    );
+  }
+); 
