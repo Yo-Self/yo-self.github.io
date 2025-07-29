@@ -34,7 +34,7 @@ function CarouselCard({ dish, onClick, size, noMargin = false }: { dish: Dish; o
   );
 }
 
-export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
+export default function Carousel({ restaurant, ...props }: { restaurant: Restaurant } & React.HTMLAttributes<HTMLElement>) {
   const [current, setCurrent] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
@@ -98,7 +98,7 @@ export default function Carousel({ restaurant }: { restaurant: Restaurant }) {
   };
 
   return (
-    <section className="carousel-section py-0 bg-white dark:bg-black">
+    <section className="carousel-section py-0 bg-white dark:bg-black" {...props}>
       <div className="container mx-auto px-0 overflow-x-hidden">
         <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] overflow-x-hidden"
           onTouchStart={handleTouchStart}
