@@ -196,23 +196,29 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
             idx === currentCategoryIdx ? (
               <span
                 key={cat}
-                className="text-sm font-semibold text-primary dark:text-cyan-400 text-center leading-tight flex items-center justify-center bg-primary/10 border border-primary/30 dark:border-cyan-700 px-4 py-1 rounded-full shadow-sm"
+                className="text-sm font-semibold text-primary dark:text-cyan-400 text-center leading-tight flex items-center justify-center bg-primary/10 border border-primary/30 dark:border-cyan-700 px-3 h-7 rounded-full shadow-sm truncate overflow-hidden whitespace-nowrap"
                 style={{
-                  maxWidth: 160,
-                  overflow: 'hidden',
+                  maxWidth: 120,
                   wordBreak: 'break-word',
-                  whiteSpace: 'normal',
-                  lineClamp: 2,
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  display: '-webkit-box',
+                  display: 'inline-flex',
                   minHeight: 8
                 }}
               >
                 {cat}
               </span>
             ) : (
-              <span key={cat} className="h-2 w-8 rounded-full bg-gray-300 dark:bg-gray-700 scale-100 transition-all duration-200 flex-shrink-0" style={{minWidth: 32, maxWidth: 64, display: 'inline-block'}}></span>
+              <button
+                key={cat}
+                className="h-7 px-3 rounded-full bg-gray-200 dark:bg-gray-700 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-300 dark:border-gray-600"
+                style={{minWidth: 32, maxWidth: 64, display: 'inline-block'}}
+                onClick={() => {
+                  // Navegar para a primeira página da categoria clicada
+                  const catIdx = categoryList.indexOf(cat);
+                  const targetPage = pageToCategoryIdx.findIndex(idx => idx === catIdx);
+                  if (targetPage !== -1) setPage(targetPage);
+                }}
+                aria-label={`Ir para categoria ${cat}`}
+              />
             )
           ))}
         </div>
