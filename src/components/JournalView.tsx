@@ -153,13 +153,40 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
     if (open) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
+      
+      // Entrar em fullscreen automaticamente
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else if ((document.documentElement as any).webkitRequestFullscreen) {
+        (document.documentElement as any).webkitRequestFullscreen().catch(() => {});
+      } else if ((document.documentElement as any).msRequestFullscreen) {
+        (document.documentElement as any).msRequestFullscreen().catch(() => {});
+      }
     } else {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
+      
+      // Sair do fullscreen automaticamente
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen().catch(() => {});
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen().catch(() => {});
+      }
     }
     return () => {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
+      
+      // Garantir que saia do fullscreen ao desmontar o componente
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen().catch(() => {});
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen().catch(() => {});
+      }
     };
   }, [open]);
 

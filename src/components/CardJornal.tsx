@@ -34,8 +34,16 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
           R${dish.price}
         </span>
         {/* Nome do prato no canto inferior esquerdo */}
-        <div className="absolute bottom-2 left-2 right-12">
-          <h3 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight truncate">
+        <div className="absolute bottom-2 left-2 right-16">
+          <h3 className="text-base font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight" style={{
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'normal',
+            lineHeight: '1.1',
+          }}>
             {dish.name}
           </h3>
         </div>
