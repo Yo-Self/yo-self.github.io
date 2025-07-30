@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Dish } from "./data";
 
 type DishModalProps = {
@@ -10,6 +10,31 @@ type DishModalProps = {
 };
 
 export default function DishModal({ open, dish, onClose }: DishModalProps) {
+  // Interceptar o botão voltar do navegador quando o modal estiver aberto
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevenir a navegação padrão e fechar o modal
+      event.preventDefault();
+      onClose();
+      
+      // Adicionar uma entrada no histórico para compensar a que foi removida
+      window.history.pushState(null, '', window.location.href);
+    };
+
+    // Adicionar uma entrada no histórico quando o modal abrir
+    window.history.pushState(null, '', window.location.href);
+
+    // Adicionar o listener para o evento popstate
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup: remover o listener quando o modal fechar
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [open, onClose]);
+
   if (!open || !dish) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
