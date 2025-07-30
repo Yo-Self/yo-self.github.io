@@ -5,7 +5,7 @@ import { Dish, Restaurant } from "./data";
 import DishModal from "./DishModal";
 import Image from "next/image";
 
-function CarouselCard({ dish, onClick, size, noMargin = false }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean }) {
+function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean; showMostOrderedTitle?: boolean }) {
   return (
     <div
       className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 ${noMargin ? '' : 'mx-2'} transition-all duration-300
@@ -26,6 +26,14 @@ function CarouselCard({ dish, onClick, size, noMargin = false }: { dish: Dish; o
           sizes="100vw"
           priority
         />
+        {/* Badge "mais pedido" no canto superior direito de cada card */}
+        {showMostOrderedTitle && (
+          <div className="absolute top-2 right-2 z-30 pointer-events-none">
+            <span className="bg-primary dark:bg-cyan-700 text-white text-xs font-bold rounded-full px-2 py-1 select-none">
+              mais pedido
+            </span>
+          </div>
+        )}
         <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
           {dish.name}
         </div>
@@ -34,7 +42,7 @@ function CarouselCard({ dish, onClick, size, noMargin = false }: { dish: Dish; o
   );
 }
 
-export default function Carousel({ restaurant, ...props }: { restaurant: Restaurant } & React.HTMLAttributes<HTMLElement>) {
+export default function Carousel({ restaurant, showMostOrderedTitle = false, ...props }: { restaurant: Restaurant, showMostOrderedTitle?: boolean } & React.HTMLAttributes<HTMLElement>) {
   const [current, setCurrent] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
@@ -105,6 +113,7 @@ export default function Carousel({ restaurant, ...props }: { restaurant: Restaur
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+
           {featured.length === 1 ? (
             <div className="flex justify-center w-full px-4">
               <div className="max-w-[480px] w-full">
@@ -114,6 +123,7 @@ export default function Carousel({ restaurant, ...props }: { restaurant: Restaur
                   onClick={() => handleCardClick(featured[0])}
                   size="main"
                   noMargin={true}
+                  showMostOrderedTitle={showMostOrderedTitle}
                 />
               </div>
             </div>
@@ -139,19 +149,15 @@ export default function Carousel({ restaurant, ...props }: { restaurant: Restaur
               </button>
               <div className="flex items-center justify-center w-full gap-2 md:gap-6 select-none overflow-x-hidden">
                 <div className="flex items-center justify-center w-full max-w-[480px] mx-auto">
-                  {getDisplayDishes().map(({ dish, size }) => {
-                    const uniqueIdx = featured.findIndex(
-                      d => d.name === dish.name && d.image === dish.image
-                    );
-                    return (
-                      <CarouselCard
-                        key={restaurant.id + '-' + uniqueIdx}
-                        dish={dish}
-                        onClick={() => size === 'main' && handleCardClick(dish)}
-                        size={size}
-                      />
-                    );
-                  })}
+                  {getDisplayDishes().map(({ dish, size }, idx) => (
+                    <CarouselCard
+                      key={restaurant.id + '-' + dish.name + '-' + dish.image + '-' + idx}
+                      dish={dish}
+                      onClick={() => size === 'main' && handleCardClick(dish)}
+                      size={size}
+                      showMostOrderedTitle={showMostOrderedTitle}
+                    />
+                  ))}
                 </div>
               </div>
               {/* Área clicável direita */}

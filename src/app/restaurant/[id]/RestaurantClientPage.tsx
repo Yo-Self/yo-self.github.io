@@ -229,7 +229,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   // Função para voltar ao grid de categorias
   const handleGridClick = () => {
     setViewMode("grid");
-    setSelectedCategory("grid");
+    setSelectedCategory("all");
   };
 
   // Quando muda de restaurante, volta para o grid
@@ -256,7 +256,23 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         onSelectRestaurant={setSelectedRestaurantId}
         data-tutorial="restaurant-switch"
       />
-      <Carousel restaurant={selectedRestaurant} data-tutorial="carousel" />
+      {/* Carousel: mostra todos os destaques na home, só os da categoria selecionada na categoria */}
+      {viewMode === 'grid' ? (
+        <Carousel restaurant={selectedRestaurant} data-tutorial="carousel" />
+      ) : (
+        (() => {
+          // Filtra destaques da categoria selecionada
+          const featured = selectedCategory === 'all'
+            ? selectedRestaurant.featured_dishes
+            : selectedRestaurant.featured_dishes.filter(dish => dish.category === selectedCategory);
+          if (!featured || featured.length === 0) return null;
+          // Cria um objeto restaurant fake só com os destaques filtrados
+          const filteredRestaurant = { ...selectedRestaurant, featured_dishes: featured };
+          return (
+            <Carousel restaurant={filteredRestaurant} data-tutorial="carousel" showMostOrderedTitle={selectedCategory !== 'all'} />
+          );
+        })()
+      )}
       {viewMode === "grid" ? (
         <>
           <div className="flex items-center px-4 mt-4" style={{marginBottom: '0.2em'}}>

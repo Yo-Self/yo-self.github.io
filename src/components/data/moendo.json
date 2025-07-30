@@ -16,6 +16,32 @@
     "Couver artistico"
   ],
   "featured_dishes": [
+        {
+      "name": "Torta De Chocolate ",
+      "description": "Torta de chocolate meio amargo com ganache e creme ingles ",
+      "price": "35,00",
+      "image": "https://static.tagme.com.br/pubimg/thumbs/MenuItem/d13b11d0-fcba-11ee-9b68-179017335969.jpg?ims=filters:quality(70):format(webp)",
+      "tags": [
+        "Destaque"
+      ],
+      "ingredients": "Torta de chocolate meio amargo com ganache e creme ingles",
+      "allergens": "Contém Lactose, Contém glúten",
+      "portion": "Serve 1 pessoa",
+      "category": "Sobremesas"
+    },
+    {
+      "category": "Menu Executivo",
+      "name": "Polpetone especial",
+      "description": "Massa fresca ao molho pomodoro, polpetone de carne bovina recheado com queijo.",
+      "price": "42,00",
+      "image": "https://static.tagme.com.br/pubimg/thumbs/MenuItem/a634f460-b254-11ef-aff9-d1b98f4953c6.jpg?ims=filters:quality(70):format(webp)",
+      "tags": [
+        "Destaque"
+      ],
+      "ingredients": "Massa fresca ao molho pomodoro, polpetone de carne bovina recheado com queijo.",
+      "allergens": "Contém Lactose",
+      "portion": "Serve 1 pessoa"
+    },
     {
       "name": "Tartare De Tomate ",
       "description": "Tomate marinado, esfera de balsamico, creme de castanha, servido com torrada da casa. |",
