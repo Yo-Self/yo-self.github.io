@@ -13,9 +13,62 @@ interface JournalViewProps {
 export default function JournalView({ open, onClose, restaurant }: JournalViewProps) {
   const [page, setPage] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [cardsPerPage, setCardsPerPage] = useState(6); // Inicial com 6, será calculado dinamicamente
   const itemsPerPage = 3;
   const categories = Array.from(new Set(restaurant.menu_items.map(item => item.category)));
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  
+  // Calcular quantos cards cabem na tela
+  useEffect(() => {
+    const calculateCardsPerPage = () => {
+      const screenHeight = window.innerHeight;
+      const screenWidth = window.innerWidth;
+      
+      // Altura disponível para os cards (subtraindo header, padding, etc.)
+      const availableHeight = screenHeight - 80; // Reduzido para mobile para aproveitar mais espaço
+      
+      // Tamanho estimado de cada card (incluindo gap) - mais compacto para mobile
+      let cardHeight;
+      if (screenWidth < 768) {
+        cardHeight = 160; // Mobile - mais compacto para caber mais cards
+      } else if (screenWidth < 1024) {
+        cardHeight = 180; // Tablet
+      } else {
+        cardHeight = 160; // Desktop - mantém o tamanho atual
+      }
+      
+      // Calcular quantas linhas e colunas cabem com breakpoints mais específicos
+      const rows = Math.floor(availableHeight / cardHeight);
+      
+      // Breakpoints mais específicos para diferentes tamanhos de tela
+      let cols;
+      if (screenWidth < 640) { // Mobile
+        cols = 2;
+      } else if (screenWidth < 768) { // Tablet pequeno
+        cols = 2;
+      } else if (screenWidth < 1024) { // Tablet
+        cols = 3;
+      } else if (screenWidth < 1280) { // Desktop pequeno
+        cols = 2;
+      } else if (screenWidth < 1536) { // Desktop médio
+        cols = 3;
+      } else { // Desktop grande
+        cols = 4;
+      }
+      
+      const calculatedCards = rows * cols;
+      setCardsPerPage(calculatedCards); // Remove o limite mínimo, mostra quantos couberem
+    };
+    
+    calculateCardsPerPage();
+    window.addEventListener('resize', calculateCardsPerPage);
+    
+    return () => window.removeEventListener('resize', calculateCardsPerPage);
+  }, []);
+
   // Agrupa pratos por categoria para navegação
   let grouped: { category: string; items: Dish[] }[] = [];
   if (selectedCategory === 'all') {
@@ -34,17 +87,19 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
       },
     ];
   }
-  // Lógica: cada página contém até 6 cards de uma mesma categoria (modo grid)
+  // Lógica: cada página contém até cardsPerPage pratos de uma categoria
   let pages: Array<Array<{ dish: Dish; category: string }>> = [];
   if (selectedCategory === 'all') {
     grouped.forEach(group => {
-      for (let i = 0; i < group.items.length; i += 6) {
-        pages.push(group.items.slice(i, i + 6).map(dish => ({ dish, category: group.category })));
+      // Dividir os pratos da categoria em páginas de cardsPerPage
+      for (let i = 0; i < group.items.length; i += cardsPerPage) {
+        pages.push(group.items.slice(i, i + cardsPerPage).map(dish => ({ dish, category: group.category })));
       }
     });
   } else {
-    for (let i = 0; i < grouped[0].items.length; i += 6) {
-      pages.push(grouped[0].items.slice(i, i + 6).map(dish => ({ dish, category: grouped[0].category })));
+    // Dividir os pratos da categoria selecionada em páginas de cardsPerPage
+    for (let i = 0; i < grouped[0].items.length; i += cardsPerPage) {
+      pages.push(grouped[0].items.slice(i, i + cardsPerPage).map(dish => ({ dish, category: grouped[0].category })));
     }
   }
   const totalPages = pages.length;
@@ -112,31 +167,26 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
   // Lista de categorias únicas na ordem de exibição
   const categoryList = grouped.map(g => g.category);
 
-  // Para cada página, descobrir a qual categoria ela pertence (agora só há páginas de pratos)
+  // Para cada página, descobrir a qual categoria ela pertence
   let pageToCategoryIdx: number[] = [];
   if (selectedCategory === 'all') {
     let catIdx = 0;
     grouped.forEach(group => {
-      const nPages = Math.ceil(group.items.length / 6);
+      const nPages = Math.ceil(group.items.length / cardsPerPage);
       for (let i = 0; i < nPages; i++) {
         pageToCategoryIdx.push(catIdx);
       }
       catIdx++;
     });
   } else {
-    for (let i = 0; i < pages.length; i++) {
+    const nPages = Math.ceil(grouped[0].items.length / cardsPerPage);
+    for (let i = 0; i < nPages; i++) {
       pageToCategoryIdx.push(0);
     }
   }
   // Índice da categoria atual
   const currentCategoryIdx = pageToCategoryIdx[page] || 0;
   const currentCategory = categoryList[currentCategoryIdx];
-
-  // Estado para modal de detalhes do prato
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
-  // Estado para direção da animação
-  const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next');
 
   if (!open) return null;
   return (
@@ -171,7 +221,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         tabIndex={-1}
       />
       {/* Indicador de categoria no topo + botão de fechar alinhados */}
-      <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-4 mb-0 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
+      <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-1 mb-1 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
         <div className="flex gap-2 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
           {categoryList.map((cat, idx) => (
             idx === currentCategoryIdx ? (
@@ -215,8 +265,8 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
           </button>
         </div>
       </div>
-      {/* Cards de pratos, modo list ou grid */}
-      <div className="flex flex-col items-center justify-center w-full flex-1 gap-4 relative px-4 md:px-8 max-w-screen-md mx-auto" style={{perspective: 1200, minHeight: 320}}>
+      {/* Cards de pratos em grid */}
+      <div className="flex flex-col items-center w-full flex-1 relative px-4 md:px-8 max-w-screen-md mx-auto" style={{perspective: 1200}}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={page + '-' + selectedCategory}
@@ -242,16 +292,16 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
               top: 0,
               display: 'flex',
               flexDirection: 'row', // Always row for grid
-              alignItems: 'center',
+              alignItems: 'flex-start',
               justifyContent: 'center',
               willChange: 'transform',
             }}
           >
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-3xl mx-auto px-2 md:px-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 w-full max-w-7xl mx-auto px-2 md:px-4">
               {pages[page]?.map((item, idx) => (
                 <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center">
                   <div className="w-full max-w-xs">
-                                          <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
+                    <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
                   </div>
                 </div>
               ))}
