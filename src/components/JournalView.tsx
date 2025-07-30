@@ -331,15 +331,18 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Áreas clicáveis para avançar/retroceder página */}
+      {/* Áreas clicáveis para avançar/retroceder página - apenas nas bordas laterais */}
       <button
         className="fixed left-0 top-0 h-full w-1/8 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Retroceder"
-        onClick={() => {
-          if (page > 0) {
-            setFlipDirection('prev');
-            setPage(prev => prev - 1);
+        onClick={(e) => {
+          // Verificar se o clique foi muito próximo da borda
+          if (e.clientX < 32) {
+            if (page > 0) {
+              setFlipDirection('prev');
+              setPage(prev => prev - 1);
+            }
           }
         }}
         tabIndex={-1}
@@ -348,10 +351,13 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         className="fixed right-0 top-0 h-full w-1/8 z-10 bg-transparent p-0 m-0 border-none outline-none"
         style={{ cursor: 'pointer' }}
         aria-label="Avançar"
-        onClick={() => {
-          if (page < totalPages - 1) {
-            setFlipDirection('next');
-            setPage(prev => prev + 1);
+        onClick={(e) => {
+          // Verificar se o clique foi muito próximo da borda
+          if (e.clientX > window.innerWidth - 32) {
+            if (page < totalPages - 1) {
+              setFlipDirection('next');
+              setPage(prev => prev + 1);
+            }
           }
         }}
         tabIndex={-1}
@@ -402,7 +408,10 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
         </div>
       </div>
       {/* Cards de pratos em grid */}
-      <div className="flex flex-col items-center w-full flex-1 relative px-4 md:px-8 max-w-screen-md mx-auto" style={{perspective: 1200}}>
+      <div 
+        className="flex flex-col items-center w-full flex-1 relative px-4 md:px-8 max-w-screen-md mx-auto z-10" 
+        style={{perspective: 1200}}
+      >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={page + '-' + selectedCategory}
