@@ -17,6 +17,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [cardsPerPage, setCardsPerPage] = useState(6); // Inicial com 6, será calculado dinamicamente
+  const [pinnedDishes, setPinnedDishes] = useState<Set<string>>(new Set()); // Set de IDs dos pratos pinados
   const itemsPerPage = 3;
   const categories = Array.from(new Set(restaurant.menu_items.map(item => item.category)));
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -87,21 +88,121 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
       },
     ];
   }
-  // Lógica: cada página contém até cardsPerPage pratos de uma categoria
-  let pages: Array<Array<{ dish: Dish; category: string }>> = [];
-  if (selectedCategory === 'all') {
-    grouped.forEach(group => {
-      // Dividir os pratos da categoria em páginas de cardsPerPage
-      for (let i = 0; i < group.items.length; i += cardsPerPage) {
-        pages.push(group.items.slice(i, i + cardsPerPage).map(dish => ({ dish, category: group.category })));
+  
+  // Função para alternar o pin de um prato
+  const togglePin = (dishId: string) => {
+    setPinnedDishes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dishId)) {
+        newSet.delete(dishId);
+      } else {
+        newSet.add(dishId);
       }
+      return newSet;
     });
-  } else {
-    // Dividir os pratos da categoria selecionada em páginas de cardsPerPage
-    for (let i = 0; i < grouped[0].items.length; i += cardsPerPage) {
-      pages.push(grouped[0].items.slice(i, i + cardsPerPage).map(dish => ({ dish, category: grouped[0].category })));
+  };
+
+  // Função para criar páginas com pratos pinados sempre nas primeiras posições
+  const createPagesWithPinnedFirst = () => {
+    let pages: Array<Array<{ dish: Dish; category: string }>> = [];
+    
+    
+    
+          // Coletar TODOS os pratos pinados (independente da categoria) - REMOVENDO DUPLICATAS
+      const pinnedDishesArray = restaurant.menu_items.filter(dish => pinnedDishes.has(dish.name));
+      const allPinnedDishes = pinnedDishesArray.filter((dish, index, self) => 
+        index === self.findIndex(d => d.name === dish.name)
+      );
+
+    
+    if (selectedCategory === 'all') {
+      // Para categoria 'all', manter a divisão por categorias
+              grouped.forEach(group => {
+          // Coletar pratos da categoria (removendo duplicatas e pratos pinados)
+          const seen = new Set<string>();
+          const categoryDishes = group.items.filter(dish => {
+            if (seen.has(dish.name) || pinnedDishes.has(dish.name)) {
+              return false;
+            }
+            seen.add(dish.name);
+            return true;
+          });
+        
+        // Pratos não pinados da categoria (já filtrados acima)
+        const unpinnedDishesInCategory = categoryDishes;
+        
+        // Calcular quantos pratos não pinados cabem por página (reservando espaço para TODOS os pinados)
+        const availableSlotsPerPage = cardsPerPage - allPinnedDishes.length;
+        
+                    if (availableSlotsPerPage <= 0) {
+              // Se não há espaço para pratos não pinados, criar páginas apenas com pinados
+              for (let i = 0; i < allPinnedDishes.length; i += cardsPerPage) {
+                const pageDishes = allPinnedDishes.slice(i, i + cardsPerPage);
+                pages.push(pageDishes.map(dish => ({ 
+                  dish, 
+                  category: group.category
+                })));
+              }
+            } else {
+              // Dividir pratos não pinados em páginas
+              for (let i = 0; i < unpinnedDishesInCategory.length; i += availableSlotsPerPage) {
+                const pageUnpinnedDishes = unpinnedDishesInCategory.slice(i, i + availableSlotsPerPage);
+                // Cada página terá: TODOS os pinados + pratos não pinados da página
+                const pageDishes = [...allPinnedDishes, ...pageUnpinnedDishes];
+                pages.push(pageDishes.map(dish => ({ 
+                  dish, 
+                  category: group.category
+                })));
+              }
+            }
+      });
+    } else {
+      // Para categoria específica
+      const seen = new Set<string>();
+      const categoryDishes = restaurant.menu_items.filter(dish => {
+        if (dish.category !== selectedCategory || seen.has(dish.name) || pinnedDishes.has(dish.name)) {
+          return false;
+        }
+        seen.add(dish.name);
+        return true;
+      });
+      
+      // Pratos não pinados da categoria (já filtrados acima)
+      const unpinnedDishesInCategory = categoryDishes;
+      
+      // Calcular quantos pratos não pinados cabem por página (reservando espaço para TODOS os pinados)
+      const availableSlotsPerPage = cardsPerPage - allPinnedDishes.length;
+      
+      if (availableSlotsPerPage <= 0) {
+        // Se não há espaço para pratos não pinados, criar páginas apenas com pinados
+        for (let i = 0; i < allPinnedDishes.length; i += cardsPerPage) {
+          const pageDishes = allPinnedDishes.slice(i, i + cardsPerPage);
+          pages.push(pageDishes.map(dish => ({ 
+            dish, 
+            category: selectedCategory
+          })));
+        }
+      } else {
+        // Dividir pratos não pinados em páginas
+        for (let i = 0; i < unpinnedDishesInCategory.length; i += availableSlotsPerPage) {
+          const pageUnpinnedDishes = unpinnedDishesInCategory.slice(i, i + availableSlotsPerPage);
+          // Cada página terá: TODOS os pinados + pratos não pinados da página
+          const pageDishes = [...allPinnedDishes, ...pageUnpinnedDishes];
+          pages.push(pageDishes.map(dish => ({ 
+            dish, 
+            category: selectedCategory
+          })));
+        }
+      }
     }
-  }
+    
+    
+    
+    return pages;
+  };
+
+  // Usar a nova lógica para criar páginas
+  const pages = createPagesWithPinnedFirst();
   const totalPages = pages.length;
 
   // Remover este efeito:
@@ -194,26 +295,34 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
   // Lista de categorias únicas na ordem de exibição
   const categoryList = grouped.map(g => g.category);
 
-  // Para cada página, descobrir a qual categoria ela pertence
+  // Para cada página, descobrir a qual categoria ela pertence baseado no conteúdo real
   let pageToCategoryIdx: number[] = [];
+  
   if (selectedCategory === 'all') {
-    let catIdx = 0;
-    grouped.forEach(group => {
-      const nPages = Math.ceil(group.items.length / cardsPerPage);
-      for (let i = 0; i < nPages; i++) {
-        pageToCategoryIdx.push(catIdx);
+    // Para categoria 'all', analisar o conteúdo real de cada página
+    pages.forEach((pageContent, pageIndex) => {
+      // Encontrar o primeiro prato não fixado na página
+      const firstUnpinnedDish = pageContent.find(item => !pinnedDishes.has(item.dish.name));
+      
+      if (firstUnpinnedDish) {
+        // Usar a categoria do primeiro prato não fixado
+        const categoryIndex = categoryList.indexOf(firstUnpinnedDish.category);
+        pageToCategoryIdx[pageIndex] = categoryIndex;
+      } else {
+        // Se a página só tem pratos fixados, usar a primeira categoria
+        pageToCategoryIdx[pageIndex] = 0;
       }
-      catIdx++;
     });
   } else {
-    const nPages = Math.ceil(grouped[0].items.length / cardsPerPage);
-    for (let i = 0; i < nPages; i++) {
+    // Para categoria específica, todas as páginas mostram a categoria selecionada
+    for (let i = 0; i < totalPages; i++) {
       pageToCategoryIdx.push(0);
     }
   }
+  
   // Índice da categoria atual
   const currentCategoryIdx = pageToCategoryIdx[page] || 0;
-  const currentCategory = categoryList[currentCategoryIdx];
+  const currentCategory = selectedCategory === 'all' ? categoryList[currentCategoryIdx] : selectedCategory;
 
   if (!open) return null;
   return (
@@ -325,13 +434,22 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
             }}
           >
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 w-full max-w-7xl mx-auto px-2 md:px-4">
-              {pages[page]?.map((item, idx) => (
-                <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center">
-                  <div className="w-full max-w-xs">
-                    <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
+                              {pages[page]?.map((item, idx) => {
+                  return (
+                  <div key={`${item.dish.name}-${item.category}-${page}-${idx}`} className="flex justify-center items-center">
+                    <div className="w-full max-w-xs">
+                      <CardJornal 
+                        dish={item.dish} 
+                        size="small" 
+                        onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} 
+                        fallbackImage={restaurant.image}
+                        isPinned={pinnedDishes.has(item.dish.name)}
+                        onPinToggle={() => togglePin(item.dish.name)}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         </AnimatePresence>

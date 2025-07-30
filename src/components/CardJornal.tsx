@@ -6,9 +6,11 @@ interface CardJornalProps {
   onClick?: () => void;
   size?: "large" | "small";
   fallbackImage?: string;
+  isPinned?: boolean;
+  onPinToggle?: () => void;
 }
 
-export default function CardJornal({ dish, onClick, size = "small", fallbackImage }: CardJornalProps) {
+export default function CardJornal({ dish, onClick, size = "small", fallbackImage, isPinned = false, onPinToggle }: CardJornalProps) {
   const [imgSrc, setImgSrc] = React.useState(dish.image);
   return (
     <div
@@ -29,6 +31,22 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
             {dish.tags[0]}
           </span>
         )}
+        {/* Ícone de pin no canto superior esquerdo */}
+        <button
+          className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center z-20 transition-all duration-200 ${
+            isPinned 
+              ? 'bg-yellow-500 text-white shadow-lg' 
+              : 'bg-white/80 text-gray-600 hover:bg-white hover:text-gray-800'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPinToggle?.();
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"/>
+          </svg>
+        </button>
         {/* Preço no canto inferior direito */}
         <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
           R${dish.price}
