@@ -5,11 +5,10 @@ interface CardJornalProps {
   dish: Dish;
   onClick?: () => void;
   size?: "large" | "small";
-  gridMode?: boolean;
   fallbackImage?: string;
 }
 
-export default function CardJornal({ dish, onClick, size = "small", gridMode = false, fallbackImage }: CardJornalProps) {
+export default function CardJornal({ dish, onClick, size = "small", fallbackImage }: CardJornalProps) {
   const [imgSrc, setImgSrc] = React.useState(dish.image);
   return (
     <div
@@ -24,37 +23,21 @@ export default function CardJornal({ dish, onClick, size = "small", gridMode = f
           className={`w-full ${size === "small" ? "h-36" : "h-48"} object-cover rounded-t-lg min-h-[9rem]`}
           onError={() => fallbackImage && setImgSrc(fallbackImage)}
         />
-        {/* Tag no canto superior esquerdo */}
+        {/* Tag no canto superior direito */}
         {dish.tags && dish.tags.length > 0 && (
-          gridMode ? (
-            <span className="absolute top-2 right-2 bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full z-10">
-              {dish.tags[0]}
-            </span>
-          ) : (
-            <span className="absolute bottom-2 right-2 bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full z-10">
-              {dish.tags[0]}
-            </span>
-          )
-        )}
-        {/* Preço: grid -> canto inferior direito, list -> canto superior direito */}
-        {gridMode ? (
-          <span className="absolute bottom-2 right-2 text-white text-base font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-            R${dish.price}
-          </span>
-        ) : (
-          <span className="absolute top-2 right-2 text-white text-base font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-            R${dish.price}
+          <span className="absolute top-2 right-2 bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full z-10">
+            {dish.tags[0]}
           </span>
         )}
-        {/* Nome do prato, grid: uma palavra por linha, list: normal */}
+        {/* Preço no canto inferior direito */}
+        <span className="absolute bottom-2 right-2 text-white text-base font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+          R${dish.price}
+        </span>
+        {/* Nome do prato com quebra de linha */}
         <div className="absolute bottom-2 left-2">
-          {gridMode ? (
-            <h3 className="text-base font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight whitespace-pre-line">
-              {dish.name.split(' ').join('\n')}
-            </h3>
-          ) : (
-            <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>
-          )}
+          <h3 className="text-base font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight whitespace-pre-line">
+            {dish.name.split(' ').join('\n')}
+          </h3>
         </div>
       </div>
       {/* Descrição fora da foto */}

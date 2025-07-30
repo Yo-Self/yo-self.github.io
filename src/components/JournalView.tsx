@@ -16,8 +16,6 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
   const itemsPerPage = 3;
   const categories = Array.from(new Set(restaurant.menu_items.map(item => item.category)));
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  // Estado para modo de visualização: 'list' (3 cards) ou 'grid' (6 cards)
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   // Agrupa pratos por categoria para navegação
   let grouped: { category: string; items: Dish[] }[] = [];
   if (selectedCategory === 'all') {
@@ -36,32 +34,17 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
       },
     ];
   }
-  // Nova lógica: cada página contém até 3 cards de uma mesma categoria, sem tela cheia de header
+  // Lógica: cada página contém até 6 cards de uma mesma categoria (modo grid)
   let pages: Array<Array<{ dish: Dish; category: string }>> = [];
-  if (viewMode === 'list') {
-    if (selectedCategory === 'all') {
-      grouped.forEach(group => {
-        for (let i = 0; i < group.items.length; i += 3) {
-          pages.push(group.items.slice(i, i + 3).map(dish => ({ dish, category: group.category })));
-        }
-      });
-    } else {
-      for (let i = 0; i < grouped[0].items.length; i += 3) {
-        pages.push(grouped[0].items.slice(i, i + 3).map(dish => ({ dish, category: grouped[0].category })));
+  if (selectedCategory === 'all') {
+    grouped.forEach(group => {
+      for (let i = 0; i < group.items.length; i += 6) {
+        pages.push(group.items.slice(i, i + 6).map(dish => ({ dish, category: group.category })));
       }
-    }
+    });
   } else {
-    // grid: 6 por página, mas ainda agrupado por categoria
-    if (selectedCategory === 'all') {
-      grouped.forEach(group => {
-        for (let i = 0; i < group.items.length; i += 6) {
-          pages.push(group.items.slice(i, i + 6).map(dish => ({ dish, category: group.category })));
-        }
-      });
-    } else {
-      for (let i = 0; i < grouped[0].items.length; i += 6) {
-        pages.push(grouped[0].items.slice(i, i + 6).map(dish => ({ dish, category: grouped[0].category })));
-      }
+    for (let i = 0; i < grouped[0].items.length; i += 6) {
+      pages.push(grouped[0].items.slice(i, i + 6).map(dish => ({ dish, category: grouped[0].category })));
     }
   }
   const totalPages = pages.length;
@@ -134,9 +117,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
   if (selectedCategory === 'all') {
     let catIdx = 0;
     grouped.forEach(group => {
-      const nPages = viewMode === 'list'
-        ? Math.ceil(group.items.length / 3)
-        : Math.ceil(group.items.length / 6);
+      const nPages = Math.ceil(group.items.length / 6);
       for (let i = 0; i < nPages; i++) {
         pageToCategoryIdx.push(catIdx);
       }
@@ -222,38 +203,8 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
             )
           ))}
         </div>
-        {/* Botão de alternância de visualização ao lado do botão de fechar */}
+        {/* Botão de fechar */}
         <div className="flex flex-row items-center gap-0">
-          <button
-            className="w-10 h-10 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition"
-            onClick={() => {
-              setViewMode(viewMode === 'list' ? 'grid' : 'list');
-              // Sempre que alternar, resetar para a primeira categoria
-              if (grouped.length > 0) {
-                setSelectedCategory('all');
-                setPage(0);
-              }
-            }}
-            aria-label={viewMode === 'list' ? 'Ver em grade' : 'Ver em lista'}
-            style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-          >
-            {viewMode === 'list' ? (
-              // Ícone grid
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="2" />
-                <rect x="14" y="3" width="7" height="7" rx="2" />
-                <rect x="14" y="14" width="7" height="7" rx="2" />
-                <rect x="3" y="14" width="7" height="7" rx="2" />
-              </svg>
-            ) : (
-              // Ícone lista
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <line x1="4" y1="12" x2="20" y2="12" />
-                <line x1="4" y1="18" x2="20" y2="18" />
-              </svg>
-            )}
-          </button>
           <button
             className="w-10 h-10 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0"
             onClick={onClose}
@@ -268,7 +219,7 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
       <div className="flex flex-col items-center justify-center w-full flex-1 gap-4 relative px-4 md:px-8 max-w-screen-md mx-auto" style={{perspective: 1200, minHeight: 320}}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={page + '-' + viewMode}
+            key={page + '-' + selectedCategory}
             initial={{
               x: flipDirection === 'next' ? 300 : -300,
               opacity: 0.7,
@@ -290,33 +241,21 @@ export default function JournalView({ open, onClose, restaurant }: JournalViewPr
               left: 0,
               top: 0,
               display: 'flex',
-              flexDirection: viewMode === 'list' ? 'column' : 'row',
+              flexDirection: 'row', // Always row for grid
               alignItems: 'center',
               justifyContent: 'center',
               willChange: 'transform',
             }}
           >
-            {viewMode === 'list' ? (
-              <div className="flex flex-col gap-4 w-full">
-                {pages[page]?.map((item, idx) => (
-                  <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center w-full" style={{minHeight: 180}}>
-                    <div className="max-w-md min-w-[320px] mx-auto">
-                      <CardJornal dish={item.dish} size="small" gridMode={false} onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
-                    </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-3xl mx-auto px-2 md:px-4">
+              {pages[page]?.map((item, idx) => (
+                <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center">
+                  <div className="w-full max-w-xs">
+                                          <CardJornal dish={item.dish} size="small" onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-3xl mx-auto px-2 md:px-4">
-                {pages[page]?.map((item, idx) => (
-                  <div key={item.dish.name + '-' + item.category} className="flex justify-center items-center">
-                    <div className="w-full max-w-xs">
-                      <CardJornal dish={item.dish} size="small" gridMode={true} onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} fallbackImage={restaurant.image} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
