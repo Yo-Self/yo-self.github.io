@@ -99,7 +99,7 @@ export default function ComplementGrid({
               </div>
               
               {/* Detalhes abaixo da foto (40% do card) */}
-              <div className="w-full px-3 pb-3 pt-2 flex flex-col justify-start" style={{ height: '40%', minHeight: '36px' }}>
+              <div className="w-full px-3 pb-3 pt-2 flex flex-col justify-center items-start text-left" style={{ height: '40%', minHeight: '36px' }}>
                 <p className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0" style={{
                   display: '-webkit-box',
                   WebkitLineClamp: 3,
