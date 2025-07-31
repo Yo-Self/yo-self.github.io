@@ -73,6 +73,25 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     return () => window.removeEventListener('resize', calculateCardsPerPage);
   }, []);
 
+  // Detectar botão voltar do navegador e fechar o modo jornal
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      // Fechar o modo jornal quando o usuário clica no botão voltar
+      onClose();
+    };
+
+    // Adicionar uma entrada no histórico quando o modo jornal é aberto
+    window.history.pushState({ journalMode: true }, '', window.location.href);
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [open, onClose]);
+
   // Agrupa pratos por categoria para navegação
   let grouped: { category: string; items: Dish[] }[] = [];
   
