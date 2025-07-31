@@ -12,9 +12,10 @@ interface SearchBarProps {
   onSearchTermChange: (value: string) => void;
   restaurant: Restaurant;
   restaurants: Restaurant[];
+  selectedCategory?: string;
 }
 
-export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, restaurants }: SearchBarProps) {
+export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, restaurants, selectedCategory: propSelectedCategory }: SearchBarProps) {
   const { t } = useTranslation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
@@ -97,14 +98,6 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
     }
   };
 
-  // Estado para categoria selecionada na busca
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-  // Sempre que abrir o bottom sheet ou limpar a busca, resetar categoria para 'all'
-  useEffect(() => {
-    if (!showSheet || !searchTerm) setSelectedCategory('all');
-  }, [showSheet, searchTerm]);
-
   // Busca dinâmica
   const term = searchTerm.trim().toLowerCase();
   const filterFn = (item: MenuItem) =>
@@ -121,8 +114,8 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
   const currentResults = term
     ? restaurant.menu_items.filter(item => {
         if (!filterFn(item)) return false;
-        if (selectedCategory === 'all') return true;
-        return item.category === selectedCategory;
+        if (propSelectedCategory === 'all') return true;
+        return item.category === propSelectedCategory;
       })
     : [];
 
@@ -175,16 +168,16 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
               <div className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-2 max-w-full pl-1 pr-4 scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', minWidth: 0, paddingBottom: 8 }}>
                 <button
                   key="all"
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ring-0 ${selectedCategory === 'all' ? 'bg-primary text-white dark:bg-cyan-700 ring-cyan-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ring-transparent'}`}
-                  onClick={() => setSelectedCategory('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ring-0 ${propSelectedCategory === 'all' ? 'bg-primary text-white dark:bg-cyan-700 ring-cyan-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ring-transparent'}`}
+                  onClick={() => onSearchTermChange('')}
                 >
                   Todos
                 </button>
                 {dynamicCategories.map(cat => (
                   <button
                     key={cat}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ring-0 ${selectedCategory === cat ? 'bg-primary text-white dark:bg-cyan-700 ring-cyan-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ring-transparent'}`}
-                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ring-0 ${propSelectedCategory === cat ? 'bg-primary text-white dark:bg-cyan-700 ring-cyan-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ring-transparent'}`}
+                    onClick={() => onSearchTermChange(cat)}
                   >
                     {cat}
                   </button>
@@ -317,7 +310,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       </button>
       {showSheet && renderSheet()}
       {/* Modal modo jornal */}
-      <JournalView open={journalOpen} onClose={() => setJournalOpen(false)} restaurant={restaurant} />
+      <JournalView open={journalOpen} onClose={() => setJournalOpen(false)} restaurant={restaurant} selectedCategory={propSelectedCategory} />
     </div>
   );
 } 

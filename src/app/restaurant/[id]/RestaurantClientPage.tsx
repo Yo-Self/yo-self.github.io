@@ -303,6 +303,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
             restaurants={restaurants}
             searchTerm={searchTerm}
             onSearchTermChange={setSearchTerm}
+            selectedCategory={selectedCategory}
             data-tutorial-search
           />
         </>
