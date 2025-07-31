@@ -45,7 +45,7 @@ export default function ComplementGrid({
           return (
             <div
               key={complement.name}
-              className={`complement-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center transition-all duration-200 ${
+              className={`complement-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col transition-all duration-200 ${
                 isSelected 
                   ? 'ring-2 ring-primary dark:ring-cyan-400 bg-primary/5' 
                   : 'hover:shadow-md'
@@ -55,7 +55,7 @@ export default function ComplementGrid({
                   onComplementToggle(complement.name);
                 }
               }}
-              style={{ paddingBottom: 0, minHeight: 160 }}
+              style={{ height: '90px', paddingBottom: 0 }}
             >
               <div className="relative w-full" style={{ height: '60%' }}>
                 <img
@@ -99,32 +99,19 @@ export default function ComplementGrid({
               </div>
               
               {/* Detalhes abaixo da foto (40% do card) */}
-              <div className="w-full px-3 py-2" style={{ height: '40%' }}>
-                <p className="text-xs text-gray-600 dark:text-gray-300 mb-1" style={{
+              <div className="w-full px-3 pb-3 pt-2 flex flex-col justify-start" style={{ height: '40%', minHeight: '36px' }}>
+                <p className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0" style={{
                   display: '-webkit-box',
-                  WebkitLineClamp: 2,
+                  WebkitLineClamp: 3,
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'normal',
                   lineHeight: '1.2',
+                  maxHeight: '3.6em', // Max 3 lines
                 }}>
                   {complement.description}
                 </p>
-                
-                {complement.ingredients && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400" style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'normal',
-                    lineHeight: '1.2',
-                  }}>
-                    {complement.ingredients}
-                  </p>
-                )}
               </div>
             </div>
           );
