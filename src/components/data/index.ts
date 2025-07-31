@@ -1,3 +1,21 @@
+export type Complement = {
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+  ingredients?: string;
+  allergens?: string;
+  portion?: string;
+};
+
+export type ComplementGroup = {
+  title: string;
+  description?: string;
+  required?: boolean;
+  max_selections?: number;
+  complements: Complement[];
+};
+
 export type Dish = {
   name: string;
   description: string;
@@ -8,6 +26,7 @@ export type Dish = {
   allergens: string;
   portion: string;
   category?: string;
+  complement_groups?: ComplementGroup[];
 };
 
 export type MenuItem = Omit<Dish, 'category'> & { category: string };

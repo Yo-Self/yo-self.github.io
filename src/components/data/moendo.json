@@ -287,7 +287,74 @@
       ],
       "ingredients": "Delicioso hambúrguer de peixe com pão brioche, rúcula, picles e molho tártaro! (2 und.)",
       "allergens": "Contém Lactose, Contém glúten",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Escolha o Pão",
+          "description": "Selecione o tipo de pão para seu hambúrguer",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Pão Brioche",
+              "description": "Pão brioche tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Farinha, ovos, manteiga, açúcar, sal"
+            },
+            {
+              "name": "Pão Australiano",
+              "description": "Pão australiano com sementes",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Farinha integral, sementes, mel"
+            },
+            {
+              "name": "Pão de Hambúrguer",
+              "description": "Pão tradicional de hambúrguer",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Farinha, água, sal, fermento"
+            }
+          ]
+        },
+        {
+          "title": "Adicionais",
+          "description": "Personalize seu hambúrguer com ingredientes extras",
+          "required": false,
+          "max_selections": 3,
+          "complements": [
+            {
+              "name": "Queijo Cheddar",
+              "description": "Fatia de queijo cheddar derretido",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Queijo cheddar"
+            },
+            {
+              "name": "Bacon",
+              "description": "Fatias de bacon crocante",
+              "price": "5,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Bacon defumado"
+            },
+            {
+              "name": "Cebola Caramelizada",
+              "description": "Cebola caramelizada no mel",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Cebola, mel, manteiga"
+            },
+            {
+              "name": "Guacamole",
+              "description": "Guacamole caseiro",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Abacate, tomate, cebola, limão"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Menu Principal",
@@ -311,7 +378,74 @@
       ],
       "ingredients": "Corte bovino gratinado com molho de alho especial, finalizado com queijo parmesão.",
       "allergens": "Contém Lactose",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Acompanhamentos",
+          "description": "Escolha seus acompanhamentos",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Arroz Branco",
+              "description": "Arroz branco soltinho",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Arroz branco, sal"
+            },
+            {
+              "name": "Arroz Integral",
+              "description": "Arroz integral nutritivo",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Arroz integral, sal"
+            },
+            {
+              "name": "Batata Rústica",
+              "description": "Batatas rústicas temperadas",
+              "price": "8,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Batatas, azeite, ervas"
+            },
+            {
+              "name": "Legumes Grelhados",
+              "description": "Mix de legumes grelhados",
+              "price": "6,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Abobrinha, berinjela, pimentão"
+            }
+          ]
+        },
+        {
+          "title": "Molhos",
+          "description": "Adicione molhos especiais",
+          "required": false,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Molho de Alho",
+              "description": "Molho de alho especial da casa",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Alho, azeite, ervas"
+            },
+            {
+              "name": "Molho Chimichurri",
+              "description": "Molho chimichurri argentino",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Salsa, alho, vinagre, azeite"
+            },
+            {
+              "name": "Molho de Pimenta",
+              "description": "Molho de pimenta caseiro",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta, azeite, sal"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Menu Principal",
@@ -666,7 +800,45 @@
       ],
       "ingredients": "Torta de chocolate meio amargo com ganache e creme ingles",
       "allergens": "Contém Lactose, Contém glúten",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Coberturas",
+          "description": "Adicione coberturas especiais à sua torta",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Sorvete de Baunilha",
+              "description": "Bola de sorvete de baunilha",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Sorvete de baunilha artesanal"
+            },
+            {
+              "name": "Calda de Chocolate",
+              "description": "Calda quente de chocolate",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Chocolate meio amargo, creme de leite"
+            },
+            {
+              "name": "Frutas Vermelhas",
+              "description": "Mix de frutas vermelhas frescas",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Morango, framboesa, amora"
+            },
+            {
+              "name": "Chantilly",
+              "description": "Chantilly caseiro",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Creme de leite, açúcar de confeiteiro"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Sobremesas",
