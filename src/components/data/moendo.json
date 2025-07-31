@@ -55,19 +55,97 @@
       "portion": "Serve 1 pessoa",
       "category": "Menu Principal"
     },
-    {
-      "name": "Mc Fish Moendo",
-      "description": "Delicioso hambúrguer de peixe com pão brioche, rúcula, picles e molho tártaro! (2 und.)",
-      "price": "42,00",
-      "image": "https://static.tagme.com.br/pubimg/thumbs/MenuItem/c6f0d5b0-9798-11ef-927a-9df237a94fc7.jpg?ims=filters:quality(70):format(webp)",
-      "tags": [
-        "Destaque"
-      ],
-      "ingredients": "Delicioso hambúrguer de peixe com pão brioche, rúcula, picles e molho tártaro! (2 und.)",
-      "allergens": "Contém Lactose, Contém glúten",
-      "portion": "Serve 1 pessoa",
-      "category": "Menu Principal"
-    },
+      {
+        "category": "Menu Principal",
+        "name": "Mc Fish Moendo",
+        "description": "Delicioso hambúrguer de peixe com pão brioche, rúcula, picles e molho tártaro! (2 und.)",
+        "price": "42,00",
+        "image": "https://static.tagme.com.br/pubimg/thumbs/MenuItem/c6f0d5b0-9798-11ef-927a-9df237a94fc7.jpg?ims=filters:quality(70):format(webp)",
+        "tags": [
+          "Destaque"
+        ],
+        "ingredients": "Delicioso hambúrguer de peixe com pão brioche, rúcula, picles e molho tártaro! (2 und.)",
+        "allergens": "Contém Lactose, Contém glúten",
+        "portion": "Serve 1 pessoa",
+        "complement_groups": [
+          {
+            "title": "Escolha o Pão",
+            "description": "Selecione o tipo de pão para seu hambúrguer",
+            "required": true,
+            "max_selections": 1,
+            "complements": [
+              {
+                "name": "Pão Brioche",
+                "description": "Pão brioche tradicional",
+                "price": "0,00",
+                "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+                "ingredients": "Farinha, ovos, manteiga, açúcar, sal"
+              },
+              {
+                "name": "Pão Australiano",
+                "description": "Pão australiano com sementes",
+                "price": "2,00",
+                "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+                "ingredients": "Farinha integral, sementes, mel"
+              },
+              {
+                "name": "Pão de Hambúrguer",
+                "description": "Pão tradicional de hambúrguer",
+                "price": "0,00",
+                "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+                "ingredients": "Farinha, água, sal, fermento"
+              }
+            ]
+          },
+          {
+            "title": "Adicionais",
+            "description": "Personalize seu hambúrguer com ingredientes extras",
+            "required": false,
+            "max_selections": 3,
+            "complements": [
+              {
+                "name": "Queijo Cheddar",
+                "description": "Fatia de queijo cheddar derretido",
+                "price": "3,00",
+                "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+                "ingredients": "Queijo cheddar"
+              },
+              {
+                "name": "Bacon",
+                "description": "Fatias de bacon crocante",
+                "price": "5,00",
+                "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+                "ingredients": "Bacon defumado"
+              },
+              {
+                "name": "Cebola Caramelizada",
+                "description": "Cebola caramelizada no mel",
+                "price": "2,00",
+                "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+                "ingredients": "Cebola, mel, manteiga"
+              },
+              {
+                "name": "Guacamole",
+                "description": "Guacamole caseiro",
+                "price": "4,00",
+                "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+                "ingredients": "Abacate, tomate, cebola, limão"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "Menu Principal",
+        "name": "Filé ao Poivre",
+        "description": "Cubos de filé mignon ao molho poivre, acompanhado de batata rústica temperada.",
+        "price": "87,00",
+        "image": "https://static.tagme.com.br/pubimg/thumbs/MenuItem/026a11f0-b248-11ef-aff9-d1b98f4953c6.jpg?ims=filters:quality(70):format(webp)",
+        "tags": [],
+        "ingredients": "Cubos de filé mignon ao molho poivre,",
+        "allergens": "Apimentado, Contém Lactose",
+        "portion": "Serve 1 pessoa"
+      },
     {
       "name": "Fraldinha Gratinada",
       "description": "Corte bovino gratinado com molho de alho especial, finalizado com queijo parmesão.\nAcompanha vinagrete e farofa de pão de alho.",
