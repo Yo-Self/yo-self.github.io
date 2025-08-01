@@ -23,6 +23,14 @@ Em listas de pratos, os nomes são transformados em links clicáveis que:
 - **Abrir modal de detalhes** ao clicar
 - **Indicam interatividade** com ícone de link
 
+### 💡 Sugestões Dinâmicas
+Sistema inteligente de sugestões que:
+- **Aparece acima** da caixa de texto
+- **Adapta-se** ao que o usuário está digitando
+- **Não interfere** no texto digitado
+- **Sugestões contextuais** baseadas em palavras-chave
+- **Desaparece** quando não há texto ou após seleção
+
 ### 🎨 Design Responsivo
 - **Cards compactos** para melhor visualização no chat
 - **Hover effects** para feedback visual
@@ -70,6 +78,36 @@ Chatbot: "Nossos pratos em destaque:
 - "Pratos mais baratos?"
 - "Pratos de frutos do mar?"
 
+### 💡 Sugestões Dinâmicas por Contexto:
+
+#### **Digite "popular" ou "destaque":**
+- "Quais são os pratos mais populares?"
+- "Mostre os pratos em destaque"
+
+#### **Digite "glúten" ou "celíaco":**
+- "Tem opções sem glúten?"
+- "Quais pratos são seguros para celíacos?"
+
+#### **Digite "vegetariano" ou "vegano":**
+- "Pratos vegetarianos?"
+- "Opções veganas disponíveis?"
+
+#### **Digite "ingrediente" ou "contém":**
+- "Quais são os ingredientes do [prato]?"
+- Sugestões específicas para pratos do menu
+
+#### **Digite "preço" ou "barato":**
+- "Pratos mais acessíveis?"
+- "Quais são os preços?"
+
+#### **Digite "sobremesa" ou "doce":**
+- "Quais são as sobremesas?"
+- "Tem doces caseiros?"
+
+#### **Digite "peixe" ou "frutos do mar":**
+- "Pratos de frutos do mar?"
+- "Opções de peixe?"
+
 ## 🎨 Componentes Criados
 
 ### `ChatDishCard.tsx`
@@ -87,6 +125,12 @@ Chatbot: "Nossos pratos em destaque:
 - Função inteligente que detecta padrões
 - Renderiza cards ou links automaticamente
 - Mantém texto normal quando não há pratos
+
+### `getDynamicSuggestions()`
+- Analisa o texto digitado em tempo real
+- Gera sugestões contextuais baseadas em palavras-chave
+- Adapta-se ao conteúdo do menu do restaurante
+- Limita sugestões para não sobrecarregar a interface
 
 ## 🔧 Integração
 
@@ -126,6 +170,8 @@ Chatbot: "Nossos pratos em destaque:
 - **Experiência unificada** no app
 - **Conversa contínua** sem interrupções
 - **Acesso rápido** aos detalhes dos pratos
+- **Sugestões inteligentes** que se adaptam ao contexto
+- **Interface limpa** sem sugestões fixas na parte inferior
 
 ## 🎯 Padrões Detectados
 
@@ -184,6 +230,7 @@ Chatbot: "Nossos pratos em destaque:
 - ✅ Indicador de status da IA implementado
 - ✅ Cards de pratos funcionando
 - ✅ Links clicáveis implementados
+- ✅ Sugestões dinâmicas implementadas
 - ✅ Navegação para modal de detalhes
 - ✅ Design responsivo
 - ✅ Tema escuro suportado

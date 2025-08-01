@@ -14,6 +14,7 @@ interface AIChatbotProps {
 
 export default function AIChatbot({ menuData, isOpen, onClose, onOpenDishModal }: AIChatbotProps) {
   const [inputMessage, setInputMessage] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -49,12 +50,39 @@ export default function AIChatbot({ menuData, isOpen, onClose, onOpenDishModal }
     }
   }, [isOpen]);
 
+  // Esconde sugestões quando pressiona Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSuggestions(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen]);
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
     
     const message = inputMessage.trim();
     setInputMessage('');
+    setShowSuggestions(false);
     await sendMessage(message);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputMessage(value);
+    setShowSuggestions(value.length > 0);
+  };
+
+  const handleSuggestionClick = async (suggestion: string) => {
+    setInputMessage(suggestion);
+    setShowSuggestions(false);
+    await sendMessage(suggestion);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -62,6 +90,72 @@ export default function AIChatbot({ menuData, isOpen, onClose, onOpenDishModal }
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  // Função para gerar sugestões dinâmicas baseadas no texto digitado
+  const getDynamicSuggestions = (text: string): string[] => {
+    const lowerText = text.toLowerCase();
+    const suggestions: string[] = [];
+
+    // Se o texto estiver vazio, mostra sugestões gerais
+    if (!text.trim()) {
+      return [
+        "Quais são os pratos mais populares?",
+        "Tem opções sem glúten?",
+        "Quais são as sobremesas?",
+        "Pratos vegetarianos?"
+      ];
+    }
+
+    // Sugestões baseadas em palavras-chave
+    if (lowerText.includes('popular') || lowerText.includes('destaque') || lowerText.includes('recomend')) {
+      suggestions.push("Quais são os pratos mais populares?");
+      suggestions.push("Mostre os pratos em destaque");
+    }
+
+    if (lowerText.includes('glúten') || lowerText.includes('gluten') || lowerText.includes('celíac')) {
+      suggestions.push("Tem opções sem glúten?");
+      suggestions.push("Quais pratos são seguros para celíacos?");
+    }
+
+    if (lowerText.includes('vegetar') || lowerText.includes('vegan')) {
+      suggestions.push("Pratos vegetarianos?");
+      suggestions.push("Opções veganas disponíveis?");
+    }
+
+    if (lowerText.includes('ingrediente') || lowerText.includes('contém') || lowerText.includes('tem')) {
+      const dishes = menuData.menu_items?.slice(0, 3) || [];
+      dishes.forEach((dish: any) => {
+        suggestions.push(`Quais são os ingredientes do ${dish.name}?`);
+      });
+    }
+
+    if (lowerText.includes('preço') || lowerText.includes('quanto') || lowerText.includes('valor') || lowerText.includes('barato')) {
+      suggestions.push("Pratos mais acessíveis?");
+      suggestions.push("Quais são os preços?");
+    }
+
+    if (lowerText.includes('sobremesa') || lowerText.includes('doce') || lowerText.includes('sobremesas')) {
+      suggestions.push("Quais são as sobremesas?");
+      suggestions.push("Tem doces caseiros?");
+    }
+
+    if (lowerText.includes('peixe') || lowerText.includes('camarão') || lowerText.includes('frutos do mar')) {
+      suggestions.push("Pratos de frutos do mar?");
+      suggestions.push("Opções de peixe?");
+    }
+
+    // Se não encontrou sugestões específicas, mostra sugestões gerais
+    if (suggestions.length === 0) {
+      return [
+        "Quais são os pratos mais populares?",
+        "Tem opções sem glúten?",
+        "Quais são as sobremesas?",
+        "Pratos vegetarianos?"
+      ];
+    }
+
+    return suggestions.slice(0, 4); // Limita a 4 sugestões
   };
 
   // Função para renderizar mensagens com cards e links
@@ -234,12 +328,33 @@ export default function AIChatbot({ menuData, isOpen, onClose, onOpenDishModal }
 
         {/* Input Area */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+          {/* Dynamic Suggestions */}
+          {showSuggestions && (
+            <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">
+                💡 Sugestões:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {getDynamicSuggestions(inputMessage).map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    disabled={isLoading}
+                    className="px-3 py-1.5 text-xs bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-cyan-300 dark:hover:border-cyan-500 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div className="flex items-center gap-2">
             <input
               ref={inputRef}
               type="text"
               value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               placeholder="Digite sua pergunta..."
               disabled={isLoading}
@@ -254,25 +369,6 @@ export default function AIChatbot({ menuData, isOpen, onClose, onOpenDishModal }
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>
-          </div>
-          
-          {/* Quick Actions */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {[
-              "Quais são os pratos mais populares?",
-              "Tem opções sem glúten?",
-              "Quais são os ingredientes do Filé ao Poivre?",
-              "Recomendações para vegetarianos?"
-            ].map((suggestion, index) => (
-              <button
-                key={index}
-                onClick={() => sendMessage(suggestion)}
-                disabled={isLoading}
-                className="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                {suggestion}
-              </button>
-            ))}
           </div>
         </div>
       </div>
