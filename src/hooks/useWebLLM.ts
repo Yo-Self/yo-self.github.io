@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { initializeWebLLM, isWebLLMSupported, getDeviceInfo } from '../lib/webllm-config';
+import { Chat, MLCEngineInterface } from '@mlc-ai/web-llm';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -18,7 +19,8 @@ interface UseWebLLMReturn {
 }
 
 export function useWebLLM(menuData: any, onOpenDishModal?: (dish: any) => void): UseWebLLMReturn {
-  const [chat, setChat] = useState<any>(null);
+  const [engine, setEngine] = useState<MLCEngineInterface | null>(null);
+  const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -68,10 +70,12 @@ export function useWebLLM(menuData: any, onOpenDishModal?: (dish: any) => void):
       
       if (supported) {
         // Tenta inicializar o WebLLM
-        const chatModule = await initializeWebLLM();
+        const mlcEngine = await initializeWebLLM();
         
-        if (chatModule) {
-          setChat(chatModule);
+        if (mlcEngine) {
+          setEngine(mlcEngine);
+          const chatInstance = new Chat(mlcEngine);
+          setChat(chatInstance);
           setMessages([{
             role: 'assistant',
             content: `Olá! Sou o assistente do ${menuData?.name || 'Moendo'}. Posso te ajudar com informações sobre nossos pratos, ingredientes, alergênicos e fazer recomendações. O que você gostaria de saber?`
@@ -128,15 +132,22 @@ export function useWebLLM(menuData: any, onOpenDishModal?: (dish: any) => void):
           content: msg.content
         }));
 
-        const response = await chat.generate([
-          { role: "system", content: systemPrompt },
-          ...conversationHistory,
-          { role: "user", content: userMessage }
-        ]);
+        const response = await chat.completions.create({
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...conversationHistory,
+            { role: "user", content: userMessage }
+          ],
+          max_tokens: 512,
+          temperature: 0.7,
+          top_p: 0.9,
+          frequency_penalty: 0.1,
+          presence_penalty: 0.1,
+        });
 
         const assistantMessage: ChatMessage = {
           role: 'assistant',
-          content: response
+          content: response.choices[0]?.message?.content || 'Desculpe, não consegui gerar uma resposta.'
         };
 
         setMessages(prev => [...prev, assistantMessage]);

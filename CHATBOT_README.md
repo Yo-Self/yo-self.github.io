@@ -30,6 +30,7 @@ Este projeto implementa um chatbot de IA totalmente no navegador que permite aos
 ### WebLLM
 - **Framework**: @mlc-ai/web-llm
 - **Modelo**: Llama-2-7b-chat-q4f16_1
+- **API**: Compatível com OpenAI API
 - **Processamento**: Totalmente no navegador
 - **Performance**: Otimizado para dispositivos móveis
 
@@ -97,7 +98,8 @@ const createSystemPrompt = useCallback(() => {
 - **Modelo**: Llama-2-7b-chat-q4f16_1 (otimizado para performance)
 - **Tokens máximos**: 512
 - **Temperatura**: 0.7 (criatividade balanceada)
-- **Cache**: 100MB para melhor performance
+- **API**: OpenAI-compatible completions
+- **Engine**: MLCEngine para inferência otimizada
 
 ### Fallback
 - **Busca inteligente**: Algoritmo de busca baseado em palavras-chave
