@@ -6,6 +6,7 @@ import { Restaurant, Dish, MenuItem } from "./data";
 import DishModal from "./DishModal";
 import DishCard from "./DishCard";
 import JournalView from "./JournalView";
+import AIChatbot from "./AIChatbot";
 
 interface SearchBarProps {
   searchTerm: string;
@@ -226,7 +227,6 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
             </div>
           )}
         </div>
-        <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
       </div>
     </div>
   );
@@ -240,6 +240,8 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
 
   // Novo estado para o modo jornal
   const [journalOpen, setJournalOpen] = useState(false);
+  // Estado para o chatbot de IA
+  const [chatbotOpen, setChatbotOpen] = useState(false);
 
   // Ícone SVG fornecido pelo usuário para o modo jornal, agora com gradiente animado no fill e maior dentro do círculo
   const NewspaperIcon = () => (
@@ -263,6 +265,35 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex flex-col items-end gap-2"
       style={{ transition: 'bottom 0.2s' }}
     >
+      {/* Botão do chatbot de IA */}
+      <button
+        className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
+        data-tutorial="ai-chatbot-button"
+        style={{ WebkitBackdropFilter: 'blur(12px)' }}
+        aria-label="Assistente IA"
+        onClick={() => setChatbotOpen(true)}
+      >
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+          <defs>
+            <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#06b6d4">
+                <animate attributeName="stop-color" values="#06b6d4;#818cf8;#f472b6;#facc15;#06b6d4" dur="2.5s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#facc15">
+                <animate attributeName="stop-color" values="#facc15;#06b6d4;#818cf8;#f472b6;#facc15" dur="2.5s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+          </defs>
+          <path
+            stroke="url(#ai-gradient)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+          />
+        </svg>
+      </button>
       {/* Botão modo jornal */}
       <button
         className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
@@ -311,6 +342,18 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       {showSheet && renderSheet()}
       {/* Modal modo jornal */}
       <JournalView open={journalOpen} onClose={() => setJournalOpen(false)} restaurant={restaurant} selectedCategory={propSelectedCategory} />
+      {/* Chatbot de IA */}
+      <AIChatbot 
+        menuData={restaurant} 
+        isOpen={chatbotOpen} 
+        onClose={() => setChatbotOpen(false)}
+        onOpenDishModal={(dish) => {
+          setSelectedDish(dish);
+          setModalOpen(true);
+        }}
+      />
+      {/* Modal de detalhes do prato */}
+      <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
     </div>
   );
 } 
