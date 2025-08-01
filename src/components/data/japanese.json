@@ -21,7 +21,67 @@
       "ingredients": "Rice, fish, seaweed, vegetables",
       "allergens": "Fish, Soy",
       "portion": "Serves 1",
-      "category": "Main Dishes"
+      "category": "Main Dishes",
+      "complement_groups": [
+        {
+          "title": "Molhos",
+          "description": "Escolha os molhos para acompanhar",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Molho de Soja",
+              "description": "Molho de soja tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho de soja"
+            },
+            {
+              "name": "Wasabi",
+              "description": "Wasabi fresco",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Wasabi"
+            },
+            {
+              "name": "Gengibre",
+              "description": "Gengibre em conserva",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Gengibre, vinagre, sal"
+            }
+          ]
+        },
+        {
+          "title": "Adicionais",
+          "description": "Adicione ingredientes extras",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Salmão Extra",
+              "description": "Porção adicional de salmão",
+              "price": "8,00",
+              "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Salmão fresco"
+            },
+            {
+              "name": "Atum Extra",
+              "description": "Porção adicional de atum",
+              "price": "7,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Atum fresco"
+            },
+            {
+              "name": "Camarão Extra",
+              "description": "Porção adicional de camarão",
+              "price": "9,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Camarão fresco"
+            }
+          ]
+        }
+      ]
     }
   ],
   "menu_items": [
@@ -36,7 +96,38 @@
       ],
       "ingredients": "Soybeans, salt",
       "allergens": "Soy",
-      "portion": "Small bowl"
+      "portion": "Small bowl",
+      "complement_groups": [
+        {
+          "title": "Temperos",
+          "description": "Escolha o tempero para seu edamame",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Sal Marinho",
+              "description": "Sal marinho tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Sal marinho"
+            },
+            {
+              "name": "Gergelim",
+              "description": "Gergelim torrado",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Gergelim torrado"
+            },
+            {
+              "name": "Pimenta",
+              "description": "Pimenta japonesa",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta japonesa"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Main Dishes",
@@ -49,7 +140,147 @@
       ],
       "ingredients": "Rice, fish, seaweed, vegetables",
       "allergens": "Fish, Soy",
-      "portion": "Serves 1"
+      "portion": "Serves 1",
+      "complement_groups": [
+        {
+          "title": "Molhos",
+          "description": "Escolha os molhos para acompanhar",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Molho de Soja",
+              "description": "Molho de soja tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho de soja"
+            },
+            {
+              "name": "Wasabi",
+              "description": "Wasabi fresco",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Wasabi"
+            },
+            {
+              "name": "Gengibre",
+              "description": "Gengibre em conserva",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Gengibre, vinagre, sal"
+            }
+          ]
+        },
+        {
+          "title": "Adicionais",
+          "description": "Adicione ingredientes extras",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Salmão Extra",
+              "description": "Porção adicional de salmão",
+              "price": "8,00",
+              "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Salmão fresco"
+            },
+            {
+              "name": "Atum Extra",
+              "description": "Porção adicional de atum",
+              "price": "7,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Atum fresco"
+            },
+            {
+              "name": "Camarão Extra",
+              "description": "Porção adicional de camarão",
+              "price": "9,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Camarão fresco"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Main Dishes",
+      "name": "Ramen",
+      "description": "Sopa de macarrão com caldo rico e ingredientes variados.",
+      "price": "16.99",
+      "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+      "tags": [
+        "Popular"
+      ],
+      "ingredients": "Noodles, broth, pork, egg, vegetables",
+      "allergens": "Gluten, Soy, Egg",
+      "portion": "Large bowl",
+      "complement_groups": [
+        {
+          "title": "Tipo de Caldo",
+          "description": "Escolha o tipo de caldo",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Caldo de Porco",
+              "description": "Caldo tradicional de porco",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Caldo de porco"
+            },
+            {
+              "name": "Caldo de Frango",
+              "description": "Caldo de frango",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Caldo de frango"
+            },
+            {
+              "name": "Caldo Vegetariano",
+              "description": "Caldo vegetariano",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Caldo de legumes"
+            }
+          ]
+        },
+        {
+          "title": "Adicionais",
+          "description": "Adicione ingredientes extras",
+          "required": false,
+          "max_selections": 3,
+          "complements": [
+            {
+              "name": "Ovo Cozido",
+              "description": "Ovo cozido",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Ovo cozido"
+            },
+            {
+              "name": "Porco Chashu",
+              "description": "Porco chashu",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Porco chashu"
+            },
+            {
+              "name": "Alga Nori",
+              "description": "Alga nori",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Alga nori"
+            },
+            {
+              "name": "Milho",
+              "description": "Milho doce",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Milho doce"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

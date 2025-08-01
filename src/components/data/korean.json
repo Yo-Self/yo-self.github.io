@@ -218,7 +218,74 @@
       ],
       "ingredients": "Arroz, carne, vegetais, ovo, molho gochujang",
       "allergens": "Ovos, Soja",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Molhos",
+          "description": "Escolha os molhos para acompanhar",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Gochujang",
+              "description": "Molho gochujang tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pasta de pimenta, arroz, soja"
+            },
+            {
+              "name": "Molho de Soja",
+              "description": "Molho de soja tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho de soja"
+            },
+            {
+              "name": "Molho de Gergelim",
+              "description": "Molho de gergelim",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Gergelim, óleo, sal"
+            }
+          ]
+        },
+        {
+          "title": "Adicionais",
+          "description": "Adicione ingredientes extras",
+          "required": false,
+          "max_selections": 3,
+          "complements": [
+            {
+              "name": "Carne Extra",
+              "description": "Porção adicional de carne",
+              "price": "8,00",
+              "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Carne bovina"
+            },
+            {
+              "name": "Ovo",
+              "description": "Ovo frito",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Ovo"
+            },
+            {
+              "name": "Kimchi",
+              "description": "Kimchi tradicional",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Repolho, pimenta, alho"
+            },
+            {
+              "name": "Gergelim",
+              "description": "Gergelim torrado",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Gergelim torrado"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Pratos Principais",
@@ -231,7 +298,89 @@
       ],
       "ingredients": "Carne bovina, molho de soja, alho, açúcar, gergelim",
       "allergens": "Soja, Gergelim",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Ponto da Carne",
+          "description": "Escolha o ponto da sua carne",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Mal Passado",
+              "description": "Carne mal passada",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Carne bovina"
+            },
+            {
+              "name": "Ao Ponto",
+              "description": "Carne ao ponto",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Carne bovina"
+            },
+            {
+              "name": "Bem Passado",
+              "description": "Carne bem passada",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Carne bovina"
+            }
+          ]
+        },
+        {
+          "title": "Acompanhamentos",
+          "description": "Escolha seus acompanhamentos",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Arroz Branco",
+              "description": "Arroz branco soltinho",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Arroz branco, sal"
+            },
+            {
+              "name": "Kimchi",
+              "description": "Kimchi tradicional",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Repolho, pimenta, alho"
+            },
+            {
+              "name": "Salada Verde",
+              "description": "Mix de folhas verdes",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Alface, rúcula, agrião"
+            }
+          ]
+        },
+        {
+          "title": "Molhos",
+          "description": "Adicione molhos especiais",
+          "required": false,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Molho de Soja",
+              "description": "Molho de soja tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho de soja"
+            },
+            {
+              "name": "Molho de Gergelim",
+              "description": "Molho de gergelim",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Gergelim, óleo, sal"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Pratos Principais",

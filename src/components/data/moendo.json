@@ -443,21 +443,37 @@
       "tags": [],
       "ingredients": "Cubos de filé mignon ao molho poivre,",
       "allergens": "Apimentado, Contém Lactose",
-      "portion": "Serve 1 pessoa"
-    },
-    {
-      "category": "Menu Principal",
-      "name": "Fraldinha Gratinada",
-      "description": "Corte bovino gratinado com molho de alho especial, finalizado com queijo parmesão.\nAcompanha vinagrete e farofa de pão de alho.",
-      "price": "98,00",
-      "image": "https://static.tagme.com.br/pubimg/thumbs/MenuItem/26bb8e30-b248-11ef-aff9-d1b98f4953c6.jpg?ims=filters:quality(70):format(webp)",
-      "tags": [
-        "Destaque"
-      ],
-      "ingredients": "Corte bovino gratinado com molho de alho especial, finalizado com queijo parmesão.",
-      "allergens": "Contém Lactose",
       "portion": "Serve 1 pessoa",
       "complement_groups": [
+        {
+          "title": "Ponto da Carne",
+          "description": "Escolha o ponto da sua carne",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Mal Passado",
+              "description": "Carne mal passada",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Filé mignon"
+            },
+            {
+              "name": "Ao Ponto",
+              "description": "Carne ao ponto",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Filé mignon"
+            },
+            {
+              "name": "Bem Passado",
+              "description": "Carne bem passada",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Filé mignon"
+            }
+          ]
+        },
         {
           "title": "Acompanhamentos",
           "description": "Escolha seus acompanhamentos",
@@ -482,7 +498,7 @@
               "name": "Batata Rústica",
               "description": "Batatas rústicas temperadas",
               "price": "8,00",
-              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
               "ingredients": "Batatas, azeite, ervas"
             },
             {
@@ -501,11 +517,11 @@
           "max_selections": 1,
           "complements": [
             {
-              "name": "Molho de Alho",
-              "description": "Molho de alho especial da casa",
-              "price": "3,00",
+              "name": "Molho Poivre",
+              "description": "Molho poivre tradicional",
+              "price": "0,00",
               "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
-              "ingredients": "Alho, azeite, ervas"
+              "ingredients": "Pimenta, creme de leite, conhaque"
             },
             {
               "name": "Molho Chimichurri",
@@ -515,11 +531,11 @@
               "ingredients": "Salsa, alho, vinagre, azeite"
             },
             {
-              "name": "Molho de Pimenta",
-              "description": "Molho de pimenta caseiro",
-              "price": "2,00",
+              "name": "Molho de Mostarda",
+              "description": "Molho de mostarda caseiro",
+              "price": "3,00",
               "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
-              "ingredients": "Pimenta, azeite, sal"
+              "ingredients": "Mostarda, mel, vinagre"
             }
           ]
         }
@@ -547,7 +563,67 @@
       ],
       "ingredients": "Filé de camarão levemente empanado,",
       "allergens": "Contém glúten",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Molhos",
+          "description": "Escolha o molho para acompanhar",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Molho Tártaro",
+              "description": "Molho tártaro tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Maionese, picles, cebola, salsa"
+            },
+            {
+              "name": "Molho de Alho",
+              "description": "Molho de alho especial",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Alho, azeite, ervas"
+            },
+            {
+              "name": "Molho de Pimenta",
+              "description": "Molho de pimenta caseiro",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta, azeite, sal"
+            }
+          ]
+        },
+        {
+          "title": "Acompanhamentos",
+          "description": "Adicione acompanhamentos",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Arroz Branco",
+              "description": "Arroz branco soltinho",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Arroz branco, sal"
+            },
+            {
+              "name": "Batata Frita",
+              "description": "Batatas fritas crocantes",
+              "price": "8,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Batatas, óleo, sal"
+            },
+            {
+              "name": "Salada Verde",
+              "description": "Mix de folhas verdes",
+              "price": "6,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Alface, rúcula, agrião"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Menu Principal",
@@ -672,7 +748,74 @@
       "tags": [],
       "ingredients": "Massa longa com camarões em molho Alfredo com espinafre e queijo parmesão.",
       "allergens": "Contém glúten, Contém Lactose",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Tipo de Massa",
+          "description": "Escolha o tipo de massa para seu prato",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Linguine",
+              "description": "Massa longa tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Farinha de trigo, ovos, sal"
+            },
+            {
+              "name": "Fettuccine",
+              "description": "Massa fita larga",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Farinha de trigo, ovos, sal"
+            },
+            {
+              "name": "Penne",
+              "description": "Massa tubular",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Farinha de trigo, água, sal"
+            }
+          ]
+        },
+        {
+          "title": "Adicionais",
+          "description": "Adicione ingredientes extras ao seu prato",
+          "required": false,
+          "max_selections": 3,
+          "complements": [
+            {
+              "name": "Camarão Extra",
+              "description": "Porção adicional de camarões",
+              "price": "12,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Camarões frescos"
+            },
+            {
+              "name": "Queijo Parmesão",
+              "description": "Queijo parmesão ralado",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Queijo parmesão"
+            },
+            {
+              "name": "Espinafre Extra",
+              "description": "Porção adicional de espinafre",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Espinafre fresco"
+            },
+            {
+              "name": "Cogumelos",
+              "description": "Cogumelos frescos",
+              "price": "5,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Cogumelos variados"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Menu Principal",
@@ -707,7 +850,38 @@
       ],
       "ingredients": "Arroz italiano com passata de tomate, creme de burrata e pesto da casa.",
       "allergens": "Vegetariano, Contém Lactose, Sem Gluten",
-      "portion": "Serve 1 pessoa"
+      "portion": "Serve 1 pessoa",
+      "complement_groups": [
+        {
+          "title": "Adicionais",
+          "description": "Adicione ingredientes extras ao seu risoto",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Burrata Extra",
+              "description": "Porção adicional de burrata",
+              "price": "8,00",
+              "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Queijo burrata fresco"
+            },
+            {
+              "name": "Tomate Cereja",
+              "description": "Tomates cereja frescos",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Tomates cereja"
+            },
+            {
+              "name": "Manjericão",
+              "description": "Manjericão fresco",
+              "price": "2,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Manjericão fresco"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Menu Principal",
@@ -890,7 +1064,7 @@
               "name": "Sorvete de Baunilha",
               "description": "Bola de sorvete de baunilha",
               "price": "4,00",
-              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
               "ingredients": "Sorvete de baunilha artesanal"
             },
             {
@@ -989,7 +1163,7 @@
       "name": "Peixe Do Dia",
       "description": " Filé de peixe com crosta de farofinha de alho, com arroz de tomate e legumes salteados",
       "price": "45,00",
-      "image": "https://source.unsplash.com/400x300/?food",
+      "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
       "tags": [],
       "ingredients": "Filé de peixe com crosta de farofinha de alho, com arroz de tomate e legumes salteados",
       "allergens": "Contém glúten",
@@ -1169,7 +1343,7 @@
       "name": "Couvert Artistico ",
       "description": "We inform that, according to current legislation (State Law No. 13.856/2009 of Pernambuco), our restaurant applies the artistic cover charge. This fee is intended to remunerate the musicians and artists who provide live entertainment during your visit. The value of the artistic cover charge will be added to your bill and is mandatory for all customers present during the performances. We appreciate your understanding and hope you enjoy our musical program. Sincerely, Moendo na Laje.",
       "price": "12,00",
-      "image": "https://source.unsplash.com/400x300/?food",
+      "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80",
       "tags": [
         "Destaque"
       ],

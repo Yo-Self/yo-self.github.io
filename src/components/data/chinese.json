@@ -21,7 +21,67 @@
       "ingredients": "Duck, pancakes, hoisin sauce, cucumber, scallion",
       "allergens": "Gluten, Soy",
       "portion": "Serves 2",
-      "category": "Main Dishes"
+      "category": "Main Dishes",
+      "complement_groups": [
+        {
+          "title": "Molhos",
+          "description": "Escolha os molhos para acompanhar",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Molho Hoisin",
+              "description": "Molho hoisin tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho hoisin"
+            },
+            {
+              "name": "Molho de Pimenta",
+              "description": "Molho de pimenta picante",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta, óleo, sal"
+            },
+            {
+              "name": "Molho de Soja",
+              "description": "Molho de soja tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho de soja"
+            }
+          ]
+        },
+        {
+          "title": "Acompanhamentos",
+          "description": "Adicione acompanhamentos extras",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Arroz Branco",
+              "description": "Arroz branco soltinho",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Arroz branco, sal"
+            },
+            {
+              "name": "Arroz Frito",
+              "description": "Arroz frito com legumes",
+              "price": "5,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Arroz, legumes, óleo"
+            },
+            {
+              "name": "Noodles",
+              "description": "Noodles salteados",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Noodles, legumes, molho de soja"
+            }
+          ]
+        }
+      ]
     }
   ],
   "menu_items": [
@@ -36,7 +96,31 @@
       ],
       "ingredients": "Vegetables, pork, flour, oil",
       "allergens": "Gluten",
-      "portion": "2 pieces"
+      "portion": "2 pieces",
+      "complement_groups": [
+        {
+          "title": "Molhos",
+          "description": "Escolha o molho para acompanhar",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Molho Agridoce",
+              "description": "Molho agridoce tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Vinagre, açúcar, molho de soja"
+            },
+            {
+              "name": "Molho de Pimenta",
+              "description": "Molho de pimenta picante",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta, óleo, sal"
+            }
+          ]
+        }
+      ]
     },
     {
       "category": "Main Dishes",
@@ -49,7 +133,140 @@
       ],
       "ingredients": "Duck, pancakes, hoisin sauce, cucumber, scallion",
       "allergens": "Gluten, Soy",
-      "portion": "Serves 2"
+      "portion": "Serves 2",
+      "complement_groups": [
+        {
+          "title": "Molhos",
+          "description": "Escolha os molhos para acompanhar",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Molho Hoisin",
+              "description": "Molho hoisin tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho hoisin"
+            },
+            {
+              "name": "Molho de Pimenta",
+              "description": "Molho de pimenta picante",
+              "price": "1,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta, óleo, sal"
+            },
+            {
+              "name": "Molho de Soja",
+              "description": "Molho de soja tradicional",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Molho de soja"
+            }
+          ]
+        },
+        {
+          "title": "Acompanhamentos",
+          "description": "Adicione acompanhamentos extras",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Arroz Branco",
+              "description": "Arroz branco soltinho",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Arroz branco, sal"
+            },
+            {
+              "name": "Arroz Frito",
+              "description": "Arroz frito com legumes",
+              "price": "5,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Arroz, legumes, óleo"
+            },
+            {
+              "name": "Noodles",
+              "description": "Noodles salteados",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Noodles, legumes, molho de soja"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Main Dishes",
+      "name": "Kung Pao Chicken",
+      "description": "Frango salteado com amendoins e pimenta.",
+      "price": "18.99",
+      "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+      "tags": [
+        "Spicy"
+      ],
+      "ingredients": "Chicken, peanuts, chili, vegetables",
+      "allergens": "Nuts, Soy",
+      "portion": "Serves 1",
+      "complement_groups": [
+        {
+          "title": "Nível de Picante",
+          "description": "Escolha o nível de picante",
+          "required": true,
+          "max_selections": 1,
+          "complements": [
+            {
+              "name": "Suave",
+              "description": "Pouco picante",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta suave"
+            },
+            {
+              "name": "Médio",
+              "description": "Picante moderado",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1528607929212-2636ec44253e?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta média"
+            },
+            {
+              "name": "Forte",
+              "description": "Muito picante",
+              "price": "0,00",
+              "image": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Pimenta forte"
+            }
+          ]
+        },
+        {
+          "title": "Acompanhamentos",
+          "description": "Escolha seus acompanhamentos",
+          "required": false,
+          "max_selections": 2,
+          "complements": [
+            {
+              "name": "Arroz Branco",
+              "description": "Arroz branco soltinho",
+              "price": "3,00",
+              "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Arroz branco, sal"
+            },
+            {
+              "name": "Arroz Frito",
+              "description": "Arroz frito com legumes",
+              "price": "5,00",
+              "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=formathttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80fit=crophttps://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80w=400https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80q=80https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=400&q=80ixlib=rb-4.0.3",
+              "ingredients": "Arroz, legumes, óleo"
+            },
+            {
+              "name": "Noodles",
+              "description": "Noodles salteados",
+              "price": "4,00",
+              "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80",
+              "ingredients": "Noodles, legumes, molho de soja"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
