@@ -7,6 +7,7 @@ import MenuSection from "@/components/MenuSection";
 import SearchBar from "@/components/SearchBar";
 import CategoryGrid from "@/components/CategoryGrid";
 import { useSearchParams } from "next/navigation";
+import { SortOption } from "@/components/SortModal";
 
 interface RestaurantClientPageProps {
   initialRestaurant: Restaurant;
@@ -280,6 +281,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid"|"list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [currentSort, setCurrentSort] = useState<SortOption>({ field: "name", direction: "asc" });
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
 
   // Quando uma categoria é selecionada no grid, muda para o modo lista e seleciona a categoria
@@ -316,6 +318,8 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         restaurants={restaurants}
         selectedRestaurantId={selectedRestaurantId}
         onSelectRestaurant={setSelectedRestaurantId}
+        currentSort={viewMode === "list" ? currentSort : undefined}
+        onSortChange={viewMode === "list" ? setCurrentSort : undefined}
         data-tutorial="restaurant-switch"
       />
       {/* Carousel: mostra todos os destaques na home, só os da categoria selecionada na categoria */}
@@ -359,6 +363,8 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
             activeCategory={selectedCategory}
             setActiveCategory={setSelectedCategory}
             onGridClick={handleGridClick}
+            currentSort={currentSort}
+            onSortChange={setCurrentSort}
           />
           <SearchBar
             restaurant={selectedRestaurant}

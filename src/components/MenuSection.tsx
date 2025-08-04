@@ -7,6 +7,7 @@ import { MenuItem } from "./data";
 import DishModal from "./DishModal";
 import { useTranslation } from "./i18n";
 import DishCard from "./DishCard";
+import { SortOption } from "./SortModal";
 
 interface MenuSectionProps {
   searchTerm?: string;
@@ -16,9 +17,11 @@ interface MenuSectionProps {
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
   onGridClick?: () => void;
+  currentSort?: SortOption;
+  onSortChange?: (sort: SortOption) => void;
 }
 
-export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, activeCategory, setActiveCategory, onGridClick }: MenuSectionProps) {
+export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, activeCategory, setActiveCategory, onGridClick, currentSort, onSortChange }: MenuSectionProps) {
   const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
@@ -66,6 +69,24 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
     filteredItems = menuItems;
   } else {
     filteredItems = menuItems.filter(item => item.category === activeCategory);
+  }
+
+  // Aplica ordenação se especificada
+  if (currentSort) {
+    filteredItems = [...filteredItems].sort((a, b) => {
+      if (currentSort.field === "name") {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        return currentSort.direction === "asc" 
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA);
+      } else {
+        // Ordenação por preço
+        const priceA = parseFloat(a.price.replace(/[^\d,.-]/g, '').replace(',', '.'));
+        const priceB = parseFloat(b.price.replace(/[^\d,.-]/g, '').replace(',', '.'));
+        return currentSort.direction === "asc" ? priceA - priceB : priceB - priceA;
+      }
+    });
   }
 
   const handleCardClick = (item: MenuItem) => {

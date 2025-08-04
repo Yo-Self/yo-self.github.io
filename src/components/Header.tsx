@@ -5,12 +5,16 @@ import { useTranslation } from "./i18n";
 import { Restaurant } from "./data";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import SortButton from "./SortButton";
+import { SortOption } from "./SortModal";
 
 interface HeaderProps {
   restaurant?: Restaurant;
   restaurants?: Restaurant[];
   selectedRestaurantId?: string;
   onSelectRestaurant?: (id: string) => void;
+  currentSort?: SortOption;
+  onSortChange?: (sort: SortOption) => void;
 }
 
 // Função para detectar iOS
@@ -263,7 +267,7 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
   );
 }
 
-export default function Header({ restaurant, restaurants, selectedRestaurantId, onSelectRestaurant }: HeaderProps) {
+export default function Header({ restaurant, restaurants, selectedRestaurantId, onSelectRestaurant, currentSort, onSortChange }: HeaderProps) {
   const { t } = useTranslation();
   if (restaurants && restaurants.length > 1 && restaurant) {
     return (
@@ -275,7 +279,10 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
             onSelect={onSelectRestaurant!}
             current={restaurant}
           />
-          <div className="absolute top-3 right-4">
+          <div className="absolute top-3 right-4 flex items-center gap-2">
+            {currentSort && onSortChange && (
+              <SortButton currentSort={currentSort} onSortChange={onSortChange} />
+            )}
             <ShareButton restaurant={restaurant} />
           </div>
         </div>
@@ -288,7 +295,10 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
       <div className="container mx-auto flex items-center justify-center px-4 m-0 pt-6 relative">
         <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100">{restaurant?.name}</h1>
         {restaurant && (
-          <div className="absolute top-6 right-4">
+          <div className="absolute top-6 right-4 flex items-center gap-2">
+            {currentSort && onSortChange && (
+              <SortButton currentSort={currentSort} onSortChange={onSortChange} />
+            )}
             <ShareButton restaurant={restaurant} />
           </div>
         )}
