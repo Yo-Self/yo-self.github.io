@@ -29,12 +29,12 @@ const getGridSteps = (hasMultiple: boolean) => [
 const journalSteps = [
   {
     selector: '[data-tutorial="journal-button"]',
-    text: 'Aqui você acessa o modo jornal para ver a lista de pratos por categoria em uma visualização de mais itens por página.',
+    text: 'Aqui você acessa o modo jornal e visualizar mais itens por página.',
     arrow: 'left',
   },
   {
     selector: '[data-tutorial="search-button"]',
-    text: 'Aqui você pode buscar pratos rapidamente.',
+    text: 'Aqui você pode buscar pratos ou ingredientes rapidamente.',
     arrow: 'left',
   },
 ];
@@ -47,12 +47,34 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
   const [show, setShow] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const [pos, setPos] = React.useState({top:0,left:0,width:0,height:0});
+  const [tutorialTimers, setTutorialTimers] = React.useState<NodeJS.Timeout[]>([]);
+  
+  // Função para limpar todos os timers de tutorial
+  const clearTutorialTimers = () => {
+    tutorialTimers.forEach(timer => clearTimeout(timer));
+    setTutorialTimers([]);
+  };
+  
+  // Função para pular para o próximo tutorial
+  const skipToNextTutorial = () => {
+    clearTutorialTimers();
+    
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      setShow(false);
+      if (typeof window !== 'undefined') localStorage.setItem('gridTutorialDone', '1');
+      onDone();
+    }
+  };
+  
   React.useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('gridTutorialDone')) {
       setShow(true);
     }
     setIsClient(true);
   }, []);
+  
   React.useEffect(() => {
     if (!show) return;
     if (step >= steps.length) return;
@@ -61,15 +83,24 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
       const rect = el.getBoundingClientRect();
       setPos({top:rect.top,left:rect.left,width:rect.width,height:rect.height});
     }
-  }, [step, show, steps]);
-  const next = () => {
-    if (step < steps.length - 1) setStep(step + 1);
-    else {
-      setShow(false);
-      if (typeof window !== 'undefined') localStorage.setItem('gridTutorialDone', '1');
-      onDone();
-    }
-  };
+    
+    // Timer automático para avançar para o próximo passo
+    const timer = setTimeout(() => {
+      if (step < steps.length - 1) {
+        setStep(step + 1);
+      } else {
+        setShow(false);
+        if (typeof window !== 'undefined') localStorage.setItem('gridTutorialDone', '1');
+        onDone();
+      }
+    }, 5000); // 4 segundos por passo
+    
+    setTutorialTimers([timer]);
+    
+    return () => {
+      clearTutorialTimers();
+    };
+  }, [step, show, steps, onDone]);
   if (!isClient || !show || step >= steps.length) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;
@@ -114,13 +145,13 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999]">
       {/* Overlay escuro que captura todos os cliques */}
-      <div className="absolute inset-0 bg-black/60 pointer-events-auto" onClick={() => setShow(false)} style={{cursor:'pointer', zIndex: 9999}} />
+      <div className="absolute inset-0 bg-black/60 pointer-events-auto" onClick={skipToNextTutorial} style={{cursor:'pointer', zIndex: 9999}} />
       {/* Destaque do elemento e caixa de texto não interativos exceto botão */}
       <div className="pointer-events-none">
         <div style={{position:'absolute',top:pos.top-8,left:pos.left-8,width:pos.width+16,height:pos.height+16,borderRadius:16,border:'3px solid #06b6d4',boxShadow:'0 0 0 9999px rgba(0,0,0,0.5)',pointerEvents:'none'}} />
         <div style={{position:'absolute',top:boxTop,left:boxLeft,width:boxWidth,zIndex:10000}} className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-4 text-gray-900 dark:text-gray-100 animate-fade-in">
           <div className="mb-2">{steps[step].text}</div>
-          <button className="mt-2 px-4 py-2 bg-primary text-white rounded-lg pointer-events-auto" onClick={next}>Próximo</button>
+          <div className="mt-2 text-xs text-gray-500">Clique para pular.</div>
         </div>
       </div>
     </div>
@@ -133,12 +164,34 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
   const [show, setShow] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const [pos, setPos] = React.useState({top:0,left:0,width:0,height:0});
+  const [tutorialTimers, setTutorialTimers] = React.useState<NodeJS.Timeout[]>([]);
+  
+  // Função para limpar todos os timers de tutorial
+  const clearTutorialTimers = () => {
+    tutorialTimers.forEach(timer => clearTimeout(timer));
+    setTutorialTimers([]);
+  };
+  
+  // Função para pular para o próximo tutorial
+  const skipToNextTutorial = () => {
+    clearTutorialTimers();
+    
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      setShow(false);
+      if (typeof window !== 'undefined') localStorage.setItem('journalTutorialDone', '1');
+      onDone();
+    }
+  };
+  
   React.useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('journalTutorialDone')) {
       setShow(true);
     }
     setIsClient(true);
   }, []);
+  
   React.useEffect(() => {
     if (!show) return;
     if (step >= steps.length) return;
@@ -147,15 +200,24 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
       const rect = el.getBoundingClientRect();
       setPos({top:rect.top,left:rect.left,width:rect.width,height:rect.height});
     }
-  }, [step, show, steps]);
-  const next = () => {
-    if (step < steps.length - 1) setStep(step + 1);
-    else {
-      setShow(false);
-      if (typeof window !== 'undefined') localStorage.setItem('journalTutorialDone', '1');
-      onDone();
-    }
-  };
+    
+    // Timer automático para avançar para o próximo passo
+    const timer = setTimeout(() => {
+      if (step < steps.length - 1) {
+        setStep(step + 1);
+      } else {
+        setShow(false);
+        if (typeof window !== 'undefined') localStorage.setItem('journalTutorialDone', '1');
+        onDone();
+      }
+    }, 4000); // 4 segundos por passo
+    
+    setTutorialTimers([timer]);
+    
+    return () => {
+      clearTutorialTimers();
+    };
+  }, [step, show, steps, onDone]);
   if (!isClient || !show || step >= steps.length) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;
@@ -200,13 +262,13 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999]">
       {/* Overlay escuro que captura todos os cliques */}
-      <div className="absolute inset-0 bg-black/60 pointer-events-auto" onClick={() => setShow(false)} style={{cursor:'pointer', zIndex: 9999}} />
+      <div className="absolute inset-0 bg-black/60 pointer-events-auto" onClick={skipToNextTutorial} style={{cursor:'pointer', zIndex: 9999}} />
       {/* Destaque do elemento e caixa de texto não interativos exceto botão */}
       <div className="pointer-events-none">
         <div style={{position:'absolute',top:pos.top-8,left:pos.left-8,width:pos.width+16,height:pos.height+16,borderRadius:16,border:'3px solid #06b6d4',boxShadow:'0 0 0 9999px rgba(0,0,0,0.5)',pointerEvents:'none'}} />
         <div style={{position:'absolute',top:boxTop,left:boxLeft,width:boxWidth,zIndex:10000}} className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-4 text-gray-900 dark:text-gray-100 animate-fade-in">
           <div className="mb-2">{steps[step].text}</div>
-          <button className="mt-2 px-4 py-2 bg-primary text-white rounded-lg pointer-events-auto" onClick={next}>Próximo</button>
+          <div className="mt-2 text-xs text-gray-500">Clique para pular</div>
         </div>
       </div>
     </div>
