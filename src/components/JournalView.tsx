@@ -548,12 +548,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             idx === currentCategoryIdx ? (
               <span
                 key={cat}
-                className="text-sm font-semibold text-primary dark:text-cyan-400 text-center leading-tight flex items-center justify-center bg-primary/10 border border-primary/30 dark:border-cyan-700 px-3 h-7 rounded-full shadow-sm truncate overflow-hidden whitespace-nowrap"
+                className="text-xs font-bold text-white text-center leading-tight flex items-center justify-center bg-primary dark:bg-cyan-600 px-3 h-8 rounded-full shadow-lg whitespace-nowrap"
                 style={{
-                  maxWidth: 120,
+                  minWidth: 'fit-content',
+                  maxWidth: 150,
                   wordBreak: 'break-word',
                   display: 'inline-flex',
-                  minHeight: 8
+                  minHeight: 32
                 }}
               >
                 {cat}
@@ -561,8 +562,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             ) : (
               <button
                 key={cat}
-                className="h-7 px-3 rounded-full bg-gray-200 dark:bg-gray-700 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-300 dark:border-gray-600"
-                style={{minWidth: 32, maxWidth: 64, display: 'inline-block'}}
+                className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-400 dark:border-gray-500"
                 onClick={() => {
                   // Navegar para a primeira página da categoria clicada
                   const catIdx = categoryList.indexOf(cat);

@@ -79,3 +79,256 @@ body {
 .animate-spin-gradient {
   animation: spin-gradient 2.5s linear infinite;
 }
+
+/* Classes de acessibilidade para tamanhos de fonte */
+.font-normal {
+  font-size: 16px;
+}
+
+.font-large {
+  font-size: 18px;
+}
+
+.font-extra-large {
+  font-size: 20px;
+}
+
+/* Ajustes específicos para componentes */
+.font-large .w-8,
+.font-large .h-8 {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.font-extra-large .w-8,
+.font-extra-large .h-8 {
+  width: 3rem;
+  height: 3rem;
+}
+
+.font-large .w-10,
+.font-large .h-10 {
+  width: 3rem;
+  height: 3rem;
+}
+
+.font-extra-large .w-10,
+.font-extra-large .h-10 {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+/* Ajustes para o modo jornal */
+.font-large .journal-view {
+  padding: 1.5rem;
+}
+
+.font-extra-large .journal-view {
+  padding: 2rem;
+}
+
+.font-large .journal-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+}
+
+.font-extra-large .journal-card {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+}
+
+.font-large .journal-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.font-extra-large .journal-title {
+  font-size: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.font-large .journal-description {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.font-extra-large .journal-description {
+  font-size: 1.25rem;
+  line-height: 1.7;
+}
+
+.font-large .journal-price {
+  font-size: 1.25rem;
+}
+
+.font-extra-large .journal-price {
+  font-size: 1.5rem;
+}
+
+/* Ajustes para cards de pratos */
+.font-large .dish-card {
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.font-extra-large .dish-card {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.font-large .dish-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.font-extra-large .dish-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.font-large .dish-card p {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.font-extra-large .dish-card p {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+/* Ajustes para grid responsivo */
+.font-large .menu-grid {
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.font-extra-large .menu-grid {
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* Ajustes para header */
+.font-large .header {
+  padding: 1rem 0;
+}
+
+.font-extra-large .header {
+  padding: 1.25rem 0;
+}
+
+.font-large .header h1,
+.font-large .logo {
+  font-size: 1.5rem;
+}
+
+.font-extra-large .header h1,
+.font-extra-large .logo {
+  font-size: 1.75rem;
+}
+
+/* Ajustes para botões de texto (não ícones) */
+.font-large button:not(.w-8):not(.h-8):not(.w-10):not(.h-10):not(.w-16):not(.h-16):not(.w-6):not(.h-6) {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.font-extra-large button:not(.w-8):not(.h-8):not(.w-10):not(.h-10):not(.w-16):not(.h-16):not(.w-6):not(.h-6) {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Ajustes para modal */
+.font-large .modal-content {
+  padding: 2rem;
+  max-width: 90vw;
+}
+
+.font-extra-large .modal-content {
+  padding: 2.5rem;
+  max-width: 95vw;
+}
+
+.font-large .modal-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.font-extra-large .modal-title {
+  font-size: 1.75rem;
+  margin-bottom: 2rem;
+}
+
+/* Ajustes para categorias */
+.font-large .category-card {
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.font-extra-large .category-card {
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.font-large .category-title {
+  font-size: 1.25rem;
+}
+
+.font-extra-large .category-title {
+  font-size: 1.5rem;
+}
+
+/* Ajustes para carousel */
+.font-large .carousel-item {
+  padding: 1.5rem;
+}
+
+.font-extra-large .carousel-item {
+  padding: 2rem;
+}
+
+.font-large .carousel-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.font-extra-large .carousel-title {
+  font-size: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Ajustes para search bar */
+.font-large .search-bar {
+  padding: 1rem;
+  margin: 1.5rem;
+}
+
+.font-extra-large .search-bar {
+  padding: 1.25rem;
+  margin: 2rem;
+}
+
+.font-large .search-input {
+  font-size: 1.125rem;
+  padding: 0.75rem 1rem;
+}
+
+.font-extra-large .search-input {
+  font-size: 1.25rem;
+  padding: 1rem 1.25rem;
+}
+
+/* Ajustes para texto truncado */
+.font-large .truncate {
+  max-width: calc(100% - 2rem);
+}
+
+.font-extra-large .truncate {
+  max-width: calc(100% - 2.5rem);
+}
+
+/* Garantir que ícones SVG sejam sempre visíveis */
+svg {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
