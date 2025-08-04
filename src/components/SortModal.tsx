@@ -3,7 +3,7 @@
 import React from "react";
 
 export type SortOption = {
-  field: "name" | "price";
+  field: "name" | "price" | "default";
   direction: "asc" | "desc";
 };
 
@@ -17,7 +17,7 @@ interface SortModalProps {
 export default function SortModal({ open, onClose, currentSort, onSortChange }: SortModalProps) {
   if (!open) return null;
 
-  const handleSortChange = (field: "name" | "price", direction: "asc" | "desc") => {
+  const handleSortChange = (field: "name" | "price" | "default", direction: "asc" | "desc") => {
     onSortChange({ field, direction });
     onClose();
   };
@@ -40,6 +40,23 @@ export default function SortModal({ open, onClose, currentSort, onSortChange }: 
         </div>
 
         <div className="space-y-4">
+          {/* Ordenação Padrão */}
+          <div className="space-y-2">
+            <h4 className="font-semibold text-gray-900 dark:text-gray-100">Ordenação</h4>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleSortChange("default", "asc")}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${
+                  currentSort.field === "default"
+                    ? "bg-cyan-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
+              >
+                Padrão
+              </button>
+            </div>
+          </div>
+
           {/* Ordenação por Nome */}
           <div className="space-y-2">
             <h4 className="font-semibold text-gray-900 dark:text-gray-100">Nome</h4>

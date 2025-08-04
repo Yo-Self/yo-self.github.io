@@ -281,7 +281,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid"|"list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [currentSort, setCurrentSort] = useState<SortOption>({ field: "name", direction: "asc" });
+  const [currentSort, setCurrentSort] = useState<SortOption>({ field: "default", direction: "asc" });
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
 
   // Quando uma categoria é selecionada no grid, muda para o modo lista e seleciona a categoria

@@ -72,7 +72,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
   }
 
   // Aplica ordenação se especificada
-  if (currentSort) {
+  if (currentSort && currentSort.field !== "default") {
     filteredItems = [...filteredItems].sort((a, b) => {
       if (currentSort.field === "name") {
         const nameA = a.name.toLowerCase();

@@ -20,7 +20,13 @@ export default function SortButton({ currentSort, onSortChange }: SortButtonProp
     );
 
     // Se há ordenação ativa, mostra ícone específico
-    if (currentSort.field === "name") {
+    if (currentSort.field === "default") {
+      return (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+      );
+    } else if (currentSort.field === "name") {
       return currentSort.direction === "asc" ? (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
