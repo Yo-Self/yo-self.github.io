@@ -28,15 +28,6 @@ const isIOS = () => {
   // Verifica se é iPad com macOS
   const isIPadMacOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
   
-  console.log('Detecção iOS:', {
-    userAgent: navigator.userAgent,
-    platform: navigator.platform,
-    maxTouchPoints: navigator.maxTouchPoints,
-    isIOSDevice,
-    isSafariIOS,
-    isIPadMacOS
-  });
-  
   return isIOSDevice || isSafariIOS || isIPadMacOS;
 };
 
@@ -54,20 +45,12 @@ const shareMenu = async (restaurant: Restaurant) => {
     url: typeof window !== 'undefined' ? window.location.href : '',
   };
 
-  console.log('Tentando compartilhar:', {
-    hasShare: !!navigator.share,
-    hasCanShare: !!navigator.canShare,
-    isIOS: isIOS(),
-    isSafari: isSafari(),
-    isSecure: window.location.protocol === 'https:',
-    userAgent: navigator.userAgent
-  });
+
 
   // No iOS, força o uso da Web Share API
   if (isIOS()) {
     // Verifica se está em HTTPS (necessário para Web Share API)
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-      console.log('Web Share API requer HTTPS');
       alert('Para compartilhar, acesse o site via HTTPS');
       return;
     }
@@ -77,8 +60,6 @@ const shareMenu = async (restaurant: Restaurant) => {
       await navigator.share(shareData);
       return;
     } catch (shareError) {
-      console.log('Erro no Web Share API (iOS):', shareError);
-      
       // Se for cancelamento, não faz nada
       if (shareError instanceof Error && shareError.name === 'AbortError') {
         return;
@@ -91,8 +72,6 @@ const shareMenu = async (restaurant: Restaurant) => {
         });
         return;
       } catch (urlError) {
-        console.log('Erro no Web Share API (iOS) - apenas URL:', urlError);
-        
         if (urlError instanceof Error && urlError.name === 'AbortError') {
           return;
         }
@@ -106,8 +85,6 @@ const shareMenu = async (restaurant: Restaurant) => {
       await navigator.share(shareData);
       return;
     } catch (shareError) {
-      console.log('Erro no Web Share API:', shareError);
-      
       if (shareError instanceof Error && shareError.name === 'AbortError') {
         return;
       }
@@ -122,7 +99,7 @@ const shareMenu = async (restaurant: Restaurant) => {
       return;
     }
   } catch (clipboardError) {
-    console.log('Erro no Clipboard API:', clipboardError);
+    // Continua para o próximo fallback
   }
 
   // Fallback: execCommand
@@ -143,7 +120,7 @@ const shareMenu = async (restaurant: Restaurant) => {
       return;
     }
   } catch (execError) {
-    console.log('Erro no execCommand:', execError);
+    // Continua para o próximo fallback
   }
 
   // Última tentativa
