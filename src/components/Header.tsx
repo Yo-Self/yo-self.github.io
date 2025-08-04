@@ -13,6 +13,182 @@ interface HeaderProps {
   onSelectRestaurant?: (id: string) => void;
 }
 
+// Função para detectar iOS
+const isIOS = () => {
+  if (typeof window === 'undefined') return false;
+  
+  // Verifica se é iOS
+  const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  
+  // Verifica se é Safari no iOS
+  const isSafariIOS = /Safari/.test(navigator.userAgent) && 
+                     !/Chrome/.test(navigator.userAgent) && 
+                     /iPad|iPhone|iPod/.test(navigator.userAgent);
+  
+  // Verifica se é iPad com macOS
+  const isIPadMacOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  
+  console.log('Detecção iOS:', {
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    maxTouchPoints: navigator.maxTouchPoints,
+    isIOSDevice,
+    isSafariIOS,
+    isIPadMacOS
+  });
+  
+  return isIOSDevice || isSafariIOS || isIPadMacOS;
+};
+
+// Função para detectar Safari
+const isSafari = () => {
+  if (typeof window === 'undefined') return false;
+  return /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+};
+
+// Função para compartilhar o cardápio
+const shareMenu = async (restaurant: Restaurant) => {
+  const shareData = {
+    title: `Cardápio - ${restaurant.name}`,
+    text: `Confira o cardápio do ${restaurant.name}!`,
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  };
+
+  console.log('Tentando compartilhar:', {
+    hasShare: !!navigator.share,
+    hasCanShare: !!navigator.canShare,
+    isIOS: isIOS(),
+    isSafari: isSafari(),
+    isSecure: window.location.protocol === 'https:',
+    userAgent: navigator.userAgent
+  });
+
+  // No iOS, força o uso da Web Share API
+  if (isIOS()) {
+    // Verifica se está em HTTPS (necessário para Web Share API)
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      console.log('Web Share API requer HTTPS');
+      alert('Para compartilhar, acesse o site via HTTPS');
+      return;
+    }
+    
+    try {
+      // Tenta com dados completos
+      await navigator.share(shareData);
+      return;
+    } catch (shareError) {
+      console.log('Erro no Web Share API (iOS):', shareError);
+      
+      // Se for cancelamento, não faz nada
+      if (shareError instanceof Error && shareError.name === 'AbortError') {
+        return;
+      }
+      
+      // Se falhar com dados completos, tenta apenas com URL
+      try {
+        await navigator.share({
+          url: shareData.url
+        });
+        return;
+      } catch (urlError) {
+        console.log('Erro no Web Share API (iOS) - apenas URL:', urlError);
+        
+        if (urlError instanceof Error && urlError.name === 'AbortError') {
+          return;
+        }
+      }
+    }
+  }
+
+  // Para outros dispositivos, tenta Web Share API normal
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (shareError) {
+      console.log('Erro no Web Share API:', shareError);
+      
+      if (shareError instanceof Error && shareError.name === 'AbortError') {
+        return;
+      }
+    }
+  }
+
+  // Fallback: Clipboard API
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(shareData.url);
+      alert('Link copiado para a área de transferência!');
+      return;
+    }
+  } catch (clipboardError) {
+    console.log('Erro no Clipboard API:', clipboardError);
+  }
+
+  // Fallback: execCommand
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = shareData.url;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    if (successful) {
+      alert('Link copiado para a área de transferência!');
+      return;
+    }
+  } catch (execError) {
+    console.log('Erro no execCommand:', execError);
+  }
+
+  // Última tentativa
+  alert(`Não foi possível compartilhar automaticamente. Copie este link: ${shareData.url}`);
+};
+
+// Botão de compartilhar
+function ShareButton({ restaurant }: { restaurant: Restaurant }) {
+  const [isSharing, setIsSharing] = useState(false);
+
+  const handleShare = async () => {
+    if (!restaurant) return;
+    
+    setIsSharing(true);
+    try {
+      await shareMenu(restaurant);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  if (!restaurant) return null;
+
+  return (
+    <button
+      onClick={handleShare}
+      disabled={isSharing}
+      className="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-400 transition-colors duration-200 shadow-lg"
+      aria-label="Compartilhar cardápio"
+      title="Compartilhar cardápio"
+    >
+      {isSharing ? (
+        <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      ) : (
+        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 // Extracted DropdownToggleButton for clarity and reusability
 function DropdownToggleButton({
   open,
@@ -115,13 +291,16 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   if (restaurants && restaurants.length > 1 && restaurant) {
     return (
       <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
-        <div className="container mx-auto flex flex-col items-center justify-center px-0 m-0 pt-3">
+        <div className="container mx-auto flex flex-col items-center justify-center px-0 m-0 pt-3 relative">
           <RestaurantDropdown
             restaurants={restaurants}
             selectedRestaurantId={selectedRestaurantId}
             onSelect={onSelectRestaurant!}
             current={restaurant}
           />
+          <div className="absolute top-3 right-4">
+            <ShareButton restaurant={restaurant} />
+          </div>
         </div>
       </header>
     );
@@ -129,8 +308,13 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   // fallback: single restaurant
   return (
     <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
-      <div className="container mx-auto flex items-center justify-center px-4 m-0 pt-6">
+      <div className="container mx-auto flex items-center justify-center px-4 m-0 pt-6 relative">
         <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100">{restaurant?.name}</h1>
+        {restaurant && (
+          <div className="absolute top-6 right-4">
+            <ShareButton restaurant={restaurant} />
+          </div>
+        )}
       </div>
     </header>
   );
