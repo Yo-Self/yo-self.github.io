@@ -29,7 +29,7 @@ const getGridSteps = (hasMultiple: boolean) => [
 const journalSteps = [
   {
     selector: '[data-tutorial="journal-button"]',
-    text: 'Aqui você acessa o modo jornal para ver os pratos por categoria.',
+    text: 'Aqui você acessa o modo jornal para ver a lista de pratos por categoria em uma visualização de mais itens por página.',
     arrow: 'left',
   },
   {

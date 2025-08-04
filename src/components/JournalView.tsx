@@ -19,11 +19,137 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const [modalOpen, setModalOpen] = useState(false);
   const [cardsPerPage, setCardsPerPage] = useState(6); // Inicial com 6, será calculado dinamicamente
   const [pinnedDishes, setPinnedDishes] = useState<Set<string>>(new Set()); // Set de IDs dos pratos pinados
+  const [showSwipeTutorial, setShowSwipeTutorial] = useState(false);
+  const [showCategoriesTutorial, setShowCategoriesTutorial] = useState(false);
+  const [showPinTutorial, setShowPinTutorial] = useState(false);
+  const [pinButtonPosition, setPinButtonPosition] = useState({ top: 0, left: 0 });
+  const [tutorialTimers, setTutorialTimers] = useState<NodeJS.Timeout[]>([]);
   const itemsPerPage = 3;
   const categories = Array.from(new Set(restaurant.menu_items.map(item => item.category)));
   
   // O JournalView deve funcionar independentemente da prop selectedCategory
   // A prop é apenas para referência, mas o JournalView mantém sua própria lógica
+  
+  // Função para limpar todos os timers de tutorial
+  const clearTutorialTimers = () => {
+    tutorialTimers.forEach(timer => clearTimeout(timer));
+    setTutorialTimers([]);
+  };
+  
+  // Função para pular para o próximo tutorial
+  const skipToNextTutorial = () => {
+    clearTutorialTimers();
+    
+    if (showSwipeTutorial) {
+      setShowSwipeTutorial(false);
+      setShowCategoriesTutorial(true);
+      const categoriesTimer = setTimeout(() => {
+        setShowCategoriesTutorial(false);
+        setShowPinTutorial(true);
+        // Calcular posição do botão de pin
+        setTimeout(() => {
+          const pinButton = document.querySelector('[data-tutorial="pin-button"]') as HTMLElement;
+          
+          if (pinButton) {
+            const rect = pinButton.getBoundingClientRect();
+            setPinButtonPosition({
+              top: rect.top,
+              left: rect.left
+            });
+          } else {
+            setPinButtonPosition({
+              top: 120,
+              left: 20
+            });
+          }
+        }, 300);
+        const pinTimer = setTimeout(() => {
+          setShowPinTutorial(false);
+          localStorage.setItem('journalSwipeTutorialDone', '1');
+        }, 6000);
+        setTutorialTimers([pinTimer]);
+      }, 6000);
+      setTutorialTimers([categoriesTimer]);
+    } else if (showCategoriesTutorial) {
+      setShowCategoriesTutorial(false);
+      setShowPinTutorial(true);
+      // Calcular posição do botão de pin
+      setTimeout(() => {
+        const pinButton = document.querySelector('[data-tutorial="pin-button"]') as HTMLElement;
+        
+        if (pinButton) {
+          const rect = pinButton.getBoundingClientRect();
+          setPinButtonPosition({
+            top: rect.top,
+            left: rect.left
+          });
+        } else {
+          setPinButtonPosition({
+            top: 120,
+            left: 20
+          });
+        }
+      }, 300);
+      const pinTimer = setTimeout(() => {
+        setShowPinTutorial(false);
+        localStorage.setItem('journalSwipeTutorialDone', '1');
+      }, 6000);
+      setTutorialTimers([pinTimer]);
+    } else if (showPinTutorial) {
+      setShowPinTutorial(false);
+      localStorage.setItem('journalSwipeTutorialDone', '1');
+    }
+  };
+  
+    // Tutorial de primeira acesso para swipe
+  useEffect(() => {
+    if (open && typeof window !== 'undefined') {
+      const hasSeenTutorial = localStorage.getItem('journalSwipeTutorialDone');
+      if (!hasSeenTutorial) {
+        setShowSwipeTutorial(true);
+        const timer = setTimeout(() => {
+          setShowSwipeTutorial(false);
+          setShowCategoriesTutorial(true);
+          const categoriesTimer = setTimeout(() => {
+            setShowCategoriesTutorial(false);
+            setShowPinTutorial(true);
+            // Calcular posição do botão de pin
+            setTimeout(() => {
+              const pinButton = document.querySelector('[data-tutorial="pin-button"]') as HTMLElement;
+              
+              if (pinButton) {
+                const rect = pinButton.getBoundingClientRect();
+                console.log('Pin button found at:', rect);
+                setPinButtonPosition({
+                  top: rect.top,
+                  left: rect.left
+                });
+              } else {
+                console.log('Pin button not found, using fallback position');
+                // Fallback: posição estimada no primeiro card
+                setPinButtonPosition({
+                  top: 120,
+                  left: 20
+                });
+              }
+            }, 300);
+            const pinTimer = setTimeout(() => {
+              setShowPinTutorial(false);
+              localStorage.setItem('journalSwipeTutorialDone', '1');
+            }, 6000);
+            setTutorialTimers([pinTimer]);
+          }, 6000);
+          setTutorialTimers([categoriesTimer]);
+        }, 4000);
+        setTutorialTimers([timer]);
+      }
+    }
+    
+    // Cleanup dos timers quando o componente for desmontado
+    return () => {
+      clearTutorialTimers();
+    };
+  }, [open]);
   
   // Calcular quantos cards cabem na tela
   useEffect(() => {
@@ -518,6 +644,135 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       </div>
       {/* Modal de detalhes do prato */}
       <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
+      
+      {/* Tutorial de Swipe */}
+      <AnimatePresence>
+        {showSwipeTutorial && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center"
+            onClick={skipToNextTutorial}
+            style={{ cursor: 'pointer' }}
+          >
+            {/* Overlay semi-transparente */}
+            <div className="absolute inset-0 bg-black/20" />
+            
+            {/* Container do tutorial */}
+            <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm mx-4 text-center">
+              {/* Ícone de mão animado */}
+              <div className="flex justify-center mb-4">
+                <motion.div
+                  animate={{
+                    x: [-30, 30, -30],
+                    rotate: [-5, 5, -5],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="text-5xl"
+                >
+                  👆
+                </motion.div>
+              </div>
+              
+              {/* Texto do tutorial */}
+              <p className="text-gray-700 dark:text-gray-200 text-lg font-medium mb-2">
+                Deslize para navegar
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Use o gesto de swipe para mudar de página
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tutorial de Categorias */}
+      <AnimatePresence>
+        {showCategoriesTutorial && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300]"
+            onClick={skipToNextTutorial}
+            style={{ cursor: 'pointer' }}
+          >
+            {/* Overlay semi-transparente */}
+            <div className="absolute inset-0 bg-black/20" />
+            
+            {/* Destaque das categorias */}
+            <div 
+              className="absolute top-1 left-1/2 transform -translate-x-1/2"
+              style={{
+                width: 'calc(100vw - 64px)',
+                maxWidth: '600px',
+                height: '40px',
+                border: '3px solid #06b6d4',
+                borderRadius: '20px',
+                boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
+                pointerEvents: 'none'
+              }}
+            />
+            
+            {/* Caixa de texto */}
+            <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 text-center max-w-xs">
+              <p className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+                Aqui você pode navegar entre as categorias
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tutorial de Fixar Prato */}
+      <AnimatePresence>
+        {showPinTutorial && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300]"
+            onClick={skipToNextTutorial}
+            style={{ cursor: 'pointer' }}
+          >
+            {/* Overlay semi-transparente */}
+            <div className="absolute inset-0 bg-black/20" />
+            
+            {/* Destaque do botão de fixar - posicionado dinamicamente */}
+            <div 
+              className="absolute"
+              style={{
+                top: `${pinButtonPosition.top - 2}px`,
+                left: `${pinButtonPosition.left - 2}px`,
+                width: '28px',
+                height: '28px',
+                border: '3px solid #06b6d4',
+                borderRadius: '50%',
+                boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
+                pointerEvents: 'none'
+              }}
+            />
+            
+            {/* Caixa de texto - posicionada próximo ao card destacado */}
+            <div 
+              className="absolute bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 text-center max-w-xs"
+              style={{
+                top: `${pinButtonPosition.top + 40}px`,
+                left: `${Math.max(20, Math.min(pinButtonPosition.left - 80, window.innerWidth - 280))}px`
+              }}
+            >
+              <p className="text-gray-700 dark:text-gray-200 text-sm font-medium">
+                Aqui você pode fixar um prato para sempre visualizar ele enquanto navega entre o jornal
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 } 

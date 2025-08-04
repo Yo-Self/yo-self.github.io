@@ -34,6 +34,7 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
 
         {/* Ícone de pin no canto superior esquerdo */}
         <button
+          data-tutorial="pin-button"
           className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center z-40 transition-all duration-200 ${
             isPinned 
               ? 'bg-yellow-500 text-white shadow-lg' 
