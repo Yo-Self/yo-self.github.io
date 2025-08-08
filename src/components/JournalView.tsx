@@ -541,6 +541,40 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         }}
         tabIndex={-1}
       />
+
+      {/* Botões visíveis de navegação (meio da página, cantos esquerdo e direito) */}
+      <button
+        aria-label="Página anterior"
+        className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
+        onClick={() => {
+          if (page > 0) {
+            setFlipDirection('prev');
+            setPage(prev => prev - 1);
+          }
+        }}
+        disabled={page <= 0}
+        style={{ opacity: page <= 0 ? 0.5 : 1 }}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      <button
+        aria-label="Próxima página"
+        className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
+        onClick={() => {
+          if (page < totalPages - 1) {
+            setFlipDirection('next');
+            setPage(prev => prev + 1);
+          }
+        }}
+        disabled={page >= totalPages - 1}
+        style={{ opacity: page >= totalPages - 1 ? 0.5 : 1 }}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
       {/* Indicador de categoria no topo + botão de fechar alinhados */}
       <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-1 mb-1 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
         <div className="flex gap-2 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
