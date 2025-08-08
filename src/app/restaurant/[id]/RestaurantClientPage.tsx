@@ -283,11 +283,18 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentSort, setCurrentSort] = useState<SortOption>({ field: "default", direction: "asc" });
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
+  const carouselRef = React.useRef<HTMLDivElement | null>(null);
 
   // Quando uma categoria é selecionada no grid, muda para o modo lista e seleciona a categoria
   const handleSelectCategory = (category: string) => {
     setSelectedCategory(category);
     setViewMode("list");
+    // Scroll para o topo da página (inclui Header + destaques)
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 0);
+    }
   };
 
   // Função para voltar ao grid de categorias
@@ -322,6 +329,8 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         onSortChange={viewMode === "list" ? setCurrentSort : undefined}
         data-tutorial="restaurant-switch"
       />
+      {/* Anchor do Carousel para scroll controlado */}
+      <div ref={carouselRef} />
       {/* Carousel: mostra todos os destaques na home, só os da categoria selecionada na categoria */}
       {viewMode === 'grid' ? (
         <Carousel restaurant={selectedRestaurant} data-tutorial="carousel" />
