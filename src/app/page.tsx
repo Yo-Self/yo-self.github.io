@@ -2,26 +2,17 @@ import Link from "next/link";
 import { fetchFullRestaurants } from "@/services/restaurants";
 
 export default async function Home() {
-  let restaurants: Array<{ id: string; name: string; image: string; description?: string }> = [];
-  let error: string | null = null;
-  try {
-    const full = await fetchFullRestaurants();
-    restaurants = full.map(r => ({ id: r.id, name: r.name, image: r.image, description: r.welcome_message }));
-  } catch (e) {
-    console.error(e);
-    error = 'Erro ao carregar restaurantes.';
-  }
-
+  const full = await fetchFullRestaurants().catch(() => []);
+  const restaurants = full.map(r => ({ id: r.id, name: r.name, image: r.image, description: r.welcome_message }));
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6 md:p-10 mx-2">
         <h1 className="text-2xl md:text-3xl font-bold text-center mb-8 text-gray-900 dark:text-gray-100">Select Restaurant</h1>
         <div className="flex flex-col gap-8">
-          {error && <div className="text-center text-red-500">{error}</div>}
-          {!error && restaurants.length === 0 && (
+          {restaurants.length === 0 && (
             <div className="text-center text-gray-600 dark:text-gray-300">Nada encontrado</div>
           )}
-          {!error && restaurants.map((restaurant) => (
+          {restaurants.map((restaurant) => (
             <Link
               key={restaurant.id}
               href={`/restaurant/${restaurant.id}`}
