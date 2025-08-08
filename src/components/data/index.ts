@@ -36,6 +36,7 @@ export type Restaurant = {
   name: string;
   welcome_message: string;
   image: string;
+  slug?: string;
   menu_categories: string[];
   featured_dishes: Dish[];
   menu_items: MenuItem[];
