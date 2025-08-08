@@ -6,6 +6,7 @@ import DishModal from "./DishModal";
 import Image from "next/image";
 
 function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean; showMostOrderedTitle?: boolean }) {
+  if (!dish) return null;
   return (
     <div
       className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 ${noMargin ? '' : 'mx-2'} transition-all duration-300
@@ -18,13 +19,13 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
     >
       <div className={`aspect-[4/3] overflow-hidden rounded-2xl relative w-full h-full`}>
         <Image
-          src={dish.image}
-          alt={dish.name}
+          src={dish.image || '/window.svg'}
+          alt={dish.name || 'Item do cardápio'}
           fill
           className="w-full h-full object-cover animate-kenburns"
           style={{ objectFit: 'cover' }}
           sizes="100vw"
-          priority
+          loading="lazy"
         />
         {/* Badge "mais pedido" no canto superior direito de cada card */}
         {showMostOrderedTitle && (
@@ -35,7 +36,7 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
           </div>
         )}
         <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-          {dish.name}
+          {dish.name || 'Item' }
         </div>
       </div>
     </div>
@@ -47,7 +48,9 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const featured = restaurant.featured_dishes;
+  const featured: Dish[] = Array.isArray(restaurant.featured_dishes)
+    ? (restaurant.featured_dishes.filter(Boolean) as Dish[])
+    : [];
 
   // Swipe state
   const touchStartX = useRef<number | null>(null);
@@ -55,9 +58,11 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
 
   // Auto-rotate
   useEffect(() => {
-    timeoutRef.current = setTimeout(() => {
-      setCurrent((prev) => (prev + 1) % featured.length);
-    }, 5000);
+    if (featured.length > 1) {
+      timeoutRef.current = setTimeout(() => {
+        setCurrent((prev) => (prev + 1) % featured.length);
+      }, 5000);
+    }
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
@@ -96,14 +101,21 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
 
   // Carousel logic for showing side/main/side
   const getDisplayDishes = () => {
+    if (featured.length === 1) {
+      return [{ dish: featured[0], size: 'main' as const, idx: 0 }];
+    }
     const prev = (current - 1 + featured.length) % featured.length;
     const next = (current + 1) % featured.length;
     return [
       { dish: featured[prev], size: 'side' as const, idx: prev },
       { dish: featured[current], size: 'main' as const, idx: current },
       { dish: featured[next], size: 'side' as const, idx: next },
-    ];
+    ].filter((entry) => Boolean(entry.dish));
   };
+
+  if (featured.length === 0) {
+    return null;
+  }
 
   return (
     <section className="carousel-section py-0 bg-white dark:bg-black" {...props}>
@@ -117,14 +129,16 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
           {featured.length === 1 ? (
             <div className="flex justify-center w-full px-4">
               <div className="max-w-[480px] w-full">
-                <CarouselCard
-                  key={restaurant.id + '-0'}
-                  dish={featured[0]}
-                  onClick={() => handleCardClick(featured[0])}
-                  size="main"
-                  noMargin={true}
-                  showMostOrderedTitle={showMostOrderedTitle}
-                />
+                {featured[0] && (
+                  <CarouselCard
+                    key={restaurant.id + '-0'}
+                    dish={featured[0]}
+                    onClick={() => handleCardClick(featured[0])}
+                    size="main"
+                    noMargin={true}
+                    showMostOrderedTitle={showMostOrderedTitle}
+                  />
+                )}
               </div>
             </div>
           ) : (
@@ -151,7 +165,7 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
                 <div className="flex items-center justify-center w-full max-w-[480px] mx-auto">
                   {getDisplayDishes().map(({ dish, size }, idx) => (
                     <CarouselCard
-                      key={restaurant.id + '-' + dish.name + '-' + dish.image + '-' + idx}
+                      key={restaurant.id + '-' + (dish?.name ?? 'dish') + '-' + (dish?.image ?? 'img') + '-' + idx}
                       dish={dish}
                       onClick={() => size === 'main' && handleCardClick(dish)}
                       size={size}

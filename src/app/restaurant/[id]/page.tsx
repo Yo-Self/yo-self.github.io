@@ -1,15 +1,17 @@
-import { restaurantMap, restaurants } from "@/components/data";
 import { notFound } from "next/navigation";
 import RestaurantClientPage from "./RestaurantClientPage";
 import { Suspense } from "react";
+import { fetchFullRestaurants, fetchRestaurantIds } from "@/services/restaurants";
 
-export function generateStaticParams() {
-  return restaurants.map(r => ({ id: r.id }));
+export async function generateStaticParams() {
+  const ids = await fetchRestaurantIds();
+  return ids.map(id => ({ id }));
 }
 
-export default async function RestaurantMenuPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const initialRestaurant = restaurantMap[id];
+export default async function RestaurantMenuPage({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const restaurants = await fetchFullRestaurants();
+  const initialRestaurant = restaurants.find(r => r.id === id) ?? null;
   if (!initialRestaurant) return notFound();
   return (
     <Suspense fallback={null}>
@@ -19,4 +21,4 @@ export default async function RestaurantMenuPage({ params }: { params: Promise<{
       />
     </Suspense>
   );
-} 
+}

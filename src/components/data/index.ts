@@ -40,17 +40,3 @@ export type Restaurant = {
   featured_dishes: Dish[];
   menu_items: MenuItem[];
 };
-
-import korean from './korean.json';
-import japanese from './japanese.json';
-import chinese from './chinese.json';
-import moendo from './moendo.json';
-
-export const restaurants: Restaurant[] = [
-  korean,
-  japanese,
-  chinese,
-  moendo
-];
-
-export const restaurantMap = Object.fromEntries(restaurants.map(r => [ r.id, r ])); 
