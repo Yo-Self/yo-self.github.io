@@ -103,14 +103,16 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_UR
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
 const REST_BASE = `${SUPABASE_URL}/rest/v1`;
 
-async function sbFetch<T>(pathWithQuery: string): Promise<T> {
+async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${REST_BASE}/${pathWithQuery}`, {
+    ...init,
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      ...(init?.headers || {}),
     },
-    // Next can cache/rest; for simplicity, no-cache
-    cache: 'no-store',
+    // Importante: para Next export (estático), evitar no-store
+    cache: init?.cache ?? 'force-cache',
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
