@@ -298,7 +298,11 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
     fetchCategoriesRows(r.id),
     fetchDishesRows(r.id),
   ]);
-  return composeRestaurantModel(r, cats, dishes);
+  const dishIds = dishes.map(d => String(d.id));
+  const groups = await fetchComplementGroupsByDishIds(dishIds);
+  const groupIds = groups.map(g => g.id);
+  const complements = await fetchComplementsByGroupIds(groupIds);
+  return composeRestaurantModel(r, cats, dishes, groups, complements);
 }
 
 export async function fetchRestaurantByCuisineWithData(cuisineType: string): Promise<Restaurant | null> {
@@ -309,7 +313,11 @@ export async function fetchRestaurantByCuisineWithData(cuisineType: string): Pro
     fetchCategoriesRows(r.id),
     fetchDishesRows(r.id),
   ]);
-  return composeRestaurantModel(r, cats, dishes);
+  const dishIds = dishes.map(d => String(d.id));
+  const groups = await fetchComplementGroupsByDishIds(dishIds);
+  const groupIds = groups.map(g => g.id);
+  const complements = await fetchComplementsByGroupIds(groupIds);
+  return composeRestaurantModel(r, cats, dishes, groups, complements);
 }
 
 
