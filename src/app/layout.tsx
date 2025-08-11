@@ -15,6 +15,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata = {
   title: "Restaurant Menu",
   description: "Digital menu for restaurants",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
