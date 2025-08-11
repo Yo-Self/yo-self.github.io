@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { MenuItem } from "./data";
 
 type CategoriesBarProps = {
@@ -15,6 +15,45 @@ type CategoriesBarProps = {
 export default function CategoriesBar({ allCategories, activeCategory, setActiveCategory, t, menuItems, fallbackImage, onGridClick, isHome = false }: CategoriesBarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Pré-carrega todas as traduções das categorias para evitar delay
+  const categoryLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    allCategories.forEach(category => {
+      labels[category] = t(category);
+    });
+    labels["all"] = t("Todos");
+    return labels;
+  }, [allCategories, t]);
+
+  // Pré-carrega as imagens das categorias para evitar delay
+  const categoryImages = useMemo(() => {
+    const images: Record<string, string[]> = {};
+    allCategories.forEach(category => {
+      const categoryItems = menuItems.filter(item => item.category === category);
+      images[category] = categoryItems.length > 0 
+        ? categoryItems.map(item => item.image || fallbackImage)
+        : [fallbackImage];
+    });
+    images["all"] = [fallbackImage];
+    return images;
+  }, [allCategories, menuItems, fallbackImage]);
+
+  // Pré-carrega as imagens das categorias para melhorar performance
+  useEffect(() => {
+    const preloadImages = () => {
+      Object.values(categoryImages).flat().forEach(imageUrl => {
+        if (imageUrl && imageUrl !== fallbackImage) {
+          const img = new Image();
+          img.src = imageUrl;
+        }
+      });
+    };
+    
+    // Pré-carrega as imagens após um pequeno delay para não bloquear a renderização inicial
+    const timer = setTimeout(preloadImages, 100);
+    return () => clearTimeout(timer);
+  }, [categoryImages, fallbackImage]);
 
   // --- Correção: permitir scroll vertical na página mesmo ao tocar na barra de categorias ---
   // Se o movimento for mais vertical que horizontal, não impedir scroll da página
@@ -137,12 +176,8 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
       >
         {categoriesWithAll.map((category, idx) => {
           const isAll = category === "all";
-          const label = isAll ? t("Todos") : t(category);
-          const images = isAll
-            ? [fallbackImage]
-            : menuItems.filter(item => item.category === category).map(item => item.image || fallbackImage);
-          // Garante que sempre haja pelo menos o fallbackImage
-          const imagesToUse = images.length > 0 ? images : [fallbackImage];
+          const label = categoryLabels[category] || category; // Usa o cache de traduções
+          const imagesToUse = categoryImages[category] || [fallbackImage]; // Usa o cache de imagens
           return (
             <CategoryBarCard
               key={category}
@@ -161,7 +196,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
 }
 
 // Novo componente para card animado
-const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
+const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
   label: string;
   images: string[];
   active: boolean;
@@ -175,9 +210,11 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
     const [next, setNext] = React.useState<number|null>(null);
     const [showNext, setShowNext] = React.useState(false);
     const [imgError, setImgError] = React.useState(false);
+    const [imgLoaded, setImgLoaded] = React.useState(false);
 
     React.useEffect(() => {
       setImgError(false); // resetar erro ao trocar categoria
+      setImgLoaded(false); // resetar carregamento
     }, [imagesToUse, label]);
 
     React.useEffect(() => {
@@ -209,9 +246,15 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
         <img
           src={currentImg}
           alt={label}
-          className="object-cover w-full h-full rounded-xl absolute inset-0 z-0"
+          className={`object-cover w-full h-full rounded-xl absolute inset-0 z-0 transition-opacity duration-200 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
           draggable={false}
-          onError={e => { setImgError(true); e.currentTarget.src = fallbackImage; }}
+          loading="eager"
+          onLoad={() => setImgLoaded(true)}
+          onError={e => { 
+            setImgError(true); 
+            e.currentTarget.src = fallbackImage; 
+            setImgLoaded(true);
+          }}
         />
         {/* Próxima imagem faz fade-in por cima */}
         {showNext && nextImg && (
@@ -221,11 +264,18 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
             className="object-cover w-full h-full rounded-xl absolute inset-0 z-10 transition-opacity duration-1000 opacity-0 animate-fadein"
             style={{animation: 'fadein 1s forwards'}}
             draggable={false}
+            loading="eager"
             onError={e => { setImgError(true); e.currentTarget.src = fallbackImage; }}
           />
         )}
         <span className="absolute inset-0 flex items-center justify-center z-10">
-          <span className="text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate">
+          <span 
+            className="text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate"
+            style={{ 
+              textRendering: 'optimizeSpeed',
+              willChange: 'auto'
+            }}
+          >
             {label}
           </span>
         </span>
@@ -238,4 +288,6 @@ const CategoryBarCard = React.forwardRef<HTMLButtonElement, {
       </button>
     );
   }
-); 
+));
+
+CategoryBarCard.displayName = 'CategoryBarCard'; 
