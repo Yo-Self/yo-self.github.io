@@ -16,9 +16,30 @@ export const metadata = {
   title: "Restaurant Menu",
   description: "Digital menu for restaurants",
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
+  openGraph: {
+    title: "Restaurant Menu",
+    description: "Digital menu for restaurants",
+    images: [
+      {
+        url: '/favicon.svg',
+        width: 1024,
+        height: 1024,
+        alt: 'Restaurant Menu Icon',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: "Restaurant Menu",
+    description: "Digital menu for restaurants",
+    images: ['/favicon.svg'],
   },
 };
 
@@ -29,6 +50,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/favicon.ico" />
+        <meta property="og:image" content="/favicon.svg" />
+        <meta property="og:image:width" content="1024" />
+        <meta property="og:image:height" content="1024" />
+        <meta name="twitter:image" content="/favicon.svg" />
+      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <AccessibilityProvider>
           {children}
