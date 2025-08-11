@@ -20,24 +20,6 @@ export const metadata = {
     shortcut: '/favicon.ico',
     apple: '/favicon.ico',
   },
-  openGraph: {
-    title: "Restaurant Menu",
-    description: "Digital menu for restaurants",
-    images: [
-      {
-        url: '/favicon.svg',
-        width: 1024,
-        height: 1024,
-        alt: 'Restaurant Menu Icon',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary',
-    title: "Restaurant Menu",
-    description: "Digital menu for restaurants",
-    images: ['/favicon.svg'],
-  },
 };
 
 export default function RootLayout({
