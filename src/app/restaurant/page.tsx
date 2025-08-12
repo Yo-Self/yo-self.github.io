@@ -1,14 +1,9 @@
 import Link from "next/link";
-import { fetchFullRestaurants } from "@/services/restaurants";
+import { fetchRestaurantsBasic } from "@/services/restaurants";
 
 export default async function RestaurantSelectionPage() {
-  const full = await fetchFullRestaurants().catch(() => []);
-  const restaurants = full.map((r) => ({
-    id: r.id,
-    name: r.name,
-    image: r.image,
-    description: r.welcome_message,
-  }));
+  // Versão estática: usa lista básica (cacheável no build) para evitar no-store no GitHub Pages
+  const restaurants = await fetchRestaurantsBasic().catch(() => []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
@@ -25,7 +20,7 @@ export default async function RestaurantSelectionPage() {
           {restaurants.map((restaurant) => (
             <Link
               key={restaurant.id}
-              href={`/restaurant/${restaurant.id}`}
+              href={`/restaurant/${restaurant.id}/`}
               className="block rounded-2xl overflow-hidden shadow group focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <div className="relative h-48 md:h-56 w-full">

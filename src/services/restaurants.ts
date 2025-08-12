@@ -325,4 +325,15 @@ export async function fetchRestaurantByCuisineWithData(cuisineType: string): Pro
   return composeRestaurantModel(r, cats, dishes, groups, complements);
 }
 
+// Leve: lista apenas dados básicos dos restaurantes para páginas estáticas (evita fetch dinâmico)
+export async function fetchRestaurantsBasic(): Promise<Array<{ id: string; name: string; image: string; welcome_message: string }>> {
+  const rows = await fetchRestaurantsRows();
+  return rows.map(r => ({
+    id: String(r.id),
+    name: r.name,
+    image: r.image_url || '',
+    welcome_message: r.description || `Bem-vindo ao ${r.name}`,
+  }));
+}
+
 
