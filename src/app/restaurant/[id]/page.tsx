@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData } from "@/services/restaurants";
 
 export const revalidate = 60;
-export const dynamicParams = false; // não gerar fallback para [id]
+export const dynamicParams = true; // permitir fallback (GH Pages pode acessar direto via URL)
 
 export async function generateStaticParams() {
   const ids = await fetchRestaurantIds();
