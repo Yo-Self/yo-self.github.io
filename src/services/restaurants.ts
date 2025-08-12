@@ -287,10 +287,6 @@ export async function fetchRestaurantIds(): Promise<string[]> {
 }
 
 export async function fetchRestaurantByIdWithData(id: string): Promise<Restaurant | null> {
-  // Evita chamadas inválidas durante export/prerender (ex.: "[id]")
-  if (!id || id.includes('[') || id.includes(']')) {
-    return null;
-  }
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
   const r = rows && rows[0];
   if (!r) return null;
