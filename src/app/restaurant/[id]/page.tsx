@@ -3,6 +3,8 @@ import RestaurantClientPage from "./RestaurantClientPage";
 import { Suspense } from "react";
 import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData } from "@/services/restaurants";
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   const ids = await fetchRestaurantIds();
   return ids.map(id => ({ id }));
