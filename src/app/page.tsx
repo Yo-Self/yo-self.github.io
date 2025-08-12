@@ -1,5 +1,65 @@
 import Link from "next/link";
 
+// Dados reais do Café Moendo para demonstração
+const moendoDishes = [
+  {
+    name: "Espresso Especial",
+    description: "Café espresso premium",
+    price: "8,90",
+    image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Destaque", "Cafés"]
+  },
+  {
+    name: "Hambúrguer Artesanal",
+    description: "Hambúrguer gourmet com batatas",
+    price: "42,90",
+    image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Destaque", "Lanches"]
+  },
+  {
+    name: "Cappuccino Cremoso",
+    description: "Cappuccino com espuma cremosa e chocolate",
+    price: "12,50",
+    image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Cafés"]
+  },
+  {
+    name: "Sanduíche Natural",
+    description: "Sanduíche com frango e vegetais frescos",
+    price: "18,90",
+    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Lanches"]
+  },
+  {
+    name: "Latte Macchiato",
+    description: "Leite vaporizado com shot de espresso",
+    price: "14,90",
+    image: "https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Cafés"]
+  },
+  {
+    name: "X-Burger Clássico",
+    description: "Hambúrguer com queijo, alface e tomate",
+    price: "28,50",
+    image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Lanches"]
+  },
+  {
+    name: "Mocha Especial",
+    description: "Café com chocolate e chantilly",
+    price: "16,90",
+    image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Cafés"]
+  },
+  {
+    name: "X-Salada Premium",
+    description: "Hambúrguer com salada completa e molho especial",
+    price: "35,90",
+    image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+    tags: ["Lanches"]
+  }
+];
+
 // Dados de exemplo para demonstração
 const sampleDishes = [
   {
@@ -66,6 +126,8 @@ function StaticDishCard({ dish, size = "large" }: { dish: typeof sampleDishes[0]
     </div>
   );
 }
+
+
 
 export default function Home() {
   return (
@@ -200,7 +262,7 @@ export default function Home() {
                 Navegação por páginas com gestos
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {sampleDishes.slice(0, 4).map((dish, index) => (
+                {moendoDishes.map((dish, index) => (
                   <div key={index} className="relative">
                     <img 
                       src={dish.image} 
@@ -217,6 +279,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+
 
       {/* CTA */}
       <section className="mx-auto max-w-5xl px-6 pb-24">
