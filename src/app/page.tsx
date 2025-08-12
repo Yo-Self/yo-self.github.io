@@ -75,7 +75,7 @@ export default function Home() {
                 O Yoself transforma seu cardápio em uma jornada intuitiva e inclusiva. QR Code sem fricção, leitura acessível, design moderno e navegação por gestos – tudo para seus clientes encontrarem o que desejam em poucos toques.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Link href="/restaurant" className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-6 py-3 text-white font-semibold shadow hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                <Link href="/restaurant/" className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-6 py-3 text-white font-semibold shadow hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400">
                   Ver cardápios
                 </Link>
                 <a href="#features" className="inline-flex items-center justify-center rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-3 text-gray-900 dark:text-gray-100 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-400">
@@ -213,7 +213,7 @@ export default function Home() {
               <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Pronto para elevar seu cardápio?</h3>
               <p className="mt-2 text-gray-700 dark:text-gray-300">Leve a experiência do seu cliente para o próximo nível com o Yoself.</p>
             </div>
-            <Link href="/restaurant" className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-6 py-3 text-white font-semibold shadow hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-white/60">
+            <Link href="/restaurant/" className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-6 py-3 text-white font-semibold shadow hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-white/60">
               Explorar cardápios
             </Link>
           </div>
