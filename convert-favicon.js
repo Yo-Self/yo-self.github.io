@@ -1,42 +1,78 @@
 const fs = require('fs');
 const path = require('path');
+const { PNG } = require('pngjs');
 
-// Lê o SVG
-const svgContent = fs.readFileSync('./public/favicon.svg', 'utf8');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
-// Cria um favicon.ico básico (placeholder)
-// Na prática, você precisaria de uma biblioteca como sharp ou jimp para converter SVG para ICO
-// Por enquanto, vamos criar um arquivo ICO simples
-
-// Cria um arquivo ICO básico (16x16 pixels, formato simples)
-const icoHeader = Buffer.from([
-  0x00, 0x00, // Reserved
-  0x01, 0x00, // Type (1 = ICO)
-  0x01, 0x00, // Number of images
-  0x10, 0x00, // Width (16)
-  0x10, 0x00, // Height (16)
-  0x00, 0x00, // Color count
-  0x00, 0x00, // Reserved
-  0x01, 0x00, // Planes
-  0x20, 0x00, // Bits per pixel
-  0x00, 0x00, 0x00, 0x00, // Size of image data
-  0x16, 0x00, 0x00, 0x00  // Offset to image data
-]);
-
-// Cria um pixel simples (16x16, 32-bit RGBA)
-const pixelData = Buffer.alloc(16 * 16 * 4);
-for (let i = 0; i < pixelData.length; i += 4) {
-  pixelData[i] = 0x00;     // R
-  pixelData[i + 1] = 0x00; // G
-  pixelData[i + 2] = 0x00; // B
-  pixelData[i + 3] = 0xFF; // A
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-// Atualiza o tamanho no header
-const totalSize = icoHeader.length + pixelData.length;
-icoHeader.writeUInt32LE(totalSize, 8);
+// Gera um PNG sólido com um ícone simples desenhado (não renderiza SVG, mas cria um placeholder bonito)
+function generatePng(width, height, fileName) {
+  const png = new PNG({ width, height });
 
-// Escreve o arquivo ICO
-fs.writeFileSync('./public/favicon.ico', Buffer.concat([icoHeader, pixelData]));
+  // Fundo turquesa
+  const bg = { r: 6, g: 182, b: 212, a: 255 };
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (width * y + x) << 2;
+      png.data[idx] = bg.r;
+      png.data[idx + 1] = bg.g;
+      png.data[idx + 2] = bg.b;
+      png.data[idx + 3] = bg.a;
+    }
+  }
 
-console.log('Favicon.ico criado!');
+  // Desenha um glifo branco simples (quatro quadrados) centralizados
+  const unit = Math.floor(Math.min(width, height) / 4);
+  const padding = Math.floor(unit / 2);
+  const blocks = [
+    { x: padding, y: padding },
+    { x: padding + unit + padding, y: padding },
+    { x: padding, y: padding + unit + padding },
+    { x: padding + unit + padding, y: padding + unit + padding },
+  ];
+  const blockSize = unit;
+
+  blocks.forEach(({ x, y }) => {
+    for (let yy = 0; yy < blockSize; yy++) {
+      for (let xx = 0; xx < blockSize; xx++) {
+        const px = x + xx;
+        const py = y + yy;
+        if (px >= 0 && px < width && py >= 0 && py < height) {
+          const idx = (width * py + px) << 2;
+          png.data[idx] = 255;
+          png.data[idx + 1] = 255;
+          png.data[idx + 2] = 255;
+          png.data[idx + 3] = 255;
+        }
+      }
+    }
+  });
+
+  const outPath = path.join(PUBLIC_DIR, fileName);
+  png.pack().pipe(fs.createWriteStream(outPath));
+  return new Promise((resolve) => {
+    png.on('end', () => resolve(outPath));
+  });
+}
+
+async function main() {
+  ensureDir(PUBLIC_DIR);
+
+  const tasks = [
+    generatePng(16, 16, 'favicon-16x16.png'),
+    generatePng(32, 32, 'favicon-32x32.png'),
+    generatePng(180, 180, 'apple-touch-icon.png'),
+    generatePng(1200, 630, 'og-image.png'),
+  ];
+
+  await Promise.all(tasks);
+  console.log('PNG favicons and OG image generated in /public');
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
