@@ -389,3 +389,39 @@ svg {
 .dark .sticky .categories-bar {
   background: black !important;
 }
+
+/* Estilos específicos para o modo jornal - limitar descrição a 2 linhas e 20% do card */
+.journal-view .menu-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.journal-view .menu-card > div:last-child {
+  height: 20% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0.5rem !important;
+  justify-content: center !important;
+}
+
+.journal-view .menu-card p {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  line-height: 1.2em !important;
+  max-height: 2.4em !important;
+  font-size: 0.8rem !important;
+  margin: 0 !important;
+}
+
+.journal-view .menu-card h3 {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  line-height: 1.1em !important;
+  max-height: 2.2em !important;
+  word-wrap: break-word !important;
+  hyphens: auto !important;
+}

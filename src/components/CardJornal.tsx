@@ -55,24 +55,14 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
           </span>
           {/* Nome do prato no canto inferior esquerdo */}
           <div className="absolute bottom-2 left-2 right-16">
-            <h3 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] truncate">
+            <h3 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight">
               {dish.name}
             </h3>
           </div>
         </ImageWithLoading>
       </div>
       <div className="w-full p-4">
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-primary dark:text-cyan-300">R${dish.price}</span>
-          <div className="flex gap-1">
-            {dish.tags?.map((tag) => (
-              <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-300">{dish.description}</p>
       </div>
     </div>
   );
