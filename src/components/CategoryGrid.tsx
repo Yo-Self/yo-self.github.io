@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MenuItem } from "./data";
+import ImageWithLoading from "./ImageWithLoading";
 
 interface CategoryGridProps {
   categories: string[];
@@ -42,11 +43,11 @@ export default function CategoryGrid({ categories, menuItems, onSelectCategory, 
 }
 
 function CategoryCard({ category, images, onClick, fallbackImage }: { category: string; images: string[]; onClick: () => void; fallbackImage: string }) {
-  const [current, setCurrent] = useState(0);
-  const [next, setNext] = useState<number|null>(null);
-  const [showNext, setShowNext] = useState(false);
+  const [current, setCurrent] = React.useState(0);
+  const [next, setNext] = React.useState<number|null>(null);
+  const [showNext, setShowNext] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (images.length <= 1) return;
     const interval = setInterval(() => {
       const nextIdx = (current + 1) % images.length;
@@ -56,7 +57,7 @@ function CategoryCard({ category, images, onClick, fallbackImage }: { category: 
         setCurrent(nextIdx);
         setShowNext(false);
         setNext(null);
-      }, 2000); // duração do fade-in aumentada para 1000ms
+      }, 1000); // duração do fade-in
     }, 4000);
     return () => clearInterval(interval);
   }, [images.length, current]);
@@ -70,22 +71,19 @@ function CategoryCard({ category, images, onClick, fallbackImage }: { category: 
       onClick={onClick}
     >
       {/* Imagem base (sempre visível) */}
-      <img
+      <ImageWithLoading
         src={currentImg}
         alt={category}
         className="object-cover w-full h-full absolute inset-0 z-0"
-        draggable={false}
-        onError={e => (e.currentTarget.src = fallbackImage)}
+        fallbackSrc={fallbackImage}
       />
       {/* Próxima imagem faz fade-in por cima */}
       {showNext && nextImg && (
-        <img
+        <ImageWithLoading
           src={nextImg}
           alt={category}
           className="object-cover w-full h-full absolute inset-0 z-10 transition-opacity duration-1000 opacity-0 animate-fadein"
-          style={{animation: 'fadein 1s forwards'}}
-          draggable={false}
-          onError={e => (e.currentTarget.src = fallbackImage)}
+          fallbackSrc={fallbackImage}
         />
       )}
       {/* Overlay para escurecer e destacar o nome */}

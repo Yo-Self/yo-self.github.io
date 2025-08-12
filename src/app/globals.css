@@ -39,6 +39,14 @@ body {
   animation: kenburns 8s ease-in-out infinite alternate;
 }
 
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadein {
+  animation: fadein 1s forwards;
+}
+
 /* Efeito glow animado para o botão de busca - borda colorida, centro transparente/opaco */
 .search-glow-btn {
   position: relative;

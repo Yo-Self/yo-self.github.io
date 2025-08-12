@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { fetchRestaurantsBasic } from "@/services/restaurants";
+import ImageWithLoading from "@/components/ImageWithLoading";
 
 export default async function RestaurantSelectionPage() {
   // Versão estática: usa lista básica (cacheável no build) para evitar no-store no GitHub Pages
@@ -24,17 +25,18 @@ export default async function RestaurantSelectionPage() {
               className="block rounded-2xl overflow-hidden shadow group focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <div className="relative h-48 md:h-56 w-full">
-                <img
+                <ImageWithLoading
                   src={restaurant.image}
                   alt={`Restaurante ${restaurant.name}`}
-                  loading="lazy"
                   className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-end rounded-2xl">
-                  <span className="text-white text-2xl md:text-3xl font-bold p-6 pb-8 drop-shadow-lg">
-                    {restaurant.name}
-                  </span>
-                </div>
+                  fallbackSrc="/window.svg"
+                >
+                  <div className="absolute inset-0 bg-black/30 flex items-end rounded-2xl">
+                    <span className="text-white text-2xl md:text-3xl font-bold p-6 pb-8 drop-shadow-lg">
+                      {restaurant.name}
+                    </span>
+                  </div>
+                </ImageWithLoading>
               </div>
             </Link>
           ))}

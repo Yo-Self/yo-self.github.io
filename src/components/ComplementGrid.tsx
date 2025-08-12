@@ -1,5 +1,6 @@
 import React from "react";
 import { ComplementGroup, Complement } from "./data";
+import ImageWithLoading from "./ImageWithLoading";
 
 interface ComplementGridProps {
   complementGroup: ComplementGroup;
@@ -58,44 +59,45 @@ export default function ComplementGrid({
               style={{ height: '90px', paddingBottom: 0 }}
             >
               <div className="relative w-full" style={{ height: '60%' }}>
-                <img
+                <ImageWithLoading
                   src={complement.image}
                   alt={complement.name}
                   className="w-full h-full object-cover rounded-t-lg"
-                />
-                
-                {/* Checkbox de seleção */}
-                <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center z-10 transition-all duration-200 ${
-                  isSelected 
-                    ? 'bg-primary dark:bg-cyan-400 text-white' 
-                    : 'bg-white/80 text-gray-600'
-                }`}>
-                  {isSelected && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
-                  )}
-                </div>
-                
-                {/* Preço no canto inferior direito */}
-                <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-                  R${complement.price}
-                </span>
-                
-                {/* Nome do complemento no canto inferior esquerdo */}
-                <div className="absolute bottom-2 left-2 right-16">
-                  <h4 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight" style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'normal',
-                    lineHeight: '1.1',
-                  }}>
-                    {complement.name}
-                  </h4>
-                </div>
+                  fallbackSrc="/window.svg"
+                >
+                  {/* Checkbox de seleção */}
+                  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center z-10 transition-all duration-200 ${
+                    isSelected 
+                      ? 'bg-primary dark:bg-cyan-400 text-white' 
+                      : 'bg-white/80 text-gray-600'
+                  }`}>
+                    {isSelected && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                      </svg>
+                    )}
+                  </div>
+                  
+                  {/* Preço no canto inferior direito */}
+                  <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+                    R${complement.price}
+                  </span>
+                  
+                  {/* Nome do complemento no canto inferior esquerdo */}
+                  <div className="absolute bottom-2 left-2 right-16">
+                    <h4 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight" style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'normal',
+                      lineHeight: '1.1',
+                    }}>
+                      {complement.name}
+                    </h4>
+                  </div>
+                </ImageWithLoading>
               </div>
               
               {/* Detalhes abaixo da foto (40% do card) */}

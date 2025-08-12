@@ -1,5 +1,6 @@
 import React from "react";
 import { Dish } from "./data";
+import ImageWithLoading from "./ImageWithLoading";
 
 interface DishCardProps {
   dish: Dish;
@@ -8,22 +9,22 @@ interface DishCardProps {
 }
 
 export default function DishCard({ dish, onClick, size = "large", fallbackImage }: DishCardProps & { fallbackImage: string }) {
-  const [imgSrc, setImgSrc] = React.useState(dish.image);
   return (
     <div
       className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-xs" : ""}`}
       onClick={onClick}
     >
       <div className="relative w-full">
-        <img
-          src={imgSrc}
+        <ImageWithLoading
+          src={dish.image}
           alt={dish.name}
+          fallbackSrc={fallbackImage}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
-          onError={() => setImgSrc(fallbackImage)}
-        />
-        <div className="absolute bottom-0 left-0 w-full px-4 py-2">
-          <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>
-        </div>
+        >
+          <div className="absolute bottom-0 left-0 w-full px-4 py-2">
+            <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>
+          </div>
+        </ImageWithLoading>
       </div>
       <div className="w-full p-4">
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>

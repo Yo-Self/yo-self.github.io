@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import SortButton from "./SortButton";
 import { SortOption } from "./SortModal";
 import AccessibilityButton from "./AccessibilityButton";
+import ImageWithLoading from "./ImageWithLoading";
 
 interface HeaderProps {
   restaurant?: Restaurant;
@@ -258,7 +259,12 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
               className={`relative w-full h-20 rounded-2xl overflow-hidden transition ring-offset-2 focus:outline-none ${r.id === selectedRestaurantId ? 'ring-2 ring-cyan-500' : ''}`}
               onClick={() => { onSelect(r.id); setOpen(false); router.push(`/restaurant/${r.id}`); }}
             >
-              <img src={r.image} alt={r.name} className="object-cover w-full h-full rounded-2xl" />
+              <ImageWithLoading
+                src={r.image}
+                alt={r.name}
+                className="object-cover w-full h-full rounded-2xl"
+                fallbackSrc="/window.svg"
+              />
               <span className="absolute inset-0 flex items-center justify-center text-white text-xl font-bold drop-shadow-lg text-center px-2 bg-black/30">{r.name}</span>
             </button>
           ))}

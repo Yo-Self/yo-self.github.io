@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Dish } from "./data";
 import ComplementGrid from "./ComplementGrid";
+import ImageWithLoading from "./ImageWithLoading";
 
 type DishModalProps = {
   open: boolean;
@@ -104,20 +105,26 @@ export default function DishModal({ open, dish, onClose }: DishModalProps) {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden relative mx-4 my-8" onClick={e => e.stopPropagation()}>
         <div className="relative">
-          <img src={dish.image} alt={dish.name} className="w-full h-48 object-cover" />
-          <button
-            className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center bg-transparent p-0 m-0 focus:outline-none z-10"
-            onClick={onClose}
-            aria-label="Close"
+          <ImageWithLoading
+            src={dish.image}
+            alt={dish.name}
+            className="w-full h-48 object-cover"
+            fallbackSrc="/window.svg"
           >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-          <div className="absolute bottom-0 left-0 w-full px-4 py-2">
-            <h2 className="text-2xl font-bold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h2>
-          </div>
+            <button
+              className="absolute top-2 right-2 w-10 h-10 flex items-center justify-center bg-transparent p-0 m-0 focus:outline-none z-10"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <div className="absolute bottom-0 left-0 w-full px-4 py-2">
+              <h2 className="text-2xl font-bold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h2>
+            </div>
+          </ImageWithLoading>
         </div>
         
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">

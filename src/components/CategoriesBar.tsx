@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from "react";
 import { MenuItem } from "./data";
+import ImageWithLoading from "./ImageWithLoading";
 
 type CategoriesBarProps = {
   allCategories: string[];
@@ -209,13 +210,6 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
     const [current, setCurrent] = React.useState(0);
     const [next, setNext] = React.useState<number|null>(null);
     const [showNext, setShowNext] = React.useState(false);
-    const [imgError, setImgError] = React.useState(false);
-    const [imgLoaded, setImgLoaded] = React.useState(false);
-
-    React.useEffect(() => {
-      setImgError(false); // resetar erro ao trocar categoria
-      setImgLoaded(false); // resetar carregamento
-    }, [imagesToUse, label]);
 
     React.useEffect(() => {
       if (imagesToUse.length <= 1) return;
@@ -232,7 +226,7 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
       return () => clearInterval(interval);
     }, [imagesToUse.length, current]);
 
-    const currentImg = !imgError && imagesToUse[current] ? imagesToUse[current] : fallbackImage;
+    const currentImg = imagesToUse[current] || fallbackImage;
     const nextImg = next !== null ? (imagesToUse[next] || fallbackImage) : null;
 
     return (
@@ -243,29 +237,19 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
         style={{ flex: '0 0 auto' }}
       >
         {/* Imagem base (sempre visível) */}
-        <img
+        <ImageWithLoading
           src={currentImg}
           alt={label}
-          className={`object-cover w-full h-full rounded-xl absolute inset-0 z-0 transition-opacity duration-200 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-          draggable={false}
-          loading="eager"
-          onLoad={() => setImgLoaded(true)}
-          onError={e => { 
-            setImgError(true); 
-            e.currentTarget.src = fallbackImage; 
-            setImgLoaded(true);
-          }}
+          className="object-cover w-full h-full rounded-xl absolute inset-0 z-0"
+          fallbackSrc={fallbackImage}
         />
         {/* Próxima imagem faz fade-in por cima */}
         {showNext && nextImg && (
-          <img
+          <ImageWithLoading
             src={nextImg}
             alt={label}
             className="object-cover w-full h-full rounded-xl absolute inset-0 z-10 transition-opacity duration-1000 opacity-0 animate-fadein"
-            style={{animation: 'fadein 1s forwards'}}
-            draggable={false}
-            loading="eager"
-            onError={e => { setImgError(true); e.currentTarget.src = fallbackImage; }}
+            fallbackSrc={fallbackImage}
           />
         )}
         <span className="absolute inset-0 flex items-center justify-center z-10">

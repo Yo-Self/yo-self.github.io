@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fetchRestaurantByIdWithData } from "@/services/restaurants";
 import DynamicCarousel from "../components/DynamicCarousel";
+import ImageWithLoading from "@/components/ImageWithLoading";
 
 // Dados reais do Café Moendo para demonstração
 const moendoDishes = [
@@ -92,22 +93,24 @@ function StaticDishCard({ dish, size = "large" }: { dish: typeof sampleDishes[0]
   return (
     <div className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow flex flex-col items-center overflow-hidden w-full ${size === "small" ? "max-w-full" : ""}`}>
       <div className="relative w-full">
-        <img
+        <ImageWithLoading
           src={dish.image}
           alt={dish.name}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
-        />
-        {/* Tag no canto superior direito - apenas para cards pequenos */}
-        {size === "small" && dish.tags && dish.tags.length > 0 && (
-          <div className="absolute top-2 right-2">
-            <span className="bg-cyan-600 dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
-              {dish.tags[0]}
-            </span>
+          fallbackSrc="/window.svg"
+        >
+          {/* Tag no canto superior direito - apenas para cards pequenos */}
+          {size === "small" && dish.tags && dish.tags.length > 0 && (
+            <div className="absolute top-2 right-2">
+              <span className="bg-cyan-600 dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                {dish.tags[0]}
+              </span>
+            </div>
+          )}
+          <div className="absolute bottom-0 left-0 w-full px-4 py-2">
+            <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] truncate">{dish.name}</h3>
           </div>
-        )}
-        <div className="absolute bottom-0 left-0 w-full px-4 py-2">
-          <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] truncate">{dish.name}</h3>
-        </div>
+        </ImageWithLoading>
       </div>
       <div className="w-full p-4 min-w-0">
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">{dish.description}</p>
@@ -133,7 +136,12 @@ function StaticDishCard({ dish, size = "large" }: { dish: typeof sampleDishes[0]
 
 export default async function Home() {
   // Buscar dados do restaurante Moendo usando o ID específico
-  const moendoRestaurant = await fetchRestaurantByIdWithData("e1f70b34-20f5-4e08-9b68-d801ca33ee54");
+  let moendoRestaurant = null;
+  try {
+    moendoRestaurant = await fetchRestaurantByIdWithData("e1f70b34-20f5-4e08-9b68-d801ca33ee54");
+  } catch (error) {
+    console.error("Erro ao carregar restaurante Moendo:", error);
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-gray-950">
@@ -205,11 +213,11 @@ export default async function Home() {
         <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-8">Destaques que chamam atenção</h2>
         <p className="text-center text-gray-600 dark:text-gray-300 mb-12">Carousel interativo com pratos especiais do restaurante Moendo</p>
         <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 bg-white dark:bg-gray-800 p-8">
-          {moendoRestaurant ? (
+          {moendoRestaurant && moendoRestaurant.featured_dishes && moendoRestaurant.featured_dishes.length > 0 ? (
             <DynamicCarousel restaurant={moendoRestaurant} showMostOrderedTitle={true} />
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-gray-300">Carregando destaques...</p>
+              <p className="text-gray-600 dark:text-gray-300">Nenhum destaque disponível no momento.</p>
             </div>
           )}
         </div>
@@ -239,7 +247,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 p-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">Modo Jornal</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 text-center">Modo Jornal</h3>
             <div className="space-y-3">
               <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
                 Navegação por páginas com gestos
@@ -247,14 +255,16 @@ export default async function Home() {
               <div className="grid grid-cols-2 gap-2">
                 {moendoDishes.map((dish, index) => (
                   <div key={index} className="relative">
-                    <img 
-                      src={dish.image} 
+                    <ImageWithLoading
+                      src={dish.image}
                       alt={dish.name}
                       className="w-full h-20 object-cover rounded-lg"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b-lg">
-                      {dish.name}
-                    </div>
+                      fallbackSrc="/window.svg"
+                    >
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b-lg">
+                        {dish.name}
+                      </div>
+                    </ImageWithLoading>
                   </div>
                 ))}
               </div>

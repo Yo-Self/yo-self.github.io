@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Dish, Restaurant } from "./data";
 import DishModal from "./DishModal";
-import Image from "next/image";
+import ImageWithLoading from "./ImageWithLoading";
 
 function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean; showMostOrderedTitle?: boolean }) {
   if (!dish) return null;
@@ -18,26 +18,23 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
     >
       <div className={`aspect-[4/3] overflow-hidden rounded-2xl relative w-full h-full`}>
-        <Image
+        <ImageWithLoading
           src={dish.image || '/window.svg'}
           alt={dish.name || 'Item do cardápio'}
-          fill
           className="w-full h-full object-cover animate-kenburns"
-          style={{ objectFit: 'cover' }}
-          sizes="100vw"
-          loading="lazy"
-        />
-        {/* Badge "mais pedido" no canto superior direito de cada card */}
-        {showMostOrderedTitle && (
-          <div className="absolute top-2 right-2 z-30 pointer-events-none">
-            <span className="bg-primary dark:bg-cyan-700 text-white text-xs font-bold rounded-full px-2 py-1 select-none">
-              mais pedido
-            </span>
+        >
+          {/* Badge "mais pedido" no canto superior direito de cada card */}
+          {showMostOrderedTitle && (
+            <div className="absolute top-2 right-2 z-30 pointer-events-none">
+              <span className="bg-primary dark:bg-cyan-700 text-white text-xs font-bold rounded-full px-2 py-1 select-none">
+                mais pedido
+              </span>
+            </div>
+          )}
+          <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+            {dish.name || 'Item' }
           </div>
-        )}
-        <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-          {dish.name || 'Item' }
-        </div>
+        </ImageWithLoading>
       </div>
     </div>
   );
