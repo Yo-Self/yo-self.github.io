@@ -1,7 +1,23 @@
 import Link from "next/link";
-import { fetchRestaurantsBasic } from "@/services/restaurants";
+import RestaurantClientPage from "./[id]/RestaurantClientPage";
+import { fetchRestaurantsBasic, fetchRestaurantByIdWithData, fetchFullRestaurants } from "@/services/restaurants";
 
-export default async function RestaurantSelectionPage() {
+export default async function RestaurantSelectionPage({ searchParams }: { searchParams?: { id?: string } }) {
+  // Se receber ?id=... abrir diretamente o restaurante (fallback para GitHub Pages)
+  const id = searchParams?.id;
+  if (id) {
+    const [initialRestaurant, restaurants] = await Promise.all([
+      fetchRestaurantByIdWithData(id),
+      fetchFullRestaurants().catch(() => []),
+    ]);
+    if (initialRestaurant) {
+      return (
+        <RestaurantClientPage initialRestaurant={initialRestaurant} restaurants={restaurants} />
+      );
+    }
+    // Se não encontrou, continua para listagem
+  }
+
   // Versão estática: usa lista básica (cacheável no build) para evitar no-store no GitHub Pages
   const restaurants = await fetchRestaurantsBasic().catch(() => []);
 
