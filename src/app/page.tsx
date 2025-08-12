@@ -28,28 +28,39 @@ const sampleDishes = [
 // Componente estático de card de prato
 function StaticDishCard({ dish, size = "large" }: { dish: typeof sampleDishes[0]; size?: "large" | "small" }) {
   return (
-    <div className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow flex flex-col items-center ${size === "small" ? "max-w-xs" : ""}`}>
+    <div className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow flex flex-col items-center overflow-hidden w-full ${size === "small" ? "max-w-full" : ""}`}>
       <div className="relative w-full">
         <img
           src={dish.image}
           alt={dish.name}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
         />
+        {/* Tag no canto superior direito - apenas para cards pequenos */}
+        {size === "small" && dish.tags && dish.tags.length > 0 && (
+          <div className="absolute top-2 right-2">
+            <span className="bg-cyan-600 dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+              {dish.tags[0]}
+            </span>
+          </div>
+        )}
         <div className="absolute bottom-0 left-0 w-full px-4 py-2">
-          <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>
+          <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] truncate">{dish.name}</h3>
         </div>
       </div>
-      <div className="w-full p-4">
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-cyan-600 dark:text-cyan-300">{dish.price}</span>
-          <div className="flex gap-1">
-            {dish.tags?.map((tag) => (
-              <span key={tag} className="bg-cyan-600 dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
-                {tag}
-              </span>
-            ))}
-          </div>
+      <div className="w-full p-4 min-w-0">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">{dish.description}</p>
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <span className="font-bold text-cyan-600 dark:text-cyan-300 text-sm truncate">{dish.price}</span>
+          {/* Tags na parte inferior - apenas para cards grandes */}
+          {size === "large" && (
+            <div className="flex gap-1 flex-wrap flex-shrink-0">
+              {dish.tags?.map((tag) => (
+                <span key={tag} className="bg-cyan-600 dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -174,9 +185,11 @@ export default function Home() {
           </div>
           <div className="rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 p-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">Grid Responsivo</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 w-full">
               {sampleDishes.map((dish, index) => (
-                <StaticDishCard key={index} dish={dish} size="small" />
+                <div key={index} className="w-full min-w-0">
+                  <StaticDishCard dish={dish} size="small" />
+                </div>
               ))}
             </div>
           </div>
