@@ -1,23 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import RestaurantClientPage from "../[id]/RestaurantClientPage";
 import type { Restaurant } from "@/components/data";
 import { fetchFullRestaurants, fetchRestaurantByIdWithData } from "@/services/restaurants";
 
-export default function RestaurantEntryPage() {
+function EntryClient() {
   const sp = useSearchParams();
   const id = sp.get("id") || "";
   const [initialRestaurant, setInitialRestaurant] = useState<Restaurant | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
   useEffect(() => {
+    if (!id) return;
     let cancelled = false;
     (async () => {
       try {
         const [r, all] = await Promise.all([
-          fetchRestaurantByIdWithData(id),
+          fetchRestaurantByIdWithData(id), 
           fetchFullRestaurants().catch(() => []),
         ]);
         if (!cancelled) {
@@ -34,13 +35,18 @@ export default function RestaurantEntryPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (!id) {
-    return null;
-  }
-  if (!initialRestaurant) {
+  if (!id || !initialRestaurant) {
     return null;
   }
   return <RestaurantClientPage initialRestaurant={initialRestaurant} restaurants={restaurants} />;
+}
+
+export default function RestaurantEntryPage() {
+  return (
+    <Suspense fallback={null}>
+      <EntryClient />
+    </Suspense>
+  );
 }
 
 
