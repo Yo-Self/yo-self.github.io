@@ -287,6 +287,10 @@ export async function fetchRestaurantIds(): Promise<string[]> {
 }
 
 export async function fetchRestaurantByIdWithData(id: string): Promise<Restaurant | null> {
+  // Salvaguarda mínima para build/export do Next que pode invocar com o literal "[id]"
+  if (id === '[id]') {
+    return null;
+  }
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
   const r = rows && rows[0];
   if (!r) return null;

@@ -13,8 +13,14 @@ export async function generateStaticParams() {
 
 export default async function RestaurantMenuPage({ params }: { params: { id: string } }) {
   const { id } = params;
+  // Protege contra chamada acidental com literal "[id]" durante o export estático
+  // (evita consulta inválida no Supabase que causa 22P02)
+  const decoded = (() => { try { return decodeURIComponent(id); } catch { return id; } })();
+  if (decoded === '[id]') {
+    return notFound();
+  }
   const [initialRestaurant, restaurants] = await Promise.all([
-    fetchRestaurantByIdWithData(id),
+    fetchRestaurantByIdWithData(decoded),
     fetchFullRestaurants().catch(() => []),
   ]);
   if (!initialRestaurant) return notFound();
