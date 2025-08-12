@@ -19,8 +19,7 @@ export default async function RestaurantMenuPage({ params }: { params: { id: str
   const decodedId = (() => {
     try { return decodeURIComponent(id); } catch { return id; }
   })();
-  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-  if (!decodedId || decodedId.includes('[') || decodedId.includes(']') || !isUuid.test(decodedId)) {
+  if (!decodedId || decodedId.includes('[') || decodedId.includes(']')) {
     return notFound();
   }
   const [initialRestaurant, restaurants] = await Promise.all([
