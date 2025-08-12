@@ -103,6 +103,11 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_UR
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
 const REST_BASE = `${SUPABASE_URL}/rest/v1`;
 
+function isLikelyUuid(value: string): boolean {
+  // Basic UUID v4/v1 format check: 8-4-4-4-12 hex with hyphens
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
+}
+
 async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${REST_BASE}/${pathWithQuery}`, {
     ...init,
@@ -287,6 +292,10 @@ export async function fetchRestaurantIds(): Promise<string[]> {
 }
 
 export async function fetchRestaurantByIdWithData(id: string): Promise<Restaurant | null> {
+  // Evita chamadas inválidas durante export/prerender (ex.: "[id]")
+  if (!id || id.includes('[') || id.includes(']') || !isLikelyUuid(id)) {
+    return null;
+  }
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
   const r = rows && rows[0];
   if (!r) return null;
