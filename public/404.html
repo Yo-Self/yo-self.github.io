@@ -21,13 +21,28 @@
       (function() {
         try {
           var path = window.location.pathname || '';
+          var search = window.location.search || '';
+          var hash = window.location.hash || '';
+          
           // Ajuste para GitHub Pages user site: redireciona URLs sem barra final para a versão com barra
           var m = path.match(/^\/restaurant\/([^\/]+)$/);
           if (m) {
             var target = path + '/';
-            var search = window.location.search || '';
-            var hash = window.location.hash || '';
             window.location.replace(target + search + hash);
+            return;
+          }
+          
+          // Se estiver acessando uma rota de restaurante que não existe, redireciona para a lista
+          var restaurantMatch = path.match(/^\/restaurant\/([^\/]+)\/$/);
+          if (restaurantMatch) {
+            // Redireciona para a página de seleção de restaurantes
+            window.location.replace('/restaurant/' + search + hash);
+            return;
+          }
+          
+          // Se estiver na raiz do projeto, redireciona para a home
+          if (path === '/restaurant/') {
+            window.location.replace('/' + search + hash);
             return;
           }
         } catch (e) {}

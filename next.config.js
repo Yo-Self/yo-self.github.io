@@ -2,8 +2,9 @@
 const nextConfig = {
   output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   images: { unoptimized: true },
-  // Mantemos trailingSlash, mas precisamos garantir que acessos sem barra sejam redirecionados pelo 404/not-found
+  // Configuração para GitHub Pages
   trailingSlash: true,
+  basePath: process.env.NODE_ENV === 'production' ? '/restaurant' : '',
 };
 
 export default nextConfig;

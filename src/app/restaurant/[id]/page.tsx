@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData } from "@/services/restaurants";
 
 export const revalidate = 60;
-export const dynamicParams = false; // gerar apenas params estáticos
+export const dynamicParams = true; // permitir params dinâmicos
 
 export async function generateStaticParams() {
   const ids = await fetchRestaurantIds();

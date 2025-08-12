@@ -150,17 +150,17 @@ async function fetchDishesRows(restaurantId: number | string): Promise<DbDish[]>
 
 async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<DbComplementGroup[]> {
   if (dishIds.length === 0) return [];
-  // Sempre buscar dados frescos para grupos de complementos
+  // Usar cache padrão para geração estática
   const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
-  const rows = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&dish_id=in.(${inList})&order=position.asc`, { cache: 'no-store' });
+  const rows = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&dish_id=in.(${inList})&order=position.asc`);
   return rows ?? [];
 }
 
 async function fetchComplementsByGroupIds(groupIds: string[]): Promise<DbComplement[]> {
   if (groupIds.length === 0) return [];
-  // Sempre buscar dados frescos para complementos
+  // Usar cache padrão para geração estática
   const inList = groupIds.map(id => encodeURIComponent(id)).join(',');
-  const rows = await sbFetch<DbComplement[]>(`complements?select=*&group_id=in.(${inList})&order=position.asc`, { cache: 'no-store' });
+  const rows = await sbFetch<DbComplement[]>(`complements?select=*&group_id=in.(${inList})&order=position.asc`);
   return rows ?? [];
 }
 
