@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { fetchRestaurantByIdWithData } from "@/services/restaurants";
+import DynamicCarousel from "../components/DynamicCarousel";
 
 // Dados reais do Café Moendo para demonstração
 const moendoDishes = [
@@ -129,7 +131,10 @@ function StaticDishCard({ dish, size = "large" }: { dish: typeof sampleDishes[0]
 
 
 
-export default function Home() {
+export default async function Home() {
+  // Buscar dados do restaurante Moendo usando o ID específico
+  const moendoRestaurant = await fetchRestaurantByIdWithData("e1f70b34-20f5-4e08-9b68-d801ca33ee54");
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-gray-950">
       {/* Hero */}
@@ -195,40 +200,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Carousel Demo - Versão Estática */}
+      {/* Carousel Dinâmico com dados reais do Moendo */}
       <section className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-8">Destaques que chamam atenção</h2>
-        <p className="text-center text-gray-600 dark:text-gray-300 mb-12">Carousel interativo para destacar os pratos especiais do chef</p>
+        <p className="text-center text-gray-600 dark:text-gray-300 mb-12">Carousel interativo com pratos especiais do restaurante Moendo</p>
         <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 bg-white dark:bg-gray-800 p-8">
-          <div className="flex items-center justify-center">
-            <div className="relative w-full max-w-2xl">
-              {/* Card principal centralizado */}
-              <div className="w-full max-w-md mx-auto">
-                <div className="relative">
-                  <img
-                    src={sampleDishes[0].image}
-                    alt={sampleDishes[0].name}
-                    className="w-full h-64 md:h-80 object-cover rounded-2xl"
-                  />
-                  <div className="absolute top-2 right-2">
-                    <span className="bg-cyan-600 text-white text-xs font-bold rounded-full px-2 py-1">
-                      mais pedido
-                    </span>
-                  </div>
-                  <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 bg-gradient-to-t from-black/50 to-transparent rounded-b-2xl">
-                    {sampleDishes[0].name}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Indicadores de navegação */}
-              <div className="flex justify-center mt-6 space-x-2">
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                <div className="w-2 h-2 bg-cyan-600 rounded-full"></div>
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-              </div>
+          {moendoRestaurant ? (
+            <DynamicCarousel restaurant={moendoRestaurant} showMostOrderedTitle={true} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-300">Carregando destaques...</p>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -279,8 +262,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-
 
       {/* CTA */}
       <section className="mx-auto max-w-5xl px-6 pb-24">
