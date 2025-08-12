@@ -152,7 +152,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
   }, [activeCategory]);
 
   return (
-    <div className="flex flex-row items-center gap-1 py-4 bg-white dark:bg-black px-1">
+    <div className="categories-bar flex flex-row items-center gap-1 py-4 bg-white dark:bg-black px-1" style={{ display: 'flex', visibility: 'visible', opacity: 1 }}>
       {/* Botão grid fixo */}
       <button
         className={`relative flex items-center justify-center min-w-[56px] w-14 h-16 rounded-xl overflow-hidden shadow transition ring-offset-2 focus:outline-none border-2 ${activeCategory === 'grid' ? 'ring-2 ring-cyan-500 border-cyan-500 bg-cyan-100 dark:bg-cyan-900' : 'border-transparent bg-gray-100 dark:bg-gray-800'}`}
@@ -172,8 +172,8 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
       {/* Container de categorias com scroll horizontal */}
       <div
         ref={containerRef}
-        className="flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full py-1"
-        style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0 }}
+        className="categories-bar-container flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full py-1"
+        style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0, display: 'flex', visibility: 'visible' }}
       >
         {categoriesWithAll.map((category, idx) => {
           const isAll = category === "all";
@@ -208,50 +208,67 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
     // Garante que sempre haja pelo menos o fallbackImage
     const imagesToUse = images.length > 0 ? images : [fallbackImage];
     const [current, setCurrent] = React.useState(0);
-    const [next, setNext] = React.useState<number|null>(null);
-    const [showNext, setShowNext] = React.useState(false);
+    const [loadedImages, setLoadedImages] = React.useState<Set<string>>(new Set());
 
+    // Pré-carrega as imagens de forma mais robusta
+    React.useEffect(() => {
+      const preloadImages = async () => {
+        const promises = imagesToUse.map((imgSrc) => {
+          if (imgSrc && !loadedImages.has(imgSrc)) {
+            return new Promise<void>((resolve) => {
+              const img = new Image();
+              img.onload = () => {
+                setLoadedImages(prev => new Set(prev).add(imgSrc));
+                resolve();
+              };
+              img.onerror = () => {
+                resolve(); // Resolve mesmo com erro para não bloquear
+              };
+              img.src = imgSrc;
+            });
+          }
+          return Promise.resolve();
+        });
+        await Promise.all(promises);
+      };
+      preloadImages();
+    }, [imagesToUse, loadedImages]);
+
+    // Troca de imagem simples sem transição complexa para evitar flickering
     React.useEffect(() => {
       if (imagesToUse.length <= 1) return;
       const interval = setInterval(() => {
-        const nextIdx = (current + 1) % imagesToUse.length;
-        setNext(nextIdx);
-        setShowNext(true);
-        setTimeout(() => {
-          setCurrent(nextIdx);
-          setShowNext(false);
-          setNext(null);
-        }, 1000); // duração do fade-in
+        setCurrent((prev) => (prev + 1) % imagesToUse.length);
       }, 4000);
       return () => clearInterval(interval);
-    }, [imagesToUse.length, current]);
+    }, [imagesToUse.length]);
 
     const currentImg = imagesToUse[current] || fallbackImage;
-    const nextImg = next !== null ? (imagesToUse[next] || fallbackImage) : null;
 
     return (
       <button
         ref={ref}
-        className={`relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
+        className={`category-bar-card relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
         onClick={onClick}
         style={{ flex: '0 0 auto' }}
       >
-        {/* Imagem base (sempre visível) */}
-        <ImageWithLoading
+        {/* Imagem única sem transição complexa */}
+        <img
           src={currentImg}
           alt={label}
-          className="object-cover w-full h-full rounded-xl absolute inset-0 z-0"
-          fallbackSrc={fallbackImage}
+          className="absolute inset-0 object-cover w-full h-full rounded-xl"
+          style={{
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            willChange: 'auto',
+            pointerEvents: 'none'
+          }}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = fallbackImage;
+          }}
         />
-        {/* Próxima imagem faz fade-in por cima */}
-        {showNext && nextImg && (
-          <ImageWithLoading
-            src={nextImg}
-            alt={label}
-            className="object-cover w-full h-full rounded-xl absolute inset-0 z-10 transition-opacity duration-1000 opacity-0 animate-fadein"
-            fallbackSrc={fallbackImage}
-          />
-        )}
+        
         <span className="absolute inset-0 flex items-center justify-center z-10">
           <span 
             className="text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate"
@@ -263,12 +280,6 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
             {label}
           </span>
         </span>
-        <style jsx>{`
-          @keyframes fadein {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-        `}</style>
       </button>
     );
   }
