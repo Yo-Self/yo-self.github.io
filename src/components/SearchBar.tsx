@@ -109,7 +109,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
 
   // Categorias dinâmicas
   const dynamicCategories = term
-    ? Array.from(new Set(restaurant.menu_items.filter(filterFn).map(item => item.category)))
+    ? Array.from(new Set(restaurant.menu_items.filter(filterFn).flatMap(item => item.categories)))
     : [];
 
   // Resultados filtrados pela categoria selecionada
@@ -117,7 +117,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
     ? restaurant.menu_items.filter(item => {
         if (!filterFn(item)) return false;
         if (propSelectedCategory === 'all') return true;
-        return item.category === propSelectedCategory;
+        return item.categories && item.categories.includes(propSelectedCategory);
       })
     : [];
 

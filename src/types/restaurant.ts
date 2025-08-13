@@ -25,7 +25,10 @@ export interface Restaurant {
 }
 
 export interface MenuItem {
-  /** Categoria do item no menu */
+  /** Categorias do item no menu (múltiplas categorias suportadas) */
+  categories: string[];
+  
+  /** Categoria principal do item (mantida para compatibilidade) */
   category: string;
   
   /** Nome do prato/bebida */
@@ -145,6 +148,7 @@ export function isValidMenuItem(obj: any): obj is MenuItem {
   return (
     typeof obj === 'object' &&
     obj !== null &&
+    Array.isArray(obj.categories) &&
     typeof obj.category === 'string' &&
     typeof obj.name === 'string' &&
     typeof obj.description === 'string' &&
@@ -216,11 +220,13 @@ export const RESTAURANT_SCHEMA_EXAMPLE = {
       ingredients: "Torta de chocolate meio amargo com ganache e creme ingles",
       allergens: "Contém Lactose, Contém glúten",
       portion: "Serve 1 pessoa",
+      categories: ["Sobremesas", "Destaque"],
       category: "Sobremesas"
     }
   ],
   menu_items: [
     {
+      categories: ["Menu Principal", "Hambúrgueres"],
       category: "Menu Principal",
       name: "Mc Fish Moendo",
       description: "Delicioso hambúrguer de peixe com pão brioche, rúcula, picles e molho tártaro! (2 und.)",

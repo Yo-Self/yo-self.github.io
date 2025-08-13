@@ -32,7 +32,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
 
   // Filtra categorias para mostrar apenas as que possuem produtos
   const availableCategories = categories.filter(category =>
-    menuItems.some(item => item.category === category)
+    menuItems.some(item => item.categories && item.categories.includes(category))
   );
 
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeCategory(activeCategory, setActiveCategory, availableCategories);
@@ -68,7 +68,9 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
   if (activeCategory === "all") {
     filteredItems = menuItems;
   } else {
-    filteredItems = menuItems.filter(item => item.category === activeCategory);
+    filteredItems = menuItems.filter(item => 
+      item.categories && item.categories.includes(activeCategory)
+    );
   }
 
   // Aplica ordenação se especificada

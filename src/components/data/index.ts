@@ -26,10 +26,14 @@ export type Dish = {
   allergens: string;
   portion: string;
   category?: string;
+  categories?: string[];
   complement_groups?: ComplementGroup[];
 };
 
-export type MenuItem = Omit<Dish, 'category'> & { category: string };
+export type MenuItem = Omit<Dish, 'category'> & { 
+  category: string;
+  categories: string[];
+};
 
 export type Restaurant = {
   id: string;

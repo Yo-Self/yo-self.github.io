@@ -31,7 +31,9 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
   const categoryImages = useMemo(() => {
     const images: Record<string, string[]> = {};
     allCategories.forEach(category => {
-      const categoryItems = menuItems.filter(item => item.category === category);
+      const categoryItems = menuItems.filter(item => 
+        item.categories && item.categories.includes(category)
+      );
       images[category] = categoryItems.length > 0 
         ? categoryItems.map(item => item.image || fallbackImage)
         : [fallbackImage];

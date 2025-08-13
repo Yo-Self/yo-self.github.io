@@ -55,6 +55,7 @@ export type DbCategory = {
   name: string;
   image_url: string | null;
   restaurant_id: number | string;
+  position: number | null;
   created_at?: string;
 };
 
@@ -74,6 +75,15 @@ export type DbDish = {
   ingredients?: string | null;
   allergens?: string | null;
   portion?: string | null;
+};
+
+export type DbDishCategory = {
+  id: string;
+  dish_id: string;
+  category_id: string;
+  position: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type DbComplementGroup = {
@@ -134,7 +144,7 @@ async function fetchCategoriesRows(restaurantId: number | string): Promise<DbCat
   const cacheKey = `sb:categories:${restaurantId}`;
   const cached = getCache<DbCategory[]>(cacheKey);
   if (cached) return cached;
-  const rows = await sbFetch<DbCategory[]>(`categories?select=*&restaurant_id=eq.${encodeURIComponent(String(restaurantId))}&order=name.asc`);
+  const rows = await sbFetch<DbCategory[]>(`categories?select=*&restaurant_id=eq.${encodeURIComponent(String(restaurantId))}&order=position.asc`);
   setCache(cacheKey, rows);
   return rows;
 }
@@ -143,9 +153,16 @@ async function fetchDishesRows(restaurantId: number | string): Promise<DbDish[]>
   const cacheKey = `sb:dishes:${restaurantId}`;
   const cached = getCache<DbDish[]>(cacheKey);
   if (cached) return cached;
-  const rows = await sbFetch<DbDish[]>(`dishes?select=*&restaurant_id=eq.${encodeURIComponent(String(restaurantId))}&is_available=eq.true&order=category_id.asc`);
+  const rows = await sbFetch<DbDish[]>(`dishes?select=*&restaurant_id=eq.${encodeURIComponent(String(restaurantId))}&is_available=eq.true&order=created_at.asc`);
   setCache(cacheKey, rows);
   return rows;
+}
+
+async function fetchDishCategoriesByDishIds(dishIds: string[]): Promise<DbDishCategory[]> {
+  if (dishIds.length === 0) return [];
+  const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
+  const rows = await sbFetch<DbDishCategory[]>(`dish_categories?select=*&dish_id=in.(${inList})&order=position.asc`);
+  return rows ?? [];
 }
 
 async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<DbComplementGroup[]> {
@@ -168,11 +185,21 @@ function composeRestaurantModel(
   r: DbRestaurant,
   categories: DbCategory[],
   dishes: DbDish[],
+  dishCategories: DbDishCategory[],
   groups: DbComplementGroup[],
   complements: DbComplement[]
 ): Restaurant {
   const categoryIdToName = new Map<string | number, string>();
   for (const c of categories) categoryIdToName.set(c.id, c.name);
+
+  // Mapear categorias por prato
+  const categoriesByDishId = new Map<string, string[]>();
+  for (const dc of dishCategories) {
+    const categoryName = categoryIdToName.get(dc.category_id) || 'Sem categoria';
+    const arr = categoriesByDishId.get(dc.dish_id) || [];
+    arr.push(categoryName);
+    categoriesByDishId.set(dc.dish_id, arr);
+  }
 
   const groupsByDishId = new Map<string, DbComplementGroup[]>();
   for (const g of groups) {
@@ -189,6 +216,10 @@ function composeRestaurantModel(
   }
 
   const menuItems: MenuItem[] = dishes.map(d => {
+    const dishCategories = categoriesByDishId.get(String(d.id)) || [];
+    const primaryCategory = dishCategories.length > 0 ? dishCategories[0] : 
+      (d.category_id != null ? (categoryIdToName.get(d.category_id) ?? 'Sem categoria') : 'Sem categoria');
+    
     const mappedGroups = (groupsByDishId.get(String(d.id)) || []).map(g => ({
       title: g.title,
       description: g.description || '',
@@ -204,7 +235,8 @@ function composeRestaurantModel(
     }));
 
     return {
-      category: (d.category_id != null ? (categoryIdToName.get(d.category_id) ?? 'Sem categoria') : 'Sem categoria'),
+      categories: dishCategories.length > 0 ? dishCategories : [primaryCategory],
+      category: primaryCategory,
       name: d.name ?? '',
       description: d.description ?? '',
       price: formatPriceBR(d.price),
@@ -219,30 +251,37 @@ function composeRestaurantModel(
 
   const featured = dishes
     .filter(d => !!d.is_featured && !!d.is_available)
-    .map(d => ({
-      name: d.name ?? '',
-      description: d.description ?? '',
-      price: formatPriceBR(d.price),
-      image: d.image_url ?? '',
-      tags: (d.tags && d.tags.length ? d.tags : ['Destaque']),
-      ingredients: d.ingredients || '',
-      allergens: d.allergens || 'Nenhum',
-      portion: d.portion || 'Serve 1 pessoa',
-      category: (d.category_id != null ? (categoryIdToName.get(d.category_id) ?? 'Sem categoria') : 'Sem categoria'),
-      complement_groups: (groupsByDishId.get(String(d.id)) || []).map(g => ({
-        title: g.title,
-        description: g.description || '',
-        required: g.required,
-        max_selections: g.max_selections,
-        complements: (complementsByGroupId.get(g.id) || []).map(c => ({
-          name: c.name,
-          description: c.description || '',
-          price: formatPriceBR(c.price),
-          image: c.image_url || '',
-          ingredients: c.ingredients || '',
+    .map(d => {
+      const dishCategories = categoriesByDishId.get(String(d.id)) || [];
+      const primaryCategory = dishCategories.length > 0 ? dishCategories[0] : 
+        (d.category_id != null ? (categoryIdToName.get(d.category_id) ?? 'Sem categoria') : 'Sem categoria');
+      
+      return {
+        name: d.name ?? '',
+        description: d.description ?? '',
+        price: formatPriceBR(d.price),
+        image: d.image_url ?? '',
+        tags: (d.tags && d.tags.length ? d.tags : ['Destaque']),
+        ingredients: d.ingredients || '',
+        allergens: d.allergens || 'Nenhum',
+        portion: d.portion || 'Serve 1 pessoa',
+        categories: dishCategories.length > 0 ? dishCategories : [primaryCategory],
+        category: primaryCategory,
+        complement_groups: (groupsByDishId.get(String(d.id)) || []).map(g => ({
+          title: g.title,
+          description: g.description || '',
+          required: g.required,
+          max_selections: g.max_selections,
+          complements: (complementsByGroupId.get(g.id) || []).map(c => ({
+            name: c.name,
+            description: c.description || '',
+            price: formatPriceBR(c.price),
+            image: c.image_url || '',
+            ingredients: c.ingredients || '',
+          })),
         })),
-      })),
-    }));
+      };
+    });
 
   return {
     id: String(r.id),
@@ -264,7 +303,8 @@ export async function fetchFullRestaurants(): Promise<Restaurant[]> {
       fetchDishesRows(r.id),
     ]);
     const dishIds = dishes.map(d => String(d.id));
-    const [groups, complements] = await Promise.all([
+    const [dishCategories, groups, complements] = await Promise.all([
+      fetchDishCategoriesByDishIds(dishIds),
       fetchComplementGroupsByDishIds(dishIds),
       (async () => {
         const g = await fetchComplementGroupsByDishIds(dishIds);
@@ -275,7 +315,7 @@ export async function fetchFullRestaurants(): Promise<Restaurant[]> {
     // Nota: chamamos fetchComplementGroupsByDishIds duas vezes para extrair groupIds; otimizações possíveis
     const realGroups = groups; // groups já carregados
     const realComplements = complements;
-    results.push(composeRestaurantModel(r, cats, dishes, realGroups, realComplements));
+    results.push(composeRestaurantModel(r, cats, dishes, dishCategories, realGroups, realComplements));
   }
   return results;
 }
@@ -299,10 +339,13 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
     fetchDishesRows(r.id),
   ]);
   const dishIds = dishes.map(d => String(d.id));
-  const groups = await fetchComplementGroupsByDishIds(dishIds);
+  const [dishCategories, groups] = await Promise.all([
+    fetchDishCategoriesByDishIds(dishIds),
+    fetchComplementGroupsByDishIds(dishIds),
+  ]);
   const groupIds = groups.map(g => g.id);
   const complements = await fetchComplementsByGroupIds(groupIds);
-  return composeRestaurantModel(r, cats, dishes, groups, complements);
+  return composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
 }
 
 export async function fetchRestaurantByCuisineWithData(cuisineType: string): Promise<Restaurant | null> {
@@ -314,10 +357,13 @@ export async function fetchRestaurantByCuisineWithData(cuisineType: string): Pro
     fetchDishesRows(r.id),
   ]);
   const dishIds = dishes.map(d => String(d.id));
-  const groups = await fetchComplementGroupsByDishIds(dishIds);
+  const [dishCategories, groups] = await Promise.all([
+    fetchDishCategoriesByDishIds(dishIds),
+    fetchComplementGroupsByDishIds(dishIds),
+  ]);
   const groupIds = groups.map(g => g.id);
   const complements = await fetchComplementsByGroupIds(groupIds);
-  return composeRestaurantModel(r, cats, dishes, groups, complements);
+  return composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
 }
 
 // Leve: lista apenas dados básicos dos restaurantes para páginas estáticas (evita fetch dinâmico)
