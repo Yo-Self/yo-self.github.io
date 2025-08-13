@@ -382,7 +382,7 @@ svg {
   z-index: 40 !important;
   min-height: 80px !important;
   width: 100% !important;
-  background: white !important;
+  background: var(--background) !important;
 }
 
 .dark .menu-section .categories-bar,
