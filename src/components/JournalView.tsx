@@ -25,7 +25,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const [pinButtonPosition, setPinButtonPosition] = useState({ top: 0, left: 0 });
   const [tutorialTimers, setTutorialTimers] = useState<NodeJS.Timeout[]>([]);
   const itemsPerPage = 3;
-  const categories = Array.from(new Set(restaurant.menu_items.flatMap(item => item.categories)));
+  const categories = Array.from(new Set(restaurant.menu_items.flatMap(item => item.categories || [item.category]).filter(Boolean)));
   
   // O JournalView deve funcionar independentemente da prop selectedCategory
   // A prop é apenas para referência, mas o JournalView mantém sua própria lógica
@@ -225,9 +225,10 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   // Agrupar todos por categoria (um prato pode aparecer em múltiplas categorias)
   const catMap: { [cat: string]: Dish[] } = {};
   restaurant.menu_items.forEach(item => {
-    item.categories.forEach(category => {
-      if (!catMap[category]) catMap[category] = [];
-      catMap[category].push(item);
+    const categories = item.categories || [item.category];
+    categories.forEach(category => {
+      if (category && !catMap[category]) catMap[category] = [];
+      if (category) catMap[category].push(item);
     });
   });
   grouped = Object.entries(catMap).map(([category, items]) => ({ category, items }));
