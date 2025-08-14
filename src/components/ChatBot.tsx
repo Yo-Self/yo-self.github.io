@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useWebLLM, ChatMessage } from '../hooks/useWebLLM';
-import { Restaurant } from './data';
+import { Restaurant, Dish } from './data';
+import ChatDishCards from './ChatDishCards';
 
 interface ChatBotProps {
   restaurant: Restaurant;
@@ -13,6 +14,8 @@ interface ChatBotProps {
 export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
   const { messages, isLoading, sendMessage, clearChat } = useWebLLM();
   const [inputMessage, setInputMessage] = useState('');
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+  const [showDishModal, setShowDishModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -48,6 +51,16 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
       e.preventDefault();
       handleSendMessage(e);
     }
+  };
+
+  const handleDishClick = (dish: Dish) => {
+    setSelectedDish(dish);
+    setShowDishModal(true);
+  };
+
+  const handleCloseDishModal = () => {
+    setShowDishModal(false);
+    setSelectedDish(null);
   };
 
   const formatTime = (date: Date) => {
@@ -152,6 +165,14 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
                   }`}>
                     {formatTime(message.timestamp)}
                   </p>
+                  
+                  {/* Cards dos pratos recomendados */}
+                  {message.role === 'model' && message.recommendedDishes && message.recommendedDishes.length > 0 && (
+                    <ChatDishCards
+                      dishes={message.recommendedDishes}
+                      onDishClick={handleDishClick}
+                    />
+                  )}
                 </div>
               </div>
             ))
@@ -204,6 +225,75 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
           </form>
         </div>
       </div>
+      
+      {/* Modal de detalhes do prato */}
+      {showDishModal && selectedDish && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden">
+            <div className="relative">
+              <img
+                src={selectedDish.image}
+                alt={selectedDish.name}
+                className="w-full h-48 object-cover"
+              />
+              <button
+                onClick={handleCloseDishModal}
+                className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              {selectedDish.tags && selectedDish.tags.length > 0 && (
+                <span className="absolute top-4 left-4 bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-1 rounded-full">
+                  {selectedDish.tags[0]}
+                </span>
+              )}
+            </div>
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {selectedDish.name}
+                </h3>
+                <span className="text-lg font-bold text-primary dark:text-cyan-500">
+                  R$ {selectedDish.price}
+                </span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                {selectedDish.description}
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                    Ingredientes
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedDish.ingredients}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                    Porção
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedDish.portion}
+                  </p>
+                </div>
+                {selectedDish.allergens && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                      Alergênicos
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {selectedDish.allergens}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

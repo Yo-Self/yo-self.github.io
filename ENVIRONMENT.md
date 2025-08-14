@@ -43,4 +43,4 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 ## Compatibilidade
 
-O sistema suporta tanto as variáveis `SUPABASE_*` (recomendadas) quanto `NEXT_PUBLIC_SUPABASE_*` (para compatibilidade com código existente).
+O sistema usa as variáveis `NEXT_PUBLIC_SUPABASE_*` para configuração do Supabase (disponíveis no cliente).

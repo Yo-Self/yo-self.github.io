@@ -27,6 +27,18 @@ Certifique-se de que as seguintes variáveis estão configuradas:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima do Supabase
 - `GOOGLE_AI_API_KEY`: Chave da API do Google AI (configurada na Edge Function)
 
+### Configuração Local
+
+Para desenvolvimento local, crie um arquivo `.env.local` na raiz do projeto:
+
+```bash
+# Supabase Configuration (REQUERIDO para o chatbot)
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_aqui
+```
+
+**📋 Instruções detalhadas**: Veja o arquivo `SETUP_ENVIRONMENT.md`
+
 ### Edge Function
 
 A Edge Function `ai-chat` deve estar configurada no Supabase com:
