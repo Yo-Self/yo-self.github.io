@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createStaticClient } from '@/lib/supabase/server';
 import { Organization, Restaurant, generateSlug } from '@/types/organization';
 
 export class OrganizationService {
@@ -61,26 +61,40 @@ export class OrganizationService {
    * Lista todas as organizações
    */
   static async list(): Promise<Organization[]> {
-    try {
-      const supabase = createClient();
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('is_organization', true)
-        .order('full_name');
+    const supabase = createClient();
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('is_organization', true)
+      .order('full_name');
 
-      if (error) {
-        console.error('Erro ao listar organizações:', error);
-        return [];
-      }
-
-      return (data || []) as Organization[];
-    } catch (error) {
-      // Se houver erro de cookies durante geração estática, retorna array vazio
-      console.warn('Erro durante geração estática, retornando array vazio:', error);
+    if (error) {
+      console.error('Erro ao listar organizações:', error);
       return [];
     }
+
+    return (data || []) as Organization[];
+  }
+
+  /**
+   * Lista todas as organizações para geração estática (sem cookies)
+   */
+  static async listForStatic(): Promise<Organization[]> {
+    const supabase = createStaticClient();
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('is_organization', true)
+      .order('full_name');
+
+    if (error) {
+      console.error('Erro ao listar organizações para geração estática:', error);
+      return [];
+    }
+
+    return (data || []) as Organization[];
   }
 
 

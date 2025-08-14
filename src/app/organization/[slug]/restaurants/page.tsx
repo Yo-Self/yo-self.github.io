@@ -10,7 +10,7 @@ interface OrganizationRestaurantsPageProps {
 }
 
 export async function generateStaticParams() {
-  const organizations = await OrganizationService.list();
+  const organizations = await OrganizationService.listForStatic();
   
   return organizations.map((organization) => ({
     slug: organization.slug,
