@@ -108,21 +108,26 @@ export type DbComplement = {
 };
 
 // Verificar se as variáveis de ambiente estão definidas
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+function getSupabaseConfig() {
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY must be defined in environment variables');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY must be defined in environment variables');
+  }
+
+  return { SUPABASE_URL, SUPABASE_ANON_KEY };
 }
 
-const REST_BASE = `${SUPABASE_URL}/rest/v1`;
-
 async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T> {
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = getSupabaseConfig();
+  const REST_BASE = `${SUPABASE_URL}/rest/v1`;
+  
   const res = await fetch(`${REST_BASE}/${pathWithQuery}`, {
     ...init,
     headers: {
-      apikey: SUPABASE_ANON_KEY!,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY!}`,
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       ...(init?.headers || {}),
     },
     // Importante: para Next export (estático), evitar no-store
