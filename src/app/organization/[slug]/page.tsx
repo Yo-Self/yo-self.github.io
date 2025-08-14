@@ -9,6 +9,14 @@ interface OrganizationPageProps {
   };
 }
 
+export async function generateStaticParams() {
+  const organizations = await OrganizationService.list();
+  
+  return organizations.map((organization) => ({
+    slug: organization.slug,
+  }));
+}
+
 export default async function OrganizationPage({ params }: OrganizationPageProps) {
   // Buscar a organização com seus restaurantes
   const result = await OrganizationService.getWithRestaurants(params.slug);
