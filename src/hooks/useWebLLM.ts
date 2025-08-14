@@ -37,7 +37,7 @@ export function useWebLLM(): UseWebLLMReturn {
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // URL da Edge Function do Supabase (substitua pela sua URL real)
+      // URL da Edge Function do Supabase
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;
       
