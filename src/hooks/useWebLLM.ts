@@ -61,6 +61,7 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   recommendedDishes?: any[]; // Array de pratos recomendados
+  model?: string; // Modelo de IA usado (ex: 'gemma-3-superto')
 }
 
 export interface UseWebLLMReturn {
@@ -141,6 +142,7 @@ export function useWebLLM(): UseWebLLMReturn {
         content: data.message,
         timestamp: new Date(data.timestamp),
         recommendedDishes,
+        model: data.model, // Incluir informação sobre o modelo usado
       };
 
       setMessages(prev => [...prev, assistantMessage]);

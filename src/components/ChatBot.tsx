@@ -160,11 +160,20 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <p className={`text-xs mt-1 ${
-                    message.role === 'user' ? 'text-cyan-100' : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {formatTime(message.timestamp)}
-                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className={`text-xs ${
+                      message.role === 'user' ? 'text-cyan-100' : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {formatTime(message.timestamp)}
+                    </p>
+                    {message.role === 'model' && message.model && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        {message.model === 'gemma-3-superto' ? '🤖 Gemma 3' : 
+                         message.model === 'gemma-3-flash' ? '⚡ Gemma 3 Flash' :
+                         message.model === 'gemini-1.5-flash' ? '💎 Gemini' : message.model}
+                      </p>
+                    )}
+                  </div>
                   
                   {/* Cards dos pratos recomendados */}
                   {message.role === 'model' && message.recommendedDishes && message.recommendedDishes.length > 0 && (

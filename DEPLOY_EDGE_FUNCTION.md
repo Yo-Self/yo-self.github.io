@@ -6,10 +6,24 @@ A Edge Function foi atualizada para resolver o erro 500 do chatbot que estava oc
 
 ### Melhorias Implementadas:
 
-1. **Retry com Backoff Exponencial**: Tenta novamente automaticamente quando o modelo está sobrecarregado
-2. **Tratamento de Erros Específicos**: Mensagens de erro mais claras para diferentes situações
-3. **Integração Completa com Google AI**: Usa a biblioteca oficial do Google Generative AI
-4. **Contexto Melhorado**: Instruções mais específicas para o assistente do restaurante
+1. **Google Gemma 3 SuperTo como Modelo Padrão**: Agora usa o modelo mais avançado do Google AI
+2. **Sistema de Fallback Inteligente**: Se o Gemma 3 SuperTo não estiver disponível, tenta automaticamente:
+   - Gemma 3 Flash
+   - Gemini 1.5 Flash (como último recurso)
+3. **Retry com Backoff Exponencial**: Tenta novamente automaticamente quando o modelo está sobrecarregado
+4. **Tratamento de Erros Específicos**: Mensagens de erro mais claras para diferentes situações
+5. **Integração Completa com Google AI**: Usa a biblioteca oficial do Google Generative AI
+6. **Contexto Melhorado**: Instruções mais específicas para o assistente do restaurante
+
+## Modelos Disponíveis
+
+A Edge Function agora suporta múltiplos modelos do Google AI:
+
+1. **Gemma 3 SuperTo** (Padrão): Modelo mais avançado e rápido
+2. **Gemma 3 Flash**: Versão otimizada para velocidade
+3. **Gemini 1.5 Flash**: Fallback para compatibilidade
+
+O sistema automaticamente tenta cada modelo em ordem até encontrar um que funcione.
 
 ## Como Fazer o Deploy
 
@@ -62,6 +76,7 @@ Após o deploy, teste o chatbot:
 1. **Abra o site** e vá para um restaurante
 2. **Abra o chatbot** e faça uma pergunta
 3. **Verifique se funciona** sem erros 500
+4. **Monitore os logs** para ver qual modelo está sendo usado
 
 ## Tratamento de Erros Implementado
 
@@ -70,6 +85,16 @@ A Edge Function agora trata especificamente:
 - **503 Service Unavailable**: "O modelo de IA está sobrecarregado. Tente novamente em alguns segundos."
 - **429 Quota Exceeded**: "O limite de uso da API do Google AI foi excedido."
 - **API Key não configurada**: "API key do Google AI não está configurada corretamente."
+- **Modelo não disponível**: "O modelo Gemma 3 SuperTo não está disponível. Tentando modelo alternativo..."
+
+## Sistema de Fallback
+
+Quando um modelo falha, a função automaticamente:
+
+1. Tenta **Gemma 3 SuperTo** (padrão)
+2. Se falhar, tenta **Gemma 3 Flash**
+3. Se falhar, tenta **Gemini 1.5 Flash**
+4. Se todos falharem, retorna erro
 
 ## Retry Automático
 
@@ -89,12 +114,20 @@ O assistente agora recebe instruções mais específicas:
 - Responde em português brasileiro
 - Mantém respostas concisas mas informativas
 
+## Vantagens do Gemma 3 SuperTo
+
+- **Velocidade**: Respostas mais rápidas
+- **Qualidade**: Melhor compreensão do contexto
+- **Eficiência**: Menor consumo de tokens
+- **Confiabilidade**: Maior estabilidade
+
 ## Troubleshooting
 
 ### Erro 500 persistente:
 - ✅ Verifique se a variável `GOOGLE_AI_API_KEY` está configurada
 - ✅ Confirme se a chave da API é válida
 - ✅ Teste a chave no Google AI Studio
+- ✅ Verifique se tem acesso aos modelos Gemma 3
 
 ### Função não responde:
 - ✅ Verifique se o deploy foi bem-sucedido
@@ -105,4 +138,9 @@ O assistente agora recebe instruções mais específicas:
 - ✅ A função já está configurada com CORS adequado
 - ✅ Verifique se está usando a URL correta
 
-A Edge Function atualizada deve resolver o problema do erro 500 e melhorar significativamente a experiência do chatbot! 🎉
+### Modelo não disponível:
+- ✅ Verifique se sua conta tem acesso aos modelos Gemma 3
+- ✅ O sistema automaticamente tentará modelos alternativos
+- ✅ Monitore os logs para ver qual modelo está sendo usado
+
+A Edge Function atualizada deve resolver o problema do erro 500 e melhorar significativamente a experiência do chatbot com o novo modelo Gemma 3 SuperTo! 🎉
