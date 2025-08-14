@@ -25,6 +25,7 @@ supabase init
 
 ### 4. Fazer o deploy da Edge Function
 ```bash
+# A Edge Function está em supabase-functions/ai-chat/
 supabase functions deploy ai-chat
 ```
 
@@ -43,7 +44,7 @@ Se o CLI não funcionar, você pode:
 1. Ir ao dashboard do Supabase
 2. Navegar para Edge Functions
 3. Criar uma nova função chamada `ai-chat`
-4. Copiar o código do arquivo `supabase/functions/ai-chat/index.ts`
+4. Copiar o código do arquivo `supabase-functions/ai-chat/index.ts`
 5. Fazer o deploy
 
 ## Configuração das Variáveis de Ambiente

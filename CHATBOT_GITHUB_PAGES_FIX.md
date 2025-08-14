@@ -74,8 +74,9 @@ Após implementar qualquer solução:
 ## Status Atual
 
 - ✅ **Ícone alterado** para balão de chat
+- ✅ **Build corrigido** - Edge Function movida para fora do diretório de compilação
 - ❌ **API server-side** não funciona no GitHub Pages
-- 🔄 **Edge Function** em desenvolvimento
+- 🔄 **Edge Function** pronta para deploy
 - 🔄 **Fallback** disponível
 
 ## Próximos Passos

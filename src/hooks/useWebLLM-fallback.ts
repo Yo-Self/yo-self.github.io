@@ -85,7 +85,7 @@ export function useWebLLM(): UseWebLLMReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [messages]);
+  }, []);
 
   const clearChat = useCallback(() => {
     setMessages([]);
