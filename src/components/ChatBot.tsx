@@ -2,8 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useWebLLM, ChatMessage } from '../hooks/useWebLLM';
+import { useTextToSpeech } from '../hooks/useTextToSpeech';
 import { Restaurant, Dish } from './data';
 import ChatDishCards from './ChatDishCards';
+import VoiceNotification from './VoiceNotification';
 
 interface ChatBotProps {
   restaurant: Restaurant;
@@ -13,9 +15,22 @@ interface ChatBotProps {
 
 export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
   const { messages, isLoading, sendMessage, clearChat } = useWebLLM();
+  const { 
+    isEnabled: isSpeechEnabled, 
+    isSpeaking, 
+    toggleSpeech, 
+    speak, 
+    stop,
+    clearReadHistory,
+    availableVoices,
+    selectedVoice,
+    setVoice
+  } = useTextToSpeech();
   const [inputMessage, setInputMessage] = useState('');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [showDishModal, setShowDishModal] = useState(false);
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [showVoiceNotification, setShowVoiceNotification] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -36,6 +51,29 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
       }, 300);
     }
   }, [isOpen]);
+
+  // Mostrar notificação de voz na primeira vez que abrir o chat
+  useEffect(() => {
+    if (isOpen && !localStorage.getItem('voice-notification-shown')) {
+      setTimeout(() => {
+        setShowVoiceNotification(true);
+        localStorage.setItem('voice-notification-shown', 'true');
+      }, 1000);
+    }
+  }, [isOpen]);
+
+  // Ler automaticamente novas mensagens do assistente
+  useEffect(() => {
+    if (isSpeechEnabled && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'model' && !isSpeaking) {
+        // Aguardar um pouco para a mensagem aparecer na tela
+        setTimeout(() => {
+          speak(lastMessage.content, false); // false = leitura automática
+        }, 500);
+      }
+    }
+  }, [messages, isSpeechEnabled, speak, isSpeaking]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +99,11 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
   const handleCloseDishModal = () => {
     setShowDishModal(false);
     setSelectedDish(null);
+  };
+
+  const handleClearChat = () => {
+    clearChat();
+    clearReadHistory(); // Limpar histórico de mensagens lidas
   };
 
   const formatTime = (date: Date) => {
@@ -89,12 +132,50 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {isLoading ? 'Digitando...' : 'Online'}
+                {isSpeechEnabled && (
+                  <span className="ml-2 text-xs text-green-600 dark:text-green-400">
+                    🔊 Voz ativada
+                  </span>
+                )}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Botão de configurações de voz */}
             <button
-              onClick={clearChat}
+              onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+              title="Configurações de voz"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            
+            {/* Botão de ativar/desativar leitura */}
+            <button
+              onClick={toggleSpeech}
+              className={`p-2 transition-colors ${
+                isSpeechEnabled 
+                  ? 'text-green-500 hover:text-green-600' 
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+              title={isSpeechEnabled ? 'Desativar leitura de voz' : 'Ativar leitura de voz'}
+            >
+              {isSpeaking ? (
+                <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+              )}
+            </button>
+            
+            <button
+              onClick={handleClearChat}
               className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               title="Limpar conversa"
             >
@@ -113,6 +194,79 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
             </button>
           </div>
         </div>
+
+        {/* Painel de configurações de voz */}
+        {showVoiceSettings && (
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                  Configurações de Voz
+                </h4>
+                <button
+                  onClick={() => setShowVoiceSettings(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Seletor de voz */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Voz
+                </label>
+                <select
+                  value={selectedVoice?.name || ''}
+                  onChange={(e) => {
+                    const voice = availableVoices.find(v => v.name === e.target.value);
+                    setVoice(voice || null);
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  {availableVoices.map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.name} ({voice.lang})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Status da funcionalidade */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Leitura automática: {isSpeechEnabled ? 'Ativada' : 'Desativada'}
+                </span>
+                {isSpeaking && (
+                  <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Falando...
+                  </span>
+                )}
+              </div>
+              
+              {/* Botões de ação */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => speak('Olá! Esta é uma mensagem de teste para verificar se a leitura de voz está funcionando corretamente.', true)}
+                  disabled={isSpeaking}
+                  className="flex-1 px-3 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-300 text-white rounded-md transition-colors"
+                >
+                  Testar Voz
+                </button>
+                <button
+                  onClick={clearReadHistory}
+                  className="px-3 py-2 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
+                  title="Limpar histórico de mensagens lidas"
+                >
+                  🔄
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -166,13 +320,25 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
                     }`}>
                       {formatTime(message.timestamp)}
                     </p>
-                    {message.role === 'model' && message.model && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500">
-                        {message.model === 'gemma-3-superto' ? '🤖 Gemma 3' : 
-                         message.model === 'gemma-3-flash' ? '⚡ Gemma 3 Flash' :
-                         message.model === 'gemini-1.5-flash' ? '💎 Gemini' : message.model}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {message.role === 'model' && message.model && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                          {message.model === 'gemma-3-superto' ? '🤖 Gemma 3' : 
+                           message.model === 'gemma-3-flash' ? '⚡ Gemma 3 Flash' :
+                           message.model === 'gemini-1.5-flash' ? '💎 Gemini' : message.model}
+                        </p>
+                      )}
+                      {message.role === 'model' && (
+                        <button
+                          onClick={() => speak(message.content, true)} // true = leitura manual
+                          disabled={isSpeaking}
+                          className="text-xs text-cyan-500 hover:text-cyan-600 disabled:text-gray-400"
+                          title="Ler mensagem"
+                        >
+                          🔊
+                        </button>
+                      )}
+                    </div>
                   </div>
                   
                   {/* Cards dos pratos recomendados */}
@@ -303,6 +469,12 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
           </div>
         </div>
       )}
+      
+      {/* Notificação de voz */}
+      <VoiceNotification 
+        isVisible={showVoiceNotification}
+        onClose={() => setShowVoiceNotification(false)}
+      />
     </div>
   );
 }

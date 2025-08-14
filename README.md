@@ -6,6 +6,7 @@ Uma aplicação moderna de cardápio digital com chatbot inteligente usando **Go
 
 - 📱 **Interface Responsiva**: Design moderno e adaptável
 - 🤖 **Chatbot Inteligente**: Assistente de IA com Google Gemma 3 SuperTo
+- 🔊 **Leitura de Voz**: Text-to-speech para respostas do chatbot
 - 🍽️ **Cardápio Interativo**: Navegação por categorias e busca
 - 🌙 **Modo Escuro**: Suporte completo a tema escuro
 - 🔍 **Busca Avançada**: Filtros por categoria e preço
@@ -82,19 +83,30 @@ O chatbot agora usa o **Google Gemma 3 SuperTo** como modelo padrão, oferecendo
 
 6. **Acesse**: [http://localhost:3000](http://localhost:3000)
 
-## 🧪 Testando o Gemma 3 SuperTo
+## 🧪 Testando
 
+### Gemma 3 SuperTo
 Execute o script de teste para verificar se tudo está funcionando:
 
 ```bash
 node test-gemma3.js
 ```
 
+### Funcionalidade de Voz
+Para testar a funcionalidade de text-to-speech:
+
+```bash
+node test-voice.js
+```
+
+Ou abra o console do navegador e execute o código fornecido pelo script.
+
 ## 📚 Documentação
 
 - [📖 Setup do Ambiente](SETUP_ENVIRONMENT.md)
 - [🚀 Deploy da Edge Function](DEPLOY_EDGE_FUNCTION.md)
 - [🤖 Migração para Gemma 3](GEMMA_3_MIGRATION.md)
+- [🔊 Funcionalidade de Voz](VOICE_FEATURE.md)
 - [📊 Configuração de Analytics](ANALYTICS_SETUP.md)
 
 ## 🏗️ Estrutura do Projeto
