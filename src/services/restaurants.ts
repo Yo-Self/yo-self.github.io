@@ -107,18 +107,22 @@ export type DbComplement = {
   position: number | null;
 };
 
-const DEFAULT_SUPABASE_URL = 'https://wulazaggdihidadkhilg.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1bGF6YWdnZGloaWRhZGtoaWxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NzkxODQsImV4cCI6MjA3MDA1NTE4NH0.MxXnFZAUoMPCy9LJFTWv_6-X_8AmLr553wrAhoeRrOQ';
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+// Verificar se as variáveis de ambiente estão definidas
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY must be defined in environment variables');
+}
+
 const REST_BASE = `${SUPABASE_URL}/rest/v1`;
 
 async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${REST_BASE}/${pathWithQuery}`, {
     ...init,
     headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      apikey: SUPABASE_ANON_KEY!,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY!}`,
       ...(init?.headers || {}),
     },
     // Importante: para Next export (estático), evitar no-store
