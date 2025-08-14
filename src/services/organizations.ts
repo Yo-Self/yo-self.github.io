@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createStaticClient } from '@/lib/supabase/server';
 import { Organization, Restaurant, generateSlug } from '@/types/organization';
 
 export class OrganizationService {
@@ -61,7 +61,9 @@ export class OrganizationService {
    * Lista todas as organizações
    */
   static async list(): Promise<Organization[]> {
-    const supabase = createClient();
+    // Detectar se estamos em geração estática (build time)
+    const isStaticGeneration = process.env.NODE_ENV === 'production' && typeof window === 'undefined';
+    const supabase = isStaticGeneration ? createStaticClient() : createClient();
     
     const { data, error } = await supabase
       .from('profiles')
@@ -76,6 +78,8 @@ export class OrganizationService {
 
     return (data || []) as Organization[];
   }
+
+
 
   /**
    * Cria ou atualiza uma organização
