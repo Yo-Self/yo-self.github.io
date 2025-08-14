@@ -4,6 +4,8 @@ import { useState, useCallback } from 'react';
 function extractRecommendedDishes(message: string, restaurantData: any): any[] {
   const menuItems = restaurantData?.menu_items || [];
   const recommendedDishes: any[] = [];
+  const addedDishIds = new Set(); // Para evitar duplicatas por ID
+  const addedNormalizedNames = new Set(); // Para evitar duplicatas por nome normalizado
 
   // Verificar se os dados estão sendo passados corretamente
   if (!restaurantData) {
@@ -21,37 +23,47 @@ function extractRecommendedDishes(message: string, restaurantData: any): any[] {
 
   // Buscar por nomes de pratos na mensagem
   menuItems.forEach((item: any) => {
-    // Normalizar o nome do prato para comparação (removendo espaços extras)
+    // Se já foi adicionado por ID, pular
+    if (addedDishIds.has(item.id || item.name)) {
+      return;
+    }
+
+    // Normalizar o nome do prato para comparação
     const normalizedDishName = item.name.toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // Remove acentos
       .trim(); // Remove espaços no início e fim
     
-    // Verificar se o nome do prato aparece na mensagem
-    if (normalizedMessage.includes(normalizedDishName)) {
-      recommendedDishes.push(item);
+    // Se já foi adicionado um prato com nome similar, pular
+    if (addedNormalizedNames.has(normalizedDishName)) {
+      return;
     }
     
-    // Verificar variações comuns do nome (ex: "Caldinho de Feijoada" vs "Caldinho De Feijoada")
+    // Verificar variações comuns do nome
     const variations = [
       normalizedDishName,
       normalizedDishName.replace(/\s+de\s+/g, ' de '), // Normalizar espaços
       normalizedDishName.replace(/\s+De\s+/g, ' de '), // Normalizar "De" para "de"
       normalizedDishName.replace(/\s+DE\s+/g, ' de '), // Normalizar "DE" para "de"
+      // Adicionar variações sem "de" para casos como "Caldinho Feijoada"
+      normalizedDishName.replace(/\s+de\s+/g, ' '),
+      normalizedDishName.replace(/\s+De\s+/g, ' '),
+      normalizedDishName.replace(/\s+DE\s+/g, ' '),
     ];
     
-    for (const variation of variations) {
-      if (normalizedMessage.includes(variation) && !recommendedDishes.some(d => d.name === item.name)) {
-        recommendedDishes.push(item);
-        break;
-      }
+    // Verificar se alguma variação aparece na mensagem
+    const isMentioned = variations.some(variation => 
+      normalizedMessage.includes(variation)
+    );
+    
+    if (isMentioned) {
+      recommendedDishes.push(item);
+      addedDishIds.add(item.id || item.name); // Marcar como adicionado por ID
+      addedNormalizedNames.add(normalizedDishName); // Marcar como adicionado por nome normalizado
     }
   });
 
-
-
   // Retornar apenas os pratos que foram realmente mencionados na mensagem
-  // Se nenhum prato específico foi mencionado, não mostrar cards
   return recommendedDishes;
 }
 
