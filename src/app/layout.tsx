@@ -1,6 +1,7 @@
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
+import Navigation from "@/components/Navigation";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -56,6 +57,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <AccessibilityProvider>
+          <Navigation />
           {children}
         </AccessibilityProvider>
       </body>

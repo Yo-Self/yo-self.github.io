@@ -2,6 +2,8 @@ import Link from "next/link";
 import { fetchRestaurantByIdWithData } from "@/services/restaurants";
 import DynamicCarousel from "../components/DynamicCarousel";
 import ImageWithLoading from "@/components/ImageWithLoading";
+import { OrganizationService } from "@/services/organizations";
+import Image from "next/image";
 
 // Dados reais do Café Moendo para demonstração
 const moendoDishes = [
@@ -87,6 +89,70 @@ const sampleDishes = [
     tags: ["Fresco"]
   }
 ];
+
+// Componente para exibir organizações
+async function OrganizationsSection() {
+  const organizations = await OrganizationService.list();
+  
+  if (!organizations || organizations.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-400 mb-4">
+          <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          Nenhuma organização encontrada
+        </h3>
+        <p className="text-gray-500 dark:text-gray-400">
+          Em breve teremos organizações parceiras disponíveis.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {organizations.map((organization) => (
+        <Link
+          key={organization.id}
+          href={`/organization/${organization.slug}`}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden group"
+        >
+          <div className="p-6">
+            <div className="flex items-center space-x-4 mb-4">
+              {organization.avatar_url && (
+                <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                  <Image
+                    src={organization.avatar_url}
+                    alt={organization.full_name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                  {organization.full_name}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  Organização parceira
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center text-blue-600 text-sm font-medium">
+              Ver restaurantes
+              <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 // Componente estático de card de prato
 function StaticDishCard({ dish, size = "large" }: { dish: typeof sampleDishes[0]; size?: "large" | "small" }) {
@@ -271,6 +337,13 @@ export default async function Home() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Organizações */}
+      <section className="mx-auto max-w-6xl px-6 py-16 md:py-24">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-8">Organizações Parceiras</h2>
+        <p className="text-center text-gray-600 dark:text-gray-300 mb-12">Descubra restaurantes incríveis de nossas organizações parceiras</p>
+        <OrganizationsSection />
       </section>
 
       {/* CTA */}

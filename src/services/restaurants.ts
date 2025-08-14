@@ -348,6 +348,28 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
   return composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
 }
 
+export async function fetchRestaurantBySlugWithData(slug: string): Promise<Restaurant | null> {
+  // Salvaguarda mínima para build/export do Next que pode invocar com o literal "[id]"
+  if (slug === '[id]') {
+    return null;
+  }
+  const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
+  const r = rows && rows[0];
+  if (!r) return null;
+  const [cats, dishes] = await Promise.all([
+    fetchCategoriesRows(r.id),
+    fetchDishesRows(r.id),
+  ]);
+  const dishIds = dishes.map(d => String(d.id));
+  const [dishCategories, groups] = await Promise.all([
+    fetchDishCategoriesByDishIds(dishIds),
+    fetchComplementGroupsByDishIds(dishIds),
+  ]);
+  const groupIds = groups.map(g => g.id);
+  const complements = await fetchComplementsByGroupIds(groupIds);
+  return composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
+}
+
 export async function fetchRestaurantByCuisineWithData(cuisineType: string): Promise<Restaurant | null> {
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&cuisine_type=eq.${encodeURIComponent(cuisineType)}&limit=1`);
   const r = rows && rows[0];

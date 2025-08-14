@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import RestaurantClientPage from "./RestaurantClientPage";
 import { Suspense } from "react";
-import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData } from "@/services/restaurants";
+import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData, fetchRestaurantBySlugWithData } from "@/services/restaurants";
 
 export const revalidate = 60;
 export const dynamicParams = true; // permitir params dinâmicos
@@ -19,11 +19,28 @@ export default async function RestaurantMenuPage({ params }: { params: { id: str
   if (decoded === '[id]') {
     return notFound();
   }
-  const [initialRestaurant, restaurants] = await Promise.all([
-    fetchRestaurantByIdWithData(decoded),
-    fetchFullRestaurants().catch(() => []),
-  ]);
+  
+  // Tenta buscar por ID primeiro (UUID), se falhar, tenta por slug
+  let initialRestaurant = null;
+  try {
+    initialRestaurant = await fetchRestaurantByIdWithData(decoded);
+  } catch (error) {
+    // Se falhou ao buscar por ID (provavelmente não é um UUID válido), tenta por slug
+    console.log('Falhou ao buscar por ID, tentando por slug:', decoded);
+  }
+  
+  if (!initialRestaurant) {
+    // Se não encontrou por ID, tenta por slug
+    try {
+      initialRestaurant = await fetchRestaurantBySlugWithData(decoded);
+    } catch (error) {
+      console.error('Erro ao buscar restaurante por slug:', error);
+    }
+  }
+  
+  const restaurants = await fetchFullRestaurants().catch(() => []);
   if (!initialRestaurant) return notFound();
+  
   return (
     <Suspense fallback={null}>
       <RestaurantClientPage
