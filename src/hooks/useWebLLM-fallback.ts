@@ -37,42 +37,36 @@ export function useWebLLM(): UseWebLLMReturn {
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      // URL da Edge Function do Supabase (substitua pela sua URL real)
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;
+      // Simular resposta da IA (para desenvolvimento/teste)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const menuItems = restaurantData?.menu_items || [];
+      const restaurantName = restaurantData?.name || 'Restaurante';
       
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          message,
-          restaurantData,
-          chatHistory: messages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro na comunicação com a IA');
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
+      // Resposta simulada baseada no contexto
+      let response = '';
+      
+      if (message.toLowerCase().includes('pratos') || message.toLowerCase().includes('cardápio')) {
+        response = `Aqui estão alguns dos nossos pratos principais:\n\n${menuItems.slice(0, 5).map((item: any) => 
+          `• ${item.name} - R$ ${item.price}\n  ${item.description}`
+        ).join('\n\n')}\n\nPosso te ajudar a escolher algo específico!`;
+      } else if (message.toLowerCase().includes('preço') || message.toLowerCase().includes('quanto')) {
+        response = `Os preços variam conforme o prato. Posso te mostrar o cardápio completo ou você pode me perguntar sobre um prato específico!`;
+      } else if (message.toLowerCase().includes('recomenda')) {
+        const popularItems = menuItems.slice(0, 3);
+        response = `Baseado no nosso cardápio, recomendo:\n\n${popularItems.map((item: any) => 
+          `• ${item.name} - R$ ${item.price}\n  ${item.description}`
+        ).join('\n\n')}\n\nEsses são alguns dos nossos pratos mais populares!`;
+      } else {
+        response = `Olá! Sou o assistente do ${restaurantName}. Posso te ajudar com informações sobre nossos pratos, preços e recomendações. O que você gostaria de saber?`;
       }
 
       // Adicionar resposta da IA
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        content: data.message,
-        timestamp: new Date(data.timestamp),
+        content: response,
+        timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -105,4 +99,4 @@ export function useWebLLM(): UseWebLLMReturn {
     sendMessage,
     clearChat,
   };
-} 
+}
