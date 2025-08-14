@@ -31,10 +31,10 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   // A prop é apenas para referência, mas o JournalView mantém sua própria lógica
   
   // Função para limpar todos os timers de tutorial
-  const clearTutorialTimers = () => {
+  const clearTutorialTimers = React.useCallback(() => {
     tutorialTimers.forEach(timer => clearTimeout(timer));
     setTutorialTimers([]);
-  };
+  }, [tutorialTimers]);
   
   // Função para pular para o próximo tutorial
   const skipToNextTutorial = () => {
@@ -149,7 +149,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     return () => {
       clearTutorialTimers();
     };
-  }, [open]);
+  }, [open, clearTutorialTimers]);
   
   // Calcular quantos cards cabem na tela
   useEffect(() => {

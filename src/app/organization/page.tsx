@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default async function OrganizationsPage() {
-  const organizations = await OrganizationService.list();
+  const organizations = await OrganizationService.listForStatic();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

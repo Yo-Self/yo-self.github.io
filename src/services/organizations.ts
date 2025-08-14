@@ -23,6 +23,26 @@ export class OrganizationService {
   }
 
   /**
+   * Busca uma organização pelo slug para geração estática (sem cookies)
+   */
+  static async getBySlugForStatic(slug: string): Promise<Organization | null> {
+    const supabase = createStaticClient();
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('slug', slug)
+      .eq('is_organization', true)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data as Organization;
+  }
+
+  /**
    * Busca uma organização com seus restaurantes
    */
   static async getWithRestaurants(slug: string): Promise<{ organization: Organization; restaurants: Restaurant[] } | null> {
@@ -49,6 +69,41 @@ export class OrganizationService {
 
     if (restaurantsError) {
       console.error('Erro ao buscar restaurantes:', restaurantsError);
+    }
+
+    return {
+      organization: organization as Organization,
+      restaurants: (restaurants || []) as Restaurant[]
+    };
+  }
+
+  /**
+   * Busca uma organização com seus restaurantes para geração estática (sem cookies)
+   */
+  static async getWithRestaurantsForStatic(slug: string): Promise<{ organization: Organization; restaurants: Restaurant[] } | null> {
+    const supabase = createStaticClient();
+    
+    // Buscar a organização
+    const { data: organization, error: orgError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('slug', slug)
+      .eq('is_organization', true)
+      .single();
+
+    if (orgError || !organization) {
+      return null;
+    }
+
+    // Buscar os restaurantes da organização
+    const { data: restaurants, error: restaurantsError } = await supabase
+      .from('restaurants')
+      .select('*')
+      .eq('user_id', organization.id)
+      .order('name');
+
+    if (restaurantsError) {
+      console.error('Erro ao buscar restaurantes para geração estática:', restaurantsError);
     }
 
     return {

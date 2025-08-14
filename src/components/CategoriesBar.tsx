@@ -47,7 +47,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
     const preloadImages = () => {
       Object.values(categoryImages).flat().forEach(imageUrl => {
         if (imageUrl && imageUrl !== fallbackImage) {
-          const img = new Image();
+          const img = new window.Image();
           img.src = imageUrl;
         }
       });
@@ -143,7 +143,10 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
   }, [activeCategory, allCategories]);
 
   // Monta lista de categorias com 'Todos' no início ou fim dependendo da página
-  const categoriesWithAll = isHome ? [...allCategories, "all"] : ["all", ...allCategories];
+  const categoriesWithAll = useMemo(() => 
+    isHome ? [...allCategories, "all"] : ["all", ...allCategories], 
+    [isHome, allCategories]
+  );
 
   useEffect(() => {
     const idx = categoriesWithAll.indexOf(activeCategory);
@@ -151,7 +154,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
     if (btn) {
       btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
-  }, [activeCategory]);
+  }, [activeCategory, categoriesWithAll]);
 
   return (
     <div className="categories-bar flex flex-row items-center gap-1 py-4 bg-white dark:bg-black px-1" style={{ display: 'flex', visibility: 'visible', opacity: 1 }}>
@@ -208,7 +211,7 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
 }>(
   ({ label, images, active, onClick, fallbackImage }, ref) => {
     // Garante que sempre haja pelo menos o fallbackImage
-    const imagesToUse = images.length > 0 ? images : [fallbackImage];
+    const imagesToUse = React.useMemo(() => images.length > 0 ? images : [fallbackImage], [images, fallbackImage]);
     const [current, setCurrent] = React.useState(0);
     const [loadedImages, setLoadedImages] = React.useState<Set<string>>(new Set());
 
@@ -218,7 +221,7 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
         const promises = imagesToUse.map((imgSrc) => {
           if (imgSrc && !loadedImages.has(imgSrc)) {
             return new Promise<void>((resolve) => {
-              const img = new Image();
+              const img = new window.Image();
               img.onload = () => {
                 setLoadedImages(prev => new Set(prev).add(imgSrc));
                 resolve();

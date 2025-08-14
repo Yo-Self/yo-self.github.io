@@ -101,7 +101,7 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
     return () => {
       clearTutorialTimers();
     };
-  }, [step, show, steps, onDone]);
+  }, [step, show, steps, onDone, clearTutorialTimers]);
   if (!isClient || !show || step >= steps.length) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;
@@ -168,10 +168,10 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
   const [tutorialTimers, setTutorialTimers] = React.useState<NodeJS.Timeout[]>([]);
   
   // Função para limpar todos os timers de tutorial
-  const clearTutorialTimers = () => {
+  const clearTutorialTimers = React.useCallback(() => {
     tutorialTimers.forEach(timer => clearTimeout(timer));
     setTutorialTimers([]);
-  };
+  }, [tutorialTimers]);
   
   // Função para pular para o próximo tutorial
   const skipToNextTutorial = () => {
@@ -197,12 +197,11 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
     if (!show) return;
     if (step >= steps.length) return;
     const el = document.querySelector(steps[step].selector) as HTMLElement;
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      setPos({top:rect.top,left:rect.left,width:rect.width,height:rect.height});
-    }
+    if (!el) return;
     
-    // Timer automático para avançar para o próximo passo
+    const rect = el.getBoundingClientRect();
+    setPos({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+    
     const timer = setTimeout(() => {
       if (step < steps.length - 1) {
         setStep(step + 1);
@@ -218,7 +217,7 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
     return () => {
       clearTutorialTimers();
     };
-  }, [step, show, steps, onDone]);
+  }, [step, show, steps, onDone, clearTutorialTimers]);
   if (!isClient || !show || step >= steps.length) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;

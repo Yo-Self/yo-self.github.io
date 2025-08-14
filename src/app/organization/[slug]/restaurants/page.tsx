@@ -19,7 +19,7 @@ export async function generateStaticParams() {
 
 export default async function OrganizationRestaurantsPage({ params }: OrganizationRestaurantsPageProps) {
   // Buscar a organização com seus restaurantes
-  const result = await OrganizationService.getWithRestaurants(params.slug);
+  const result = await OrganizationService.getWithRestaurantsForStatic(params.slug);
 
   if (!result) {
     notFound();

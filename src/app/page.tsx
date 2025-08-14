@@ -92,7 +92,7 @@ const sampleDishes = [
 
 // Componente para exibir organizações
 async function OrganizationsSection() {
-  const organizations = await OrganizationService.list();
+  const organizations = await OrganizationService.listForStatic();
   
   if (!organizations || organizations.length === 0) {
     return (
