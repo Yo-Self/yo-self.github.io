@@ -6,6 +6,7 @@ import { Restaurant, Dish, MenuItem } from "./data";
 import DishModal from "./DishModal";
 import DishCard from "./DishCard";
 import JournalView from "./JournalView";
+import ChatBot from "./ChatBot";
 
 
 interface SearchBarProps {
@@ -241,6 +242,9 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
 
   // Novo estado para o modo jornal
   const [journalOpen, setJournalOpen] = useState(false);
+  
+  // Estado para o chatbot
+  const [chatOpen, setChatOpen] = useState(false);
 
 
   // Ícone SVG fornecido pelo usuário para o modo jornal, agora com gradiente animado no fill e maior dentro do círculo
@@ -266,6 +270,32 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       style={{ transition: 'bottom 0.2s' }}
     >
 
+      {/* Botão chatbot */}
+      <button
+        className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
+        data-tutorial="chat-button"
+        style={{ WebkitBackdropFilter: 'blur(12px)' }}
+        aria-label="Assistente IA"
+        onClick={() => setChatOpen(true)}
+      >
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
+          <defs>
+            <linearGradient id="chat-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#06b6d4">
+                <animate attributeName="stop-color" values="#06b6d4;#818cf8;#f472b6;#facc15;#06b6d4" dur="2.5s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#facc15">
+                <animate attributeName="stop-color" values="#facc15;#06b6d4;#818cf8;#f472b6;#facc15" dur="2.5s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+          </defs>
+          <path
+            d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"
+            fill="url(#chat-gradient)"
+          />
+        </svg>
+      </button>
+      
       {/* Botão modo jornal */}
       <button
         className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
@@ -317,6 +347,13 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
 
       {/* Modal de detalhes do prato */}
       <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
+      
+      {/* Chatbot */}
+      <ChatBot 
+        restaurant={restaurant} 
+        isOpen={chatOpen} 
+        onClose={() => setChatOpen(false)} 
+      />
     </div>
   );
 } 
