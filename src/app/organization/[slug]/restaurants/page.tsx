@@ -62,7 +62,7 @@ export default async function OrganizationRestaurantsPage({ params }: Organizati
             {restaurants.map((restaurant) => (
               <Link
                 key={restaurant.id}
-                href={`/restaurant/${restaurant.slug}`}
+                href={`/restaurant/${restaurant.id}`}
                 className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden group"
               >
                 <div className="relative h-48">

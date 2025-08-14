@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import RestaurantClientPage from "./RestaurantClientPage";
 import { Suspense } from "react";
-import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData, fetchRestaurantBySlugWithData } from "@/services/restaurants";
+import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData } from "@/services/restaurants";
 
 export const revalidate = 60;
 export const dynamicParams = true; // permitir params dinâmicos
@@ -30,12 +30,8 @@ export default async function RestaurantMenuPage({ params }: { params: { id: str
   }
   
   if (!initialRestaurant) {
-    // Se não encontrou por ID, tenta por slug
-    try {
-      initialRestaurant = await fetchRestaurantBySlugWithData(decoded);
-    } catch (error) {
-      console.error('Erro ao buscar restaurante por slug:', error);
-    }
+    // Se não encontrou por ID, não tenta por slug (campo não existe na tabela)
+    console.log('Restaurante não encontrado por ID:', decoded);
   }
   
   const restaurants = await fetchFullRestaurants().catch(() => []);

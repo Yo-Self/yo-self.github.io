@@ -45,9 +45,6 @@ export interface Restaurant {
   /** Descrição do restaurante */
   description?: string;
   
-  /** Slug único do restaurante */
-  slug: string;
-  
   /** ID do usuário/organização proprietária */
   user_id: string;
   
