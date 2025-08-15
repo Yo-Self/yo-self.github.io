@@ -3,7 +3,7 @@ import RestaurantClientPage from "./RestaurantClientPage";
 import { Suspense } from "react";
 import { fetchFullRestaurants, fetchRestaurantIds, fetchRestaurantByIdWithData } from "@/services/restaurants";
 
-export const revalidate = 60;
+export const revalidate = 0; // TEMPORÁRIO: Forçar regeneração imediata
 export const dynamicParams = true; // permitir params dinâmicos
 
 export async function generateStaticParams() {
