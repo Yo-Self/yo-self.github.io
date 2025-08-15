@@ -265,6 +265,20 @@ UPDATE restaurants SET waiter_call_enabled = false WHERE id = 'e1e057fc-ea38-42f
 4. Criar relatórios de performance
 5. Integrar com sistema de mesas existente
 
+## 🔧 Troubleshooting
+
+### Problema: Ícone não aparece no GitHub Pages
+**Sintoma**: Botão "Chamar Garçom" aparece sem ícone no GitHub Pages, mas funciona localmente.
+
+**Causa**: Caminho relativo do SVG não resolve corretamente em rotas aninhadas do GitHub Pages.
+
+**Solução**: Usar URL absoluta para o ícone SVG:
+```tsx
+src="https://yo-self.github.io/call-waiter.svg"
+```
+
+**Verificação**: Testar se o arquivo está acessível em `https://yo-self.github.io/call-waiter.svg`
+
 ## 🎨 Design do Botão
 
 ### Características Visuais
@@ -281,6 +295,8 @@ UPDATE restaurants SET waiter_call_enabled = false WHERE id = 'e1e057fc-ea38-42f
 
 ### Ícone Utilizado
 O botão usa o arquivo `call-waiter.svg` que representa uma mão segurando um prato com cloche (tampa de prato), simbolizando o serviço de garçom de forma elegante e intuitiva. O ícone é convertido para branco através de filtros CSS para contrastar com o fundo laranja.
+
+**Nota para GitHub Pages**: O ícone usa URL absoluta (`https://yo-self.github.io/call-waiter.svg`) para garantir que funcione corretamente em todas as rotas do site.
 
 ## 🎯 Comportamento da Interface
 
