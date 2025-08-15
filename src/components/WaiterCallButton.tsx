@@ -67,7 +67,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
       {/* Botão de chamar garçom */}
       <button
         onClick={() => setShowModal(true)}
-        className="w-10 h-10 rounded-full bg-orange-500 hover:bg-orange-600 transition-colors duration-200 shadow-lg flex items-center justify-center ${className}"
+        className={`w-10 h-8 rounded-full bg-orange-500 hover:bg-orange-600 transition-colors duration-200 shadow-lg flex items-center justify-center ${className}`}
         aria-label="Chamar garçom"
         title="Chamar garçom"
         data-waiter-button
@@ -75,7 +75,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
         <img 
           src="/call-waiter.svg" 
           alt="Chamar garçom" 
-          className="w-9 h-9 filter brightness-0 invert"
+          className="w-8 h-8 filter brightness-0 invert"
         />
       </button>
 
