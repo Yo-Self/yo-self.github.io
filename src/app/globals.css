@@ -556,7 +556,7 @@ svg {
   position: relative !important;
   z-index: 10 !important;
   margin-top: 0 !important;
-  padding-top: 0.5rem !important;
+  padding-top: 0 !important;
 }
 
 /* Ajustes para dispositivos com notch (iPhone X e similares) */
