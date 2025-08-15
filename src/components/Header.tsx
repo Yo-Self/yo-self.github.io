@@ -9,6 +9,7 @@ import SortButton from "./SortButton";
 import { SortOption } from "./SortModal";
 import AccessibilityButton from "./AccessibilityButton";
 import ImageWithLoading from "./ImageWithLoading";
+import WaiterCallButton from "./WaiterCallButton";
 
 interface HeaderProps {
   restaurant?: Restaurant;
@@ -290,6 +291,10 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
             <AccessibilityButton />
           </div>
           <div className="absolute top-3 right-4 flex items-center gap-2">
+            <WaiterCallButton 
+              restaurantId={restaurant.id} 
+              waiterCallEnabled={restaurant.waiter_call_enabled}
+            />
             {currentSort && onSortChange && (
               <SortButton currentSort={currentSort} onSortChange={onSortChange} />
             )}
@@ -309,6 +314,10 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
         </div>
         {restaurant && (
           <div className="absolute top-6 right-4 flex items-center gap-2">
+            <WaiterCallButton 
+              restaurantId={restaurant.id} 
+              waiterCallEnabled={restaurant.waiter_call_enabled}
+            />
             {currentSort && onSortChange && (
               <SortButton currentSort={currentSort} onSortChange={onSortChange} />
             )}

@@ -41,6 +41,7 @@ export type Restaurant = {
   welcome_message: string;
   image: string;
   slug?: string;
+  waiter_call_enabled?: boolean;
   menu_categories: string[];
   featured_dishes: Dish[];
   menu_items: MenuItem[];

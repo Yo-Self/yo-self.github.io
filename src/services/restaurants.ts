@@ -46,6 +46,7 @@ export type DbRestaurant = {
   cuisine_type: string | null;
   image_url: string | null;
   description: string | null;
+  waiter_call_enabled?: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -297,6 +298,7 @@ function composeRestaurantModel(
     name: r.name,
     welcome_message: r.description || `Bem-vindo ao ${r.name}`,
     image: r.image_url || '',
+    waiter_call_enabled: r.waiter_call_enabled || false,
     menu_categories: categories.map(c => c.name),
     featured_dishes: featured,
     menu_items: menuItems,
