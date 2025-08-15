@@ -125,7 +125,6 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
   const REST_BASE = `${SUPABASE_URL}/rest/v1`;
   
   const fullUrl = `${REST_BASE}/${pathWithQuery}`;
-  console.log('🔍 sbFetch - URL da requisição:', fullUrl);
   
   const res = await fetch(fullUrl, {
     ...init,
@@ -134,8 +133,8 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       ...(init?.headers || {}),
     },
-    // Importante: para Next export (estático), usar force-cache
-    cache: init?.cache ?? 'force-cache',
+    // Desabilitar cache temporariamente para debug
+    cache: init?.cache ?? 'no-store',
   });
   
   if (!res.ok) {
@@ -153,22 +152,11 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
 async function fetchRestaurantsRows(): Promise<DbRestaurant[]> {
   const cacheKey = 'sb:restaurants';
   
-
-  
-  const cached = getCache<DbRestaurant[]>(cacheKey);
-  
+  // Desabilitar cache temporariamente para debug
+  // const cached = getCache<DbRestaurant[]>(cacheKey);
+  // if (cached) return cached;
 
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&order=created_at.asc`);
-  
-  // Log dos dados brutos do Supabase
-  const moendoFromSupabase = rows?.find(r => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54');
-  console.log('🔍 fetchRestaurantsRows - Dados do Supabase:', {
-    totalRows: rows?.length,
-    moendoFound: !!moendoFromSupabase,
-    moendoWaiterCallEnabled: moendoFromSupabase?.waiter_call_enabled,
-    moendoWaiterCallEnabledType: typeof moendoFromSupabase?.waiter_call_enabled,
-    allMoendoData: moendoFromSupabase
-  });
   
   setCache(cacheKey, rows ?? []);
   return rows ?? [];
@@ -328,7 +316,7 @@ function composeRestaurantModel(
     name: r.name,
     welcome_message: r.description || `Bem-vindo ao ${r.name}`,
     image: r.image_url || '',
-    waiter_call_enabled: r.waiter_call_enabled || false,
+    waiter_call_enabled: r.waiter_call_enabled === true,
     menu_categories: categories.map(c => c.name),
     featured_dishes: featured,
     menu_items: menuItems,
