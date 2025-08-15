@@ -139,7 +139,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/30 backdrop-blur-sm">
       <div
         ref={sheetRef}
-        className="fixed bottom-0 left-0 w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl p-0 pt-0 pb-0 relative flex flex-col items-center"
+        className="fixed bottom-0 left-0 w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl p-0 pt-0 pb-0 relative flex flex-col items-center z-70"
         style={{ right: 0, margin: '0 auto' }}
       >
         {/* Input fixo no topo do sheet */}
@@ -267,7 +267,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
 
   return (
     <div
-      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-50 flex flex-col items-end gap-2"
+              className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom)+1.5rem)] right-[max(1.5rem,env(safe-area-inset-right)+1.5rem)] z-60 flex flex-col items-end gap-2"
       style={{ transition: 'bottom 0.2s' }}
     >
 

@@ -108,10 +108,10 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
   return (
     <section className="menu-section py-0 bg-white dark:bg-black">
       <div className="container mx-auto px-0 pb-20">
-        {/* Barra de categorias sticky, só gruda no topo ao atingir o topo */}
+        {/* Barra de categorias sticky, fica no topo quando rola */}
         <div
           ref={categoriesRef}
-          className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4 border-b border-gray-100 dark:border-gray-800"
+          className="sticky top-0 z-50 bg-white dark:bg-black px-0 pb-2 pl-4 border-b border-gray-100 dark:border-gray-800 shadow-sm"
         >
           <CategoriesBar
             allCategories={availableCategories}

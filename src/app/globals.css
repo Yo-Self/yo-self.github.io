@@ -481,11 +481,11 @@ svg {
 @media screen and (max-width: 428px) {
   /* iPhone 14 Pro Max e dispositivos similares */
   .header {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 50 !important;
     background: white !important;
     min-height: 60px !important;
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
   }
   
   .dark .header {
@@ -505,9 +505,14 @@ svg {
 @media screen and (min-width: 429px) and (max-width: 768px) {
   /* Tablets e dispositivos médios */
   .header {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 50 !important;
+    background: white !important;
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+  }
+  
+  .dark .header {
+    background: black !important;
   }
   
   .carousel-section {
@@ -518,9 +523,14 @@ svg {
 @media screen and (min-width: 769px) {
   /* Desktop e telas grandes */
   .header {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 50 !important;
+    background: white !important;
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+  }
+  
+  .dark .header {
+    background: black !important;
   }
   
   .carousel-section {
@@ -528,13 +538,13 @@ svg {
   }
 }
 
-/* Garantir que o header sempre fique no topo */
+/* Header sem comportamento sticky */
 .header {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 50 !important;
   background: white !important;
   overflow: visible !important;
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
 }
 
 .dark .header {

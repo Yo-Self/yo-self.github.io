@@ -279,8 +279,8 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   
   // Sempre mostra o título do restaurante atual, independente de ter múltiplos restaurantes
   return (
-    <header className="header bg-white dark:bg-black p-0 m-0 sticky top-0 z-50">
-      <div className="container mx-auto flex items-center px-4 m-0 pb-2">
+    <header className="header bg-white dark:bg-black p-0 m-0 h-[60px] flex items-center shadow-sm">
+      <div className="container mx-auto flex items-center px-4 m-0">
         <div className="flex items-center gap-2 w-20">
           <AccessibilityButton />
           {currentSort && onSortChange && (
