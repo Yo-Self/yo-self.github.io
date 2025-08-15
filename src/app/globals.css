@@ -251,6 +251,114 @@ body {
   font-size: 1.75rem;
 }
 
+/* Garantir que os ícones do header fiquem dentro dos limites */
+.header .absolute {
+  position: absolute !important;
+}
+
+.header .absolute.left-4 {
+  left: 1rem !important;
+}
+
+.header .absolute.right-4 {
+  right: 1rem !important;
+}
+
+/* Garantir que os ícones tenham espaço suficiente */
+.header .absolute.top-1\/2 {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Garantir que todos os ícones tenham o mesmo tamanho e alinhamento */
+.header button {
+  width: 2rem !important;
+  height: 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Garantir que os ícones absolutos não interfiram no alinhamento */
+.header .absolute {
+  z-index: 10 !important;
+}
+
+/* Garantir que o título fique alinhado com os ícones */
+.header .logo {
+  line-height: 2rem !important;
+  height: 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  justify-content: center !important;
+  z-index: 5 !important;
+  margin: 0 auto !important;
+}
+
+/* Ajustes responsivos para os ícones do header */
+@media screen and (max-width: 375px) {
+  .header .absolute.left-4 {
+    left: 0.5rem !important;
+  }
+  
+  .header .absolute.right-4 {
+    right: 0.5rem !important;
+  }
+  
+  .header .absolute.top-1\/2 {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+  
+  .header .container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}
+
+@media screen and (min-width: 376px) and (max-width: 428px) {
+  .header .absolute.left-4 {
+    left: 0.75rem !important;
+  }
+  
+  .header .absolute.right-4 {
+    right: 0.75rem !important;
+  }
+  
+  .header .absolute.top-1\/2 {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+  
+  .header .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
+/* Garantir que os ícones não saiam do header em telas maiores */
+@media screen and (min-width: 429px) {
+  .header .absolute.left-4 {
+    left: 1rem !important;
+  }
+  
+  .header .absolute.right-4 {
+    right: 1rem !important;
+  }
+  
+  .header .absolute.top-1\/2 {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+  
+  .header .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
 /* Ajustes para botões de texto (não ícones) */
 .font-large button:not(.w-8):not(.h-8):not(.w-10):not(.h-10):not(.w-16):not(.h-16):not(.w-6):not(.h-6) {
   padding: 0.75rem 1.5rem;
@@ -367,6 +475,191 @@ svg {
   z-index: 40 !important;
   min-height: 80px !important;
   width: 100% !important;
+}
+
+/* Ajustes específicos para responsividade em diferentes dispositivos */
+@media screen and (max-width: 428px) {
+  /* iPhone 14 Pro Max e dispositivos similares */
+  .header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+    background: white !important;
+    min-height: 60px !important;
+  }
+  
+  .dark .header {
+    background: black !important;
+  }
+  
+  .carousel-section {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  
+  .carousel-card {
+    max-height: 60vw !important;
+  }
+}
+
+@media screen and (min-width: 429px) and (max-width: 768px) {
+  /* Tablets e dispositivos médios */
+  .header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+  }
+  
+  .carousel-section {
+    margin-top: 0 !important;
+  }
+}
+
+@media screen and (min-width: 769px) {
+  /* Desktop e telas grandes */
+  .header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+  }
+  
+  .carousel-section {
+    margin-top: 0 !important;
+  }
+}
+
+/* Garantir que o header sempre fique no topo */
+.header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+  background: white !important;
+  overflow: visible !important;
+}
+
+.dark .header {
+  background: black !important;
+}
+
+/* Ajustes para o carousel não sobrepor o header */
+.carousel-section {
+  position: relative !important;
+  z-index: 10 !important;
+  margin-top: 0 !important;
+  padding-top: 0.5rem !important;
+}
+
+/* Ajustes para dispositivos com notch (iPhone X e similares) */
+@supports (padding: max(0px)) {
+  .header {
+    padding-top: max(0.75rem, env(safe-area-inset-top)) !important;
+  }
+  
+  .carousel-section {
+    padding-top: 0 !important;
+  }
+}
+
+/* Ajustes específicos para iPhone 14 Pro Max (430px) e dispositivos similares */
+@media screen and (min-width: 430px) and (max-width: 430px) {
+  .carousel-card {
+    height: 65vw !important;
+    max-height: 280px !important;
+  }
+  
+  .carousel-section {
+    min-height: 280px !important;
+  }
+  
+  .header {
+    min-height: 65px !important;
+  }
+  
+  .header .container {
+    min-height: 65px !important;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media screen and (max-width: 375px) {
+  .carousel-card {
+    height: 70vw !important;
+  }
+  
+  .header {
+    padding: 0.5rem 0 !important;
+  }
+}
+
+/* Ajustes para telas médias */
+@media screen and (min-width: 376px) and (max-width: 428px) {
+  .carousel-card {
+    height: 65vw !important;
+  }
+}
+
+/* Garantir que o body não tenha scroll horizontal */
+body {
+  overflow-x: hidden !important;
+  width: 100% !important;
+}
+
+/* Garantir que o container principal seja responsivo */
+.container {
+  max-width: 100% !important;
+}
+
+/* Ajustes específicos para o header */
+.header .container {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Garantir que os ícones não saiam do header */
+.header .container .absolute {
+  max-width: calc(100% - 2rem) !important;
+}
+
+/* Header com altura relativa aos ícones */
+.header {
+  height: auto !important;
+  min-height: 60px !important;
+}
+
+/* Garantir que o header se ajuste ao conteúdo */
+.header .container {
+  height: auto !important;
+  min-height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+/* Garantir que o título fique centralizado */
+.header .container h1 {
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  z-index: 5 !important;
+  flex: 1 !important;
+  text-align: center !important;
+  min-width: 0 !important;
+}
+
+/* Ajustes para o layout flex */
+.min-h-screen.flex.flex-col {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.flex-1.relative {
+  flex: 1 !important;
+  position: relative !important;
 }
 
 .categories-bar-container {

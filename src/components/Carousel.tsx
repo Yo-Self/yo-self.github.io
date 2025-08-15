@@ -115,7 +115,7 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
   }
 
   return (
-    <section className="carousel-section py-0 bg-white dark:bg-black" {...props}>
+    <section className="carousel-section pt-1 pb-0 bg-white dark:bg-black" {...props}>
       <div className="container mx-auto px-0 overflow-x-hidden">
         <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] overflow-x-hidden"
           onTouchStart={handleTouchStart}
