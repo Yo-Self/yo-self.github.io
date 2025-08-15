@@ -39,7 +39,7 @@ Esta funcionalidade permite que clientes chamem garçons através da interface d
   - Gerenciamento de estado e erros
 
 ### 4. Componentes
-- **WaiterCallButton**: Cápsula laranja com texto "Chamar Garçom" (só aparece se `waiter_call_enabled = true`)
+- **WaiterCallButton**: Botão circular laranja com ícone `call-waiter.svg` (só aparece se `waiter_call_enabled = true`)
 - **WaiterCallNotifications**: Painel de notificações para a equipe
 
 ## Como Usar no Projeto Atual
@@ -255,6 +255,7 @@ UPDATE restaurants SET waiter_call_enabled = false WHERE id = 'e1e057fc-ea38-42f
 ✅ **Validações Implementadas**: Prevenção de chamadas duplicadas funcionando
 ✅ **Interface Cliente**: Botão integrado no header do cardápio digital
 ✅ **Controle por Restaurante**: Campo `waiter_call_enabled` implementado para habilitar/desabilitar por restaurante
+✅ **Design Simplificado**: Botão circular com ícone apenas
 
 ## Próximos Passos
 
@@ -264,9 +265,26 @@ UPDATE restaurants SET waiter_call_enabled = false WHERE id = 'e1e057fc-ea38-42f
 4. Criar relatórios de performance
 5. Integrar com sistema de mesas existente
 
+## 🎨 Design do Botão
+
+### Características Visuais
+- **Formato**: Botão circular laranja
+- **Tamanho**: 40x40px (w-10 h-10)
+- **Ícone**: Arquivo `call-waiter.svg` convertido para branco via filtros CSS
+- **Hover**: Transição suave para laranja mais escuro
+- **Sombra**: Efeito de elevação sutil
+- **Posição**: Canto superior direito do header
+
+### Layout do Header
+- **Esquerda**: Botão de acessibilidade + Botão de ordenação
+- **Direita**: Botão de compartilhamento + Botão "Chamar Garçom"
+
+### Ícone Utilizado
+O botão usa o arquivo `call-waiter.svg` que representa uma mão segurando um prato com cloche (tampa de prato), simbolizando o serviço de garçom de forma elegante e intuitiva. O ícone é convertido para branco através de filtros CSS para contrastar com o fundo laranja.
+
 ## 🎯 Comportamento da Interface
 
-- **Quando `waiter_call_enabled = true`**: A cápsula laranja "Chamar Garçom" aparece no header
-- **Quando `waiter_call_enabled = false` ou `null`**: A cápsula não é renderizada
-- **Design**: Cápsula laranja com texto "Chamar Garçom"
+- **Quando `waiter_call_enabled = true`**: O botão circular laranja com ícone aparece no header
+- **Quando `waiter_call_enabled = false` ou `null`**: O botão não é renderizado
+- **Design**: Botão circular laranja com ícone `call-waiter.svg`
 - **Controle granular**: Cada restaurante pode ter sua própria configuração

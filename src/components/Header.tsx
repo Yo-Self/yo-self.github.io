@@ -287,18 +287,18 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
             onSelect={onSelectRestaurant!}
             current={restaurant}
           />
-          <div className="absolute top-3 left-4">
+          <div className="absolute top-3 left-4 flex items-center gap-2">
             <AccessibilityButton />
+            {currentSort && onSortChange && (
+              <SortButton currentSort={currentSort} onSortChange={onSortChange} />
+            )}
           </div>
           <div className="absolute top-3 right-4 flex items-center gap-2">
+            <ShareButton restaurant={restaurant} />
             <WaiterCallButton 
               restaurantId={restaurant.id} 
               waiterCallEnabled={restaurant.waiter_call_enabled}
             />
-            {currentSort && onSortChange && (
-              <SortButton currentSort={currentSort} onSortChange={onSortChange} />
-            )}
-            <ShareButton restaurant={restaurant} />
           </div>
         </div>
       </header>
@@ -309,19 +309,19 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
     <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
       <div className="container mx-auto flex items-center justify-center px-4 m-0 pt-6 relative">
         <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100">{restaurant?.name}</h1>
-        <div className="absolute top-6 left-4">
+        <div className="absolute top-6 left-4 flex items-center gap-2">
           <AccessibilityButton />
+          {currentSort && onSortChange && (
+            <SortButton currentSort={currentSort} onSortChange={onSortChange} />
+          )}
         </div>
         {restaurant && (
           <div className="absolute top-6 right-4 flex items-center gap-2">
+            <ShareButton restaurant={restaurant} />
             <WaiterCallButton 
               restaurantId={restaurant.id} 
               waiterCallEnabled={restaurant.waiter_call_enabled}
             />
-            {currentSort && onSortChange && (
-              <SortButton currentSort={currentSort} onSortChange={onSortChange} />
-            )}
-            <ShareButton restaurant={restaurant} />
           </div>
         )}
       </div>
