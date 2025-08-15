@@ -283,24 +283,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [currentSort, setCurrentSort] = useState<SortOption>({ field: "default", direction: "asc" });
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
   
-  // Debug remoto: log que funciona no cliente
-  useEffect(() => {
-    console.log('🔍 RestaurantClientPage Debug (Client):', {
-      initialRestaurantId: initialRestaurant.id,
-      initialRestaurantName: initialRestaurant.name,
-      initialWaiterCallEnabled: initialRestaurant.waiter_call_enabled,
-      selectedRestaurantId,
-      selectedRestaurantName: selectedRestaurant.name,
-      selectedWaiterCallEnabled: selectedRestaurant.waiter_call_enabled,
-      restaurantsCount: restaurants.length,
-      allRestaurantIds: restaurants.map(r => r.id),
-      allRestaurantNames: restaurants.map(r => r.name),
-      allWaiterCallEnabled: restaurants.map(r => ({ id: r.id, name: r.name, waiter_call_enabled: r.waiter_call_enabled })),
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
-  }, [initialRestaurant, selectedRestaurant, restaurants, selectedRestaurantId]);
+
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
 
   // Quando uma categoria é selecionada no grid, muda para o modo lista e seleciona a categoria

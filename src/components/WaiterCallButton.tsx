@@ -58,46 +58,14 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     clearError();
   };
 
-  // Debug remoto: log que funciona no cliente
-  useEffect(() => {
-    console.log('🔍 WaiterCallButton Debug (Client):', {
-      restaurantId,
-      waiterCallEnabled,
-      type: typeof waiterCallEnabled,
-      truthy: Boolean(waiterCallEnabled),
-      falsy: !waiterCallEnabled,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
-  }, [restaurantId, waiterCallEnabled]);
-
-  // TEMPORÁRIO: Forçar renderização para debug
-  // if (!waiterCallEnabled) {
-  //   console.log('❌ WaiterCallButton: Não renderizando - waiterCallEnabled é falsy');
-  //   return null;
-  // }
-
-  console.log('✅ WaiterCallButton: Renderizando botão (forçado) - VERSÃO ATUALIZADA');
+  // Se a funcionalidade não estiver habilitada, não renderizar o botão
+  if (!waiterCallEnabled) {
+    return null;
+  }
 
   return (
     <>
-      {/* Debug: Elemento visual que sempre aparece */}
-      <div style={{ 
-        width: '20px', 
-        height: '20px', 
-        backgroundColor: 'lime', 
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '2px solid black',
-        position: 'relative',
-        zIndex: 1000,
-        marginRight: '5px'
-      }}>
-        <span style={{ color: 'black', fontSize: '8px' }}>D</span>
-      </div>
+
       
       {/* Botão de chamar garçom */}
       <button
