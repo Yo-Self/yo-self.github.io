@@ -143,8 +143,9 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
 
 async function fetchRestaurantsRows(): Promise<DbRestaurant[]> {
   const cacheKey = 'sb:restaurants';
-  const cached = getCache<DbRestaurant[]>(cacheKey);
-  if (cached) return cached;
+  // TEMPORÁRIO: Forçar busca de dados atualizados
+  // const cached = getCache<DbRestaurant[]>(cacheKey);
+  // if (cached) return cached;
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&order=created_at.asc`);
   setCache(cacheKey, rows ?? []);
   return rows ?? [];
