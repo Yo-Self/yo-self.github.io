@@ -428,8 +428,26 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
   if (id === '[id]') {
     return null;
   }
+  
+  // Log específico para esta função
+  console.log('🔍 fetchRestaurantByIdWithData - Iniciando busca:', {
+    id,
+    isMoendo: id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54'
+  });
+  
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
   const r = rows && rows[0];
+  
+  // Log da resposta do Supabase
+  if (id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54') {
+    console.log('🔍 fetchRestaurantByIdWithData - Resposta do Supabase para Moendo:', {
+      rowsLength: rows?.length,
+      moendoData: r,
+      waiter_call_enabled: r?.waiter_call_enabled,
+      waiter_call_enabledType: typeof r?.waiter_call_enabled
+    });
+  }
+  
   if (!r) return null;
   const [cats, dishes] = await Promise.all([
     fetchCategoriesRows(r.id),
@@ -442,7 +460,19 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
   ]);
   const groupIds = groups.map(g => g.id);
   const complements = await fetchComplementsByGroupIds(groupIds);
-  return composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
+  const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
+  
+  // Log do resultado final
+  if (id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54') {
+    console.log('🔍 fetchRestaurantByIdWithData - Resultado final para Moendo:', {
+      restaurantId: result.id,
+      restaurantName: result.name,
+      waiter_call_enabled: result.waiter_call_enabled,
+      waiter_call_enabledType: typeof result.waiter_call_enabled
+    });
+  }
+  
+  return result;
 }
 
 // Função removida - a tabela restaurants não tem campo slug
