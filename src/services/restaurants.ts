@@ -124,7 +124,10 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
   const { SUPABASE_URL, SUPABASE_ANON_KEY } = getSupabaseConfig();
   const REST_BASE = `${SUPABASE_URL}/rest/v1`;
   
-  const res = await fetch(`${REST_BASE}/${pathWithQuery}`, {
+  const fullUrl = `${REST_BASE}/${pathWithQuery}`;
+  console.log('🔍 sbFetch - URL da requisição:', fullUrl);
+  
+  const res = await fetch(fullUrl, {
     ...init,
     headers: {
       apikey: SUPABASE_ANON_KEY,
@@ -134,11 +137,43 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
     // Importante: para Next export (estático), usar force-cache
     cache: init?.cache ?? 'force-cache',
   });
+  
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`Supabase REST error ${res.status}: ${text}`);
   }
-  return res.json() as Promise<T>;
+  
+  const data = await res.json() as T;
+  
+  // Log detalhado da resposta
+  if (pathWithQuery.includes('restaurants')) {
+    console.log('🔍 sbFetch - Resposta completa do Supabase:', {
+      path: pathWithQuery,
+      status: res.status,
+      dataLength: Array.isArray(data) ? data.length : 'N/A',
+      moendoData: Array.isArray(data) ? data.find((r: any) => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54') : null,
+      allData: data
+    });
+    
+    // Log específico para o Moendo
+    if (Array.isArray(data)) {
+      const moendo = data.find((r: any) => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54');
+      if (moendo) {
+        console.log('🎯 MOENDO ENCONTRADO:', {
+          id: moendo.id,
+          name: moendo.name,
+          waiter_call_enabled: moendo.waiter_call_enabled,
+          waiter_call_enabled_type: typeof moendo.waiter_call_enabled,
+          allFields: Object.keys(moendo),
+          rawData: moendo
+        });
+      } else {
+        console.log('❌ MOENDO NÃO ENCONTRADO na resposta');
+      }
+    }
+  }
+  
+  return data;
 }
 
 async function fetchRestaurantsRows(): Promise<DbRestaurant[]> {
@@ -340,7 +375,8 @@ function composeRestaurantModel(
     waiter_call_enabled: r.waiter_call_enabled,
     type: typeof r.waiter_call_enabled,
     truthy: Boolean(r.waiter_call_enabled),
-    finalValue: r.waiter_call_enabled || false
+    finalValue: r.waiter_call_enabled || false,
+    rawData: r
   });
 
   return {
