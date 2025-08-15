@@ -293,6 +293,8 @@ function composeRestaurantModel(
       };
     });
 
+
+
   return {
     id: String(r.id),
     name: r.name,

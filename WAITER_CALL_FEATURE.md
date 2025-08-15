@@ -279,6 +279,21 @@ src="https://yo-self.github.io/call-waiter.svg"
 
 **Verificação**: Testar se o arquivo está acessível em `https://yo-self.github.io/call-waiter.svg`
 
+### Problema: Botão não é renderizado
+**Sintoma**: Botão "Chamar Garçom" não aparece mesmo com `waiter_call_enabled = true`.
+
+**Causa**: Dados corretos no banco, mas problema na renderização do componente.
+
+**Solução**: Verificar se o campo `waiter_call_enabled` está sendo passado corretamente:
+1. Confirmar que o restaurante tem `waiter_call_enabled = true` no banco
+2. Verificar se o campo está sendo incluído na função `composeRestaurantModel`
+3. Confirmar que o componente `WaiterCallButton` recebe a prop corretamente
+
+**Debug**: Adicionar logs temporários para verificar os valores:
+```tsx
+console.log('WaiterCallButton Debug:', { waiterCallEnabled, type: typeof waiterCallEnabled });
+```
+
 ## 🎨 Design do Botão
 
 ### Características Visuais
