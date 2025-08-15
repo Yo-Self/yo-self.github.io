@@ -143,9 +143,45 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
 
 async function fetchRestaurantsRows(): Promise<DbRestaurant[]> {
   const cacheKey = 'sb:restaurants';
+  
+  // TEMPORÁRIO: Limpar cache para forçar busca fresca
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(cacheKey);
+      console.log('🧹 fetchRestaurantsRows: Cache limpo forçadamente');
+    } catch {}
+  }
+  memoryCache.delete(cacheKey);
+  
   const cached = getCache<DbRestaurant[]>(cacheKey);
-  if (cached) return cached;
+  
+  // Log para debug do cache
+  console.log('🔍 fetchRestaurantsRows - Cache debug:', {
+    cacheKey,
+    hasCached: !!cached,
+    cachedLength: cached?.length,
+    moendoFromCache: cached?.find(r => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54')?.waiter_call_enabled,
+    moendoFromCacheType: typeof cached?.find(r => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54')?.waiter_call_enabled
+  });
+  
+  if (cached) {
+    console.log('📦 fetchRestaurantsRows: Usando cache');
+    return cached;
+  }
+  
+  console.log('🌐 fetchRestaurantsRows: Buscando do Supabase');
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&order=created_at.asc`);
+  
+  // Log dos dados brutos do Supabase
+  const moendoFromSupabase = rows?.find(r => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54');
+  console.log('🔍 fetchRestaurantsRows - Dados do Supabase:', {
+    totalRows: rows?.length,
+    moendoFound: !!moendoFromSupabase,
+    moendoWaiterCallEnabled: moendoFromSupabase?.waiter_call_enabled,
+    moendoWaiterCallEnabledType: typeof moendoFromSupabase?.waiter_call_enabled,
+    allMoendoData: moendoFromSupabase
+  });
+  
   setCache(cacheKey, rows ?? []);
   return rows ?? [];
 }
