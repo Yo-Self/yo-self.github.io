@@ -9,7 +9,6 @@ import SortButton from "./SortButton";
 import { SortOption } from "./SortModal";
 import AccessibilityButton from "./AccessibilityButton";
 import ImageWithLoading from "./ImageWithLoading";
-import WaiterCallButton from "./WaiterCallButton";
 
 interface HeaderProps {
   restaurant?: Restaurant;
@@ -296,10 +295,6 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
         {restaurant && (
           <div className="flex items-center gap-2 w-20 justify-end">
             <ShareButton restaurant={restaurant} />
-            <WaiterCallButton 
-              restaurantId={restaurant.id} 
-              waiterCallEnabled={restaurant.waiter_call_enabled}
-            />
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import DishModal from "./DishModal";
 import DishCard from "./DishCard";
 import JournalView from "./JournalView";
 import IntegratedChatBot from "./IntegratedChatBot";
+import WaiterCallButton from "./WaiterCallButton";
 
 
 interface SearchBarProps {
@@ -271,6 +272,15 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
     >
 
 
+      
+      {/* Botão chamar garçom */}
+      <div className="mb-2">
+        <WaiterCallButton 
+          restaurantId={restaurant.id} 
+          waiterCallEnabled={restaurant.waiter_call_enabled}
+          className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group"
+        />
+      </div>
       
       {/* Botão modo jornal */}
       <button
