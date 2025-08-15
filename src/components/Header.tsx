@@ -278,6 +278,24 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
 export default function Header({ restaurant, restaurants, selectedRestaurantId, onSelectRestaurant, currentSort, onSortChange }: HeaderProps) {
   const { t } = useTranslation();
   
+  // Debug remoto: log que funciona no cliente
+  useEffect(() => {
+    if (restaurant) {
+      console.log('🔍 Header Debug (Client):', {
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+        waiter_call_enabled: restaurant.waiter_call_enabled,
+        type: typeof restaurant.waiter_call_enabled,
+        truthy: Boolean(restaurant.waiter_call_enabled),
+        falsy: !restaurant.waiter_call_enabled,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        allRestaurantProps: Object.keys(restaurant)
+      });
+    }
+  }, [restaurant]);
+  
 
   if (restaurants && restaurants.length > 1 && restaurant) {
     return (
