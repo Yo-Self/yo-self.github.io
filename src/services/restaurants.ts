@@ -306,12 +306,19 @@ function composeRestaurantModel(
     rawData: r
   });
 
+  // TEMPORÁRIO: Forçar waiter_call_enabled para o restaurante Moendo
+  let finalWaiterCallEnabled = r.waiter_call_enabled;
+  if (r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54' || r.name === 'Moendo') {
+    finalWaiterCallEnabled = true;
+    console.log('🔧 FORÇANDO waiter_call_enabled = true para Moendo');
+  }
+
   return {
     id: String(r.id),
     name: r.name,
     welcome_message: r.description || `Bem-vindo ao ${r.name}`,
     image: r.image_url || '',
-    waiter_call_enabled: r.waiter_call_enabled || false,
+    waiter_call_enabled: finalWaiterCallEnabled || false,
     menu_categories: categories.map(c => c.name),
     featured_dishes: featured,
     menu_items: menuItems,
