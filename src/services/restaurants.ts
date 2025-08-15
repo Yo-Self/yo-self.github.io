@@ -145,33 +145,7 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
   
   const data = await res.json() as T;
   
-  // Log detalhado da resposta
-  if (pathWithQuery.includes('restaurants')) {
-    console.log('🔍 sbFetch - Resposta completa do Supabase:', {
-      path: pathWithQuery,
-      status: res.status,
-      dataLength: Array.isArray(data) ? data.length : 'N/A',
-      moendoData: Array.isArray(data) ? data.find((r: any) => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54') : null,
-      allData: data
-    });
-    
-    // Log específico para o Moendo
-    if (Array.isArray(data)) {
-      const moendo = data.find((r: any) => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54');
-      if (moendo) {
-        console.log('🎯 MOENDO ENCONTRADO:', {
-          id: moendo.id,
-          name: moendo.name,
-          waiter_call_enabled: moendo.waiter_call_enabled,
-          waiter_call_enabled_type: typeof moendo.waiter_call_enabled,
-          allFields: Object.keys(moendo),
-          rawData: moendo
-        });
-      } else {
-        console.log('❌ MOENDO NÃO ENCONTRADO na resposta');
-      }
-    }
-  }
+
   
   return data;
 }
@@ -179,32 +153,11 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
 async function fetchRestaurantsRows(): Promise<DbRestaurant[]> {
   const cacheKey = 'sb:restaurants';
   
-  // TEMPORÁRIO: Limpar cache para forçar busca fresca
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.removeItem(cacheKey);
-      console.log('🧹 fetchRestaurantsRows: Cache limpo forçadamente');
-    } catch {}
-  }
-  memoryCache.delete(cacheKey);
+
   
   const cached = getCache<DbRestaurant[]>(cacheKey);
   
-  // Log para debug do cache
-  console.log('🔍 fetchRestaurantsRows - Cache debug:', {
-    cacheKey,
-    hasCached: !!cached,
-    cachedLength: cached?.length,
-    moendoFromCache: cached?.find(r => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54')?.waiter_call_enabled,
-    moendoFromCacheType: typeof cached?.find(r => r.id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54')?.waiter_call_enabled
-  });
-  
-  if (cached) {
-    console.log('📦 fetchRestaurantsRows: Usando cache');
-    return cached;
-  }
-  
-  console.log('🌐 fetchRestaurantsRows: Buscando do Supabase');
+
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&order=created_at.asc`);
   
   // Log dos dados brutos do Supabase
@@ -368,16 +321,7 @@ function composeRestaurantModel(
 
 
 
-  // TEMPORÁRIO: Log para verificar o valor do waiter_call_enabled
-  console.log('🔍 VERIFICANDO waiter_call_enabled:', {
-    restaurantId: r.id,
-    restaurantName: r.name,
-    waiter_call_enabled: r.waiter_call_enabled,
-    type: typeof r.waiter_call_enabled,
-    truthy: Boolean(r.waiter_call_enabled),
-    finalValue: r.waiter_call_enabled || false,
-    rawData: r
-  });
+
 
   return {
     id: String(r.id),
@@ -429,24 +373,12 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
     return null;
   }
   
-  // Log específico para esta função
-  console.log('🔍 fetchRestaurantByIdWithData - Iniciando busca:', {
-    id,
-    isMoendo: id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54'
-  });
+
   
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
   const r = rows && rows[0];
   
-  // Log da resposta do Supabase
-  if (id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54') {
-    console.log('🔍 fetchRestaurantByIdWithData - Resposta do Supabase para Moendo:', {
-      rowsLength: rows?.length,
-      moendoData: r,
-      waiter_call_enabled: r?.waiter_call_enabled,
-      waiter_call_enabledType: typeof r?.waiter_call_enabled
-    });
-  }
+
   
   if (!r) return null;
   const [cats, dishes] = await Promise.all([
@@ -462,15 +394,7 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
   const complements = await fetchComplementsByGroupIds(groupIds);
   const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
   
-  // Log do resultado final
-  if (id === 'e1f70b34-20f5-4e08-9b68-d801ca33ee54') {
-    console.log('🔍 fetchRestaurantByIdWithData - Resultado final para Moendo:', {
-      restaurantId: result.id,
-      restaurantName: result.name,
-      waiter_call_enabled: result.waiter_call_enabled,
-      waiter_call_enabledType: typeof result.waiter_call_enabled
-    });
-  }
+
   
   return result;
 }

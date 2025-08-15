@@ -298,20 +298,7 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
             )}
           </div>
           <div className="absolute top-3 right-4 flex items-center gap-2">
-            {/* Log para verificar valores no Header */}
-            {(() => {
-              console.log('🔍 Header (Multi) - Valores sendo passados para WaiterCallButton:', {
-                restaurantId: restaurant.id,
-                restaurantName: restaurant.name,
-                waiter_call_enabled: restaurant.waiter_call_enabled,
-                type: typeof restaurant.waiter_call_enabled,
-                isNull: restaurant.waiter_call_enabled === null,
-                isUndefined: restaurant.waiter_call_enabled === undefined,
-                isTrue: restaurant.waiter_call_enabled === true,
-                isFalse: restaurant.waiter_call_enabled === false
-              });
-              return null;
-            })()}
+
             <ShareButton restaurant={restaurant} />
             <WaiterCallButton 
               restaurantId={restaurant.id} 
@@ -335,20 +322,7 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
         </div>
         {restaurant && (
           <div className="absolute top-6 right-4 flex items-center gap-2">
-            {/* Log para verificar valores no Header */}
-            {(() => {
-              console.log('🔍 Header (Single) - Valores sendo passados para WaiterCallButton:', {
-                restaurantId: restaurant.id,
-                restaurantName: restaurant.name,
-                waiter_call_enabled: restaurant.waiter_call_enabled,
-                type: typeof restaurant.waiter_call_enabled,
-                isNull: restaurant.waiter_call_enabled === null,
-                isUndefined: restaurant.waiter_call_enabled === undefined,
-                isTrue: restaurant.waiter_call_enabled === true,
-                isFalse: restaurant.waiter_call_enabled === false
-              });
-              return null;
-            })()}
+
             <ShareButton restaurant={restaurant} />
             <WaiterCallButton 
               restaurantId={restaurant.id} 

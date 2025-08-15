@@ -58,28 +58,10 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     clearError();
   };
 
-  // Log detalhado para debug
-  console.log('🔍 WaiterCallButton - Valores recebidos:', {
-    restaurantId,
-    waiterCallEnabled,
-    type: typeof waiterCallEnabled,
-    isNull: waiterCallEnabled === null,
-    isUndefined: waiterCallEnabled === undefined,
-    isTrue: waiterCallEnabled === true,
-    isFalse: waiterCallEnabled === false,
-    truthy: Boolean(waiterCallEnabled),
-    falsy: !waiterCallEnabled,
-    shouldShow: waiterCallEnabled === true || waiterCallEnabled === null,
-    shouldHide: waiterCallEnabled === false
-  });
-
   // Nova lógica: exibir se for true ou null, esconder apenas se for false
   if (waiterCallEnabled === false) {
-    console.log('❌ WaiterCallButton: Não renderizando - waiterCallEnabled é false');
     return null;
   }
-
-  console.log('✅ WaiterCallButton: Renderizando botão - waiterCallEnabled é true ou null');
 
   return (
     <>
