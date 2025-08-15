@@ -78,7 +78,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
   //   return null;
   // }
 
-  console.log('✅ WaiterCallButton: Renderizando botão (forçado)');
+  console.log('✅ WaiterCallButton: Renderizando botão (forçado) - VERSÃO ATUALIZADA');
 
   return (
     <>
