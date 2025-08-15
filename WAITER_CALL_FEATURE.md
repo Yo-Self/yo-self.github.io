@@ -274,10 +274,10 @@ UPDATE restaurants SET waiter_call_enabled = false WHERE id = 'e1e057fc-ea38-42f
 
 **Solução**: Usar URL absoluta para o ícone SVG:
 ```tsx
-src="https://yo-self.github.io/call-waiter.svg"
+src="/call-waiter.svg"
 ```
 
-**Verificação**: Testar se o arquivo está acessível em `https://yo-self.github.io/call-waiter.svg`
+**Verificação**: Testar se o arquivo está acessível em `/call-waiter.svg`
 
 ### Problema: Botão não é renderizado
 **Sintoma**: Botão "Chamar Garçom" não aparece mesmo com `waiter_call_enabled = true`.
@@ -311,7 +311,7 @@ console.log('WaiterCallButton Debug:', { waiterCallEnabled, type: typeof waiterC
 ### Ícone Utilizado
 O botão usa o arquivo `call-waiter.svg` que representa uma mão segurando um prato com cloche (tampa de prato), simbolizando o serviço de garçom de forma elegante e intuitiva. O ícone é convertido para branco através de filtros CSS para contrastar com o fundo laranja.
 
-**Nota para GitHub Pages**: O ícone usa URL absoluta (`https://yo-self.github.io/call-waiter.svg`) para garantir que funcione corretamente em todas as rotas do site.
+**Nota**: O ícone usa caminho relativo (`/call-waiter.svg`) para referenciar o arquivo local na pasta `public/`.
 
 ## 🎯 Comportamento da Interface
 

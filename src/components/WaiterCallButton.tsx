@@ -73,9 +73,9 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
         data-waiter-button
       >
         <img 
-          src="https://yo-self.github.io/call-waiter.svg" 
+          src="/call-waiter.svg" 
           alt="Chamar garçom" 
-          className="w-8 h-8 filter brightness-0 invert"
+          className="w-9 h-9 filter brightness-0 invert"
         />
       </button>
 
