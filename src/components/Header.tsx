@@ -277,6 +277,8 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
 
 export default function Header({ restaurant, restaurants, selectedRestaurantId, onSelectRestaurant, currentSort, onSortChange }: HeaderProps) {
   const { t } = useTranslation();
+  
+
   if (restaurants && restaurants.length > 1 && restaurant) {
     return (
       <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">

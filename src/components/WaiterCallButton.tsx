@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWaiterCalls } from '@/hooks/useWaiterCalls';
 
 interface WaiterCallButtonProps {
@@ -76,7 +76,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
         <img 
           src="https://yo-self.github.io/call-waiter.svg" 
           alt="Chamar garçom" 
-          className="w-9 h-9 filter brightness-0 invert"
+          className="w-8 h-8 filter brightness-0 invert"
         />
       </button>
 
