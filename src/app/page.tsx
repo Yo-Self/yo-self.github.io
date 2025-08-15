@@ -5,6 +5,9 @@ import ImageWithLoading from "@/components/ImageWithLoading";
 import { OrganizationService } from "@/services/organizations";
 import Image from "next/image";
 
+// Configuração de cache para GitHub Pages
+export const revalidate = 3600; // 1 hora
+
 // Dados reais do Café Moendo para demonstração
 const moendoDishes = [
   {

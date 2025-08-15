@@ -4,7 +4,8 @@ const nextConfig = {
   images: { unoptimized: true },
   // Configuração para GitHub Pages
   trailingSlash: true,
-  basePath: process.env.NODE_ENV === 'production' ? '/restaurant' : '',
+  // Para repositório yo-self.github.io, não precisamos de basePath
+  // basePath: process.env.NODE_ENV === 'production' ? '/restaurant' : '',
 };
 
 export default nextConfig;

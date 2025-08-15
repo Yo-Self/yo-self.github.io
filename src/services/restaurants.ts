@@ -133,8 +133,8 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       ...(init?.headers || {}),
     },
-    // Desabilitar cache temporariamente para debug
-    cache: init?.cache ?? 'no-store',
+    // Usar cache padrão para melhor performance
+    cache: init?.cache ?? 'default',
   });
   
   if (!res.ok) {
@@ -152,9 +152,8 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
 async function fetchRestaurantsRows(): Promise<DbRestaurant[]> {
   const cacheKey = 'sb:restaurants';
   
-  // Desabilitar cache temporariamente para debug
-  // const cached = getCache<DbRestaurant[]>(cacheKey);
-  // if (cached) return cached;
+  const cached = getCache<DbRestaurant[]>(cacheKey);
+  if (cached) return cached;
 
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&order=created_at.asc`);
   
