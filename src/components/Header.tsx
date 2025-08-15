@@ -278,51 +278,23 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
 export default function Header({ restaurant, restaurants, selectedRestaurantId, onSelectRestaurant, currentSort, onSortChange }: HeaderProps) {
   const { t } = useTranslation();
   
-
-  
-
-  if (restaurants && restaurants.length > 1 && restaurant) {
-    return (
-      <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
-        <div className="container mx-auto flex flex-col items-center justify-center px-0 m-0 pt-3 relative">
-          <RestaurantDropdown
-            restaurants={restaurants}
-            selectedRestaurantId={selectedRestaurantId}
-            onSelect={onSelectRestaurant!}
-            current={restaurant}
-          />
-          <div className="absolute top-3 left-4 flex items-center gap-2">
-            <AccessibilityButton />
-            {currentSort && onSortChange && (
-              <SortButton currentSort={currentSort} onSortChange={onSortChange} />
-            )}
-          </div>
-          <div className="absolute top-3 right-4 flex items-center gap-2">
-
-            <ShareButton restaurant={restaurant} />
-            <WaiterCallButton 
-              restaurantId={restaurant.id} 
-              waiterCallEnabled={restaurant.waiter_call_enabled}
-            />
-          </div>
-        </div>
-      </header>
-    );
-  }
-  // fallback: single restaurant
+  // Sempre mostra o título do restaurante atual, independente de ter múltiplos restaurantes
   return (
-    <header className="header bg-white dark:bg-black shadow-sm p-0 m-0">
-      <div className="container mx-auto flex items-center justify-center px-4 m-0 pt-6 relative">
-        <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100">{restaurant?.name}</h1>
-        <div className="absolute top-6 left-4 flex items-center gap-2">
+    <header className="header bg-white dark:bg-black p-0 m-0 sticky top-0 z-50">
+      <div className="container mx-auto flex items-center px-4 m-0 pb-2">
+        <div className="flex items-center gap-2 w-20">
           <AccessibilityButton />
           {currentSort && onSortChange && (
             <SortButton currentSort={currentSort} onSortChange={onSortChange} />
           )}
         </div>
+        
+        <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100 flex-1 text-center">
+          {restaurant?.name}
+        </h1>
+        
         {restaurant && (
-          <div className="absolute top-6 right-4 flex items-center gap-2">
-
+          <div className="flex items-center gap-2 w-20 justify-end">
             <ShareButton restaurant={restaurant} />
             <WaiterCallButton 
               restaurantId={restaurant.id} 
