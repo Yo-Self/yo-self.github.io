@@ -131,7 +131,7 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       ...(init?.headers || {}),
     },
-    // Importante: para Next export (estático), evitar no-store
+    // Importante: para Next export (estático), usar force-cache
     cache: init?.cache ?? 'force-cache',
   });
   if (!res.ok) {
@@ -295,6 +295,16 @@ function composeRestaurantModel(
     });
 
 
+
+  // Debug: log para verificar o valor do waiter_call_enabled
+  console.log('🔍 composeRestaurantModel Debug:', {
+    restaurantId: r.id,
+    restaurantName: r.name,
+    waiter_call_enabled: r.waiter_call_enabled,
+    type: typeof r.waiter_call_enabled,
+    truthy: Boolean(r.waiter_call_enabled),
+    rawData: r
+  });
 
   return {
     id: String(r.id),

@@ -72,13 +72,13 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     });
   }, [restaurantId, waiterCallEnabled]);
 
-  // Se a funcionalidade não estiver habilitada, não renderizar o botão
-  if (!waiterCallEnabled) {
-    console.log('❌ WaiterCallButton: Não renderizando - waiterCallEnabled é falsy');
-    return null;
-  }
+  // TEMPORÁRIO: Forçar renderização para debug
+  // if (!waiterCallEnabled) {
+  //   console.log('❌ WaiterCallButton: Não renderizando - waiterCallEnabled é falsy');
+  //   return null;
+  // }
 
-  console.log('✅ WaiterCallButton: Renderizando botão');
+  console.log('✅ WaiterCallButton: Renderizando botão (forçado)');
 
   return (
     <>
