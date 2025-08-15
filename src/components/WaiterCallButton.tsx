@@ -58,10 +58,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     clearError();
   };
 
-  // Nova lógica: exibir se for true ou null, esconder apenas se for false
-  if (waiterCallEnabled === false) {
-    return null;
-  }
+
 
   return (
     <>
