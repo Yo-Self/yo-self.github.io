@@ -297,6 +297,16 @@ function composeRestaurantModel(
 
 
 
+  // TEMPORÁRIO: Log para verificar o valor do waiter_call_enabled
+  console.log('🔍 VERIFICANDO waiter_call_enabled:', {
+    restaurantId: r.id,
+    restaurantName: r.name,
+    waiter_call_enabled: r.waiter_call_enabled,
+    type: typeof r.waiter_call_enabled,
+    truthy: Boolean(r.waiter_call_enabled),
+    finalValue: r.waiter_call_enabled || false
+  });
+
   return {
     id: String(r.id),
     name: r.name,
