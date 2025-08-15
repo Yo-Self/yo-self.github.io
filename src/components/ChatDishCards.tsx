@@ -1,10 +1,10 @@
 import React from 'react';
-import { Dish } from './data';
+import { Dish, MenuItem } from './data';
 import CardJornal from './CardJornal';
 
 interface ChatDishCardsProps {
-  dishes: Dish[];
-  onDishClick: (dish: Dish) => void;
+  dishes: (Dish | MenuItem)[];
+  onDishClick: (dish: Dish | MenuItem) => void;
 }
 
 export default function ChatDishCards({ dishes, onDishClick }: ChatDishCardsProps) {

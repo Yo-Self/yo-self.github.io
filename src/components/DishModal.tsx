@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Dish } from "./data";
+import { Dish, MenuItem } from "./data";
 import ComplementGrid from "./ComplementGrid";
 import ImageWithLoading from "./ImageWithLoading";
 
 type DishModalProps = {
   open: boolean;
-  dish: Dish | null;
+  dish: Dish | MenuItem | null;
   onClose: () => void;
 };
 

@@ -80,7 +80,7 @@ export interface UseWebLLMReturn {
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
-  sendMessage: (message: string, restaurantData: any) => Promise<void>;
+  sendMessage: (message: string, restaurantData: any) => Promise<string>;
   clearChat: () => void;
 }
 
@@ -89,8 +89,8 @@ export function useWebLLM(): UseWebLLMReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = useCallback(async (message: string, restaurantData: any) => {
-    if (!message.trim()) return;
+  const sendMessage = useCallback(async (message: string, restaurantData: any): Promise<string> => {
+    if (!message.trim()) return '';
 
     setIsLoading(true);
     setError(null);
@@ -142,8 +142,6 @@ export function useWebLLM(): UseWebLLMReturn {
         throw new Error(data.error);
       }
 
-
-
       // Extrair pratos recomendados da resposta da IA
       const recommendedDishes = extractRecommendedDishes(data.message, restaurantData);
 
@@ -158,6 +156,8 @@ export function useWebLLM(): UseWebLLMReturn {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      
+      return data.message; // Retornar a resposta da IA
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
@@ -187,6 +187,8 @@ export function useWebLLM(): UseWebLLMReturn {
       };
 
       setMessages(prev => [...prev, errorMessageObj]);
+      
+      throw err; // Re-throw para que o chamador possa tratar o erro
     } finally {
       setIsLoading(false);
     }

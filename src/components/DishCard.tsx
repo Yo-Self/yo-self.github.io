@@ -1,9 +1,9 @@
 import React from "react";
-import { Dish } from "./data";
+import { Dish, MenuItem } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 
 interface DishCardProps {
-  dish: Dish;
+  dish: Dish | MenuItem;
   onClick?: () => void;
   size?: "large" | "small";
 }
