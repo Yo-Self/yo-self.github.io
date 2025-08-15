@@ -288,7 +288,7 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
           )}
         </div>
         
-        <h1 className="logo text-xl font-bold text-gray-900 dark:text-gray-100 flex-1 text-center">
+        <h1 className="logo text-2xl font-bold text-gray-900 dark:text-gray-100 flex-1 text-center">
           {restaurant?.name}
         </h1>
         
