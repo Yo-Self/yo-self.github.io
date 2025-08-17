@@ -33,22 +33,55 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
           )}
 
           {/* Ícone de pin no canto superior esquerdo */}
-          <button
+          <div
             data-tutorial="pin-button"
-            className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center z-40 transition-all duration-200 ${
-              isPinned 
-                ? 'bg-yellow-500 text-white shadow-lg' 
-                : 'bg-white/80 text-gray-600 hover:bg-white hover:text-gray-800'
-            }`}
+            className={`pin-button ${isPinned ? 'pinned' : 'unpinned'}`}
             onClick={(e) => {
               e.stopPropagation();
+              console.log('Pin clicked, current isPinned:', isPinned);
               onPinToggle?.();
             }}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              zIndex: 999999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '24px',
+              height: '24px',
+              backgroundColor: isPinned ? '#f59e0b' : 'rgba(255, 255, 255, 0.9)',
+              color: isPinned ? 'white' : '#4b5563',
+              borderRadius: '50%',
+              border: 'none',
+              outline: 'none',
+              cursor: 'pointer',
+              boxShadow: isPinned ? '0 4px 8px rgba(245, 158, 11, 0.4)' : '0 2px 4px rgba(0,0,0,0.2)',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none',
+              transition: 'all 0.2s ease-in-out'
+            }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <svg 
+              width="14" 
+              height="14" 
+              viewBox="0 0 24 24" 
+              fill="currentColor" 
+              style={{ 
+                display: 'block',
+                width: '14px',
+                height: '14px',
+                pointerEvents: 'none',
+                transform: isPinned ? 'scale(1.1)' : 'scale(1)',
+                transition: 'transform 0.2s ease-in-out'
+              }}
+            >
               <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"/>
             </svg>
-          </button>
+          </div>
           {/* Preço no canto inferior direito */}
           <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
             R${dish.price}

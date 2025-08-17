@@ -10,6 +10,7 @@ import { SortOption } from "./SortModal";
 import AccessibilityButton from "./AccessibilityButton";
 import ImageWithLoading from "./ImageWithLoading";
 
+
 interface HeaderProps {
   restaurant?: Restaurant;
   restaurants?: Restaurant[];
@@ -293,7 +294,7 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
         </h1>
         
         {restaurant && (
-          <div className="flex items-center gap-2 w-20 justify-end">
+          <div className="flex items-center gap-2 w-24 justify-end">
             <ShareButton restaurant={restaurant} />
           </div>
         )}

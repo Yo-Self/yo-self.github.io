@@ -17,22 +17,31 @@ const AccessibilityContext = createContext<AccessibilityContextType | undefined>
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'extra-large'>('normal');
   const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Carrega as preferências salvas no localStorage
   useEffect(() => {
-    const savedFontSize = localStorage.getItem('accessibility-font-size') as 'normal' | 'large' | 'extra-large';
-    if (savedFontSize) {
-      setFontSize(savedFontSize);
-    }
+    try {
+      const savedFontSize = localStorage.getItem('accessibility-font-size') as 'normal' | 'large' | 'extra-large';
+      if (savedFontSize && ['normal', 'large', 'extra-large'].includes(savedFontSize)) {
+        setFontSize(savedFontSize);
+      }
 
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system';
-    if (savedTheme) {
-      setThemeState(savedTheme);
+      const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system';
+      if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+        setThemeState(savedTheme);
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar preferências de acessibilidade:', error);
+    } finally {
+      setIsInitialized(true);
     }
   }, []);
 
   // Aplica as classes CSS baseado no tamanho da fonte
   useEffect(() => {
+    if (!isInitialized) return;
+    
     const root = document.documentElement;
     
     // Remove classes anteriores
@@ -42,22 +51,41 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     root.classList.add(`font-${fontSize}`);
     
     // Salva no localStorage
-    localStorage.setItem('accessibility-font-size', fontSize);
-  }, [fontSize]);
+    try {
+      localStorage.setItem('accessibility-font-size', fontSize);
+    } catch (error) {
+      console.warn('Erro ao salvar tamanho da fonte:', error);
+    }
+  }, [fontSize, isInitialized]);
 
   // Aplica o tema
   useEffect(() => {
+    if (!isInitialized) return;
+    
     const root = document.documentElement;
     
     if (theme === 'dark') {
       root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
+      try {
+        localStorage.setItem('theme', 'dark');
+      } catch (error) {
+        console.warn('Erro ao salvar tema:', error);
+      }
     } else if (theme === 'light') {
       root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+      try {
+        localStorage.setItem('theme', 'light');
+      } catch (error) {
+        console.warn('Erro ao salvar tema:', error);
+      }
     } else {
       // system - remove a preferência salva e deixa o script no layout detectar
-      localStorage.removeItem('theme');
+      try {
+        localStorage.removeItem('theme');
+      } catch (error) {
+        console.warn('Erro ao remover tema:', error);
+      }
+      
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (prefersDark) {
         root.classList.add('dark');
@@ -65,7 +93,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         root.classList.remove('dark');
       }
     }
-  }, [theme]);
+  }, [theme, isInitialized]);
 
   const increaseFontSize = () => {
     setFontSize(current => {
@@ -88,7 +116,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   };
 
   const setTheme = (newTheme: 'light' | 'dark' | 'system') => {
-    setThemeState(newTheme);
+    if (['light', 'dark', 'system'].includes(newTheme)) {
+      setThemeState(newTheme);
+    }
   };
 
   const toggleTheme = () => {

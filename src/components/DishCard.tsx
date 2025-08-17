@@ -21,7 +21,16 @@ export default function DishCard({ dish, onClick, size = "large", fallbackImage 
           fallbackSrc={fallbackImage}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
         >
-          <div className="absolute bottom-0 left-0 w-full px-4 py-2">
+          <div 
+            className="absolute bottom-0 left-0 w-full px-4 py-2"
+            style={{
+              position: 'absolute',
+              bottom: '0',
+              left: '0',
+              right: '0',
+              zIndex: 10
+            }}
+          >
             <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>
           </div>
         </ImageWithLoading>

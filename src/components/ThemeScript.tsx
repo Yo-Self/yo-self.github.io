@@ -8,22 +8,23 @@ export default function ThemeScript() {
       // Verifica se há uma preferência salva no localStorage
       const savedTheme = localStorage.getItem('theme');
       
-      if (savedTheme) {
-        // Aplica o tema salvo
-        if (savedTheme === 'dark') {
+      if (savedTheme === 'dark') {
+        // Aplica o tema escuro
+        document.documentElement.classList.add('dark');
+      } else if (savedTheme === 'light') {
+        // Aplica o tema claro
+        document.documentElement.classList.remove('dark');
+      } else {
+        // Se não há preferência salva, detecta a preferência do sistema
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
         }
-      } else {
-        // Detecta a preferência do sistema
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (prefersDark) {
-          document.documentElement.classList.add('dark');
-        }
       }
       
-      // Escuta mudanças na preferência do sistema
+      // Escuta mudanças na preferência do sistema apenas quando não há tema salvo
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = (e: MediaQueryListEvent) => {
         const savedTheme = localStorage.getItem('theme');
@@ -43,6 +44,15 @@ export default function ThemeScript() {
       };
     } catch (e) {
       console.error('Erro ao aplicar tema:', e);
+      // Fallback: detecta preferência do sistema
+      try {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (fallbackError) {
+        console.error('Erro no fallback de tema:', fallbackError);
+      }
     }
   }, []);
 

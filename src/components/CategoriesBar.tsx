@@ -253,7 +253,7 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
     return (
       <button
         ref={ref}
-        className={`category-bar-card relative flex items-center justify-center min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
+        className={`category-bar-card relative min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
         onClick={onClick}
         style={{ flex: '0 0 auto' }}
       >
@@ -266,7 +266,14 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
             transform: 'translateZ(0)',
             backfaceVisibility: 'hidden',
             willChange: 'auto',
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+            width: '100%',
+            height: '100%'
           }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
@@ -274,7 +281,21 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
           }}
         />
         
-        <span className="absolute inset-0 flex items-center justify-center z-10">
+
+        
+        <span 
+          className="absolute inset-0 flex items-center justify-center z-20"
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
           <span 
             className="text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate"
             style={{ 

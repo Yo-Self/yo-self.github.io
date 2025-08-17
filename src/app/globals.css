@@ -84,14 +84,26 @@ body {
 /* Classes de acessibilidade para tamanhos de fonte */
 .font-normal {
   font-size: 16px;
+  line-height: 1.5;
 }
 
 .font-large {
   font-size: 18px;
+  line-height: 1.6;
 }
 
 .font-extra-large {
   font-size: 20px;
+  line-height: 1.7;
+}
+
+/* Animações para o menu de acessibilidade */
+.animate-fade-in-0 {
+  animation: fade-in-0 0.2s ease-out;
+}
+
+.animate-zoom-in-95 {
+  animation: zoom-in-95 0.2s ease-out;
 }
 
 /* Classes para line-clamp */
@@ -282,6 +294,99 @@ body {
 /* Garantir que os ícones absolutos não interfiram no alinhamento */
 .header .absolute {
   z-index: 10 !important;
+}
+
+/* Garantir que o menu de acessibilidade fique acima de tudo */
+.accessibility-menu {
+  z-index: 999999999 !important;
+  position: fixed !important;
+  isolation: isolate !important;
+}
+
+/* Sobrescrever qualquer z-index que possa estar interferindo */
+.accessibility-menu,
+.accessibility-menu * {
+  z-index: 999999999 !important;
+}
+
+/* Garantir que o menu fique acima de todos os outros elementos */
+.accessibility-menu {
+  position: fixed !important;
+  z-index: 999999999 !important;
+  isolation: isolate !important;
+}
+
+/* Forçar CategoriesBar a ficar abaixo do menu de acessibilidade */
+.categories-bar {
+  z-index: 1 !important;
+}
+
+.categories-bar * {
+  z-index: 1 !important;
+}
+
+/* Forçar todos os elementos relacionados a categorias para baixo */
+.menu-section .sticky,
+.menu-section .categories-bar,
+.menu-section .sticky *,
+.menu-section .categories-bar * {
+  z-index: 1 !important;
+}
+
+/* Garantir que o menu de acessibilidade seja o elemento mais alto */
+.accessibility-menu {
+  z-index: 999999999 !important;
+  position: fixed !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+}
+
+/* Forçar MenuSection e todos os seus elementos para baixo */
+.menu-section {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+.menu-section .sticky {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+.menu-section .categories-bar {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+/* Permitir que elementos específicos mantenham seus z-index */
+.menu-section .category-bar-card,
+.menu-section .menu-card,
+.menu-section .ImageWithLoading {
+  z-index: auto !important;
+  position: relative !important;
+}
+
+/* Permitir que o botão de pin mantenha seu z-index */
+.pin-button,
+[data-tutorial="pin-button"],
+.journal-view .pin-button,
+.journal-view [data-tutorial="pin-button"] {
+  z-index: 999999 !important;
+  position: absolute !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Garantir que o menu de acessibilidade seja renderizado por último */
+.accessibility-menu {
+  z-index: 999999999 !important;
+  position: fixed !important;
+  isolation: isolate !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
 }
 
 /* Garantir que o título fique alinhado com os ícones */
@@ -544,7 +649,7 @@ svg {
   overflow: visible !important;
   position: static !important;
   top: auto !important;
-  z-index: auto !important;
+  z-index: 10 !important;
 }
 
 .dark .header {
@@ -554,7 +659,7 @@ svg {
 /* Ajustes para o carousel não sobrepor o header */
 .carousel-section {
   position: relative !important;
-  z-index: 10 !important;
+  z-index: 5 !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
@@ -627,6 +732,132 @@ body {
   overflow: visible !important;
 }
 
+/* Estilos específicos para o menu de acessibilidade */
+.accessibility-menu {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Garantir que os botões do menu sejam sempre clicáveis */
+.accessibility-menu button {
+  position: relative;
+  z-index: 1;
+}
+
+/* Melhorar a aparência das sombras */
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Garantir que o menu fique sempre visível */
+.z-50 {
+  z-index: 50 !important;
+}
+
+/* Melhorar a aparência dos botões desabilitados */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Garantir que os ícones tenham o tamanho correto */
+.w-4.h-4 {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+/* Melhorar a aparência dos indicadores de tema */
+.theme-indicator {
+  width: 1rem !important;
+  height: 1rem !important;
+  border-radius: 50% !important;
+}
+
+/* Garantir que os ícones não saiam do header */
+.header svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Estilos específicos para botões do menu de acessibilidade */
+.accessibility-menu button,
+[class*="bg-gray-50"] button {
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Garantir que os botões tenham aparência clara de botões */
+.accessibility-menu button:not(:disabled),
+[class*="bg-gray-50"] button:not(:disabled) {
+  background-color: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.accessibility-menu button:hover:not(:disabled),
+[class*="bg-gray-50"] button:hover:not(:disabled) {
+  background-color: #f3f4f6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.accessibility-menu button:active:not(:disabled),
+[class*="bg-gray-50"] button:active:not(:disabled) {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Garantir que os botões selecionados tenham aparência clara */
+.accessibility-menu button[class*="bg-blue-50"],
+[class*="bg-blue-50"] {
+  background-color: #eff6ff !important;
+  border: 2px solid #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Garantir que o texto dos botões seja sempre visível */
+.accessibility-menu button span,
+[class*="bg-gray-50"] button span {
+  color: inherit !important;
+  font-weight: 500 !important;
+}
+
+/* Garantir que os ícones dos botões sejam sempre visíveis */
+.accessibility-menu button svg,
+[class*="bg-gray-50"] button svg {
+  color: currentColor !important;
+  opacity: 0.8 !important;
+}
+
+/* Garantir que os botões tenham padding adequado */
+.accessibility-menu button,
+[class*="bg-gray-50"] button {
+  padding: 12px 16px !important;
+  min-height: 48px !important;
+}
+
+/* Garantir que os botões de tema tenham aparência consistente */
+.theme-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Garantir que os indicadores de tema sejam sempre visíveis */
+.theme-indicator {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50% !important;
+  flex-shrink: 0 !important;
+}
+
 /* Garantir que os ícones não saiam do header */
 .header .container .absolute {
   max-width: calc(100% - 2rem) !important;
@@ -690,6 +921,190 @@ body {
   flex-shrink: 0 !important;
 }
 
+/* Garantir que as imagens dos cards preencham todo o espaço */
+.category-bar-card img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 0.75rem !important;
+  z-index: 1 !important;
+}
+
+/* Garantir que o texto fique centralizado sobre a imagem */
+.category-bar-card span {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 20 !important;
+}
+
+
+
+/* Forçar layout correto dos cards */
+.category-bar-card {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Garantir que os cards de pratos tenham layout correto */
+.menu-card {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.menu-card .relative {
+  position: relative !important;
+}
+
+.menu-card img {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.menu-card .absolute {
+  position: absolute !important;
+  z-index: 10 !important;
+}
+
+/* Garantir que o ImageWithLoading funcione corretamente */
+.ImageWithLoading {
+  position: relative !important;
+}
+
+.ImageWithLoading img {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.ImageWithLoading .absolute {
+  position: absolute !important;
+  z-index: 10 !important;
+}
+
+/* Garantir que o botão de pin seja exibido corretamente */
+.pin-button,
+[data-tutorial="pin-button"] {
+  position: absolute !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: white !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Garantir que o SVG do pin seja exibido */
+.pin-button svg,
+[data-tutorial="pin-button"] svg {
+  display: block !important;
+  width: 14px !important;
+  height: 14px !important;
+  fill: currentColor !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Garantir que os cards do jornal tenham layout correto */
+.journal-view .menu-card {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.journal-view .ImageWithLoading {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Forçar exibição do botão de pin no modo jornal */
+.journal-view .pin-button,
+.journal-view [data-tutorial="pin-button"] {
+  position: absolute !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: white !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.journal-view .pin-button svg,
+.journal-view [data-tutorial="pin-button"] svg {
+  display: block !important;
+  width: 14px !important;
+  height: 14px !important;
+  fill: currentColor !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* CSS extremamente específico para forçar exibição do pin */
+div.pin-button[data-tutorial="pin-button"] {
+  position: absolute !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: white !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  top: 8px !important;
+  left: 8px !important;
+}
+
+/* Estados específicos do pin */
+div.pin-button.pinned[data-tutorial="pin-button"] {
+  background: #f59e0b !important;
+  color: white !important;
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4) !important;
+}
+
+div.pin-button.unpinned[data-tutorial="pin-button"] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #4b5563 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+div.pin-button[data-tutorial="pin-button"] svg {
+  display: block !important;
+  width: 14px !important;
+  height: 14px !important;
+  fill: currentColor !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
 /* Garantir que a barra de categorias seja visível em todos os modos */
 .menu-section .categories-bar,
 .sticky .categories-bar {
@@ -742,4 +1157,57 @@ body {
   max-height: 2.2em !important;
   word-wrap: break-word !important;
   hyphens: auto !important;
+}
+
+/* Garantir que o botão X do menu de acessibilidade seja sempre visível */
+.accessibility-menu button[aria-label="Fechar menu"],
+.accessibility-menu button[aria-label="Fechar menu"] svg {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+  color: #9ca3af !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 0 !important;
+}
+
+.accessibility-menu button[aria-label="Fechar menu"]:hover {
+  color: #4b5563 !important;
+  background: transparent !important;
+}
+
+.accessibility-menu button[aria-label="Fechar menu"]:hover svg {
+  color: #4b5563 !important;
+}
+
+/* CSS extremamente específico para o botão X */
+.accessibility-menu .flex.items-center.justify-between.mb-4 button,
+.accessibility-menu .flex.items-center.justify-between.mb-4 button svg {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+  pointer-events: auto !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 0 !important;
+}
+
+/* CSS específico para o SVG do X */
+.accessibility-menu button[aria-label="Fechar menu"] svg {
+  width: 24px !important;
+  height: 24px !important;
+  color: #9ca3af !important;
+  stroke: #9ca3af !important;
+  fill: none !important;
+  background: transparent !important;
 }
