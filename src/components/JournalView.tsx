@@ -24,6 +24,12 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const [showPinTutorial, setShowPinTutorial] = useState(false);
   const [pinButtonPosition, setPinButtonPosition] = useState({ top: 0, left: 0 });
   const [tutorialTimers, setTutorialTimers] = useState<NodeJS.Timeout[]>([]);
+  
+  // Refs para áudio
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
+  
   const itemsPerPage = 3;
   const categories = Array.from(new Set(restaurant.menu_items.flatMap(item => item.categories || [item.category]).filter(Boolean)));
   
@@ -100,8 +106,87 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       localStorage.setItem('journalSwipeTutorialDone', '1');
     }
   };
+
+  // Funções de áudio para o som de virar página
+  const initAudioContext = () => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (error) {
+        // Silenciar erro
+      }
+    }
+  };
+
+  const loadAudioFile = async () => {
+    if (!audioContextRef.current || audioBufferRef.current) return;
+    
+    try {
+      const response = await fetch('/page-flip.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      audioBufferRef.current = await audioContextRef.current.decodeAudioData(arrayBuffer);
+    } catch (error) {
+      // Silenciar erro
+    }
+  };
+
+  const playPageFlipSound = React.useCallback(async () => {
+    // Primeiro, tentar com o elemento de áudio HTML
+    try {
+      if (audioRef.current) {
+        if (!audioRef.current.src || audioRef.current.src === '') {
+          audioRef.current.src = '/page-flip.mp3';
+        }
+        
+        if (audioRef.current.readyState < 2) {
+          throw new Error('Audio not ready');
+        }
+        
+        audioRef.current.muted = false;
+        audioRef.current.volume = 0.3; // Volume mais baixo para o som de página
+        audioRef.current.currentTime = 0;
+        
+        const playPromise = audioRef.current.play();
+        
+        try {
+          await Promise.race([
+            playPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('HTML Audio timeout')), 1000))
+          ]);
+          return;
+        } catch (playError: any) {
+          // Silenciar erro
+        }
+      }
+    } catch (error) {
+      // Silenciar erro
+    }
+
+    // Se HTML Audio falhar, tentar com Web Audio API
+    try {
+      initAudioContext();
+      await loadAudioFile();
+      
+      if (audioContextRef.current && audioBufferRef.current) {
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = audioBufferRef.current;
+        source.connect(audioContextRef.current.destination);
+        source.start(0);
+        return;
+      }
+    } catch (error) {
+      // Silenciar erro
+    }
+  }, []);
+
+  // Tocar som quando a página mudar
+  useEffect(() => {
+    if (open && page > 0) { // Não tocar na primeira página
+      playPageFlipSound();
+    }
+  }, [page, open, playPageFlipSound]);
   
-    // Tutorial de primeira acesso para swipe
+  // Tutorial de primeira acesso para swipe
   useEffect(() => {
     if (open && typeof window !== 'undefined') {
       const hasSeenTutorial = localStorage.getItem('journalSwipeTutorialDone');
@@ -520,6 +605,15 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Áudio para o som de virar página */}
+      <audio 
+        ref={audioRef} 
+        preload="auto" 
+        muted
+        src="/page-flip.mp3"
+      >
+        Seu navegador não suporta o elemento de áudio.
+      </audio>
       {/* Áreas clicáveis para avançar/retroceder página - apenas nas bordas laterais */}
       <button
         className="fixed left-0 top-0 h-full w-1/8 z-10 bg-transparent p-0 m-0 border-none outline-none"
