@@ -80,14 +80,14 @@ export default function AccessibilityButton() {
         ref={buttonRef}
         type="button"
         onClick={handleMenuToggle}
-        className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 transition-all duration-200 shadow-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2"
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-200 shadow-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring-offset-2"
         aria-label="Configurações de acessibilidade"
         title="Configurações de acessibilidade"
         aria-expanded={showMenu}
       >
-        <div className="w-4 h-4 flex items-center justify-center font-bold text-xs">
-          <span className="text-xs">a</span>
-          <span className="text-sm">A</span>
+        <div className="w-4 h-4 flex items-center justify-center font-bold text-xs text-white">
+          <span className="text-xs text-white">a</span>
+          <span className="text-sm text-white">A</span>
         </div>
       </button>
 
@@ -130,7 +130,7 @@ export default function AccessibilityButton() {
               }}
             >
               <svg 
-                className="w-6 h-6" 
+                className="w-6 h-6 text-gray-400 dark:text-gray-300" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -139,8 +139,7 @@ export default function AccessibilityButton() {
                   opacity: 1,
                   display: 'block',
                   width: '24px',
-                  height: '24px',
-                  color: '#9ca3af'
+                  height: '24px'
                 }}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -162,7 +161,7 @@ export default function AccessibilityButton() {
                 disabled={fontSize === 'normal'}
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   fontSize === 'normal'
-                    ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                    ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
                 }`}
                 aria-label="Diminuir tamanho da fonte"
@@ -176,7 +175,7 @@ export default function AccessibilityButton() {
                 disabled={fontSize === 'extra-large'}
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   fontSize === 'extra-large'
-                    ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                    ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
                 }`}
                 aria-label="Aumentar tamanho da fonte"
@@ -231,13 +230,13 @@ export default function AccessibilityButton() {
                 onClick={() => handleThemeChange('dark')}
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   theme === 'dark'
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-2 border-blue-200 dark:border-blue-800'
+                    ? 'bg-blue-600 dark:bg-blue-700 text-white border-2 border-blue-500 dark:border-blue-600'
                     : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
                 }`}
                 aria-label="Aplicar tema escuro"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gray-700 border border-gray-600"></div>
+                  <div className="w-3 h-3 rounded-full bg-gray-700 dark:bg-gray-300 border border-gray-600 dark:border-gray-400"></div>
                   <span className="text-xs">Escuro</span>
                 </div>
               </button>

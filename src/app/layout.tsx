@@ -57,9 +57,9 @@ export default function RootLayout({
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="/og-image.png" />
       </head>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
-        <ThemeScript />
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white`}>
         <AccessibilityProvider>
+          <ThemeScript />
           <Navigation />
           {children}
         </AccessibilityProvider>

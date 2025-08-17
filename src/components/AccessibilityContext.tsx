@@ -58,23 +58,30 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     }
   }, [fontSize, isInitialized]);
 
-  // Aplica o tema
+  // Aplica o tema - agora sincronizado com o ThemeScript
   useEffect(() => {
     if (!isInitialized) return;
     
     const root = document.documentElement;
+    const body = document.body;
     
     if (theme === 'dark') {
       root.classList.add('dark');
+      body.classList.add('dark');
       try {
         localStorage.setItem('theme', 'dark');
+        // Dispara evento para sincronizar outras abas
+        window.dispatchEvent(new StorageEvent('storage', { key: 'theme', newValue: 'dark' }));
       } catch (error) {
         console.warn('Erro ao salvar tema:', error);
       }
     } else if (theme === 'light') {
       root.classList.remove('dark');
+      body.classList.remove('dark');
       try {
         localStorage.setItem('theme', 'light');
+        // Dispara evento para sincronizar outras abas
+        window.dispatchEvent(new StorageEvent('storage', { key: 'theme', newValue: 'light' }));
       } catch (error) {
         console.warn('Erro ao salvar tema:', error);
       }
@@ -82,18 +89,41 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       // system - remove a preferência salva e deixa o script no layout detectar
       try {
         localStorage.removeItem('theme');
+        // Dispara evento para sincronizar outras abas
+        window.dispatchEvent(new StorageEvent('storage', { key: 'theme', newValue: null }));
       } catch (error) {
         console.warn('Erro ao remover tema:', error);
       }
       
+      // Aplica a preferência do sistema imediatamente
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (prefersDark) {
         root.classList.add('dark');
+        body.classList.add('dark');
       } else {
         root.classList.remove('dark');
+        body.classList.remove('dark');
       }
     }
   }, [theme, isInitialized]);
+
+  // Sincroniza com mudanças externas no tema
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'theme') {
+        if (e.newValue === 'dark') {
+          setThemeState('dark');
+        } else if (e.newValue === 'light') {
+          setThemeState('light');
+        } else {
+          setThemeState('system');
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const increaseFontSize = () => {
     setFontSize(current => {

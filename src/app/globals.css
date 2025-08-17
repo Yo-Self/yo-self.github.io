@@ -13,9 +13,423 @@
 }
 
 body {
-  /* background: var(--background); */
-  /* color: var(--foreground); */
+  background: var(--background);
+  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Garantir que o tema seja aplicado em todo o body */
+body.dark {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+body:not(.dark) {
+  background: #ffffff !important;
+  color: #171717 !important;
+}
+
+/* Garantir que o html também tenha o tema aplicado */
+html.dark {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+html:not(.dark) {
+  background: #ffffff !important;
+  color: #171717 !important;
+}
+
+/* Garantir que todos os elementos principais tenham o tema aplicado */
+.dark body {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+.dark html {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+/* Garantir que o main tenha o tema aplicado */
+.dark main {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+/* Garantir que as seções tenham o tema aplicado */
+.dark section {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+/* Garantir que os containers tenham o tema aplicado */
+.dark .container {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+/* Garantir que elementos específicos tenham o tema aplicado */
+.dark .carousel-section {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+.dark .menu-section {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+.dark .categories-bar {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+.dark .header {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+.dark .navigation {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+/* Garantir que elementos de texto tenham o tema aplicado */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #ededed !important;
+}
+
+.dark p, .dark span, .dark div {
+  color: #ededed !important;
+}
+
+/* Garantir que elementos de fundo tenham o tema aplicado */
+.dark .bg-white {
+  background-color: #0a0a0a !important;
+}
+
+.dark .text-gray-900 {
+  color: #ededed !important;
+}
+
+.dark .text-gray-700 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.dark .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-300 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-100 {
+  color: #f3f4f6 !important;
+}
+
+/* Garantir que elementos específicos do Tailwind tenham o tema aplicado */
+.dark .bg-gradient-to-b.from-white.to-gray-100 {
+  background: linear-gradient(to bottom, #0a0a0a, #1f1f1f) !important;
+}
+
+.dark .bg-gradient-to-b.from-gray-900.to-gray-950 {
+  background: linear-gradient(to bottom, #0a0a0a, #000000) !important;
+}
+
+/* Garantir que elementos de fundo específicos tenham o tema aplicado */
+.dark .bg-gray-50 {
+  background-color: #1f1f1f !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #2d2d2d !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #404040 !important;
+}
+
+.dark .bg-gray-300 {
+  background-color: #525252 !important;
+}
+
+.dark .bg-gray-400 {
+  background-color: #737373 !important;
+}
+
+.dark .bg-gray-500 {
+  background-color: #a3a3a3 !important;
+}
+
+.dark .bg-gray-600 {
+  background-color: #525252 !important;
+}
+
+.dark .bg-gray-700 {
+  background-color: #404040 !important;
+}
+
+.dark .bg-gray-800 {
+  background-color: #2d2d2d !important;
+}
+
+.dark .bg-gray-900 {
+  background-color: #1f1f1f !important;
+}
+
+.dark .bg-gray-950 {
+  background-color: #0a0a0a !important;
+}
+
+/* Garantir que os ícones do menu de acessibilidade mudem corretamente no modo escuro */
+.dark .accessibility-menu svg {
+  color: #d1d5db !important;
+  stroke: #d1d5db !important;
+}
+
+.dark .accessibility-menu button svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.dark .accessibility-menu .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+.dark .accessibility-menu .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.dark .accessibility-menu .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+.dark .accessibility-menu .text-gray-700 {
+  color: #d1d5db !important;
+}
+
+.dark .accessibility-menu .text-gray-800 {
+  color: #e5e7eb !important;
+}
+
+.dark .accessibility-menu .text-gray-900 {
+  color: #f9fafb !important;
+}
+
+.dark .accessibility-menu .text-white {
+  color: #ffffff !important;
+}
+
+.dark .accessibility-menu .bg-white {
+  background-color: #1f1f1f !important;
+}
+
+.dark .accessibility-menu .bg-gray-50 {
+  background-color: #2d2d2d !important;
+}
+
+.dark .accessibility-menu .bg-gray-100 {
+  background-color: #404040 !important;
+}
+
+.dark .accessibility-menu .bg-gray-200 {
+  background-color: #525252 !important;
+}
+
+.dark .accessibility-menu .bg-gray-300 {
+  background-color: #737373 !important;
+}
+
+.dark .accessibility-menu .bg-gray-400 {
+  background-color: #9ca3af !important;
+}
+
+.dark .accessibility-menu .bg-gray-500 {
+  background-color: #a3a3a3 !important;
+}
+
+.dark .accessibility-menu .bg-gray-600 {
+  background-color: #525252 !important;
+}
+
+.dark .accessibility-menu .bg-gray-700 {
+  background-color: #404040 !important;
+}
+
+.dark .accessibility-menu .bg-gray-800 {
+  background-color: #2d2d2d !important;
+}
+
+.dark .accessibility-menu .bg-gray-900 {
+  background-color: #1f1f1f !important;
+}
+
+.dark .accessibility-menu .bg-blue-50 {
+  background-color: #1e3a8a !important;
+}
+
+.dark .accessibility-menu .bg-blue-900\/20 {
+  background-color: rgba(30, 58, 138, 0.2) !important;
+}
+
+.dark .accessibility-menu .border-blue-100 {
+  border-color: #1e3a8a !important;
+}
+
+.dark .accessibility-menu .border-blue-800 {
+  border-color: #1e40af !important;
+}
+
+.dark .accessibility-menu .text-blue-700 {
+  color: #60a5fa !important;
+}
+
+.dark .accessibility-menu .text-blue-300 {
+  color: #93c5fd !important;
+}
+
+/* Correções específicas para o botão do tema escuro quando selecionado */
+.dark .accessibility-menu button.bg-blue-50 {
+  background-color: #1e3a8a !important;
+}
+
+.dark .accessibility-menu button.bg-blue-900\/20 {
+  background-color: rgba(30, 58, 138, 0.2) !important;
+}
+
+.dark .accessibility-menu button.border-blue-200 {
+  border-color: #1e3a8a !important;
+}
+
+.dark .accessibility-menu button.border-blue-800 {
+  border-color: #1e40af !important;
+}
+
+.dark .accessibility-menu button.text-blue-700 {
+  color: #60a5fa !important;
+}
+
+.dark .accessibility-menu button.text-blue-300 {
+  color: #93c5fd !important;
+}
+
+/* Garantir que o botão do tema escuro tenha cores corretas quando selecionado */
+.dark .accessibility-menu button[class*="bg-blue-50"] {
+  background-color: #1e3a8a !important;
+}
+
+.dark .accessibility-menu button[class*="bg-blue-900"] {
+  background-color: rgba(30, 58, 138, 0.2) !important;
+}
+
+.dark .accessibility-menu button[class*="border-blue-200"] {
+  border-color: #1e3a8a !important;
+}
+
+.dark .accessibility-menu button[class*="border-blue-800"] {
+  border-color: #1e40af !important;
+}
+
+.dark .accessibility-menu button[class*="text-blue-700"] {
+  color: #60a5fa !important;
+}
+
+.dark .accessibility-menu button[class*="text-blue-300"] {
+  color: #93c5fd !important;
+}
+
+/* Classes específicas para o botão do tema escuro quando selecionado */
+.dark .accessibility-menu button.dark\\:bg-blue-900\\/30 {
+  background-color: rgba(30, 58, 138, 0.3) !important;
+}
+
+.dark .accessibility-menu button.dark\\:text-blue-200 {
+  color: #bfdbfe !important;
+}
+
+.dark .accessibility-menu button.dark\\:border-blue-700 {
+  border-color: #1d4ed8 !important;
+}
+
+/* Garantir que o botão do tema escuro tenha cores corretas quando selecionado */
+.dark .accessibility-menu button.dark\\:bg-blue-900\\/20 {
+  background-color: rgba(30, 58, 138, 0.2) !important;
+}
+
+.dark .accessibility-menu button.dark\\:text-blue-300 {
+  color: #93c5fd !important;
+}
+
+.dark .accessibility-menu button.dark\\:border-blue-800 {
+  border-color: #1e40af !important;
+}
+
+/* Novas classes para o botão do tema escuro quando selecionado */
+.dark .accessibility-menu button.bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.dark .accessibility-menu button.bg-blue-700 {
+  background-color: #1d4ed8 !important;
+}
+
+.dark .accessibility-menu button.text-white {
+  color: #ffffff !important;
+}
+
+.dark .accessibility-menu button.border-blue-500 {
+  border-color: #3b82f6 !important;
+}
+
+.dark .accessibility-menu button.border-blue-600 {
+  border-color: #2563eb !important;
+}
+
+/* Garantir que o botão principal (aA) tenha cores corretas no modo escuro */
+.dark button.bg-blue-500 {
+  background-color: #2563eb !important;
+}
+
+.dark button.bg-blue-600 {
+  background-color: #1d4ed8 !important;
+}
+
+.dark button.hover\\:bg-blue-600:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.dark button.hover\\:bg-blue-700:hover {
+  background-color: #1e40af !important;
+}
+
+.dark button.text-white {
+  color: #ffffff !important;
+}
+
+.dark button span.text-white {
+  color: #ffffff !important;
+}
+
+/* Garantir que o botão aA seja sempre visível */
+button.bg-blue-500,
+button.bg-blue-600,
+button.dark\\:bg-blue-600 {
+  background-color: #3b82f6 !important;
+}
+
+button.text-white,
+button span.text-white {
+  color: #ffffff !important;
 }
 
 @layer utilities {

@@ -47,6 +47,14 @@ export default {
           },
         },
       },
+      backgroundColor: {
+        'dark': '#0a0a0a',
+        'dark-secondary': '#1f1f1f',
+      },
+      textColor: {
+        'dark': '#ededed',
+        'dark-secondary': '#d1d5db',
+      },
     },
   },
   plugins: [],
@@ -56,5 +64,10 @@ export default {
     'font-normal',
     'font-large',
     'font-extra-large',
+    'dark',
+    'bg-dark',
+    'text-dark',
+    'bg-dark-secondary',
+    'text-dark-secondary',
   ],
 }; 
