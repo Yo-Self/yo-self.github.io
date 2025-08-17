@@ -7,18 +7,27 @@ interface AccessibilityContextType {
   increaseFontSize: () => void;
   decreaseFontSize: () => void;
   resetFontSize: () => void;
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  toggleTheme: () => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
 
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'extra-large'>('normal');
+  const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system');
 
-  // Carrega a preferência salva no localStorage
+  // Carrega as preferências salvas no localStorage
   useEffect(() => {
     const savedFontSize = localStorage.getItem('accessibility-font-size') as 'normal' | 'large' | 'extra-large';
     if (savedFontSize) {
       setFontSize(savedFontSize);
+    }
+
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system';
+    if (savedTheme) {
+      setThemeState(savedTheme);
     }
   }, []);
 
@@ -35,6 +44,28 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // Salva no localStorage
     localStorage.setItem('accessibility-font-size', fontSize);
   }, [fontSize]);
+
+  // Aplica o tema
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else if (theme === 'light') {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      // system - remove a preferência salva e deixa o script no layout detectar
+      localStorage.removeItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+  }, [theme]);
 
   const increaseFontSize = () => {
     setFontSize(current => {
@@ -56,12 +87,27 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     setFontSize('normal');
   };
 
+  const setTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    setThemeState(newTheme);
+  };
+
+  const toggleTheme = () => {
+    setThemeState(current => {
+      if (current === 'light') return 'dark';
+      if (current === 'dark') return 'system';
+      return 'light';
+    });
+  };
+
   return (
     <AccessibilityContext.Provider value={{
       fontSize,
       increaseFontSize,
       decreaseFontSize,
       resetFontSize,
+      theme,
+      setTheme,
+      toggleTheme,
     }}>
       {children}
     </AccessibilityContext.Provider>

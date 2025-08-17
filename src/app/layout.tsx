@@ -55,6 +55,47 @@ export default function RootLayout({
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="/og-image.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  // Verifica se há uma preferência salva no localStorage
+                  const savedTheme = localStorage.getItem('theme');
+                  
+                  if (savedTheme) {
+                    // Aplica o tema salvo
+                    if (savedTheme === 'dark') {
+                      document.documentElement.classList.add('dark');
+                    } else {
+                      document.documentElement.classList.remove('dark');
+                    }
+                  } else {
+                    // Detecta a preferência do sistema
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (prefersDark) {
+                      document.documentElement.classList.add('dark');
+                    }
+                  }
+                  
+                  // Escuta mudanças na preferência do sistema
+                  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    const savedTheme = localStorage.getItem('theme');
+                    if (!savedTheme) {
+                      if (e.matches) {
+                        document.documentElement.classList.add('dark');
+                      } else {
+                        document.documentElement.classList.remove('dark');
+                      }
+                    }
+                  });
+                } catch (e) {
+                  console.error('Erro ao aplicar tema:', e);
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <AccessibilityProvider>
