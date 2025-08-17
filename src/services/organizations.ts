@@ -77,6 +77,11 @@ export class OrganizationService {
   static async getWithRestaurants(slug: string): Promise<{ organization: Organization; restaurants: Restaurant[] } | null> {
     const supabase = createClient();
     
+    if (!supabase) {
+      console.warn('Supabase client not available');
+      return null;
+    }
+    
     // Buscar a organização
     const { data: organization, error: orgError } = await supabase
       .from('profiles')
@@ -111,6 +116,11 @@ export class OrganizationService {
    */
   static async getWithRestaurantsForStatic(slug: string): Promise<{ organization: Organization; restaurants: Restaurant[] } | null> {
     const supabase = createStaticClient();
+    
+    if (!supabase) {
+      console.warn('Supabase static client not available');
+      return null;
+    }
     
     // Buscar a organização
     const { data: organization, error: orgError } = await supabase
@@ -147,6 +157,11 @@ export class OrganizationService {
   static async list(): Promise<Organization[]> {
     const supabase = createClient();
     
+    if (!supabase) {
+      console.warn('Supabase client not available');
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -166,6 +181,11 @@ export class OrganizationService {
    */
   static async listForStatic(): Promise<Organization[]> {
     const supabase = createStaticClient();
+    
+    if (!supabase) {
+      console.warn('Supabase static client not available');
+      return [];
+    }
     
     const { data, error } = await supabase
       .from('profiles')
@@ -188,6 +208,11 @@ export class OrganizationService {
    */
   static async upsert(organization: Partial<Organization>): Promise<Organization | null> {
     const supabase = createClient();
+    
+    if (!supabase) {
+      console.warn('Supabase client not available');
+      return null;
+    }
     
     // Gerar slug se não fornecido
     if (!organization.slug && organization.full_name) {
@@ -216,6 +241,11 @@ export class OrganizationService {
    */
   static async isSlugAvailable(slug: string, excludeId?: string): Promise<boolean> {
     const supabase = createClient();
+    
+    if (!supabase) {
+      console.warn('Supabase client not available');
+      return false;
+    }
     
     let query = supabase
       .from('profiles')

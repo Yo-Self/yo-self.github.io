@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useWaiterCalls } from '@/hooks/useWaiterCalls';
 
 interface WaiterCallButtonProps {
@@ -15,6 +15,9 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createCall, error, clearError } = useWaiterCalls();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
 
 
 
@@ -39,6 +42,8 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
       const result = await createCall(restaurantId, tableNum, notes.trim() || undefined);
       
       if (result) {
+        // Tocar o som quando a chamada for enviada com sucesso
+        await playBellSound();
         alert('Chamada de garçom enviada com sucesso!');
         setShowModal(false);
         setTableNumber('');
@@ -60,15 +65,159 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     clearError();
   };
 
+  // Inicializar contexto de áudio
+  const initAudioContext = () => {
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (error) {
+        // Silenciar erro
+      }
+    }
+  };
+
+  // Carregar arquivo de áudio
+  const loadAudioFile = async () => {
+    if (!audioContextRef.current || audioBufferRef.current) return;
+    
+    try {
+      const response = await fetch('/restaurant-bell.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      audioBufferRef.current = await audioContextRef.current.decodeAudioData(arrayBuffer);
+    } catch (error) {
+      // Silenciar erro
+    }
+  };
+
+  // Gerar som de sino programaticamente como fallback
+  const generateBellSound = () => {
+    if (!audioContextRef.current) return null;
+    
+    try {
+      const sampleRate = audioContextRef.current.sampleRate;
+      const duration = 2.0; // 2 segundos
+      const numSamples = Math.floor(sampleRate * duration);
+      
+      const buffer = audioContextRef.current.createBuffer(1, numSamples, sampleRate);
+      const channelData = buffer.getChannelData(0);
+      
+      // Frequência base do sino (aproximadamente 800Hz)
+      const baseFreq = 800;
+      
+      // Harmônicos do sino
+      const harmonics = [
+        { freq: baseFreq, amplitude: 1.0, decay: 0.1 },
+        { freq: baseFreq * 2, amplitude: 0.5, decay: 0.15 },
+        { freq: baseFreq * 3, amplitude: 0.3, decay: 0.2 },
+        { freq: baseFreq * 4, amplitude: 0.2, decay: 0.25 }
+      ];
+      
+      // Gerar o som
+      for (let i = 0; i < numSamples; i++) {
+        const time = i / sampleRate;
+        let sample = 0;
+        
+        // Adicionar cada harmônico
+        harmonics.forEach(harmonic => {
+          const envelope = Math.exp(-time / harmonic.decay);
+          sample += harmonic.amplitude * envelope * Math.sin(2 * Math.PI * harmonic.freq * time);
+        });
+        
+        // Aplicar envelope geral
+        const overallEnvelope = Math.exp(-time / 0.5);
+        channelData[i] = sample * overallEnvelope * 0.3; // Reduzir volume
+      }
+      
+      return buffer;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const playBellSound = async () => {
+    // Primeiro, tentar com o elemento de áudio HTML (com timeout rápido)
+    try {
+      if (audioRef.current) {
+        // Verificar e definir src se necessário
+        if (!audioRef.current.src || audioRef.current.src === '') {
+          audioRef.current.src = '/restaurant-bell.mp3';
+        }
+        
+        // Se o áudio não está pronto, pular para Web Audio API
+        if (audioRef.current.readyState < 2) {
+          throw new Error('Audio not ready');
+        }
+        
+        audioRef.current.muted = false;
+        audioRef.current.volume = 0.5;
+        audioRef.current.currentTime = 0;
+        
+        const playPromise = audioRef.current.play();
+        
+        try {
+          await Promise.race([
+            playPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('HTML Audio timeout')), 1000))
+          ]);
+          return;
+        } catch (playError: any) {
+          // Silenciar erro
+        }
+      }
+    } catch (error) {
+      // Silenciar erro
+    }
+
+    // Se HTML Audio falhar, tentar com Web Audio API
+    try {
+      initAudioContext();
+      await loadAudioFile();
+      
+      if (audioContextRef.current && audioBufferRef.current) {
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = audioBufferRef.current;
+        source.connect(audioContextRef.current.destination);
+        source.start(0);
+        return;
+      } else {
+        const generatedBuffer = generateBellSound();
+        if (generatedBuffer && audioContextRef.current) {
+          const source = audioContextRef.current.createBufferSource();
+          source.buffer = generatedBuffer;
+          source.connect(audioContextRef.current.destination);
+          source.start(0);
+          return;
+        }
+      }
+    } catch (error) {
+      // Silenciar erro
+    }
+  };
+
+  const handleButtonClick = async () => {
+    // Remover o som do clique do botão - agora só toca quando a chamada é enviada
+    setShowModal(true);
+  };
+
 
 
   return (
     <>
 
       
+      {/* Áudio do sino de restaurante */}
+      <audio 
+        ref={audioRef} 
+        preload="auto" 
+        muted
+        src="/restaurant-bell.mp3"
+      >
+        Seu navegador não suporta o elemento de áudio.
+      </audio>
+
       {/* Botão de chamar garçom */}
       <button
-        onClick={() => setShowModal(true)}
+        onClick={handleButtonClick}
         className={className || "w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 transition-colors duration-200 shadow-lg flex items-center justify-center"}
         aria-label="Chamar garçom"
         title="Chamar garçom"
