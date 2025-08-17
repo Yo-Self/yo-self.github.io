@@ -157,7 +157,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
   }, [activeCategory, categoriesWithAll]);
 
   return (
-    <div className="categories-bar flex flex-row items-center gap-1 py-4 bg-white dark:bg-black px-1 relative z-20" style={{ display: 'flex', visibility: 'visible', opacity: 1, position: 'relative' }}>
+    <div className="categories-bar flex flex-row items-center gap-1 py-4 bg-white dark:bg-black px-1 relative z-30" style={{ display: 'flex', visibility: 'visible', opacity: 1, position: 'relative' }}>
       {/* Botão grid fixo */}
       <button
         className={`relative flex items-center justify-center min-w-[56px] w-14 h-16 rounded-xl overflow-hidden shadow transition ring-offset-2 focus:outline-none border-2 ${activeCategory === 'grid' ? 'ring-2 ring-cyan-500 border-cyan-500 bg-cyan-100 dark:bg-cyan-900' : 'border-transparent bg-gray-100 dark:bg-gray-800'}`}

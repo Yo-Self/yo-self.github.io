@@ -472,7 +472,7 @@ svg {
   visibility: visible !important;
   opacity: 1 !important;
   position: relative !important;
-  z-index: 40 !important;
+  z-index: 30 !important;
   min-height: 80px !important;
   width: 100% !important;
 }
@@ -697,7 +697,7 @@ body {
   visibility: visible !important;
   opacity: 1 !important;
   position: relative !important;
-  z-index: 40 !important;
+  z-index: 30 !important;
   min-height: 80px !important;
   width: 100% !important;
   background: var(--background) !important;

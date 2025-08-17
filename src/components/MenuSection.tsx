@@ -111,7 +111,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
         {/* Barra de categorias sticky, fica no topo quando rola */}
         <div
           ref={categoriesRef}
-          className="sticky top-0 z-50 bg-white dark:bg-black px-0 pb-2 pl-4 border-b border-gray-100 dark:border-gray-800 shadow-sm"
+          className="sticky top-0 z-30 bg-white dark:bg-black px-0 pb-2 pl-4 border-b border-gray-100 dark:border-gray-800 shadow-sm"
         >
           <CategoriesBar
             allCategories={availableCategories}
