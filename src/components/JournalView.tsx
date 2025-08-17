@@ -780,8 +780,10 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
           </motion.div>
         </AnimatePresence>
       </div>
-      {/* Modal de detalhes do prato */}
-      <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
+      {/* Modal de detalhes do prato - renderizado fora do JournalView */}
+      {modalOpen && selectedDish && (
+        <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
+      )}
       
       {/* Tutorial de Swipe */}
       <AnimatePresence>

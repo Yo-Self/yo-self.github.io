@@ -119,78 +119,80 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
   }
 
   return (
-    <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10" {...props}>
-      <div className="relative max-w-6xl mx-auto px-4">
-        {/* Carousel container */}
-        <div 
-          className="relative flex items-center justify-center"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {getDisplayDishes().map((dish, index) => {
-            const isMain = index === 1;
-            const size = isMain ? 'main' : 'side';
-            const showTitle = isMain && showMostOrderedTitle;
-            
-            return (
-              <CarouselCard
-                key={`${dish.name || index}-${current}`}
-                dish={dish}
-                size={size}
-                onClick={() => handleCardClick(dish)}
-                noMargin={index === 1}
-                showMostOrderedTitle={showTitle}
-              />
-            );
-          })}
-        </div>
-
-        {/* Navigation arrows */}
-        {featured.length > 1 && (
-          <>
-            <button
-              onClick={() => setCurrent((prev) => (prev - 1 + featured.length) % featured.length)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/80 rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-black transition-colors duration-200 z-30"
-              aria-label="Prato anterior"
-            >
-              <svg className="w-6 h-6 text-gray-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            <button
-              onClick={() => setCurrent((prev) => (prev + 1) % featured.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/80 rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-black transition-colors duration-200 z-30"
-              aria-label="Próximo prato"
-            >
-              <svg className="w-6 h-6 text-gray-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
-        )}
-
-        {/* Dots indicator */}
-        {featured.length > 1 && (
-          <div className="flex justify-center mt-4 space-x-2">
-            {featured.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrent(index)}
-                className={`w-3 h-3 rounded-full transition-colors duration-200 ${
-                  index === current 
-                    ? 'bg-cyan-500 dark:bg-cyan-400' 
-                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                }`}
-                aria-label={`Ir para prato ${index + 1}`}
-              />
-            ))}
+    <>
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative" {...props}>
+        <div className="relative max-w-6xl mx-auto px-4">
+          {/* Carousel container */}
+          <div 
+            className="relative flex items-center justify-center"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {getDisplayDishes().map((dish, index) => {
+              const isMain = index === 1;
+              const size = isMain ? 'main' : 'side';
+              const showTitle = isMain && showMostOrderedTitle;
+              
+              return (
+                <CarouselCard
+                  key={`${dish.name || index}-${current}`}
+                  dish={dish}
+                  size={size}
+                  onClick={() => handleCardClick(dish)}
+                  noMargin={index === 1}
+                  showMostOrderedTitle={showTitle}
+                />
+              );
+            })}
           </div>
-        )}
-      </div>
 
-      {/* Modal */}
+          {/* Navigation arrows */}
+          {featured.length > 1 && (
+            <>
+              <button
+                onClick={() => setCurrent((prev) => (prev - 1 + featured.length) % featured.length)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/80 rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-black transition-colors duration-200"
+                aria-label="Prato anterior"
+              >
+                <svg className="w-6 h-6 text-gray-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => setCurrent((prev) => (prev + 1) % featured.length)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/80 rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-black transition-colors duration-200"
+                aria-label="Próximo prato"
+              >
+                <svg className="w-6 h-6 text-gray-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Dots indicator */}
+          {featured.length > 1 && (
+            <div className="flex justify-center mt-4 space-x-2">
+              {featured.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrent(index)}
+                  className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                    index === current 
+                      ? 'bg-cyan-500 dark:bg-cyan-400' 
+                      : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                  }`}
+                  aria-label={`Ir para prato ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Modal - renderizado fora do carousel */}
       {modalOpen && selectedDish && (
         <DishModal
           dish={selectedDish}
@@ -198,6 +200,6 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
           onClose={() => setModalOpen(false)}
         />
       )}
-    </section>
+    </>
   );
 } 

@@ -1625,3 +1625,206 @@ div.pin-button[data-tutorial="pin-button"] svg {
   fill: none !important;
   background: transparent !important;
 }
+
+/* Garantir que o modal tenha z-index alto */
+.modal,
+.dish-modal,
+[class*="modal"] {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+/* Garantir que o modal de detalhes do prato tenha z-index máximo */
+.DishModal,
+[data-modal="true"],
+.fixed.inset-0 {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+
+.fixed.inset-0 > div {
+  z-index: 99999 !important;
+  position: relative !important;
+}
+
+/* Regras específicas para garantir que o modal apareça acima de tudo */
+div[class*="fixed inset-0"] {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+div[class*="fixed inset-0"] > div {
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Forçar z-index máximo para todos os modais */
+[class*="modal"],
+[class*="Modal"],
+.modal,
+.Modal {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Regras específicas para garantir que o modal apareça acima de tudo */
+div[class*="fixed inset-0"] {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+div[class*="fixed inset-0"] > div {
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Regras específicas para o DishModal */
+.DishModal,
+div[class*="DishModal"],
+div[class*="dish-modal"] {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Garantir que o modal apareça acima de todos os elementos */
+.fixed.inset-0 {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+.fixed.inset-0 > div {
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Forçar z-index baixo para elementos de conteúdo */
+.carousel-section,
+.categories-bar,
+.menu-section,
+.dish-card,
+.menu-card {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+/* Garantir que o modal seja centralizado corretamente */
+.fixed.inset-0.flex.items-center.justify-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 999999 !important;
+}
+
+/* Garantir que o modal seja centralizado no modo jornal */
+.JournalView .fixed.inset-0,
+.JournalView [class*="fixed inset-0"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 999999 !important;
+}
+
+/* Garantir que o modal seja centralizado quando renderizado fora do JournalView */
+body > .fixed.inset-0,
+body > [class*="fixed inset-0"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 999999 !important;
+}
+
+/* Garantir que o conteúdo do modal seja centralizado */
+.fixed.inset-0 > div {
+  margin: auto !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* Garantir que o modal tenha padding adequado nas laterais */
+.fixed.inset-0.flex.items-center.justify-center {
+  padding: 1rem !important;
+}
+
+/* Garantir que o modal tenha padding adequado em telas pequenas */
+@media (max-width: 640px) {
+  .fixed.inset-0.flex.items-center.justify-center {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Garantir que o modal tenha padding adequado em telas muito pequenas */
+@media (max-width: 480px) {
+  .fixed.inset-0.flex.items-center.justify-center {
+    padding: 0.25rem !important;
+  }
+}
+
+/* Garantir que o categories bar e cards tenham z-index baixo */
+.categories-bar,
+.category-grid,
+.dish-card,
+.menu-card,
+.menu-section {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+/* Garantir que o header tenha z-index médio */
+.header,
+.navigation {
+  z-index: 10 !important;
+  position: relative !important;
+}
+
+/* Garantir que o carousel tenha z-index baixo */
+.carousel-section {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+/* Garantir que o carousel não sobreponha outros elementos */
+.carousel-section {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* Garantir que o botão aA seja sempre visível */
+button[aria-label="Configurações de acessibilidade"] {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+button[aria-label="Configurações de acessibilidade"]:hover {
+  background-color: #2563eb !important;
+}
+
+button[aria-label="Configurações de acessibilidade"] span {
+  color: #ffffff !important;
+}
+
+.dark button[aria-label="Configurações de acessibilidade"] {
+  background-color: #2563eb !important;
+}
+
+.dark button[aria-label="Configurações de acessibilidade"]:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.dark button[aria-label="Configurações de acessibilidade"] span {
+  color: #ffffff !important;
+}
