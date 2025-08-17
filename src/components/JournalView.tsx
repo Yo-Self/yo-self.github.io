@@ -147,9 +147,9 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     
     // Cleanup dos timers quando o componente for desmontado
     return () => {
-      clearTutorialTimers();
+      tutorialTimers.forEach(timer => clearTimeout(timer));
     };
-  }, [open, clearTutorialTimers]);
+  }, [open]);
   
   // Calcular quantos cards cabem na tela
   useEffect(() => {
@@ -219,19 +219,19 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   }, [open, onClose]);
 
   // Agrupa pratos por categoria para navegação
-  let grouped: { category: string; items: Dish[] }[] = [];
-  
-  // O JournalView sempre deve mostrar todas as categorias, independentemente da prop
-  // Agrupar todos por categoria (um prato pode aparecer em múltiplas categorias)
-  const catMap: { [cat: string]: Dish[] } = {};
-  restaurant.menu_items.forEach(item => {
-    const categories = item.categories || [item.category];
-    categories.forEach(category => {
-      if (category && !catMap[category]) catMap[category] = [];
-      if (category) catMap[category].push(item);
+  const grouped = React.useMemo(() => {
+    // O JournalView sempre deve mostrar todas as categorias, independentemente da prop
+    // Agrupar todos por categoria (um prato pode aparecer em múltiplas categorias)
+    const catMap: { [cat: string]: Dish[] } = {};
+    restaurant.menu_items.forEach(item => {
+      const categories = item.categories || [item.category];
+      categories.forEach(category => {
+        if (category && !catMap[category]) catMap[category] = [];
+        if (category) catMap[category].push(item);
+      });
     });
-  });
-  grouped = Object.entries(catMap).map(([category, items]) => ({ category, items }));
+    return Object.entries(catMap).map(([category, items]) => ({ category, items }));
+  }, [restaurant.menu_items]);
   
   // Função para alternar o pin de um prato
   const togglePin = (dishId: string) => {
@@ -312,7 +312,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   };
 
   // Função para criar páginas com pratos pinados sempre nas primeiras posições
-  const createPagesWithPinnedFirst = () => {
+  const createPagesWithPinnedFirst = React.useMemo(() => {
     let pages: Array<Array<{ dish: Dish; category: string }>> = [];
     
     // Coletar TODOS os pratos pinados (independente da categoria) - REMOVENDO DUPLICATAS
@@ -363,10 +363,10 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     });
     
     return pages;
-  };
+  }, [restaurant.menu_items, pinnedDishes, cardsPerPage, grouped]);
 
   // Usar a nova lógica para criar páginas
-  const pages = createPagesWithPinnedFirst();
+  const pages = createPagesWithPinnedFirst;
   const totalPages = pages.length;
 
   // Remover este efeito:
@@ -381,7 +381,9 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
 
   // Atualiza página ao trocar categoria
   useEffect(() => {
-    setPage(0);
+    if (open) {
+      setPage(0);
+    }
   }, [open]);
 
   // Swipe handlers
@@ -457,54 +459,59 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
 
   // --- NOVA LÓGICA DE INDICADOR DE CATEGORIA ---
   // Lista de categorias únicas na ordem de exibição
-  const categoryList = grouped.map(g => g.category);
+  const categoryList = React.useMemo(() => grouped.map(g => g.category), [grouped]);
 
   // Coletar TODOS os pratos pinados (independente da categoria) - REMOVENDO DUPLICATAS
-  const pinnedDishesArray = restaurant.menu_items.filter(dish => pinnedDishes.has(dish.name));
-  const allPinnedDishes = pinnedDishesArray.filter((dish, index, self) => 
-    index === self.findIndex(d => d.name === dish.name)
-  );
+  const allPinnedDishes = React.useMemo(() => {
+    const pinnedDishesArray = restaurant.menu_items.filter(dish => pinnedDishes.has(dish.name));
+    return pinnedDishesArray.filter((dish, index, self) => 
+      index === self.findIndex(d => d.name === dish.name)
+    );
+  }, [restaurant.menu_items, pinnedDishes]);
 
   // Para cada página, descobrir a qual categoria ela pertence baseado na estrutura de criação
-  let pageToCategoryIdx: number[] = [];
-  
-  // Replicar a mesma lógica de criação de páginas para determinar a categoria de cada página
-  let pageIndex = 0;
-  
-  grouped.forEach((group, categoryIndex) => {
-    // Coletar pratos da categoria (removendo duplicatas e pratos já fixados)
-    const seen = new Set<string>();
-    const categoryDishes = group.items.filter(dish => {
-      if (seen.has(dish.name) || pinnedDishes.has(dish.name)) {
-        return false; // Remover duplicatas e pratos já fixados
+  const pageToCategoryIdx = React.useMemo(() => {
+    let pageToCategoryIdx: number[] = [];
+    let pageIndex = 0;
+    
+    // Replicar a mesma lógica de criação de páginas para determinar a categoria de cada página
+    grouped.forEach((group, categoryIndex) => {
+      // Coletar pratos da categoria (removendo duplicatas e pratos já fixados)
+      const seen = new Set<string>();
+      const categoryDishes = group.items.filter(dish => {
+        if (seen.has(dish.name) || pinnedDishes.has(dish.name)) {
+          return false; // Remover duplicatas e pratos já fixados
+        }
+        seen.add(dish.name);
+        return true;
+      });
+      
+      const dishesInCategory = categoryDishes;
+      const availableSlotsPerPage = Math.max(0, cardsPerPage - allPinnedDishes.length);
+      
+      if (availableSlotsPerPage <= 0) {
+        // Se não há espaço para pratos não pinados, criar páginas apenas com pinados
+        const pagesForCategory = Math.ceil(allPinnedDishes.length / cardsPerPage);
+        for (let i = 0; i < pagesForCategory; i++) {
+          pageToCategoryIdx[pageIndex] = categoryIndex;
+          pageIndex++;
+        }
+      } else {
+        // Dividir pratos da categoria em páginas
+        const pagesForCategory = Math.max(1, Math.ceil(dishesInCategory.length / availableSlotsPerPage));
+        for (let i = 0; i < pagesForCategory; i++) {
+          pageToCategoryIdx[pageIndex] = categoryIndex;
+          pageIndex++;
+        }
       }
-      seen.add(dish.name);
-      return true;
     });
     
-    const dishesInCategory = categoryDishes;
-    const availableSlotsPerPage = Math.max(0, cardsPerPage - allPinnedDishes.length);
-    
-    if (availableSlotsPerPage <= 0) {
-      // Se não há espaço para pratos não pinados, criar páginas apenas com pinados
-      const pagesForCategory = Math.ceil(allPinnedDishes.length / cardsPerPage);
-      for (let i = 0; i < pagesForCategory; i++) {
-        pageToCategoryIdx[pageIndex] = categoryIndex;
-        pageIndex++;
-      }
-    } else {
-      // Dividir pratos da categoria em páginas
-      const pagesForCategory = Math.max(1, Math.ceil(dishesInCategory.length / availableSlotsPerPage));
-      for (let i = 0; i < pagesForCategory; i++) {
-        pageToCategoryIdx[pageIndex] = categoryIndex;
-        pageIndex++;
-      }
-    }
-  });
+    return pageToCategoryIdx;
+  }, [grouped, pinnedDishes, cardsPerPage, allPinnedDishes]);
   
   // Índice da categoria atual
-  const currentCategoryIdx = pageToCategoryIdx[page] || 0;
-  const currentCategory = categoryList[currentCategoryIdx];
+  const currentCategoryIdx = React.useMemo(() => pageToCategoryIdx[page] || 0, [pageToCategoryIdx, page]);
+  const currentCategory = React.useMemo(() => categoryList[currentCategoryIdx], [categoryList, currentCategoryIdx]);
 
   if (!open) return null;
   return (

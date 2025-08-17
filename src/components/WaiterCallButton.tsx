@@ -23,14 +23,6 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     restaurantId 
   });
 
-  // Se waiterCallEnabled for false, não renderiza o componente
-  if (!waiterCallEnabled) {
-    console.log('❌ WaiterCallButton: Não renderizando - waiterCallEnabled é falsy');
-    return null;
-  }
-
-  console.log('✅ WaiterCallButton: Renderizando botão');
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
