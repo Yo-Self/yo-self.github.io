@@ -105,8 +105,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   if (!open || !dish) return null;
   
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden relative" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden relative z-[999999]" onClick={e => e.stopPropagation()}>
         <div className="relative">
           <ImageWithLoading
             src={dish.image}

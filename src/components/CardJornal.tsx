@@ -52,7 +52,7 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
               width: '24px',
               height: '24px',
               backgroundColor: isPinned ? '#f59e0b' : 'rgba(255, 255, 255, 0.9)',
-              color: isPinned ? 'white' : '#4b5563',
+              color: isPinned ? '#ffffff' : '#4b5563',
               borderRadius: '50%',
               border: 'none',
               outline: 'none',
@@ -69,7 +69,7 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
               width="14" 
               height="14" 
               viewBox="0 0 24 24" 
-              fill="currentColor" 
+              fill={isPinned ? '#ffffff' : '#4b5563'}
               style={{ 
                 display: 'block',
                 width: '14px',
@@ -95,7 +95,9 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
         </ImageWithLoading>
       </div>
       <div className="w-full p-4">
-        <p className="text-sm text-gray-600 dark:text-gray-300">{dish.description}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-tight">
+          {dish.description}
+        </p>
       </div>
     </div>
   );

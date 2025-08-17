@@ -9,10 +9,10 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
   if (!dish) return null;
   return (
     <div
-      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 ${noMargin ? '' : 'mx-2'} transition-all duration-300
+      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 transition-all duration-300
         ${size === 'main'
-          ? 'w-full max-w-full h-[60vw] md:h-[340px] scale-100 z-20'
-          : 'w-[32px] h-[60vw] scale-90 opacity-60 z-10 md:w-full md:max-w-full md:h-[340px]'}
+          ? 'w-[85vw] md:w-[600px] h-[50vw] md:h-[340px] scale-100 z-20'
+          : 'w-[15vw] md:w-[100px] h-[50vw] md:h-[340px] scale-90 opacity-60 z-10'}
       `}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
@@ -117,7 +117,7 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
 
   if (featured.length === 0) {
     return (
-      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10" {...props}>
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
         <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
           <p>Nenhum prato em destaque disponível</p>
         </div>
@@ -128,9 +128,9 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
   // Garantir que sempre haja pelo menos um item principal
   if (featured.length === 1) {
     return (
-      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative" {...props}>
-        <div className="relative max-w-6xl mx-auto px-4">
-          <div className="relative flex items-center justify-center min-h-[60vw] md:min-h-[340px]">
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative w-full" {...props}>
+        <div className="relative w-full overflow-hidden">
+          <div className="relative flex items-center justify-center min-h-[60vw] md:min-h-[340px] w-full">
             <CarouselCard
               key={`${featured[0].name || 'single'}-0`}
               dish={featured[0]}
@@ -147,11 +147,11 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
 
   return (
     <>
-      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative" {...props}>
-        <div className="relative max-w-6xl mx-auto px-4">
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative w-full" {...props}>
+        <div className="relative w-full overflow-hidden">
           {/* Carousel container */}
           <div 
-            className="relative flex items-center justify-center min-h-[60vw] md:min-h-[340px]"
+            className="relative flex items-center justify-center min-h-[60vw] md:min-h-[340px] w-full"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}

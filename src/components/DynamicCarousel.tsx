@@ -15,10 +15,10 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
   
   return (
     <div
-      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 ${noMargin ? '' : 'mx-2'} transition-all duration-300
+      className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 transition-all duration-300
         ${size === 'main'
-          ? 'w-full max-w-full h-[60vw] md:h-[340px] scale-100 z-20'
-          : 'w-[32px] h-[60vw] scale-90 opacity-60 z-10 md:w-full md:max-w-full md:h-[340px]'}
+          ? 'w-[85vw] md:w-[600px] h-[50vw] md:h-[340px] scale-100 z-20'
+          : 'w-[15vw] md:w-[100px] h-[50vw] md:h-[340px] scale-90 opacity-60 z-10'}
       `}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
@@ -131,9 +131,9 @@ export default function DynamicCarousel({
   }
 
   return (
-    <section className="carousel-section py-0 bg-transparent" {...props}>
-      <div className="container mx-auto px-0 overflow-x-hidden">
-        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] overflow-x-hidden"
+    <section className="carousel-section py-0 bg-transparent w-full" {...props}>
+      <div className="w-full overflow-hidden">
+        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] w-full"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -157,7 +157,7 @@ export default function DynamicCarousel({
             <>
               {/* Área clicável esquerda */}
               <button
-                className="absolute left-0 top-0 h-full w-[18vw] md:w-[120px] z-20 bg-transparent p-0 cursor-pointer"
+                className="absolute left-0 top-0 h-full w-[12vw] md:w-[80px] z-20 bg-transparent p-0 cursor-pointer"
                 style={{ outline: 'none', border: 'none' }}
                 aria-label="Retroceder"
                 onClick={() => setCurrent((current - 1 + featured.length) % featured.length)}
@@ -173,7 +173,7 @@ export default function DynamicCarousel({
                   <polyline points="15,18 9,12 15,6" />
                 </svg>
               </button>
-              <div className="flex items-center justify-center w-full gap-2 md:gap-6 select-none overflow-x-hidden">
+              <div className="flex items-center justify-center w-full gap-1 md:gap-4 select-none">
                 <div className="flex items-center justify-center w-full max-w-[480px] mx-auto">
                   {getDisplayDishes().map(({ dish, size }, idx) => (
                     <CarouselCard
@@ -188,7 +188,7 @@ export default function DynamicCarousel({
               </div>
               {/* Área clicável direita */}
               <button
-                className="absolute right-0 top-0 h-full w-[18vw] md:w-[120px] z-20 bg-transparent p-0 cursor-pointer"
+                className="absolute right-0 top-0 h-full w-[12vw] md:w-[80px] z-20 bg-transparent p-0 cursor-pointer"
                 style={{ outline: 'none', border: 'none' }}
                 aria-label="Avançar"
                 onClick={() => setCurrent((current + 1) % featured.length)}
