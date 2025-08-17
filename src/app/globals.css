@@ -1076,6 +1076,45 @@ svg {
   z-index: 5 !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
+  min-height: 60vw !important;
+}
+
+/* Garantir altura mínima para carousel filtrado por categoria */
+.carousel-section:has(.carousel-card) {
+  min-height: 60vw !important;
+}
+
+/* Garantir altura mínima para carousel com poucos itens */
+.carousel-section .relative.flex.items-center.justify-center {
+  min-height: 60vw !important;
+}
+
+/* Garantir que o container do carousel mantenha altura mínima */
+.carousel-section .relative.max-w-6xl.mx-auto.px-4 {
+  min-height: 60vw !important;
+}
+
+/* Garantir que o carousel mantenha altura mínima mesmo quando filtrado */
+.carousel-section:has(.carousel-card[class*="h-[60vw]"]) {
+  min-height: 60vw !important;
+}
+
+@media screen and (min-width: 768px) {
+  .carousel-section {
+    min-height: 340px !important;
+  }
+  
+  .carousel-section .relative.flex.items-center.justify-center {
+    min-height: 340px !important;
+  }
+  
+  .carousel-section .relative.max-w-6xl.mx-auto.px-4 {
+    min-height: 340px !important;
+  }
+  
+  .carousel-section:has(.carousel-card[class*="md:h-[340px]"]) {
+    min-height: 340px !important;
+  }
 }
 
 /* Ajustes para dispositivos com notch (iPhone X e similares) */
@@ -1113,10 +1152,33 @@ svg {
 @media screen and (max-width: 375px) {
   .carousel-card {
     height: 70vw !important;
+    min-height: 250px !important;
   }
   
   .header {
     padding: 0.5rem 0 !important;
+  }
+}
+
+/* Garantir que os cards do carousel mantenham altura mínima */
+.carousel-card {
+  min-height: 250px !important;
+}
+
+/* Garantir que os cards principais tenham altura correta */
+.carousel-card[class*="h-[60vw]"] {
+  height: 60vw !important;
+  min-height: 250px !important;
+}
+
+@media screen and (min-width: 768px) {
+  .carousel-card {
+    min-height: 340px !important;
+  }
+  
+  .carousel-card[class*="md:h-[340px]"] {
+    height: 340px !important;
+    min-height: 340px !important;
   }
 }
 

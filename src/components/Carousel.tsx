@@ -99,13 +99,20 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
   // Carousel logic for showing side/main/side
   const getDisplayDishes = () => {
     if (featured.length === 0) return [];
-    if (featured.length === 1) return [featured[0]];
-    if (featured.length === 2) return [featured[0], featured[1]];
+    if (featured.length === 1) return [{ dish: featured[0], size: 'main' as const, index: 0 }];
+    if (featured.length === 2) return [
+      { dish: featured[0], size: 'side' as const, index: 0 },
+      { dish: featured[1], size: 'main' as const, index: 1 }
+    ];
     
     const prev = (current - 1 + featured.length) % featured.length;
     const next = (current + 1) % featured.length;
     
-    return [featured[prev], featured[current], featured[next]];
+    return [
+      { dish: featured[prev], size: 'side' as const, index: prev },
+      { dish: featured[current], size: 'main' as const, index: current },
+      { dish: featured[next], size: 'side' as const, index: next }
+    ];
   };
 
   if (featured.length === 0) {
@@ -118,29 +125,48 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
     );
   }
 
+  // Garantir que sempre haja pelo menos um item principal
+  if (featured.length === 1) {
+    return (
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative" {...props}>
+        <div className="relative max-w-6xl mx-auto px-4">
+          <div className="relative flex items-center justify-center min-h-[60vw] md:min-h-[340px]">
+            <CarouselCard
+              key={`${featured[0].name || 'single'}-0`}
+              dish={featured[0]}
+              size="main"
+              onClick={() => handleCardClick(featured[0])}
+              noMargin={true}
+              showMostOrderedTitle={showMostOrderedTitle}
+            />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <>
       <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative" {...props}>
         <div className="relative max-w-6xl mx-auto px-4">
           {/* Carousel container */}
           <div 
-            className="relative flex items-center justify-center"
+            className="relative flex items-center justify-center min-h-[60vw] md:min-h-[340px]"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {getDisplayDishes().map((dish, index) => {
-              const isMain = index === 1;
-              const size = isMain ? 'main' : 'side';
+            {getDisplayDishes().map((item, index) => {
+              const isMain = item.size === 'main';
               const showTitle = isMain && showMostOrderedTitle;
               
               return (
                 <CarouselCard
-                  key={`${dish.name || index}-${current}`}
-                  dish={dish}
-                  size={size}
-                  onClick={() => handleCardClick(dish)}
-                  noMargin={index === 1}
+                  key={`${item.dish.name || item.index}-${current}`}
+                  dish={item.dish}
+                  size={item.size}
+                  onClick={() => handleCardClick(item.dish)}
+                  noMargin={isMain}
                   showMostOrderedTitle={showTitle}
                 />
               );

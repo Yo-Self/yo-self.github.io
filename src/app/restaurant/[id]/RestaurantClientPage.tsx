@@ -340,7 +340,13 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
           // Filtra destaques da categoria selecionada
           const featured = selectedCategory === 'all'
             ? selectedRestaurant.featured_dishes
-            : selectedRestaurant.featured_dishes.filter(dish => dish.category === selectedCategory);
+            : selectedRestaurant.featured_dishes.filter(dish => 
+                dish.category === selectedCategory || 
+                (dish.categories && dish.categories.includes(selectedCategory))
+              );
+          
+
+          
           if (!featured || featured.length === 0) return null;
           // Cria um objeto restaurant fake só com os destaques filtrados
           const filteredRestaurant = { ...selectedRestaurant, featured_dishes: featured };
