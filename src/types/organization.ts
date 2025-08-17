@@ -56,6 +56,11 @@ export interface Restaurant {
   
   /** Data de última atualização */
   updated_at: string;
+  
+  /** Configuração do WhatsApp */
+  whatsapp_phone?: string;
+  whatsapp_enabled?: boolean;
+  whatsapp_custom_message?: string;
 }
 
 // Função utilitária para gerar slug a partir de um nome

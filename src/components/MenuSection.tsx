@@ -19,9 +19,11 @@ interface MenuSectionProps {
   onGridClick?: () => void;
   currentSort?: SortOption;
   onSortChange?: (sort: SortOption) => void;
+  restaurantId?: string;
+  restaurant?: any; // Para acessar configurações do restaurante
 }
 
-export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, activeCategory, setActiveCategory, onGridClick, currentSort, onSortChange }: MenuSectionProps) {
+export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, activeCategory, setActiveCategory, onGridClick, currentSort, onSortChange, restaurantId, restaurant }: MenuSectionProps) {
   const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
@@ -134,7 +136,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
           ))}
         </div>
       </div>
-      <DishModal open={modalOpen} dish={selectedDish} onClose={() => setModalOpen(false)} />
+      <DishModal open={modalOpen} dish={selectedDish} restaurantId={restaurantId} restaurant={restaurant} onClose={() => setModalOpen(false)} />
     </section>
   );
 } 

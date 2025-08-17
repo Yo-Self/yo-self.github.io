@@ -45,4 +45,7 @@ export type Restaurant = {
   menu_categories: string[];
   featured_dishes: Dish[];
   menu_items: MenuItem[];
+  whatsapp_phone?: string;
+  whatsapp_enabled?: boolean;
+  whatsapp_custom_message?: string;
 };

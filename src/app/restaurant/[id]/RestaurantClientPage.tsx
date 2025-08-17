@@ -381,6 +381,8 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
             onGridClick={handleGridClick}
             currentSort={currentSort}
             onSortChange={setCurrentSort}
+            restaurantId={selectedRestaurant.id}
+            restaurant={selectedRestaurant}
           />
           <SearchBar
             restaurant={selectedRestaurant}

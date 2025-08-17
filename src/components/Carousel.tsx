@@ -222,6 +222,8 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
       {modalOpen && selectedDish && (
         <DishModal
           dish={selectedDish}
+          restaurantId={restaurant.id}
+          restaurant={restaurant}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
         />

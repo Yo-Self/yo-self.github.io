@@ -4,14 +4,17 @@ import React, { useEffect, useState } from "react";
 import { Dish, MenuItem } from "./data";
 import ComplementGrid from "./ComplementGrid";
 import ImageWithLoading from "./ImageWithLoading";
+import WhatsAppButton from "./WhatsAppButton";
 
 type DishModalProps = {
   open: boolean;
   dish: Dish | MenuItem | null;
+  restaurantId?: string;
+  restaurant?: any; // Para acessar configurações do restaurante
   onClose: () => void;
 };
 
-export default function DishModal({ open, dish, onClose }: DishModalProps) {
+export default function DishModal({ open, dish, restaurantId = "default", restaurant, onClose }: DishModalProps) {
   const [selectedComplements, setSelectedComplements] = useState<Map<string, Set<string>>>(new Map());
 
   // Interceptar o botão voltar do navegador quando o modal estiver aberto
@@ -198,6 +201,19 @@ export default function DishModal({ open, dish, onClose }: DishModalProps) {
               </div>
             )}
           </div>
+          
+          {/* Botão WhatsApp - Canto inferior direito */}
+          {/* Só exibir se o restaurante tiver WhatsApp habilitado */}
+          {restaurant?.whatsapp_enabled !== false && (
+            <div className="mt-6 flex justify-end">
+              <WhatsAppButton 
+                dish={dish}
+                selectedComplements={selectedComplements}
+                restaurantId={restaurantId}
+                className="w-full sm:w-auto"
+              />
+            </div>
+          )}
           
           {dish.tags && (
             <div className="flex gap-2 mt-2">

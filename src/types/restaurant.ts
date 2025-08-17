@@ -22,6 +22,11 @@ export interface Restaurant {
   
   /** Todos os itens do menu */
   menu_items: MenuItem[];
+  
+  /** Configuração do WhatsApp */
+  whatsapp_phone?: string;
+  whatsapp_enabled?: boolean;
+  whatsapp_custom_message?: string;
 }
 
 export interface MenuItem {

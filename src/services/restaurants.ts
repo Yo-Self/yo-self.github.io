@@ -47,6 +47,9 @@ export type DbRestaurant = {
   image_url: string | null;
   description: string | null;
   waiter_call_enabled?: boolean;
+  whatsapp_phone?: string;
+  whatsapp_enabled?: boolean;
+  whatsapp_custom_message?: string;
   created_at?: string;
   updated_at?: string;
 };
@@ -321,6 +324,9 @@ function composeRestaurantModel(
     welcome_message: r.description || `Bem-vindo ao ${r.name}`,
     image: r.image_url || '',
     waiter_call_enabled: r.waiter_call_enabled === true,
+    whatsapp_phone: r.whatsapp_phone,
+    whatsapp_enabled: r.whatsapp_enabled !== false, // Padrão true se não especificado
+    whatsapp_custom_message: r.whatsapp_custom_message,
     menu_categories: categories.map(c => c.name),
     featured_dishes: featured,
     menu_items: menuItems,
