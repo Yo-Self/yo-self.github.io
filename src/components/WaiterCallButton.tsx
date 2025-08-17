@@ -16,12 +16,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createCall, error, clearError } = useWaiterCalls();
 
-  // Debug log para verificar o valor da propriedade
-  console.log('🔍 WaiterCallButton Debug:', { 
-    waiterCallEnabled, 
-    type: typeof waiterCallEnabled,
-    restaurantId 
-  });
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

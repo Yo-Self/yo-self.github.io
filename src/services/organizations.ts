@@ -1,12 +1,36 @@
 import { createClient, createStaticClient } from '@/lib/supabase/server';
 import { Organization, Restaurant, generateSlug } from '@/types/organization';
 
+// Helper function to check if Supabase client is available
+function getSupabaseClient() {
+  const supabase = createClient();
+  if (!supabase) {
+    console.warn('Supabase client not available');
+    return null;
+  }
+  return supabase;
+}
+
+function getSupabaseStaticClient() {
+  const supabase = createStaticClient();
+  if (!supabase) {
+    console.warn('Supabase static client not available');
+    return null;
+  }
+  return supabase;
+}
+
 export class OrganizationService {
   /**
    * Busca uma organização pelo slug
    */
   static async getBySlug(slug: string): Promise<Organization | null> {
     const supabase = createClient();
+    
+    if (!supabase) {
+      console.warn('Supabase client not available');
+      return null;
+    }
     
     const { data, error } = await supabase
       .from('profiles')
@@ -27,6 +51,11 @@ export class OrganizationService {
    */
   static async getBySlugForStatic(slug: string): Promise<Organization | null> {
     const supabase = createStaticClient();
+    
+    if (!supabase) {
+      console.warn('Supabase client not available');
+      return null;
+    }
     
     const { data, error } = await supabase
       .from('profiles')

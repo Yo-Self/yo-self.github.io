@@ -114,14 +114,19 @@ function getSupabaseConfig() {
   const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined in environment variables');
+    console.warn('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined in environment variables');
+    return null;
   }
 
   return { SUPABASE_URL, SUPABASE_ANON_KEY };
 }
 
 async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T> {
-  const { SUPABASE_URL, SUPABASE_ANON_KEY } = getSupabaseConfig();
+  const config = getSupabaseConfig();
+  if (!config) {
+    throw new Error('Supabase configuration not available');
+  }
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = config;
   const REST_BASE = `${SUPABASE_URL}/rest/v1`;
   
   const fullUrl = `${REST_BASE}/${pathWithQuery}`;
@@ -323,35 +328,45 @@ function composeRestaurantModel(
 }
 
 export async function fetchFullRestaurants(): Promise<Restaurant[]> {
-  const base = await fetchRestaurantsRows();
-  const results: Restaurant[] = [];
-  for (const r of base) {
-    const [cats, dishes] = await Promise.all([
-      fetchCategoriesRows(r.id),
-      fetchDishesRows(r.id),
-    ]);
-    const dishIds = dishes.map(d => String(d.id));
-    const [dishCategories, groups, complements] = await Promise.all([
-      fetchDishCategoriesByDishIds(dishIds),
-      fetchComplementGroupsByDishIds(dishIds),
-      (async () => {
-        const g = await fetchComplementGroupsByDishIds(dishIds);
-        const groupIds = g.map(x => x.id);
-        return fetchComplementsByGroupIds(groupIds);
-      })()
-    ]);
-    // Nota: chamamos fetchComplementGroupsByDishIds duas vezes para extrair groupIds; otimizações possíveis
-    const realGroups = groups; // groups já carregados
-    const realComplements = complements;
-    results.push(composeRestaurantModel(r, cats, dishes, dishCategories, realGroups, realComplements));
+  try {
+    const base = await fetchRestaurantsRows();
+    const results: Restaurant[] = [];
+    for (const r of base) {
+      const [cats, dishes] = await Promise.all([
+        fetchCategoriesRows(r.id),
+        fetchDishesRows(r.id),
+      ]);
+      const dishIds = dishes.map(d => String(d.id));
+      const [dishCategories, groups, complements] = await Promise.all([
+        fetchDishCategoriesByDishIds(dishIds),
+        fetchComplementGroupsByDishIds(dishIds),
+        (async () => {
+          const g = await fetchComplementGroupsByDishIds(dishIds);
+          const groupIds = g.map(x => x.id);
+          return fetchComplementsByGroupIds(groupIds);
+        })()
+      ]);
+      // Nota: chamamos fetchComplementGroupsByDishIds duas vezes para extrair groupIds; otimizações possíveis
+      const realGroups = groups; // groups já carregados
+      const realComplements = complements;
+      results.push(composeRestaurantModel(r, cats, dishes, dishCategories, realGroups, realComplements));
+    }
+    return results;
+  } catch (error) {
+    console.error('Erro ao buscar restaurantes:', error);
+    return [];
   }
-  return results;
 }
 
 // Mais leve: apenas os IDs (para generateStaticParams)
 export async function fetchRestaurantIds(): Promise<string[]> {
-  const rows = await sbFetch<Array<Pick<DbRestaurant, 'id'>>>(`restaurants?select=id&order=created_at.asc`);
-  return (rows ?? []).map(r => String(r.id));
+  try {
+    const rows = await sbFetch<Array<Pick<DbRestaurant, 'id'>>>(`restaurants?select=id&order=created_at.asc`);
+    return (rows ?? []).map(r => String(r.id));
+  } catch (error) {
+    console.error('Erro ao buscar IDs dos restaurantes:', error);
+    return [];
+  }
 }
 
 export async function fetchRestaurantByIdWithData(id: string): Promise<Restaurant | null> {
@@ -359,31 +374,30 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
   if (id === '[id]') {
     return null;
   }
-  
 
-  
-  const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
-  const r = rows && rows[0];
-  
+  try {
+    const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
+    const r = rows && rows[0];
 
-  
-  if (!r) return null;
-  const [cats, dishes] = await Promise.all([
-    fetchCategoriesRows(r.id),
-    fetchDishesRows(r.id),
-  ]);
-  const dishIds = dishes.map(d => String(d.id));
-  const [dishCategories, groups] = await Promise.all([
-    fetchDishCategoriesByDishIds(dishIds),
-    fetchComplementGroupsByDishIds(dishIds),
-  ]);
-  const groupIds = groups.map(g => g.id);
-  const complements = await fetchComplementsByGroupIds(groupIds);
-  const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
-  
+    if (!r) return null;
+    const [cats, dishes] = await Promise.all([
+      fetchCategoriesRows(r.id),
+      fetchDishesRows(r.id),
+    ]);
+    const dishIds = dishes.map(d => String(d.id));
+    const [dishCategories, groups] = await Promise.all([
+      fetchDishCategoriesByDishIds(dishIds),
+      fetchComplementGroupsByDishIds(dishIds),
+    ]);
+    const groupIds = groups.map(g => g.id);
+    const complements = await fetchComplementsByGroupIds(groupIds);
+    const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
 
-  
-  return result;
+    return result;
+  } catch (error) {
+    console.error('Erro ao buscar restaurante por ID:', error);
+    return null;
+  }
 }
 
 // Função removida - a tabela restaurants não tem campo slug

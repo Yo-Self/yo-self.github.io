@@ -111,7 +111,8 @@ export function useWebLLM(): UseWebLLMReturn {
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Configuração do Supabase não encontrada. Verifique as variáveis de ambiente.');
+        console.warn('Configuração do Supabase não encontrada - funcionalidade de IA desabilitada');
+        return '';
       }
       
       const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;

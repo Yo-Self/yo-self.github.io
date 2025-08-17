@@ -43,7 +43,8 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Configuração do Supabase não encontrada');
+        console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
+        return null;
       }
       
       const functionUrl = `${supabaseUrl}/functions/v1/waiter-calls`;
@@ -98,7 +99,8 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Configuração do Supabase não encontrada');
+        console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
+        return [];
       }
       
       const functionUrl = `${supabaseUrl}/functions/v1/waiter-calls?restaurant_id=${restaurantId}&status=${status}`;
@@ -145,7 +147,8 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error('Configuração do Supabase não encontrada');
+        console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
+        return null;
       }
       
       const functionUrl = `${supabaseUrl}/functions/v1/waiter-calls`;
