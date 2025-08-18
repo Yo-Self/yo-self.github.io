@@ -152,7 +152,8 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
     const idx = categoriesWithAll.indexOf(activeCategory);
     const btn = btnRefs.current[idx];
     if (btn) {
-      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      // Removido o scrollIntoView para evitar scroll automático
+      // btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
   }, [activeCategory, categoriesWithAll]);
 

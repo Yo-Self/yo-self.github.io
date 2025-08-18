@@ -290,12 +290,6 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const handleSelectCategory = (category: string) => {
     setSelectedCategory(category);
     setViewMode("list");
-    // Scroll para o topo da página (inclui Header + destaques)
-    if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 0);
-    }
   };
 
   // Função para voltar ao grid de categorias
