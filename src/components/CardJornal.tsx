@@ -16,7 +16,7 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
     <div
       className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-2xl" : ""}`}
       onClick={onClick}
-      style={{ paddingBottom: 0, minHeight: 160 }}
+      style={{ paddingBottom: 0, minHeight: 144 }}
     >
       <div className="relative w-full">
         <ImageWithLoading
@@ -94,7 +94,7 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
           </div>
         </ImageWithLoading>
       </div>
-      <div className="w-full p-4">
+      <div className="w-full p-2">
         <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-tight">
           {dish.description}
         </p>
