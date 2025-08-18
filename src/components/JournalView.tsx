@@ -3,6 +3,8 @@ import { Restaurant, Dish } from "./data";
 import CardJornal from "./CardJornal";
 import DishModal from "./DishModal";
 import { AnimatePresence, motion } from "framer-motion";
+import { usePreloadDishImages } from "../hooks/useImageCache";
+import ImageCacheStatus from "./ImageCacheStatus";
 
 interface JournalViewProps {
   open: boolean;
@@ -602,6 +604,40 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const currentCategoryIdx = React.useMemo(() => pageToCategoryIdx[page] || 0, [pageToCategoryIdx, page]);
   const currentCategory = React.useMemo(() => categoryList[currentCategoryIdx], [categoryList, currentCategoryIdx]);
 
+  // Usar o hook de pré-carregamento de imagens
+  const allDishes = React.useMemo(() => {
+    return restaurant.menu_items;
+  }, [restaurant.menu_items]);
+
+  const { preloadProgress, isImageLoaded } = usePreloadDishImages(allDishes);
+
+  // Pré-carregar imagens das próximas páginas quando a página atual mudar
+  useEffect(() => {
+    if (!open || pages.length === 0) return;
+
+    // Pré-carregar imagens das próximas 2 páginas
+    const nextPages = [];
+    for (let i = page + 1; i < Math.min(page + 3, pages.length); i++) {
+      if (pages[i]) {
+        nextPages.push(...pages[i].map(item => item.dish));
+      }
+    }
+
+    // Pré-carregar imagens das páginas anteriores também
+    for (let i = Math.max(0, page - 2); i < page; i++) {
+      if (pages[i]) {
+        nextPages.push(...pages[i].map(item => item.dish));
+      }
+    }
+
+    // Remover duplicatas
+    const uniqueDishes = nextPages.filter((dish, index, self) => 
+      index === self.findIndex(d => d.name === dish.name)
+    );
+
+    // As imagens serão pré-carregadas automaticamente pelo hook
+  }, [page, pages, open]);
+
   if (!open) return null;
   return (
     <motion.div 
@@ -770,6 +806,22 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             )
           ))}
         </div>
+        
+        {/* Indicador de progresso do pré-carregamento */}
+        {preloadProgress < 100 && (
+          <motion.div
+            className="flex items-center gap-2 mr-2"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-xs text-cyan-500 dark:text-cyan-400 font-medium">
+              {Math.round(preloadProgress)}%
+            </span>
+          </motion.div>
+        )}
+        
         {/* Botão de fechar */}
         <div className="flex flex-row items-center gap-0">
           <motion.button
@@ -1148,6 +1200,9 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       {modalOpen && selectedDish && (
         <DishModal open={modalOpen} dish={selectedDish} restaurantId={restaurant.id} restaurant={restaurant} onClose={() => setModalOpen(false)} />
       )}
+      
+      {/* Status do cache de imagens */}
+      <ImageCacheStatus dishes={allDishes} />
       
       {/* Tutorial de Swipe */}
       <AnimatePresence>
