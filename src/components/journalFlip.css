@@ -1,4 +1,4 @@
-/* Efeito de virar página estilo livro/Kindle */
+/* Efeito de virar página estilo livro/Kindle - Versão 3D aprimorada */
 .pageflip-next-enter {
   transform: rotateY(90deg);
   opacity: 0;
@@ -40,4 +40,60 @@
 /* Garante que o elemento animado fique acima dos outros durante a transição */
 .pageflip-next-enter, .pageflip-prev-enter, .pageflip-next-exit-active, .pageflip-prev-exit-active {
   z-index: 10;
+}
+
+/* Estilos para melhorar a experiência 3D */
+.journal-view {
+  perspective: 2000px;
+  transform-style: preserve-3d;
+}
+
+.journal-view * {
+  transform-style: preserve-3d;
+}
+
+/* Efeitos de sombra e profundidade para os cards durante a animação */
+.journal-card-animating {
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity, filter;
+}
+
+/* Melhorias na performance de animação */
+.journal-view .grid {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Efeito de profundidade para os botões de navegação */
+.journal-view button {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateZ(0);
+}
+
+.journal-view button:hover {
+  transform: translateZ(10px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* Efeito de elevação para os indicadores de categoria */
+.journal-view .category-indicator {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateZ(0);
+}
+
+.journal-view .category-indicator:hover {
+  transform: translateZ(5px) scale(1.02);
+}
+
+/* Suporte para dispositivos com preferência por movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  .journal-view * {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  
+  .journal-view {
+    perspective: none;
+  }
 } 

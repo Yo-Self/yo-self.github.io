@@ -604,10 +604,18 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
 
   if (!open) return null;
   return (
-    <div className="journal-view fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white dark:bg-gray-900 animate-fade-in-fast select-none"
+    <motion.div 
+      className="journal-view fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white dark:bg-gray-900 select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ 
+        duration: 0.5, 
+        ease: [0.25, 0.46, 0.45, 0.94] 
+      }}
     >
       {/* Áudio para o som de virar página */}
       <audio 
@@ -651,7 +659,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       />
 
       {/* Botões visíveis de navegação (meio da página, cantos esquerdo e direito) */}
-      <button
+      <motion.button
         aria-label="Página anterior"
         className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
         onClick={() => {
@@ -662,12 +670,25 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         }}
         disabled={page <= 0}
         style={{ opacity: page <= 0 ? 0.5 : 1 }}
+        whileHover={{
+          scale: 1.1,
+          y: -2,
+          transition: { duration: 0.2 }
+        }}
+        whileTap={{
+          scale: 0.95,
+          y: 0,
+          transition: { duration: 0.1 }
+        }}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
-      </button>
-      <button
+      </motion.button>
+      <motion.button
         aria-label="Próxima página"
         className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
         onClick={() => {
@@ -678,17 +699,30 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         }}
         disabled={page >= totalPages - 1}
         style={{ opacity: page >= totalPages - 1 ? 0.5 : 1 }}
+        whileHover={{
+          scale: 1.1,
+          y: -2,
+          transition: { duration: 0.2 }
+        }}
+        whileTap={{
+          scale: 0.95,
+          y: 0,
+          transition: { duration: 0.1 }
+        }}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6" />
         </svg>
-      </button>
+      </motion.button>
       {/* Indicador de categoria no topo + botão de fechar alinhados */}
       <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-1 mb-1 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
         <div className="flex gap-2 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
           {categoryList.map((cat, idx) => (
             idx === currentCategoryIdx ? (
-              <span
+              <motion.span
                 key={cat}
                 className="text-xs font-bold text-white text-center leading-tight flex items-center justify-center bg-primary dark:bg-cyan-600 px-3 h-8 rounded-full shadow-lg whitespace-nowrap"
                 style={{
@@ -698,11 +732,19 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
                   display: 'inline-flex',
                   minHeight: 32
                 }}
+                initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                whileHover={{
+                  scale: 1.05,
+                  y: -2,
+                  transition: { duration: 0.2 }
+                }}
               >
                 {cat}
-              </span>
+              </motion.span>
             ) : (
-              <button
+              <motion.button
                 key={cat}
                 className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-400 dark:border-gray-500"
                 onClick={() => {
@@ -712,43 +754,94 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
                   if (targetPage !== -1) setPage(targetPage);
                 }}
                 aria-label={`Ir para categoria ${cat}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                whileHover={{
+                  scale: 1.2,
+                  y: -2,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{
+                  scale: 0.9,
+                  transition: { duration: 0.1 }
+                }}
               />
             )
           ))}
         </div>
         {/* Botão de fechar */}
         <div className="flex flex-row items-center gap-0">
-          <button
+          <motion.button
             className="w-10 h-10 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0"
             onClick={onClose}
             aria-label="Fechar jornal"
             style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+            whileHover={{
+              scale: 1.1,
+              rotate: 90,
+              transition: { duration: 0.3 }
+            }}
+            whileTap={{
+              scale: 0.9,
+              transition: { duration: 0.1 }
+            }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-          </button>
+          </motion.button>
         </div>
       </div>
       {/* Cards de pratos em grid */}
       <div 
         className="flex flex-col items-center w-full flex-1 relative px-4 md:px-8 max-w-screen-md mx-auto z-10" 
-        style={{perspective: 1200}}
+        style={{perspective: 2000}}
       >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={page + '-' + currentCategory}
             initial={{
-              x: flipDirection === 'next' ? 300 : -300,
-              opacity: 0.7,
+              rotateY: flipDirection === 'next' ? 90 : -90,
+              x: flipDirection === 'next' ? 100 : -100,
+              opacity: 0,
+              scale: 0.95,
+              filter: 'blur(2px)',
+              transformOrigin: flipDirection === 'next' ? 'left center' : 'right center',
             }}
             animate={{
+              rotateY: 0,
               x: 0,
               opacity: 1,
-              transition: { duration: 0.08, ease: [0.77,0,0.175,1] }
+              scale: 1,
+              filter: 'blur(0px)',
+              transition: { 
+                duration: 0.8, 
+                ease: [0.25, 0.46, 0.45, 0.94],
+                rotateY: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                x: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+                opacity: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+                scale: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                filter: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
+              }
             }}
             exit={{
-              x: flipDirection === 'next' ? -300 : 300,
-              opacity: 0.7,
-              transition: { duration: 0.08, ease: [0.77,0,0.175,1] }
+              rotateY: flipDirection === 'next' ? -90 : 90,
+              x: flipDirection === 'next' ? -100 : 100,
+              opacity: 0,
+              scale: 0.95,
+              filter: 'blur(2px)',
+              transformOrigin: flipDirection === 'next' ? 'right center' : 'left center',
+              transition: { 
+                duration: 0.6, 
+                ease: [0.25, 0.46, 0.45, 0.94],
+                rotateY: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+                x: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                opacity: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
+                scale: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+                filter: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }
+              }
             }}
             style={{
               width: '100%',
@@ -757,25 +850,292 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
               left: 0,
               top: 0,
               display: 'flex',
-              flexDirection: 'row', // Always row for grid
+              flexDirection: 'row',
               alignItems: 'flex-start',
               justifyContent: 'center',
               willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              transformStyle: 'preserve-3d',
             }}
           >
+            {/* Efeito de sombra dinâmica durante a animação */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: `linear-gradient(${flipDirection === 'next' ? '90deg' : '270deg'}, 
+                  rgba(0,0,0,0.1) 0%, 
+                  rgba(0,0,0,0.05) 50%, 
+                  rgba(0,0,0,0) 100%)`,
+                pointerEvents: 'none',
+                zIndex: -1,
+              }}
+              initial={{
+                opacity: 0,
+                scale: 0.8,
+              }}
+              animate={{
+                opacity: [0, 0.3, 0],
+                scale: [0.8, 1.1, 1],
+                transition: {
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  opacity: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                  scale: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+                }
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.8,
+                transition: { duration: 0.3 }
+              }}
+            />
+            
+            {/* Efeito de "dobra" da página - simula a curvatura da página sendo virada */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: `linear-gradient(${flipDirection === 'next' ? '90deg' : '270deg'}, 
+                  rgba(255,255,255,0.8) 0%, 
+                  rgba(255,255,255,0.4) 30%, 
+                  rgba(255,255,255,0.1) 60%, 
+                  rgba(255,255,255,0) 100%)`,
+                pointerEvents: 'none',
+                zIndex: 1,
+                maskImage: `linear-gradient(${flipDirection === 'next' ? '90deg' : '270deg'}, 
+                  transparent 0%, 
+                  rgba(0,0,0,0.3) 20%, 
+                  rgba(0,0,0,0.8) 50%, 
+                  rgba(0,0,0,0.3) 80%, 
+                  transparent 100%)`,
+                WebkitMaskImage: `linear-gradient(${flipDirection === 'next' ? '90deg' : '270deg'}, 
+                  transparent 0%, 
+                  rgba(0,0,0,0.3) 20%, 
+                  rgba(0,0,0,0.8) 50%, 
+                  rgba(0,0,0,0.3) 80%, 
+                  transparent 100%)`,
+              }}
+              initial={{
+                opacity: 0,
+                scaleX: flipDirection === 'next' ? 0.1 : 0.1,
+                x: flipDirection === 'next' ? -50 : 50,
+              }}
+              animate={{
+                opacity: [0, 0.6, 0],
+                scaleX: [0.1, 1.2, 0.1],
+                x: [flipDirection === 'next' ? -50 : 50, 0, flipDirection === 'next' ? 50 : -50],
+                transition: {
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  opacity: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                  scaleX: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+                  x: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+                }
+              }}
+              exit={{
+                opacity: 0,
+                scaleX: 0.1,
+                x: flipDirection === 'next' ? 50 : -50,
+                transition: { duration: 0.3 }
+              }}
+            />
+            
+            {/* Efeito de "página sendo levantada" - simula a elevação 3D da página */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: `linear-gradient(${flipDirection === 'next' ? '90deg' : '270deg'}, 
+                  rgba(0,0,0,0.15) 0%, 
+                  rgba(0,0,0,0.08) 30%, 
+                  rgba(0,0,0,0.02) 70%, 
+                  rgba(0,0,0,0) 100%)`,
+                pointerEvents: 'none',
+                zIndex: 2,
+                transform: 'translateZ(20px)',
+                filter: 'blur(0.5px)',
+              }}
+              initial={{
+                opacity: 0,
+                scale: 0.9,
+                rotateY: flipDirection === 'next' ? 45 : -45,
+                z: 0,
+              }}
+              animate={{
+                opacity: [0, 0.4, 0],
+                scale: [0.9, 1.05, 1],
+                rotateY: [flipDirection === 'next' ? 45 : -45, 0, 0],
+                z: [0, 20, 0],
+                transition: {
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  opacity: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+                  scale: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
+                  rotateY: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                  z: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
+                }
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.9,
+                rotateY: 0,
+                z: 0,
+                transition: { duration: 0.3 }
+              }}
+            />
+            
+            {/* Efeito de "ondulação" - simula o movimento natural da página sendo virada */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: `radial-gradient(ellipse at ${flipDirection === 'next' ? '30%' : '70%'} center, 
+                  rgba(255,255,255,0.6) 0%, 
+                  rgba(255,255,255,0.3) 40%, 
+                  rgba(255,255,255,0.1) 70%, 
+                  rgba(255,255,255,0) 100%)`,
+                pointerEvents: 'none',
+                zIndex: 3,
+                filter: 'blur(1px)',
+              }}
+              initial={{
+                opacity: 0,
+                scale: 0.5,
+                x: flipDirection === 'next' ? -100 : 100,
+                y: -20,
+              }}
+              animate={{
+                opacity: [0, 0.5, 0],
+                scale: [0.5, 1.3, 0.8],
+                x: [flipDirection === 'next' ? -100 : 100, 0, flipDirection === 'next' ? 50 : -50],
+                y: [-20, 0, 10],
+                transition: {
+                  duration: 1,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  opacity: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
+                  scale: { duration: 1, ease: [0.25, 0.46, 0.45, 0.94] },
+                  x: { duration: 1, ease: [0.25, 0.46, 0.45, 0.94] },
+                  y: { duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }
+                }
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.5,
+                x: flipDirection === 'next' ? 50 : -50,
+                y: 10,
+                transition: { duration: 0.3 }
+              }}
+            />
+            
+            {/* Efeito de "reflexo" - simula a luz refletindo na página durante a animação */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: `linear-gradient(${flipDirection === 'next' ? '135deg' : '225deg'}, 
+                  rgba(255,255,255,0.8) 0%, 
+                  rgba(255,255,255,0.4) 25%, 
+                  rgba(255,255,255,0.1) 50%, 
+                  rgba(255,255,255,0) 75%)`,
+                pointerEvents: 'none',
+                zIndex: 4,
+                mixBlendMode: 'overlay',
+              }}
+              initial={{
+                opacity: 0,
+                scale: 0.8,
+                rotate: flipDirection === 'next' ? -15 : 15,
+              }}
+              animate={{
+                opacity: [0, 0.3, 0],
+                scale: [0.8, 1.1, 0.9],
+                rotate: [flipDirection === 'next' ? -15 : 15, 0, 0],
+                transition: {
+                  duration: 0.9,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  opacity: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+                  scale: { duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] },
+                  rotate: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }
+                }
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.8,
+                rotate: 0,
+                transition: { duration: 0.3 }
+              }}
+            />
+            
+            {/* Efeito de "partículas" - simula pequenos detalhes voando durante a animação */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: `radial-gradient(circle at ${flipDirection === 'next' ? '25%' : '75%'} 50%, 
+                  rgba(255,255,255,0.4) 0%, 
+                  rgba(255,255,255,0.2) 30%, 
+                  rgba(255,255,255,0.1) 60%, 
+                  rgba(255,255,255,0) 100%)`,
+                pointerEvents: 'none',
+                zIndex: 5,
+                filter: 'blur(0.5px)',
+              }}
+              initial={{
+                opacity: 0,
+                scale: 0.3,
+                x: flipDirection === 'next' ? -150 : 150,
+                y: -30,
+              }}
+              animate={{
+                opacity: [0, 0.4, 0],
+                scale: [0.3, 1.5, 0.6],
+                x: [flipDirection === 'next' ? -150 : 150, 0, flipDirection === 'next' ? 100 : -100],
+                y: [-30, 0, 20],
+                transition: {
+                  duration: 1.2,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  opacity: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+                  scale: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] },
+                  x: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] },
+                  y: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }
+                }
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.3,
+                x: flipDirection === 'next' ? 100 : -100,
+                y: 20,
+                transition: { duration: 0.3 }
+              }}
+            />
+            
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 w-full max-w-7xl mx-auto px-2 md:px-4">
                               {pages[page]?.map((item, idx) => {
                   return (
                   <div key={`${item.dish.name}-${item.category}-${page}-${idx}`} className="flex justify-center items-center">
                     <div className="w-full max-w-xs">
-                      <CardJornal 
-                        dish={item.dish} 
-                        size="small" 
-                        onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} 
-                        fallbackImage={restaurant.image}
-                        isPinned={pinnedDishes.has(item.dish.name)}
-                        onPinToggle={() => togglePin(item.dish.name)}
-                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: idx * 0.1,
+                          ease: [0.25, 0.46, 0.45, 0.94]
+                        }}
+                        whileHover={{
+                          scale: 1.02,
+                          y: -5,
+                          transition: { duration: 0.2 }
+                        }}
+                        style={{
+                          transformStyle: 'preserve-3d',
+                          backfaceVisibility: 'hidden'
+                        }}
+                      >
+                        <CardJornal 
+                          dish={item.dish} 
+                          size="small" 
+                          onClick={() => { setSelectedDish(item.dish); setModalOpen(true); }} 
+                          fallbackImage={restaurant.image}
+                          isPinned={pinnedDishes.has(item.dish.name)}
+                          onPinToggle={() => togglePin(item.dish.name)}
+                        />
+                      </motion.div>
                     </div>
                   </div>
                 );
@@ -917,6 +1277,6 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 } 
