@@ -4,7 +4,6 @@ import CardJornal from "./CardJornal";
 import DishModal from "./DishModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePreloadDishImages } from "../hooks/useImageCache";
-import ImageCacheStatus from "./ImageCacheStatus";
 
 interface JournalViewProps {
   open: boolean;
@@ -807,21 +806,6 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
           ))}
         </div>
         
-        {/* Indicador de progresso do pré-carregamento */}
-        {preloadProgress < 100 && (
-          <motion.div
-            className="flex items-center gap-2 mr-2"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-xs text-cyan-500 dark:text-cyan-400 font-medium">
-              {Math.round(preloadProgress)}%
-            </span>
-          </motion.div>
-        )}
-        
         {/* Botão de fechar */}
         <div className="flex flex-row items-center gap-0">
           <motion.button
@@ -1200,9 +1184,6 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       {modalOpen && selectedDish && (
         <DishModal open={modalOpen} dish={selectedDish} restaurantId={restaurant.id} restaurant={restaurant} onClose={() => setModalOpen(false)} />
       )}
-      
-      {/* Status do cache de imagens */}
-      <ImageCacheStatus dishes={allDishes} />
       
       {/* Tutorial de Swipe */}
       <AnimatePresence>
