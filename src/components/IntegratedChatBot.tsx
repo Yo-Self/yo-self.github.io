@@ -528,20 +528,27 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              {selectedDish.tags && selectedDish.tags.length > 0 && (
-                <span className="absolute top-4 left-4 bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-1 rounded-full">
-                  {selectedDish.tags[0]}
-                </span>
-              )}
+
             </div>
             <div className="p-6">
               <div className="flex justify-between items-start mb-3">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   {selectedDish.name}
                 </h3>
-                <span className="text-lg font-bold text-primary dark:text-cyan-500">
-                  R$ {selectedDish.price}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-primary dark:text-cyan-500">
+                    R$ {selectedDish.price}
+                  </span>
+                  {selectedDish.tags && selectedDish.tags.length > 0 && (
+                    <div className="flex gap-1">
+                      {selectedDish.tags.map(tag => (
+                        <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {selectedDish.description}

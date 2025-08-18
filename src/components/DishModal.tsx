@@ -195,11 +195,23 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
               Total: R${calculateTotalPrice()}
             </div>
             
-            {hasUnfilledRequiredGroups() && (
-              <div className="text-sm text-red-600 dark:text-red-400">
-                * Selecione os complementos obrigatórios
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {dish.tags && (
+                <div className="flex gap-1">
+                  {dish.tags.map(tag => (
+                    <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {hasUnfilledRequiredGroups() && (
+                <div className="text-sm text-red-600 dark:text-red-400">
+                  * Selecione os complementos obrigatórios
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Botão WhatsApp - Canto inferior direito */}
@@ -212,16 +224,6 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
                 restaurantId={restaurantId}
                 className="w-full sm:w-auto"
               />
-            </div>
-          )}
-          
-          {dish.tags && (
-            <div className="flex gap-2 mt-2">
-              {dish.tags.map(tag => (
-                <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
-                  {tag}
-                </span>
-              ))}
             </div>
           )}
         </div>
