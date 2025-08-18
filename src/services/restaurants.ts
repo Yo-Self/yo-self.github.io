@@ -244,42 +244,44 @@ function composeRestaurantModel(
     complementsByGroupId.set(c.group_id, arr);
   }
 
-  const menuItems: MenuItem[] = dishes.map(d => {
-    const dishCategories = categoriesByDishId.get(String(d.id)) || [];
-    const primaryCategory = dishCategories.length > 0 ? dishCategories[0] : 
-      (d.category_id != null ? (categoryIdToName.get(d.category_id) ?? 'Sem categoria') : 'Sem categoria');
-    
-    const mappedGroups = (groupsByDishId.get(String(d.id)) || []).map(g => ({
-      title: g.title,
-      description: g.description || '',
-      required: g.required,
-      max_selections: g.max_selections,
-      complements: (complementsByGroupId.get(g.id) || []).map(c => ({
-        name: c.name,
-        description: c.description || '',
-        price: formatPriceBR(c.price),
-        image: c.image_url || '',
-        ingredients: c.ingredients || '',
-      })),
-    }));
+  const menuItems: MenuItem[] = dishes
+    .filter(d => d.name && d.name.trim() !== '') // Filtrar apenas pratos com nome válido
+    .map(d => {
+      const dishCategories = categoriesByDishId.get(String(d.id)) || [];
+      const primaryCategory = dishCategories.length > 0 ? dishCategories[0] : 
+        (d.category_id != null ? (categoryIdToName.get(d.category_id) ?? 'Sem categoria') : 'Sem categoria');
+      
+      const mappedGroups = (groupsByDishId.get(String(d.id)) || []).map(g => ({
+        title: g.title,
+        description: g.description || '',
+        required: g.required,
+        max_selections: g.max_selections,
+        complements: (complementsByGroupId.get(g.id) || []).map(c => ({
+          name: c.name,
+          description: c.description || '',
+          price: formatPriceBR(c.price),
+          image: c.image_url || '',
+          ingredients: c.ingredients || '',
+        })),
+      }));
 
-    return {
-      categories: dishCategories.length > 0 ? dishCategories : [primaryCategory],
-      category: primaryCategory,
-      name: d.name ?? '',
-      description: d.description ?? '',
-      price: formatPriceBR(d.price),
-      image: d.image_url ?? '',
-      tags: (d.tags && Array.isArray(d.tags)) ? d.tags : [],
-      ingredients: d.ingredients || '',
-      allergens: d.allergens || 'Nenhum',
-      portion: d.portion || 'Serve 1 pessoa',
-      complement_groups: mappedGroups.length > 0 ? mappedGroups : undefined,
-    };
-  });
+      return {
+        categories: dishCategories.length > 0 ? dishCategories : [primaryCategory],
+        category: primaryCategory,
+        name: d.name ?? '',
+        description: d.description ?? '',
+        price: formatPriceBR(d.price),
+        image: d.image_url ?? '',
+        tags: (d.tags && Array.isArray(d.tags)) ? d.tags : [],
+        ingredients: d.ingredients || '',
+        allergens: d.allergens || 'Nenhum',
+        portion: d.portion || 'Serve 1 pessoa',
+        complement_groups: mappedGroups.length > 0 ? mappedGroups : undefined,
+      };
+    });
 
   const featured = dishes
-    .filter(d => !!d.is_featured && !!d.is_available)
+    .filter(d => !!d.is_featured && !!d.is_available && d.name && d.name.trim() !== '')
     .map(d => {
       const dishCategories = categoriesByDishId.get(String(d.id)) || [];
       const primaryCategory = dishCategories.length > 0 ? dishCategories[0] : 
@@ -310,7 +312,7 @@ function composeRestaurantModel(
           })),
         })),
       };
-    });
+    }).filter(dish => dish.name && dish.name.trim() !== ''); // Filtro adicional para garantir que o nome seja válido
 
 
 

@@ -334,15 +334,23 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
       <div ref={carouselRef} />
       {/* Carousel: mostra todos os destaques na home, só os da categoria selecionada na categoria */}
       {viewMode === 'grid' ? (
-        <Carousel restaurant={selectedRestaurant} data-tutorial="carousel" />
+        <Carousel 
+          restaurant={{
+            ...selectedRestaurant,
+            featured_dishes: Array.isArray(selectedRestaurant.featured_dishes) 
+              ? (selectedRestaurant.featured_dishes || []).filter(dish => dish && dish.name && dish.name.trim() !== '')
+              : []
+          }} 
+          data-tutorial="carousel" 
+        />
       ) : (
         (() => {
-          // Filtra destaques da categoria selecionada
+          // Filtra destaques da categoria selecionada e remove itens undefined
           const featured = selectedCategory === 'all'
-            ? selectedRestaurant.featured_dishes
-            : selectedRestaurant.featured_dishes.filter(dish => 
-                dish.category === selectedCategory || 
-                (dish.categories && dish.categories.includes(selectedCategory))
+            ? (Array.isArray(selectedRestaurant.featured_dishes) ? selectedRestaurant.featured_dishes : []).filter(dish => dish && dish.name && dish.name.trim() !== '')
+            : (Array.isArray(selectedRestaurant.featured_dishes) ? selectedRestaurant.featured_dishes : []).filter(dish => 
+                dish && dish.name && dish.name.trim() !== '' && (dish.category === selectedCategory || 
+                (dish.categories && dish.categories.includes(selectedCategory)))
               );
           
 

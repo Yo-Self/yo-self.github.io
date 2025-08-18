@@ -63,13 +63,35 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
 }
 
 export default function Carousel({ restaurant, showMostOrderedTitle = false, ...props }: { restaurant: Restaurant, showMostOrderedTitle?: boolean } & React.HTMLAttributes<HTMLElement>) {
+  // Verificação inicial de segurança
+  if (!restaurant || !restaurant.id || !restaurant.name || !restaurant.featured_dishes || !Array.isArray(restaurant.featured_dishes)) {
+    return (
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
+        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+          <p>Dados do restaurante não disponíveis</p>
+        </div>
+      </section>
+    );
+  }
+
   const [current, setCurrent] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const featured: Dish[] = Array.isArray(restaurant.featured_dishes)
-    ? (restaurant.featured_dishes.filter(Boolean) as Dish[])
+    ? (restaurant.featured_dishes.filter(dish => dish && dish.name && dish.name.trim() !== '') as Dish[])
     : [];
+
+  // Verificação adicional para garantir que há pelo menos um item válido
+  if (featured.length === 0) {
+    return (
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
+        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+          <p>Nenhum prato em destaque disponível</p>
+        </div>
+      </section>
+    );
+  }
 
   // Swipe state
   const touchStartX = useRef<number | null>(null);
@@ -87,7 +109,26 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
     };
   }, [current, featured.length]);
 
+  // Garantir que current não exceda o tamanho do array
+  useEffect(() => {
+    if (featured.length > 0 && current >= featured.length) {
+      setCurrent(0);
+    }
+    // Se featured mudou e current não é válido, resetar para 0
+    if (featured.length > 0 && (current < 0 || current >= featured.length)) {
+      setCurrent(0);
+    }
+  }, [featured.length, current]);
+
+  // Inicializar current quando o componente montar
+  useEffect(() => {
+    if (featured.length > 0 && current === 0) {
+      setCurrent(0);
+    }
+  }, [featured.length]);
+
   const handleCardClick = (dish: Dish) => {
+    if (!dish || !dish.name) return;
     setSelectedDish(dish);
     setModalOpen(true);
   };
@@ -121,43 +162,58 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
   // Carousel logic for showing side/main/side
   const getDisplayDishes = () => {
     if (featured.length === 0) return [];
-    if (featured.length === 1) return [{ dish: featured[0], size: 'main' as const, index: 0, position: 'center' as const }];
-    if (featured.length === 2) return [
-      { dish: featured[0], size: 'side' as const, index: 0, position: 'left' as const },
-      { dish: featured[1], size: 'main' as const, index: 1, position: 'center' as const }
-    ];
+    if (featured.length === 1) {
+      const dish = featured[0];
+      if (!dish || !dish.name) return [];
+      return [{ dish, size: 'main' as const, index: 0, position: 'center' as const }];
+    }
+    if (featured.length === 2) {
+      const dish1 = featured[0];
+      const dish2 = featured[1];
+      if (!dish1 || !dish1.name || !dish2 || !dish2.name) return [];
+      return [
+        { dish: dish1, size: 'side' as const, index: 0, position: 'left' as const },
+        { dish: dish2, size: 'main' as const, index: 1, position: 'center' as const }
+      ];
+    }
     
-    const prev = (current - 1 + featured.length) % featured.length;
-    const next = (current + 1) % featured.length;
+    // Garantir que current seja válido
+    const validCurrent = Math.min(Math.max(0, current), featured.length - 1);
+    const prev = (validCurrent - 1 + featured.length) % featured.length;
+    const next = (validCurrent + 1) % featured.length;
     
-    return [
+    // Filtrar apenas itens válidos
+    const items = [
       { dish: featured[prev], size: 'side' as const, index: prev, position: 'left' as const },
-      { dish: featured[current], size: 'main' as const, index: current, position: 'center' as const },
+      { dish: featured[validCurrent], size: 'main' as const, index: validCurrent, position: 'center' as const },
       { dish: featured[next], size: 'side' as const, index: next, position: 'right' as const }
-    ];
+    ].filter(item => item.dish && item.dish.name && item.dish.name.trim() !== ''); // Remove itens com dish undefined ou nome inválido
+    
+    return items;
   };
-
-  if (featured.length === 0) {
-    return (
-      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
-        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-          <p>Nenhum prato em destaque disponível</p>
-        </div>
-      </section>
-    );
-  }
 
   // Garantir que sempre haja pelo menos um item principal
   if (featured.length === 1) {
+    const dish = featured[0];
+    if (!dish || !dish.name) {
+      return (
+        <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
+          <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+            <p>Dados do prato em destaque não disponíveis</p>
+          </div>
+        </section>
+      );
+    }
+    
     return (
       <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative w-full" {...props}>
         <div className="relative w-full overflow-hidden">
           <div className="relative flex items-center justify-center min-h-[60vw] md:min-h-[340px] w-full">
             <CarouselCard
-              key={`${featured[0].name || 'single'}-0`}
-              dish={featured[0]}
+              key={`${dish.name || 'single'}-0`}
+              dish={dish}
               size="main"
-              onClick={() => handleCardClick(featured[0])}
+              onClick={() => handleCardClick(dish)}
               noMargin={true}
               showMostOrderedTitle={showMostOrderedTitle}
             />
@@ -179,6 +235,9 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
             onTouchEnd={handleTouchEnd}
           >
             {getDisplayDishes().map((item, index) => {
+              // Verificar se item.dish existe antes de renderizar
+              if (!item.dish) return null;
+              
               const isMain = item.size === 'main';
               const showTitle = isMain && showMostOrderedTitle;
               
@@ -226,7 +285,7 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
       </section>
 
       {/* Modal - renderizado fora do carousel */}
-      {modalOpen && selectedDish && (
+      {modalOpen && selectedDish && restaurant.id && (
         <DishModal
           dish={selectedDish}
           restaurantId={restaurant.id}
