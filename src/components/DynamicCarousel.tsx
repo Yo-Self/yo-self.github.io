@@ -208,21 +208,7 @@ export default function DynamicCarousel({
           )}
         </div>
         
-        {/* Indicadores de navegação */}
-        {featured.length > 1 && (
-          <div className="flex justify-center mt-6 space-x-2">
-            {featured.map((_, index) => (
-              <button
-                key={index}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === current ? 'bg-cyan-600' : 'bg-gray-300'
-                }`}
-                onClick={() => setCurrent(index)}
-                aria-label={`Ir para slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
+
       </div>
     </section>
   );
