@@ -81,6 +81,88 @@ html:not(.dark) {
   color: #ededed !important;
 }
 
+/* Animações personalizadas para o carrossel - Efeito Roda Gigante */
+@keyframes ferrisWheelLeft {
+  0% {
+    transform: rotateY(0deg) translateZ(0px) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateY(-90deg) translateZ(50px) scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(-180deg) translateZ(100px) scale(0.8);
+    opacity: 0.6;
+  }
+}
+
+@keyframes ferrisWheelRight {
+  0% {
+    transform: rotateY(0deg) translateZ(0px) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateY(90deg) translateZ(50px) scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(180deg) translateZ(100px) scale(0.8);
+    opacity: 0.6;
+  }
+}
+
+@keyframes ferrisWheelCenter {
+  0% {
+    transform: rotateY(0deg) translateZ(0px) scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(0deg) translateZ(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-ferris-left {
+  animation: ferrisWheelLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-style: preserve-3d;
+}
+
+.animate-ferris-right {
+  animation: ferrisWheelRight 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-style: preserve-3d;
+}
+
+.animate-ferris-center {
+  animation: ferrisWheelCenter 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-style: preserve-3d;
+}
+
+/* Container 3D para o efeito roda gigante */
+.carousel-3d-container {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.carousel-card {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.carousel-card:hover {
+  transform: scale(1.02) translateZ(10px);
+}
+
+/* Indicadores de progresso animados */
+.carousel-section .progress-indicator {
+  transition: all 0.3s ease-in-out;
+}
+
+.carousel-section .progress-indicator:hover {
+  transform: scale(1.2);
+}
+
 .dark .menu-section {
   background: #0a0a0a !important;
   color: #ededed !important;
@@ -734,6 +816,78 @@ button span.text-white {
   position: fixed !important;
 }
 
+/* Ajustes para mobile/retrato - diminuir espaçamento entre header, carousel e categories */
+@media (max-width: 768px) {
+  /* Regras mais específicas para sobrescrever CSS legacy */
+  section.carousel-section,
+  .carousel-section,
+  div[class*="carousel-section"] {
+    padding-top: 0.5rem !important; /* 8px em vez de 60px */
+    padding-bottom: 1rem !important; /* 16px em vez de 100px */
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Regras específicas para categories bar */
+  div.categories-bar,
+  .categories-bar,
+  div[class*="categories-bar"] {
+    padding-top: 0.5rem !important; /* 8px em vez de 12px */
+    padding-bottom: 0.25rem !important; /* 4px em vez de 0 */
+  }
+  
+  /* Ajuste específico para o header no mobile */
+  header.header,
+  .header,
+  header[class*="header"] {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* Ajuste para o container do header no mobile */
+  .header .container,
+  header .container {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Ajustes ainda mais específicos para telas muito pequenas */
+@media (max-width: 480px) {
+  /* Regras mais específicas para sobrescrever CSS legacy */
+  section.carousel-section,
+  .carousel-section,
+  div[class*="carousel-section"] {
+    padding-top: 0.25rem !important; /* 4px */
+    padding-bottom: 0.75rem !important; /* 12px */
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Regras específicas para categories bar */
+  div.categories-bar,
+  .categories-bar,
+  div[class*="categories-bar"] {
+    padding-top: 0.375rem !important; /* 6px */
+    padding-bottom: 0.125rem !important; /* 2px */
+  }
+  
+  /* Ajuste específico para o header em telas muito pequenas */
+  header.header,
+  .header,
+  header[class*="header"] {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* Ajuste para o container do header em telas muito pequenas */
+  .header .container,
+  header .container {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
 /* Ajustes para o card do jornal */
 .menu-card .pin-button {
   position: absolute !important;
@@ -805,3 +959,92 @@ button span.text-white {
 }
 
 /* Garantir que o botão aA seja sempre visível */
+
+/* REGRAS ESPECÍFICAS PARA IPHONE - MÁXIMA PRIORIDADE */
+/* iPhone 12 Pro e similares */
+@media (max-width: 390px), (max-device-width: 390px) {
+  /* Carousel - espaçamento zero */
+  .carousel-section,
+  section.carousel-section,
+  div[class*="carousel-section"],
+  body .carousel-section,
+  html body .carousel-section,
+  html .carousel-section {
+    padding-top: 0 !important;
+    padding-bottom: 0.25rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Categories bar - espaçamento zero */
+  .categories-bar,
+  div.categories-bar,
+  div[class*="categories-bar"],
+  body .categories-bar,
+  html body .categories-bar,
+  html .categories-bar {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Header - sem margem */
+  .header,
+  header.header,
+  header[class*="header"],
+  body .header,
+  html body .header,
+  html .header {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+}
+
+/* Dispositivos móveis em geral */
+@media (max-width: 768px), (max-device-width: 768px) {
+  /* Carousel */
+  .carousel-section,
+  section.carousel-section,
+  div[class*="carousel-section"],
+  body .carousel-section,
+  html body .carousel-section,
+  html .carousel-section {
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.375rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Categories bar */
+  .categories-bar,
+  div.categories-bar,
+  div[class*="categories-bar"],
+  body .categories-bar,
+  html body .categories-bar,
+  html .categories-bar {
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.0625rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Header */
+  .header,
+  header.header,
+  header[class*="header"],
+  body .header,
+  html body .header,
+  html .header {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+}

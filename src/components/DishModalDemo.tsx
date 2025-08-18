@@ -6,7 +6,6 @@ import { Dish } from "./data";
 
 // Dados de exemplo para demonstração
 const demoDish: Dish = {
-  id: "demo-1",
   name: "Pasta Carbonara",
   description: "Uma deliciosa pasta italiana com molho cremoso de ovos, queijo parmesão, bacon crocante e pimenta preta fresca. Uma experiência gastronômica autêntica que transporta você diretamente para as ruas de Roma.",
   price: "32,90",
@@ -21,9 +20,9 @@ const demoDish: Dish = {
       required: false,
       max_selections: 2,
       complements: [
-        { name: "Frango Grelhado", price: "8,90" },
-        { name: "Camarão", price: "12,90" },
-        { name: "Salmão", price: "15,90" }
+        { name: "Frango Grelhado", price: "8,90", description: "Frango grelhado na chapa", image: "/window.svg" },
+        { name: "Camarão", price: "12,90", description: "Camarão grelhado", image: "/window.svg" },
+        { name: "Salmão", price: "15,90", description: "Salmão grelhado", image: "/window.svg" }
       ]
     },
     {
@@ -31,9 +30,9 @@ const demoDish: Dish = {
       required: false,
       max_selections: 3,
       complements: [
-        { name: "Brócolis", price: "4,90" },
-        { name: "Espinafre", price: "3,90" },
-        { name: "Tomate Cereja", price: "3,90" }
+        { name: "Brócolis", price: "4,90", description: "Brócolis fresco", image: "/window.svg" },
+        { name: "Espinafre", price: "3,90", description: "Espinafre fresco", image: "/window.svg" },
+        { name: "Tomate Cereja", price: "3,90", description: "Tomate cereja", image: "/window.svg" }
       ]
     },
     {
@@ -41,8 +40,8 @@ const demoDish: Dish = {
       required: false,
       max_selections: 1,
       complements: [
-        { name: "Molho de Trufas", price: "6,90" },
-        { name: "Molho de Gorgonzola", price: "5,90" }
+        { name: "Molho de Trufas", price: "6,90", description: "Molho especial de trufas", image: "/window.svg" },
+        { name: "Molho de Gorgonzola", price: "5,90", description: "Molho cremoso de gorgonzola", image: "/window.svg" }
       ]
     }
   ]

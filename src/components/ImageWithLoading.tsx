@@ -114,7 +114,7 @@ export default function ImageWithLoading({
   return (
     <div className={`relative ${className}`}>
       {/* Loading skeleton - só mostra se realmente estiver carregando */}
-      {isLoading && (
+      {isLoading && !isImageLoaded(currentSrc) && (
         <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg z-10">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
@@ -126,7 +126,7 @@ export default function ImageWithLoading({
       <img
         src={currentSrc}
         alt={alt}
-        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        className={`${className} opacity-100`}
         onLoad={() => {
           // Só dispara onLoad se não estiver usando cache
           if (!isImageLoaded(currentSrc)) {
