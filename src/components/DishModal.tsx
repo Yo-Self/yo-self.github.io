@@ -167,16 +167,16 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
-                <div className="flex items-center space-x-2 modal-info-item">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">Ingredientes:</span>
+                <div className="modal-info-item">
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">Ingredientes: </span>
                   <span className="text-gray-700 dark:text-gray-300">{dish.ingredients}</span>
                 </div>
-                <div className="flex items-center space-x-2 modal-info-item">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">Alérgenos:</span>
+                <div className="modal-info-item">
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">Alérgenos: </span>
                   <span className="text-gray-700 dark:text-gray-300">{dish.allergens}</span>
                 </div>
-                <div className="flex items-center space-x-2 modal-info-item">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">Porção:</span>
+                <div className="modal-info-item">
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">Porção: </span>
                   <span className="text-gray-700 dark:text-gray-300">{dish.portion}</span>
                 </div>
               </div>
