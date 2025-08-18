@@ -347,8 +347,8 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       grouped.forEach((group, categoryIndex) => {
         const seen = new Set<string>();
         const categoryDishes = group.items.filter(dish => {
-          if (seen.has(dish.name) || newPinnedDishes.has(dish.name)) {
-            return false; // Remover duplicatas e pratos já fixados
+          if (seen.has(dish.name)) {
+            return false; // Remover apenas duplicatas, manter pratos pinados na categoria
           }
           seen.add(dish.name);
           return true;
@@ -408,17 +408,17 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
 
     // O JournalView sempre mostra todas as categorias
     grouped.forEach(group => {
-      // Coletar pratos da categoria (removendo duplicatas e pratos já fixados)
+      // Coletar pratos da categoria (removendo apenas duplicatas, NÃO os pinados)
       const seen = new Set<string>();
       const categoryDishes = group.items.filter(dish => {
-        if (seen.has(dish.name) || pinnedDishes.has(dish.name)) {
-          return false; // Remover duplicatas e pratos já fixados
+        if (seen.has(dish.name)) {
+          return false; // Remover apenas duplicatas, manter pratos pinados na categoria
         }
         seen.add(dish.name);
         return true;
       });
       
-      // Pratos da categoria (excluindo os pinados que já aparecem no topo)
+      // Pratos da categoria (incluindo os pinados para manter na categoria original)
       const dishesInCategory = categoryDishes;
       
       // Calcular quantos pratos cabem por página (reservando espaço para TODOS os pinados)
@@ -437,9 +437,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         // Dividir pratos da categoria em páginas
         for (let i = 0; i < dishesInCategory.length; i += availableSlotsPerPage) {
           const pageCategoryDishes = dishesInCategory.slice(i, i + availableSlotsPerPage);
-          // Cada página terá: TODOS os pinados + pratos da categoria da página (sem duplicação)
+          // Cada página terá: TODOS os pinados + pratos da categoria da página (evitando duplicatas da mesma categoria)
           const pageDishes = [...allPinnedDishes, ...pageCategoryDishes];
-          pages.push(pageDishes.map(dish => ({ 
+          // Remover duplicatas da mesma categoria para evitar mostrar o mesmo prato duas vezes
+          const uniquePageDishes = pageDishes.filter((dish, index, self) => 
+            index === self.findIndex(d => d.name === dish.name)
+          );
+          pages.push(uniquePageDishes.map(dish => ({ 
             dish, 
             category: group.category
           })));
@@ -561,11 +565,11 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     
     // Replicar a mesma lógica de criação de páginas para determinar a categoria de cada página
     grouped.forEach((group, categoryIndex) => {
-      // Coletar pratos da categoria (removendo duplicatas e pratos já fixados)
+      // Coletar pratos da categoria (removendo apenas duplicatas, NÃO os pinados)
       const seen = new Set<string>();
       const categoryDishes = group.items.filter(dish => {
-        if (seen.has(dish.name) || pinnedDishes.has(dish.name)) {
-          return false; // Remover duplicatas e pratos já fixados
+        if (seen.has(dish.name)) {
+          return false; // Remover apenas duplicatas, manter pratos pinados na categoria
         }
         seen.add(dish.name);
         return true;
