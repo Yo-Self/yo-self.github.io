@@ -5,19 +5,38 @@ import { Dish, Restaurant } from "./data";
 import DishModal from "./DishModal";
 import ImageWithLoading from "./ImageWithLoading";
 
-function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean; showMostOrderedTitle?: boolean }) {
+function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false, position = 'center' }: { dish: Dish; onClick: () => void; size: 'main' | 'side'; noMargin?: boolean; showMostOrderedTitle?: boolean; position?: 'left' | 'center' | 'right' }) {
   if (!dish) return null;
+  
+  // Definir as bordas arredondadas baseado na posição e tamanho da tela
+  const getBorderRadius = () => {
+    if (size === 'main') return 'rounded-2xl'; // Card central sempre com bordas completas
+    
+    if (size === 'side') {
+      if (position === 'left') {
+        // No mobile (portrait): borda só na direita, no desktop (landscape): bordas completas
+        return 'rounded-r-2xl md:rounded-2xl';
+      }
+      if (position === 'right') {
+        // No mobile (portrait): borda só na esquerda, no desktop (landscape): bordas completas
+        return 'rounded-l-2xl md:rounded-2xl';
+      }
+    }
+    
+    return 'rounded-2xl'; // Fallback
+  };
+  
   return (
     <div
       className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 transition-all duration-300
         ${size === 'main'
           ? 'w-[85vw] md:w-[600px] h-[50vw] md:h-[340px] scale-100 z-20'
-          : 'w-[15vw] md:w-[100px] h-[50vw] md:h-[340px] scale-90 opacity-60 z-10'}
+          : 'w-[72vw] md:w-[510px] lg:w-[510px] xl:w-[510px] h-[42vw] md:h-[289px] lg:h-[289px] xl:h-[289px] scale-90 md:scale-95 lg:scale-100 opacity-60 md:opacity-80 lg:opacity-100 z-10'}
       `}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
     >
-      <div className={`aspect-[4/3] overflow-hidden rounded-2xl relative w-full h-full`}>
+      <div className={`aspect-[4/3] overflow-hidden ${getBorderRadius()} relative w-full h-full`}>
         <ImageWithLoading
           src={dish.image || '/window.svg'}
           alt={dish.name || 'Item do cardápio'}
@@ -31,9 +50,12 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
               </span>
             </div>
           )}
-          <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-            {dish.name || 'Item' }
-          </div>
+          {/* Título do prato - só exibir no card central */}
+          {size === 'main' && (
+            <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+              {dish.name || 'Item' }
+            </div>
+          )}
         </ImageWithLoading>
       </div>
     </div>
@@ -99,19 +121,19 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
   // Carousel logic for showing side/main/side
   const getDisplayDishes = () => {
     if (featured.length === 0) return [];
-    if (featured.length === 1) return [{ dish: featured[0], size: 'main' as const, index: 0 }];
+    if (featured.length === 1) return [{ dish: featured[0], size: 'main' as const, index: 0, position: 'center' as const }];
     if (featured.length === 2) return [
-      { dish: featured[0], size: 'side' as const, index: 0 },
-      { dish: featured[1], size: 'main' as const, index: 1 }
+      { dish: featured[0], size: 'side' as const, index: 0, position: 'left' as const },
+      { dish: featured[1], size: 'main' as const, index: 1, position: 'center' as const }
     ];
     
     const prev = (current - 1 + featured.length) % featured.length;
     const next = (current + 1) % featured.length;
     
     return [
-      { dish: featured[prev], size: 'side' as const, index: prev },
-      { dish: featured[current], size: 'main' as const, index: current },
-      { dish: featured[next], size: 'side' as const, index: next }
+      { dish: featured[prev], size: 'side' as const, index: prev, position: 'left' as const },
+      { dish: featured[current], size: 'main' as const, index: current, position: 'center' as const },
+      { dish: featured[next], size: 'side' as const, index: next, position: 'right' as const }
     ];
   };
 
@@ -168,6 +190,7 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
                   onClick={() => handleCardClick(item.dish)}
                   noMargin={isMain}
                   showMostOrderedTitle={showTitle}
+                  position={item.position}
                 />
               );
             })}

@@ -4,26 +4,45 @@ import React, { useState, useRef, useEffect } from "react";
 import { Restaurant } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 
-function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false }: { 
+function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false, position = 'center' }: { 
   dish: any; 
   onClick: () => void; 
   size: 'main' | 'side'; 
   noMargin?: boolean; 
-  showMostOrderedTitle?: boolean 
+  showMostOrderedTitle?: boolean;
+  position?: 'left' | 'center' | 'right';
 }) {
   if (!dish) return null;
+  
+  // Definir as bordas arredondadas baseado na posição e tamanho da tela
+  const getBorderRadius = () => {
+    if (size === 'main') return 'rounded-2xl'; // Card central sempre com bordas completas
+    
+    if (size === 'side') {
+      if (position === 'left') {
+        // No mobile (portrait): borda só na direita, no desktop (landscape): bordas completas
+        return 'rounded-r-2xl md:rounded-2xl';
+      }
+      if (position === 'right') {
+        // No mobile (portrait): borda só na esquerda, no desktop (landscape): bordas completas
+        return 'rounded-l-2xl md:rounded-2xl';
+      }
+    }
+    
+    return 'rounded-2xl'; // Fallback
+  };
   
   return (
     <div
       className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 transition-all duration-300
         ${size === 'main'
           ? 'w-[85vw] md:w-[600px] h-[50vw] md:h-[340px] scale-100 z-20'
-          : 'w-[15vw] md:w-[100px] h-[50vw] md:h-[340px] scale-90 opacity-60 z-10'}
+          : 'w-[72vw] md:w-[510px] lg:w-[510px] xl:w-[510px] h-[42vw] md:h-[289px] lg:h-[289px] xl:h-[289px] scale-90 md:scale-95 lg:scale-100 opacity-60 md:opacity-80 lg:opacity-100 z-10'}
       `}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
     >
-      <div className={`aspect-[4/3] overflow-hidden rounded-2xl relative w-full h-full`}>
+      <div className={`aspect-[4/3] overflow-hidden ${getBorderRadius()} relative w-full h-full`}>
         <ImageWithLoading
           src={dish.image || '/window.svg'}
           alt={dish.name || 'Item do cardápio'}
@@ -38,9 +57,12 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
               </span>
             </div>
           )}
-          <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-            {dish.name || 'Item' }
-          </div>
+          {/* Título do prato - só exibir no card central */}
+          {size === 'main' && (
+            <div className="absolute bottom-0 left-0 w-full text-white text-center font-semibold text-lg py-2 px-2 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+              {dish.name || 'Item' }
+            </div>
+          )}
         </ImageWithLoading>
       </div>
     </div>
@@ -111,14 +133,14 @@ export default function DynamicCarousel({
   // Carousel logic for showing side/main/side
   const getDisplayDishes = () => {
     if (featured.length === 1) {
-      return [{ dish: featured[0], size: 'main' as const, idx: 0 }];
+      return [{ dish: featured[0], size: 'main' as const, idx: 0, position: 'center' as const }];
     }
     const prev = (current - 1 + featured.length) % featured.length;
     const next = (current + 1) % featured.length;
     return [
-      { dish: featured[prev], size: 'side' as const, idx: prev },
-      { dish: featured[current], size: 'main' as const, idx: current },
-      { dish: featured[next], size: 'side' as const, idx: next },
+      { dish: featured[prev], size: 'side' as const, idx: prev, position: 'left' as const },
+      { dish: featured[current], size: 'main' as const, idx: current, position: 'center' as const },
+      { dish: featured[next], size: 'side' as const, idx: next, position: 'right' as const },
     ].filter((entry) => Boolean(entry.dish));
   };
 
@@ -175,13 +197,14 @@ export default function DynamicCarousel({
               </button>
               <div className="flex items-center justify-center w-full gap-1 md:gap-4 select-none">
                 <div className="flex items-center justify-center w-full max-w-[480px] mx-auto">
-                  {getDisplayDishes().map(({ dish, size }, idx) => (
+                  {getDisplayDishes().map(({ dish, size, position }, idx) => (
                     <CarouselCard
                       key={restaurant.id + '-' + (dish?.name ?? 'dish') + '-' + (dish?.image ?? 'img') + '-' + idx}
                       dish={dish}
                       onClick={() => size === 'main' && handleCardClick(dish)}
                       size={size}
                       showMostOrderedTitle={showMostOrderedTitle}
+                      position={position}
                     />
                   ))}
                 </div>
