@@ -282,7 +282,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     window.addEventListener('resize', calculateCardsPerPage);
     
     return () => window.removeEventListener('resize', calculateCardsPerPage);
-  }, []);
+  }, [tutorialTimers]);
 
   // Detectar botão voltar do navegador e fechar o modo jornal
   useEffect(() => {

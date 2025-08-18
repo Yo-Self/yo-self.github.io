@@ -63,41 +63,20 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
 }
 
 export default function Carousel({ restaurant, showMostOrderedTitle = false, ...props }: { restaurant: Restaurant, showMostOrderedTitle?: boolean } & React.HTMLAttributes<HTMLElement>) {
-  // Verificação inicial de segurança
-  if (!restaurant || !restaurant.id || !restaurant.name || !restaurant.featured_dishes || !Array.isArray(restaurant.featured_dishes)) {
-    return (
-      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
-        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-          <p>Dados do restaurante não disponíveis</p>
-        </div>
-      </section>
-    );
-  }
-
+  // All hooks must be called at the top level, before any conditional returns
   const [current, setCurrent] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  // Calculate featured dishes first
   const featured: Dish[] = Array.isArray(restaurant.featured_dishes)
     ? (restaurant.featured_dishes.filter(dish => dish && dish.name && dish.name.trim() !== '') as Dish[])
     : [];
 
-  // Verificação adicional para garantir que há pelo menos um item válido
-  if (featured.length === 0) {
-    return (
-      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
-        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-          <p>Nenhum prato em destaque disponível</p>
-        </div>
-      </section>
-    );
-  }
-
-  // Swipe state
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-
-  // Auto-rotate
+  // All useEffect hooks must be called before any conditional returns
   useEffect(() => {
     if (featured.length > 1) {
       timeoutRef.current = setTimeout(() => {
@@ -109,23 +88,42 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
     };
   }, [current, featured.length]);
 
-  // Garantir que current não exceda o tamanho do array
   useEffect(() => {
     if (featured.length > 0 && current >= featured.length) {
       setCurrent(0);
     }
-    // Se featured mudou e current não é válido, resetar para 0
     if (featured.length > 0 && (current < 0 || current >= featured.length)) {
       setCurrent(0);
     }
   }, [featured.length, current]);
 
-  // Inicializar current quando o componente montar
   useEffect(() => {
     if (featured.length > 0 && current === 0) {
       setCurrent(0);
     }
   }, [featured.length]);
+
+  // Verificação inicial de segurança
+  if (!restaurant || !restaurant.id || !restaurant.name || !restaurant.featured_dishes || !Array.isArray(restaurant.featured_dishes)) {
+    return (
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
+        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+          <p>Dados do restaurante não disponíveis</p>
+        </div>
+      </section>
+    );
+  }
+
+  // Verificação adicional para garantir que há pelo menos um item válido
+  if (featured.length === 0) {
+    return (
+      <section className="carousel-section pt-0 pb-0 bg-white dark:bg-black relative z-10 w-full" {...props}>
+        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+          <p>Nenhum prato em destaque disponível</p>
+        </div>
+      </section>
+    );
+  }
 
   const handleCardClick = (dish: Dish) => {
     if (!dish || !dish.name) return;

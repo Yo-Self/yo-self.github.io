@@ -108,7 +108,7 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
         }
       }
     }
-  }, [results, isSpeechEnabled, speak, isSpeaking]);
+  }, [results, isSpeechEnabled, speak, isSpeaking, messages]);
 
   // Processar erros
   useEffect(() => {
@@ -126,7 +126,7 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
         setMessages(prev => [...prev, errorMessage]);
       }
     }
-  }, [error]);
+  }, [error, messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

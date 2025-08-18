@@ -66,6 +66,16 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     setIsEnabled(prev => !prev);
   }, [isSupported]);
 
+  const stop = useCallback(() => {
+    if (!isSupported) return;
+
+    if (speechRef.current) {
+      window.speechSynthesis.cancel();
+      speechRef.current = null;
+    }
+    setIsSpeaking(false);
+  }, [isSupported]);
+
   const speak = useCallback((text: string, isManual: boolean = false) => {
     if (!isSupported || !text.trim()) return;
     
@@ -118,17 +128,7 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     // Armazenar referência e iniciar fala
     speechRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [isSupported, isEnabled, selectedVoice, readMessages]);
-
-  const stop = useCallback(() => {
-    if (!isSupported) return;
-
-    if (speechRef.current) {
-      window.speechSynthesis.cancel();
-      speechRef.current = null;
-    }
-    setIsSpeaking(false);
-  }, [isSupported]);
+  }, [isSupported, isEnabled, selectedVoice, readMessages, stop]);
 
   const setVoice = useCallback((voice: SpeechSynthesisVoice | null) => {
     setSelectedVoice(voice);

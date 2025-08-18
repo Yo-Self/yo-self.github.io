@@ -51,10 +51,10 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
   const [tutorialTimers, setTutorialTimers] = React.useState<NodeJS.Timeout[]>([]);
   
   // Função para limpar todos os timers de tutorial
-  const clearTutorialTimers = () => {
+  const clearTutorialTimers = React.useCallback(() => {
     tutorialTimers.forEach(timer => clearTimeout(timer));
     setTutorialTimers([]);
-  };
+  }, [tutorialTimers]);
   
   // Função para pular para o próximo tutorial
   const skipToNextTutorial = () => {
