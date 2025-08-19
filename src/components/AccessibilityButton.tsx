@@ -6,6 +6,7 @@ import { useAccessibility } from "./AccessibilityContext";
 export default function AccessibilityButton() {
   const { fontSize, increaseFontSize, decreaseFontSize, resetFontSize, theme, setTheme } = useAccessibility();
   const [showMenu, setShowMenu] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -32,7 +33,15 @@ export default function AccessibilityButton() {
   }, [showMenu]);
 
   const handleMenuToggle = () => {
-    setShowMenu(!showMenu);
+    if (showMenu) {
+      setIsClosing(true);
+      setTimeout(() => {
+        setShowMenu(false);
+        setIsClosing(false);
+      }, 250);
+    } else {
+      setShowMenu(true);
+    }
   };
 
   const handleDecreaseFont = () => {
@@ -80,7 +89,7 @@ export default function AccessibilityButton() {
         ref={buttonRef}
         type="button"
         onClick={handleMenuToggle}
-        className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-200 shadow-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring-offset-2"
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-200 shadow-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring-offset-2 hover:scale-110 active:scale-95 hover:shadow-xl"
         aria-label="Configurações de acessibilidade"
         title="Configurações de acessibilidade"
         aria-expanded={showMenu}
@@ -95,7 +104,11 @@ export default function AccessibilityButton() {
       {showMenu && (
         <div 
           ref={menuRef}
-          className="accessibility-menu fixed bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-4 min-w-[280px] max-w-[320px] transform transition-all duration-200 ease-out animate-fade-in-0 animate-zoom-in-95"
+          className={`accessibility-menu fixed bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-4 min-w-[280px] max-w-[320px] menu-transition ${
+            isClosing 
+              ? 'animate-accessibility-menu-close' 
+              : 'animate-accessibility-menu-open'
+          }`}
           style={{
             zIndex: 999999999,
             position: 'fixed',
@@ -106,14 +119,25 @@ export default function AccessibilityButton() {
           }}
         >
           {/* Cabeçalho do menu */}
-          <div className="flex items-center justify-between mb-4">
+          <div 
+            className="flex items-center justify-between mb-4 transform transition-all duration-300 delay-25"
+            style={{
+              animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
+            }}
+          >
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Acessibilidade
             </h3>
             <button
               type="button"
-              onClick={() => setShowMenu(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+              onClick={() => {
+                setIsClosing(true);
+                setTimeout(() => {
+                  setShowMenu(false);
+                  setIsClosing(false);
+                }, 250);
+              }}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200 hover:scale-110 active:scale-95 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
               aria-label="Fechar menu"
               style={{
                 visibility: 'visible',
@@ -148,7 +172,12 @@ export default function AccessibilityButton() {
           </div>
           
           {/* Seção de tamanho da fonte */}
-          <div className="mb-4">
+          <div 
+            className="mb-4 transform transition-all duration-300 delay-75"
+            style={{
+              animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
+            }}
+          >
             <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
               Tamanho da fonte
             </h4>
@@ -162,7 +191,7 @@ export default function AccessibilityButton() {
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   fontSize === 'normal'
                     ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
+                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500 hover:scale-105 active:scale-95'
                 }`}
                 aria-label="Diminuir tamanho da fonte"
               >
@@ -176,7 +205,7 @@ export default function AccessibilityButton() {
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   fontSize === 'extra-large'
                     ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
+                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500 hover:scale-105 active:scale-95'
                 }`}
                 aria-label="Aumentar tamanho da fonte"
               >
@@ -186,7 +215,7 @@ export default function AccessibilityButton() {
               <button
                 type="button"
                 onClick={handleResetFont}
-                className="flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500"
+                className="flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500 hover:scale-105 active:scale-95"
                 aria-label="Restaurar tamanho padrão da fonte"
               >
                 <span className="text-xs">Padrão</span>
@@ -202,7 +231,12 @@ export default function AccessibilityButton() {
           </div>
 
           {/* Seção de tema */}
-          <div className="mb-4">
+          <div 
+            className="mb-4 transform transition-all duration-300 delay-150"
+            style={{
+              animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
+            }}
+          >
             <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
               Tema
             </h4>
@@ -215,7 +249,7 @@ export default function AccessibilityButton() {
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   theme === 'light'
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-2 border-blue-200 dark:border-blue-800'
-                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
+                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500 hover:scale-105 active:scale-95'
                 }`}
                 aria-label="Aplicar tema claro"
               >
@@ -231,7 +265,7 @@ export default function AccessibilityButton() {
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   theme === 'dark'
                     ? 'bg-blue-600 dark:bg-blue-700 text-white border-2 border-blue-500 dark:border-blue-600'
-                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
+                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500 hover:scale-105 active:scale-95'
                 }`}
                 aria-label="Aplicar tema escuro"
               >
@@ -247,7 +281,7 @@ export default function AccessibilityButton() {
                 className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 ${
                   theme === 'system'
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-2 border-blue-200 dark:border-blue-800'
-                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500'
+                    : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 hover:shadow-md active:bg-gray-200 dark:active:bg-gray-500 hover:scale-105 active:scale-95'
                 }`}
                 aria-label="Usar preferência do sistema"
               >
