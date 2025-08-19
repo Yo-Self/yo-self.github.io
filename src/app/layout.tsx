@@ -1,5 +1,6 @@
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "./scroll-animations.css";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
 import Analytics from "@/components/Analytics";
 import Navigation from "@/components/Navigation";

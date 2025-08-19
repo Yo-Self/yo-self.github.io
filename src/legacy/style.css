@@ -940,7 +940,7 @@ body {
 }
 
 .menu-card:hover {
-    transform: translateY(-5px);
+    /* Efeito de hover removido para manter apenas a animação de entrada */
 }
 
 .menu-card-image {

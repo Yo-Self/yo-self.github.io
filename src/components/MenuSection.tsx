@@ -6,7 +6,7 @@ import useSwipeCategory from "./useSwipeCategory";
 import { MenuItem } from "./data";
 import DishModal from "./DishModal";
 import { useTranslation } from "./i18n";
-import DishCard from "./DishCard";
+import AnimatedDishCard from "./AnimatedDishCard";
 import { SortOption } from "./SortModal";
 
 interface MenuSectionProps {
@@ -113,7 +113,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
         {/* Barra de categorias sticky, fica no topo quando rola */}
         <div
           ref={categoriesRef}
-          className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-2 pl-4"
+          className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-1 md:pb-2 pl-4"
         >
           <CategoriesBar
             allCategories={availableCategories}
@@ -131,8 +131,15 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {filteredItems.map((item) => (
-            <DishCard key={`${item.name}-${item.category}`} dish={item} onClick={() => handleCardClick(item)} size="large" fallbackImage={fallbackImage} />
+          {filteredItems.map((item, index) => (
+            <AnimatedDishCard 
+              key={`${item.name}-${item.category}`} 
+              dish={item} 
+              onClick={() => handleCardClick(item)} 
+              size="large" 
+              fallbackImage={fallbackImage}
+              index={index}
+            />
           ))}
         </div>
       </div>

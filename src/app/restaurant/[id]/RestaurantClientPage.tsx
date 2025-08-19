@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Carousel from "@/components/Carousel";
 import MenuSection from "@/components/MenuSection";
 import SearchBar from "@/components/SearchBar";
-import CategoryGrid from "@/components/CategoryGrid";
+import AnimatedCategoryGrid from "@/components/AnimatedCategoryGrid";
 import { useSearchParams } from "next/navigation";
 import { SortOption } from "@/components/SortModal";
 
@@ -369,7 +369,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
             <span className="text-xl font-bold text-gray-900 dark:text-gray-100 mx-3 whitespace-nowrap text-center">Categorias</span>
             <div className="flex-1 border-t border-gray-300 dark:border-gray-700" style={{marginTop: '0.2em'}}></div>
           </div>
-          <CategoryGrid
+          <AnimatedCategoryGrid
             categories={selectedRestaurant.menu_categories}
             menuItems={selectedRestaurant.menu_items}
             onSelectCategory={handleSelectCategory}

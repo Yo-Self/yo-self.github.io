@@ -4,6 +4,8 @@ import DynamicCarousel from "../components/DynamicCarousel";
 import ImageWithLoading from "@/components/ImageWithLoading";
 import { OrganizationService } from "@/services/organizations";
 import Image from "next/image";
+import AnimatedStaticDishCard from "@/components/AnimatedStaticDishCard";
+import AnimationDemo from "@/components/AnimationDemo";
 
 // Configuração de cache para GitHub Pages
 export const revalidate = 3600; // 1 hora
@@ -158,46 +160,9 @@ async function OrganizationsSection() {
 }
 
 // Componente estático de card de prato
-function StaticDishCard({ dish, size = "large" }: { dish: typeof sampleDishes[0]; size?: "large" | "small" }) {
+function StaticDishCard({ dish, size = "large", index = 0 }: { dish: typeof sampleDishes[0]; size?: "large" | "small"; index?: number }) {
   return (
-    <div className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow flex flex-col items-center overflow-hidden w-full ${size === "small" ? "max-w-full" : ""}`}>
-      <div className="relative w-full">
-        <ImageWithLoading
-          src={dish.image}
-          alt={dish.name}
-          className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
-          fallbackSrc="/window.svg"
-        >
-          {/* Tag no canto superior direito - apenas para cards pequenos */}
-          {size === "small" && dish.tags && dish.tags.length > 0 && (
-            <div className="absolute top-2 right-2">
-              <span className="bg-cyan-600 dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
-                {dish.tags[0]}
-              </span>
-            </div>
-          )}
-          <div className="absolute bottom-0 left-0 w-full px-4 py-2">
-            <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] truncate">{dish.name}</h3>
-          </div>
-        </ImageWithLoading>
-      </div>
-      <div className="w-full p-4 min-w-0">
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">{dish.description}</p>
-        <div className="flex items-center justify-between gap-2 min-w-0">
-          <span className="font-bold text-cyan-600 dark:text-cyan-300 text-sm truncate">{dish.price}</span>
-          {/* Tags na parte inferior - apenas para cards grandes */}
-          {size === "large" && (
-            <div className="flex gap-1 flex-wrap flex-shrink-0">
-              {dish.tags?.map((tag) => (
-                <span key={tag} className="bg-cyan-600 dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <AnimatedStaticDishCard dish={dish} size={size} index={index} />
   );
 }
 
@@ -246,12 +211,12 @@ export default async function Home() {
             <div className="relative">
               <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 bg-white dark:bg-gray-800 p-4">
                 <div className="w-full max-w-sm mx-auto">
-                  <StaticDishCard dish={sampleDishes[0]} size="large" />
+                  <StaticDishCard dish={sampleDishes[0]} size="large" index={0} />
                 </div>
               </div>
               <div className="absolute -bottom-8 -left-8 w-40 md:w-56 rounded-xl overflow-hidden shadow-xl ring-1 ring-black/5 bg-white dark:bg-gray-800 p-2">
                 <div className="w-full">
-                  <StaticDishCard dish={sampleDishes[1]} size="small" />
+                  <StaticDishCard dish={sampleDishes[1]} size="small" index={1} />
                 </div>
               </div>
             </div>
@@ -301,7 +266,7 @@ export default async function Home() {
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">Cards de Pratos</h3>
             <div className="space-y-4">
               {sampleDishes.slice(0, 2).map((dish, index) => (
-                <StaticDishCard key={index} dish={dish} size="small" />
+                <StaticDishCard key={index} dish={dish} size="small" index={index} />
               ))}
             </div>
           </div>
@@ -310,7 +275,7 @@ export default async function Home() {
             <div className="grid grid-cols-2 gap-3 w-full">
               {sampleDishes.map((dish, index) => (
                 <div key={index} className="w-full min-w-0">
-                  <StaticDishCard dish={dish} size="small" />
+                  <StaticDishCard dish={dish} size="small" index={index} />
                 </div>
               ))}
             </div>
@@ -340,6 +305,13 @@ export default async function Home() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Demonstração das Animações */}
+      <section className="mx-auto max-w-6xl px-6 py-16 md:py-24">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-8">Animações de Scroll</h2>
+        <p className="text-center text-gray-600 dark:text-gray-300 mb-12">Veja como os cards de pratos aparecem com animações suaves durante o scroll</p>
+        <AnimationDemo />
       </section>
 
       {/* Organizações */}
