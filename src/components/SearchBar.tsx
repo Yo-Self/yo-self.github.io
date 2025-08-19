@@ -291,6 +291,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
           restaurantId={restaurant.id} 
           waiterCallEnabled={restaurant.waiter_call_enabled}
           className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-900/80 border-2 border-white dark:border-gray-800 shadow-2xl backdrop-blur-md flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group"
+          data-tutorial="waiter-button"
         />
       </div>
       {/* Botão de busca integrada */}

@@ -7,9 +7,10 @@ interface WaiterCallButtonProps {
   restaurantId: string;
   waiterCallEnabled?: boolean;
   className?: string;
+  'data-tutorial'?: string;
 }
 
-export default function WaiterCallButton({ restaurantId, waiterCallEnabled = false, className = "" }: WaiterCallButtonProps) {
+export default function WaiterCallButton({ restaurantId, waiterCallEnabled = false, className = "", ...props }: WaiterCallButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
@@ -241,6 +242,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
         aria-label="Chamar garçom"
         title="Chamar garçom"
         data-waiter-button
+        {...props}
       >
         <svg width="45" height="45" viewBox="0 0 258 234" fill="none" style={{ display: 'block' }}>
           <defs>
