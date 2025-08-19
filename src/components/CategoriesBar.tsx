@@ -191,10 +191,10 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
   }, [scrollToActiveCategory]);
 
   return (
-    <div className="categories-bar flex flex-row items-center gap-1 pt-3 pb-3 bg-white dark:bg-black px-1 relative z-30" style={{ display: 'flex', visibility: 'visible', opacity: 1, position: 'relative' }}>
+    <div className="categories-bar flex flex-row items-center gap-1 pt-3 pb-4 bg-white dark:bg-black px-1 relative z-30" style={{ display: 'flex', visibility: 'visible', opacity: 1, position: 'relative' }}>
       {/* Botão grid fixo */}
       <button
-        className={`relative flex items-center justify-center min-w-[56px] w-14 h-16 rounded-xl overflow-hidden shadow transition-all duration-300 ease-in-out focus:outline-none border-4 ${
+        className={`relative flex items-center justify-center min-w-[56px] w-14 h-20 rounded-xl overflow-hidden shadow transition-all duration-300 ease-in-out focus:outline-none border-4 ${
           activeCategory === 'grid' 
             ? 'border-cyan-500 bg-cyan-100 dark:bg-cyan-900 scale-105 shadow-lg' 
             : 'border-transparent bg-gray-100 dark:bg-gray-800 hover:border-gray-300 hover:scale-105'
@@ -215,7 +215,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
       {/* Container de categorias com scroll horizontal */}
       <div
         ref={containerRef}
-        className="categories-bar-container flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full py-3"
+        className="categories-bar-container flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full py-4"
         style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0, display: 'flex', visibility: 'visible' }}
       >
         {categoriesWithAll.map((category, idx) => {
@@ -291,7 +291,7 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
     return (
       <button
         ref={ref}
-        className={`category-bar-card relative min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition-all duration-300 ease-in-out focus:outline-none ${
+        className={`category-bar-card relative min-w-[120px] w-40 h-20 rounded-xl overflow-hidden shadow transition-all duration-300 ease-in-out focus:outline-none ${
           active 
             ? "border-4 border-cyan-500 scale-105 shadow-lg" 
             : "border-4 border-transparent hover:scale-105 hover:shadow-md hover:border-gray-300"
@@ -342,12 +342,15 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
           }}
         >
           <span 
-            className={`text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate transition-all duration-300 ${
-              active ? 'text-lg font-extrabold' : 'text-base font-bold'
-            }`}
+            className="text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 leading-tight transition-all duration-300"
             style={{ 
               textRendering: 'optimizeSpeed',
-              willChange: 'auto'
+              willChange: 'auto',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              lineHeight: '1.2'
             }}
           >
             {label}
