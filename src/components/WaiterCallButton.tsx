@@ -11,6 +11,7 @@ interface WaiterCallButtonProps {
 
 export default function WaiterCallButton({ restaurantId, waiterCallEnabled = false, className = "" }: WaiterCallButtonProps) {
   const [showModal, setShowModal] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,16 +42,21 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     try {
       const result = await createCall(restaurantId, tableNum, notes.trim() || undefined);
       
-      if (result) {
-        // Tocar o som quando a chamada for enviada com sucesso
-        await playBellSound();
-        alert('Chamada de garçom enviada com sucesso!');
-        setShowModal(false);
-        setTableNumber('');
-        setNotes('');
-      } else {
-        alert('Erro ao enviar chamada de garçom. Tente novamente.');
-      }
+              if (result) {
+          // Tocar o som quando a chamada for enviada com sucesso
+          await playBellSound();
+          alert('Chamada de garçom enviada com sucesso!');
+          setIsClosing(true);
+          // Aguardar a animação terminar antes de fechar
+          setTimeout(() => {
+            setShowModal(false);
+            setIsClosing(false);
+            setTableNumber('');
+            setNotes('');
+          }, 250);
+        } else {
+          alert('Erro ao enviar chamada de garçom. Tente novamente.');
+        }
     } catch (err) {
       console.error('Error creating waiter call:', err);
     } finally {
@@ -59,10 +65,15 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
   };
 
   const handleCancel = () => {
-    setShowModal(false);
-    setTableNumber('');
-    setNotes('');
-    clearError();
+    setIsClosing(true);
+    // Aguardar a animação terminar antes de fechar
+    setTimeout(() => {
+      setShowModal(false);
+      setIsClosing(false);
+      setTableNumber('');
+      setNotes('');
+      clearError();
+    }, 250); // Tempo da animação de fechamento
   };
 
   // Inicializar contexto de áudio
@@ -195,7 +206,15 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
   };
 
   const handleButtonClick = async () => {
-    // Remover o som do clique do botão - agora só toca quando a chamada é enviada
+    // Adicionar efeito de clique no botão
+    const button = document.querySelector('[data-waiter-button]') as HTMLElement;
+    if (button) {
+      button.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        button.style.transform = 'scale(1)';
+      }, 150);
+    }
+    
     setShowModal(true);
   };
 
@@ -218,7 +237,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
       {/* Botão de chamar garçom */}
       <button
         onClick={handleButtonClick}
-        className={className || "w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 transition-colors duration-200 shadow-lg flex items-center justify-center"}
+        className={`${className || "w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 shadow-lg flex items-center justify-center"} transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-xl`}
         aria-label="Chamar garçom"
         title="Chamar garçom"
         data-waiter-button
@@ -251,15 +270,38 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div 
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+            isClosing 
+              ? 'animate-waiter-backdrop-close' 
+              : 'animate-waiter-backdrop-open'
+          }`}
+          style={{
+            background: isClosing 
+              ? 'rgba(0, 0, 0, 0.3)' 
+              : 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: isClosing ? 'blur(4px)' : 'blur(8px)'
+          }}
+        >
+          <div 
+            className={`bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6 waiter-modal-transition ${
+              isClosing 
+                ? 'animate-waiter-modal-close' 
+                : 'animate-waiter-modal-open'
+            }`}
+          >
+                          <div 
+                className="flex items-center justify-between mb-4 transform transition-all duration-300 delay-25"
+                style={{
+                  animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
+                }}
+              >
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 Chamar Garçom
               </h2>
               <button
                 onClick={handleCancel}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-all duration-200 hover:scale-110 active:scale-95 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                 aria-label="Fechar"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +311,12 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
+              <div 
+                className="transform transition-all duration-300 delay-75"
+                style={{
+                  animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
+                }}
+              >
                 <label htmlFor="tableNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Número da Mesa *
                 </label>
@@ -278,14 +325,19 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
                   id="tableNumber"
                   value={tableNumber}
                   onChange={(e) => setTableNumber(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-all duration-200 hover:border-orange-400 focus:border-orange-500"
                   placeholder="Ex: 5"
                   min="1"
                   required
                 />
               </div>
 
-              <div>
+              <div 
+                className="transform transition-all duration-300 delay-150"
+                style={{
+                  animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
+                }}
+              >
                 <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Observações (opcional)
                 </label>
@@ -293,7 +345,7 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-all duration-200 hover:border-orange-400 focus:border-orange-500"
                   placeholder="Ex: Preciso de mais água, tem alguma dúvida sobre o cardápio..."
                   rows={3}
                 />
@@ -305,18 +357,23 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div 
+                className="flex gap-3 pt-2 transform transition-all duration-300 delay-200"
+                style={{
+                  animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
+                }}
+              >
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+                  className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 hover:scale-105 active:scale-95"
                   disabled={isSubmitting}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors duration-200 disabled:bg-orange-400 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 disabled:bg-orange-400 disabled:cursor-not-allowed hover:scale-105 active:scale-95 hover:shadow-lg"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
