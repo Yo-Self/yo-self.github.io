@@ -13,16 +13,17 @@ export default {
         primary: '#06b6d4', // cyan-500 do Tailwind, visível no light e acessível
       },
       animation: {
-        'fade-in-0': 'fade-in-0 0.2s ease-out',
-        'zoom-in-95': 'zoom-in-95 0.2s ease-out',
-        'slide-in-from-top': 'slide-in-from-top 0.2s ease-out',
-        'fade-in-up': 'fade-in-up 0.5s ease-out',
-        'fade-in-down': 'fade-in-down 0.5s ease-out',
-        'fade-in-left': 'fade-in-left 0.5s ease-out',
-        'fade-in-right': 'fade-in-right 0.5s ease-out',
-        'bounce-in': 'bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-        'slide-up': 'slide-up 0.4s ease-out',
-        'scale-in': 'scale-in 0.3s ease-out',
+        'fade-in-up': 'fadeInUp 0.6s ease-out',
+        'fade-in-down': 'fadeInDown 0.6s ease-out',
+        'fade-in-left': 'fadeInLeft 0.6s ease-out',
+        'fade-in-right': 'fadeInRight 0.6s ease-out',
+        'bounce-in': 'bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        'slide-up': 'slideUp 0.6s ease-out',
+        'scale-in': 'scaleIn 0.6s ease-out',
+        'slide-left': 'slideLeft 0.4s ease-out',
+        'slide-right': 'slideRight 0.4s ease-out',
+        'fade-in-center': 'fadeInCenter 0.6s ease-out',
+
       },
       keyframes: {
         'fade-in-0': {
@@ -142,20 +143,7 @@ export default {
           '0%': { transform: 'scale(0.95)', opacity: '0.7' },
           '100%': { transform: 'scale(1)', opacity: '1' }
         },
-        'ferris-left': {
-          '0%': { transform: 'rotateY(0deg) translateZ(0px) scale(1)', opacity: '1' },
-          '50%': { transform: 'rotateY(-90deg) translateZ(50px) scale(0.9)', opacity: '0.8' },
-          '100%': { transform: 'rotateY(-180deg) translateZ(100px) scale(0.8)', opacity: '0.6' }
-        },
-        'ferris-right': {
-          '0%': { transform: 'rotateY(0deg) translateZ(0px) scale(1)', opacity: '1' },
-          '50%': { transform: 'rotateY(90deg) translateZ(50px) scale(0.9)', opacity: '0.8' },
-          '100%': { transform: 'rotateY(180deg) translateZ(100px) scale(0.8)', opacity: '0.6' }
-        },
-        'ferris-center': {
-          '0%': { transform: 'rotateY(0deg) translateZ(0px) scale(0.9)', opacity: '0.8' },
-          '100%': { transform: 'rotateY(0deg) translateZ(0px) scale(1)', opacity: '1' }
-        },
+
       },
       backgroundColor: {
         'dark': '#0a0a0a',
@@ -189,8 +177,6 @@ export default {
     'animate-slide-left',
     'animate-slide-right',
     'animate-fade-in-center',
-    'animate-ferris-left',
-    'animate-ferris-right',
-    'animate-ferris-center',
+
   ],
 }; 
