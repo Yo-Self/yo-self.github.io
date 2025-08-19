@@ -14,6 +14,7 @@ interface IntegratedChatBotProps {
   restaurants: Restaurant[];
   isOpen: boolean;
   onClose: () => void;
+  buttonRef?: React.RefObject<HTMLButtonElement>; // Referência para o botão de busca
 }
 
 interface ChatMessage {
@@ -27,7 +28,7 @@ interface ChatMessage {
   model?: string;
 }
 
-export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onClose }: IntegratedChatBotProps) {
+export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onClose, buttonRef }: IntegratedChatBotProps) {
   const { results, isLoading, error, search, clearResults } = useIntegratedSearch();
   const { 
     isEnabled: isSpeechEnabled, 
@@ -47,8 +48,12 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
   const [showDishModal, setShowDishModal] = useState(false);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   const [showVoiceNotification, setShowVoiceNotification] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isEntering, setIsEntering] = useState(false);
+  const [animationStarted, setAnimationStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll para a última mensagem
   const scrollToBottom = () => {
@@ -77,6 +82,57 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
       }, 1000);
     }
   }, [isOpen]);
+
+  // Efeito de entrada animada
+  useEffect(() => {
+    if (isOpen) {
+      console.log('🔄 Iniciando animação de entrada...');
+      // Iniciar animação
+      setAnimationStarted(true);
+      setIsEntering(true);
+      
+      // Aplicar animação diretamente via JavaScript
+      if (chatRef.current) {
+        const element = chatRef.current;
+        
+        // Estado inicial
+        element.style.transform = 'scale(0.1) translateY(100px)';
+        element.style.opacity = '0';
+        
+        // Forçar reflow
+        element.offsetHeight;
+        
+        // Aplicar animação
+        element.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        element.style.transform = 'scale(1) translateY(0)';
+        element.style.opacity = '1';
+        
+        console.log('🎭 Animação JavaScript aplicada');
+      }
+      
+      // Aplicar animação de entrada após um pequeno delay
+      setTimeout(() => {
+        console.log('✅ Animação de entrada concluída');
+        setIsEntering(false);
+        // Removido o bounce sutil para evitar chacoalhada
+      }, 400); // Reduzido para sincronizar com a nova duração da animação
+    } else {
+      console.log('🔄 Resetando estados de animação...');
+      // Resetar estados quando fechar
+      setAnimationStarted(false);
+      setIsEntering(false);
+    }
+  }, [isOpen]);
+
+  // Debug: log dos estados
+  useEffect(() => {
+    console.log('📊 Estados de animação:', { 
+      isOpen, 
+      isAnimating, 
+      isEntering, 
+      animationStarted 
+    });
+  }, [isOpen, isAnimating, isEntering, animationStarted]);
 
   // Processar resultados da busca/LLM
   useEffect(() => {
@@ -173,6 +229,38 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
     clearReadHistory();
   };
 
+  const handleClose = () => {
+    if (isAnimating) return;
+    
+    console.log('🔄 Iniciando animação de saída...');
+    setIsAnimating(true);
+    
+    // Aplicar animação de saída via JavaScript
+    if (chatRef.current) {
+      const element = chatRef.current;
+      
+      // Aplicar animação de saída
+      element.style.transition = 'all 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19)';
+      element.style.transform = 'scale(0.1) translateY(100px)';
+      element.style.opacity = '0';
+      
+      console.log('🎭 Animação de saída aplicada');
+    }
+    
+    // Animar o backdrop blur também
+    const backdrop = document.querySelector('.chat-backdrop');
+    if (backdrop) {
+      backdrop.classList.add('bg-black/0');
+    }
+    
+    // Aguardar a animação terminar antes de fechar
+    setTimeout(() => {
+      console.log('✅ Animação de saída concluída');
+      setIsAnimating(false);
+      onClose();
+    }, 400);
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
@@ -180,13 +268,36 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
     });
   };
 
+  // Calcular posição do botão para a animação
+  const getButtonPosition = () => {
+    if (!buttonRef?.current) return { x: 0, y: 0 };
+    
+    const rect = buttonRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    return { x: centerX, y: centerY };
+  };
+
   if (!isOpen) return null;
 
+  const buttonPos = getButtonPosition();
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl flex flex-col h-[80vh] max-h-[600px]">
+    <div className={`fixed inset-0 z-[200] flex items-end justify-center backdrop-blur-sm transition-all duration-400 chat-backdrop ${
+      animationStarted && isEntering ? 'bg-black/0' : 'bg-black/50'
+    }`}>
+      <div 
+        ref={chatRef}
+        className="w-full max-w-md bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl flex flex-col h-[80vh] max-h-[600px] transform-gpu chat-transition"
+        style={{
+          transformOrigin: `${buttonPos.x}px ${buttonPos.y}px`,
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 rounded-t-3xl">
+        <div className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 rounded-t-3xl transition-all duration-500 delay-100 ${
+          animationStarted && isEntering ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+        }`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +362,7 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
               </svg>
             </button>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               title="Fechar"
             >
@@ -336,7 +447,9 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className={`flex-1 overflow-y-auto p-4 space-y-4 transition-all duration-500 delay-200 ${
+          animationStarted && isEntering ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+        }`}>
           {messages.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
@@ -478,7 +591,9 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className={`p-4 border-t border-gray-200 dark:border-gray-700 transition-all duration-500 delay-300 ${
+          animationStarted && isEntering ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+        }`}>
           <form onSubmit={handleSendMessage} className="flex gap-2">
             <input
               ref={inputRef}

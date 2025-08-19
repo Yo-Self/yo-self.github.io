@@ -341,6 +341,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
         restaurants={restaurants}
         isOpen={chatOpen} 
         onClose={() => setChatOpen(false)} 
+        buttonRef={buttonRef}
       />
     </div>
   );
