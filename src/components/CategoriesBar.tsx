@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import { MenuItem } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 
@@ -123,45 +123,82 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
     };
   }, [activeCategory, allCategories, setActiveCategory]);
 
-  useEffect(() => {
-    const idx = allCategories.indexOf(activeCategory);
-    const container = containerRef.current;
-    const btn = btnRefs.current[idx];
-    if (container && btn) {
-      // Calcula a posição do botão em relação ao container
-      const btnLeft = btn.offsetLeft;
-      const btnRight = btnLeft + btn.offsetWidth;
-      const containerLeft = container.scrollLeft;
-      const containerRight = containerLeft + container.offsetWidth;
-      // Se o botão está fora da tela à esquerda
-      if (btnLeft < containerLeft) {
-        container.scrollLeft = btnLeft - 16; // 16px de margem
-      } else if (btnRight > containerRight) {
-        container.scrollLeft = btnRight - container.offsetWidth + 16; // 16px de margem
-      }
-    }
-  }, [activeCategory, allCategories]);
-
   // Monta lista de categorias com 'Todos' no início ou fim dependendo da página
   const categoriesWithAll = useMemo(() => 
     isHome ? [...allCategories, "all"] : ["all", ...allCategories], 
     [isHome, allCategories]
   );
 
-  useEffect(() => {
+  // Função melhorada para scroll automático da categoria ativa
+  const scrollToActiveCategory = useCallback(() => {
     const idx = categoriesWithAll.indexOf(activeCategory);
+    const container = containerRef.current;
     const btn = btnRefs.current[idx];
-    if (btn) {
-      // Removido o scrollIntoView para evitar scroll automático
-      // btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    
+    if (container && btn) {
+      // Calcula a posição do botão em relação ao container
+      const btnLeft = btn.offsetLeft;
+      const btnRight = btnLeft + btn.offsetWidth;
+      const containerLeft = container.scrollLeft;
+      const containerRight = containerLeft + container.offsetWidth;
+      const containerWidth = container.offsetWidth;
+      
+      // Calcula a posição ideal para centralizar o botão
+      const targetScrollLeft = btnLeft - (containerWidth / 2) + (btn.offsetWidth / 2);
+      
+      // Aplica scroll suave para a posição calculada
+      // Em dispositivos móveis, usa scroll instantâneo para melhor performance
+      if ('ontouchstart' in window) {
+        container.scrollLeft = Math.max(0, targetScrollLeft);
+      } else {
+        container.scrollTo({
+          left: Math.max(0, targetScrollLeft),
+          behavior: 'smooth'
+        });
+      }
     }
   }, [activeCategory, categoriesWithAll]);
 
+  // Scroll automático sempre que a categoria ativa mudar
+  useEffect(() => {
+    // Pequeno delay para garantir que o DOM foi atualizado
+    const timer = setTimeout(() => {
+      scrollToActiveCategory();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [activeCategory, scrollToActiveCategory]);
+
+  // Scroll automático também quando as categorias mudarem
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToActiveCategory();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [categoriesWithAll, scrollToActiveCategory]);
+
+  // Scroll automático quando a janela for redimensionada
+  useEffect(() => {
+    const handleResize = () => {
+      setTimeout(() => {
+        scrollToActiveCategory();
+      }, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [scrollToActiveCategory]);
+
   return (
-    <div className="categories-bar flex flex-row items-center gap-1 pt-3 pb-0 bg-white dark:bg-black px-1 relative z-30" style={{ display: 'flex', visibility: 'visible', opacity: 1, position: 'relative' }}>
+    <div className="categories-bar flex flex-row items-center gap-1 pt-3 pb-3 bg-white dark:bg-black px-1 relative z-30" style={{ display: 'flex', visibility: 'visible', opacity: 1, position: 'relative' }}>
       {/* Botão grid fixo */}
       <button
-        className={`relative flex items-center justify-center min-w-[56px] w-14 h-16 rounded-xl overflow-hidden shadow transition ring-offset-2 focus:outline-none border-2 ${activeCategory === 'grid' ? 'ring-2 ring-cyan-500 border-cyan-500 bg-cyan-100 dark:bg-cyan-900' : 'border-transparent bg-gray-100 dark:bg-gray-800'}`}
+        className={`relative flex items-center justify-center min-w-[56px] w-14 h-16 rounded-xl overflow-hidden shadow transition-all duration-300 ease-in-out focus:outline-none border-4 ${
+          activeCategory === 'grid' 
+            ? 'border-cyan-500 bg-cyan-100 dark:bg-cyan-900 scale-105 shadow-lg' 
+            : 'border-transparent bg-gray-100 dark:bg-gray-800 hover:border-gray-300 hover:scale-105'
+        }`}
         onClick={() => {
           if (onGridClick) onGridClick();
           setActiveCategory('grid');
@@ -178,7 +215,7 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
       {/* Container de categorias com scroll horizontal */}
       <div
         ref={containerRef}
-        className="categories-bar-container flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full py-1"
+        className="categories-bar-container flex flex-nowrap overflow-x-auto whitespace-nowrap gap-3 no-scrollbar max-w-full py-3"
         style={{ WebkitOverflowScrolling: 'touch', overflowY: 'hidden', maxWidth: '100vw', minWidth: 0, display: 'flex', visibility: 'visible' }}
       >
         {categoriesWithAll.map((category, idx) => {
@@ -254,7 +291,11 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
     return (
       <button
         ref={ref}
-        className={`category-bar-card relative min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition ring-offset-0 focus:outline-none ${active ? "ring-4 ring-cyan-500 border-cyan-500" : "border-transparent"}`}
+        className={`category-bar-card relative min-w-[120px] w-40 h-16 rounded-xl overflow-hidden shadow transition-all duration-300 ease-in-out focus:outline-none ${
+          active 
+            ? "border-4 border-cyan-500 scale-105 shadow-lg" 
+            : "border-4 border-transparent hover:scale-105 hover:shadow-md hover:border-gray-300"
+        }`}
         onClick={onClick}
         style={{ flex: '0 0 auto' }}
       >
@@ -282,7 +323,10 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
           }}
         />
         
-
+        {/* Overlay para melhorar legibilidade do texto */}
+        {active && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-xl" />
+        )}
         
         <span 
           className="absolute inset-0 flex items-center justify-center z-20"
@@ -298,7 +342,9 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
           }}
         >
           <span 
-            className="text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate"
+            className={`text-white text-base font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] text-center px-2 truncate transition-all duration-300 ${
+              active ? 'text-lg font-extrabold' : 'text-base font-bold'
+            }`}
             style={{ 
               textRendering: 'optimizeSpeed',
               willChange: 'auto'
