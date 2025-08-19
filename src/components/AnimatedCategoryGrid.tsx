@@ -67,7 +67,7 @@ function AnimatedCategoryCard({
   const [current, setCurrent] = React.useState(0);
   const [next, setNext] = React.useState<number|null>(null);
   const [showNext, setShowNext] = React.useState(false);
-  const { elementRef, isVisible } = useScrollAnimation({
+  const { elementRef, isVisible } = useScrollAnimation<HTMLButtonElement>({
     threshold: 0.1,
     rootMargin: '0px 0px -50px 0px',
     triggerOnce: true

@@ -1,4 +1,5 @@
 import { createClient, createStaticClient } from '@/lib/supabase/server';
+import { supabase as clientSupabase } from '@/lib/supabase/client';
 import { Organization, Restaurant, generateSlug } from '@/types/organization';
 
 // Helper function to check if Supabase client is available
@@ -201,7 +202,51 @@ export class OrganizationService {
     return (data || []) as Organization[];
   }
 
+  /**
+   * Lista todas as organizações para uso em client components
+   */
+  static async listForClient(): Promise<Organization[]> {
+    if (!clientSupabase) {
+      console.warn('Supabase client not available');
+      return [];
+    }
+    
+    const { data, error } = await clientSupabase
+      .from('profiles')
+      .select('*')
+      .eq('is_organization', true)
+      .order('full_name');
 
+    if (error) {
+      console.error('Erro ao listar organizações:', error);
+      return [];
+    }
+
+    return (data || []) as Organization[];
+  }
+
+  /**
+   * Busca uma organização pelo slug para uso em client components
+   */
+  static async getBySlugForClient(slug: string): Promise<Organization | null> {
+    if (!clientSupabase) {
+      console.warn('Supabase client not available');
+      return null;
+    }
+    
+    const { data, error } = await clientSupabase
+      .from('profiles')
+      .select('*')
+      .eq('slug', slug)
+      .eq('is_organization', true)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data as Organization;
+  }
 
   /**
    * Cria ou atualiza uma organização
