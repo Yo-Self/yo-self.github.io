@@ -38,7 +38,6 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
             className={`pin-button ${isPinned ? 'pinned' : 'unpinned'}`}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('Pin clicked, current isPinned:', isPinned);
               onPinToggle?.();
             }}
             style={{

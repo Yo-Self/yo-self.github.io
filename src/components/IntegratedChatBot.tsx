@@ -86,7 +86,6 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
   // Efeito de entrada animada
   useEffect(() => {
     if (isOpen) {
-      console.log('🔄 Iniciando animação de entrada...');
       // Iniciar animação
       setAnimationStarted(true);
       setIsEntering(true);
@@ -107,32 +106,19 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
         element.style.transform = 'scale(1) translateY(0)';
         element.style.opacity = '1';
         
-        console.log('🎭 Animação JavaScript aplicada');
       }
       
       // Aplicar animação de entrada após um pequeno delay
       setTimeout(() => {
-        console.log('✅ Animação de entrada concluída');
         setIsEntering(false);
         // Removido o bounce sutil para evitar chacoalhada
       }, 400); // Reduzido para sincronizar com a nova duração da animação
     } else {
-      console.log('🔄 Resetando estados de animação...');
       // Resetar estados quando fechar
       setAnimationStarted(false);
       setIsEntering(false);
     }
   }, [isOpen]);
-
-  // Debug: log dos estados
-  useEffect(() => {
-    console.log('📊 Estados de animação:', { 
-      isOpen, 
-      isAnimating, 
-      isEntering, 
-      animationStarted 
-    });
-  }, [isOpen, isAnimating, isEntering, animationStarted]);
 
   // Processar resultados da busca/LLM
   useEffect(() => {
@@ -232,7 +218,6 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
   const handleClose = () => {
     if (isAnimating) return;
     
-    console.log('🔄 Iniciando animação de saída...');
     setIsAnimating(true);
     
     // Aplicar animação de saída via JavaScript
@@ -244,7 +229,6 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
       element.style.transform = 'scale(0.1) translateY(100px)';
       element.style.opacity = '0';
       
-      console.log('🎭 Animação de saída aplicada');
     }
     
     // Animar o backdrop blur também
@@ -255,7 +239,6 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
     
     // Aguardar a animação terminar antes de fechar
     setTimeout(() => {
-      console.log('✅ Animação de saída concluída');
       setIsAnimating(false);
       onClose();
     }, 400);

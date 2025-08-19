@@ -205,7 +205,6 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
               
               if (pinButton) {
                 const rect = pinButton.getBoundingClientRect();
-                console.log('Pin button found at:', rect);
                 setPinButtonPosition({
                   top: rect.top,
                   left: rect.left

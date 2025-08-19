@@ -108,7 +108,6 @@ export function useWhatsAppConfig(restaurantId?: string) {
         throw new Error('Erro ao salvar configuração do WhatsApp');
       }
 
-      console.log('Configuração do WhatsApp atualizada com sucesso:', newConfig);
     } catch (err) {
       console.error('Erro ao salvar configuração do WhatsApp:', err);
       setError('Erro ao salvar configuração');
