@@ -25,7 +25,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 300); // Tempo da animação de saída
+    }, 400); // Aumentado para dar tempo das animações completarem
   }, [onClose]);
 
   // Resetar seleções quando o prato mudar

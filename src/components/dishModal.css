@@ -89,6 +89,93 @@
   }
 }
 
+/* Animações de fechamento - NOVAS */
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes modalContentSlideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
+@keyframes modalImageZoomOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes modalCloseButtonFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) rotate(90deg);
+  }
+}
+
+@keyframes modalTitleSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes modalInfoFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+}
+
+@keyframes modalTagFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
 /* Classes de animação */
 .modal-backdrop {
   animation: modalFadeIn 0.3s ease-out;
@@ -114,14 +201,69 @@
   animation: modalTitleSlideIn 0.5s ease-out 0.4s both;
 }
 
-/* Animações de saída */
+/* Animações de saída - ATUALIZADAS */
 .modal-exit {
-  animation: modalSlideIn 0.3s ease-in reverse;
+  animation: modalSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .modal-backdrop-exit {
-  animation: modalFadeIn 0.3s ease-in reverse;
+  animation: modalFadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* Animações de fechamento para elementos internos */
+.modal-exit .modal-content {
+  animation: modalContentSlideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .modal-image-container {
+  animation: modalImageZoomOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .modal-close-button {
+  animation: modalCloseButtonFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .modal-title {
+  animation: modalTitleSlideOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .modal-info-item {
+  animation: modalInfoFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .modal-tag {
+  animation: modalTagFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .complement-group {
+  animation: modalInfoFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .selection-summary {
+  animation: modalInfoFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .total-section {
+  animation: modalInfoFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-exit .whatsapp-section {
+  animation: modalInfoFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Delays escalonados para animações de fechamento */
+.modal-exit .modal-info-item:nth-child(1) { animation-delay: 0.05s; }
+.modal-exit .modal-info-item:nth-child(2) { animation-delay: 0.1s; }
+.modal-exit .modal-info-item:nth-child(3) { animation-delay: 0.15s; }
+
+.modal-exit .complement-group:nth-child(1) { animation-delay: 0.1s; }
+.modal-exit .complement-group:nth-child(2) { animation-delay: 0.15s; }
+.modal-exit .complement-group:nth-child(3) { animation-delay: 0.2s; }
+.modal-exit .complement-group:nth-child(4) { animation-delay: 0.25s; }
+
+.modal-exit .modal-tag:nth-child(1) { animation-delay: 0.1s; }
+.modal-exit .modal-tag:nth-child(2) { animation-delay: 0.15s; }
+.modal-exit .modal-tag:nth-child(3) { animation-delay: 0.2s; }
 
 /* Hover effects */
 .modal-container:hover {
@@ -166,6 +308,21 @@
 /* Smooth transitions para todos os elementos */
 .modal-container * {
   transition: all 0.2s ease-out;
+}
+
+/* Garantir que as animações de fechamento tenham prioridade */
+.modal-exit * {
+  transition: none !important;
+}
+
+/* Melhorar a performance das animações */
+.modal-container,
+.modal-exit,
+.modal-backdrop,
+.modal-backdrop-exit {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* Efeito de shimmer para loading */
