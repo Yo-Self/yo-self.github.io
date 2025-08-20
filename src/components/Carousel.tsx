@@ -81,28 +81,6 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
     ? (restaurant.featured_dishes.filter(dish => dish && dish.name && dish.name.trim() !== '') as Dish[])
     : [];
 
-  // Auto-rotation
-  useEffect(() => {
-    if (featured.length > 1 && !isTransitioning && !isDragging) {
-      timeoutRef.current = setTimeout(() => {
-        handleNext();
-      }, 5000);
-    }
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [current, featured.length, isTransitioning, isDragging]);
-
-  // Reset current if out of bounds
-  useEffect(() => {
-    if (featured.length > 0 && current >= featured.length) {
-      setCurrent(0);
-    }
-    if (featured.length > 0 && (current < 0 || current >= featured.length)) {
-      setCurrent(0);
-    }
-  }, [featured.length, current]);
-
   const handleNext = useCallback(() => {
     if (isTransitioning || featured.length <= 1) return;
     
@@ -114,6 +92,28 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
       setIsTransitioning(false);
     }, 300);
   }, [isTransitioning, featured.length]);
+
+  // Auto-rotation
+  useEffect(() => {
+    if (featured.length > 1 && !isTransitioning && !isDragging) {
+      timeoutRef.current = setTimeout(() => {
+        handleNext();
+      }, 5000);
+    }
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [current, featured.length, isTransitioning, isDragging, handleNext]);
+
+  // Reset current if out of bounds
+  useEffect(() => {
+    if (featured.length > 0 && current >= featured.length) {
+      setCurrent(0);
+    }
+    if (featured.length > 0 && (current < 0 || current >= featured.length)) {
+      setCurrent(0);
+    }
+  }, [featured.length, current]);
 
   const handlePrev = useCallback(() => {
     if (isTransitioning || featured.length <= 1) return;

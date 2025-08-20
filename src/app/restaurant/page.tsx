@@ -21,7 +21,7 @@ export default async function RestaurantSelectionPage() {
           {restaurants.map((restaurant) => (
             <Link
               key={restaurant.id}
-              href={`/restaurant/${restaurant.id}/`}
+                              href={`/restaurant/${restaurant.slug || restaurant.id}/`}
               className="block rounded-2xl overflow-hidden shadow group focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <div className="relative h-48 md:h-56 w-full">

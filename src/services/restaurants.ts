@@ -42,6 +42,7 @@ function formatPriceBR(price: number | null): string {
 
 export type DbRestaurant = {
   id: number | string;
+  slug: string | null;
   name: string;
   cuisine_type: string | null;
   image_url: string | null;
@@ -322,6 +323,7 @@ function composeRestaurantModel(
 
   return {
     id: String(r.id),
+    slug: r.slug || String(r.id), // Usar slug se existir, senão usar ID como fallback
     name: r.name,
     welcome_message: r.description || `Bem-vindo ao ${r.name}`,
     image: r.image_url || '',
@@ -366,11 +368,11 @@ export async function fetchFullRestaurants(): Promise<Restaurant[]> {
   }
 }
 
-// Mais leve: apenas os IDs (para generateStaticParams)
+// Mais leve: apenas os IDs e slugs (para generateStaticParams)
 export async function fetchRestaurantIds(): Promise<string[]> {
   try {
-    const rows = await sbFetch<Array<Pick<DbRestaurant, 'id'>>>(`restaurants?select=id&order=created_at.asc`);
-    return (rows ?? []).map(r => String(r.id));
+    const rows = await sbFetch<Array<Pick<DbRestaurant, 'id' | 'slug'>>>(`restaurants?select=id,slug&order=created_at.asc`);
+    return (rows ?? []).map(r => r.slug || String(r.id));
   } catch (error) {
     console.error('Erro ao buscar IDs dos restaurantes:', error);
     return [];
@@ -408,28 +410,44 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
   }
 }
 
-// Função removida - a tabela restaurants não tem campo slug
-// export async function fetchRestaurantBySlugWithData(slug: string): Promise<Restaurant | null> {
-//   // Salvaguarda mínima para build/export do Next que pode invocar com o literal "[id]"
-//   if (slug === '[id]') {
-//     return null;
-//   }
-//   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
-//   const r = rows && rows[0];
-//   if (!r) return null;
-//   const [cats, dishes] = await Promise.all([
-//     fetchCategoriesRows(r.id),
-//     fetchDishesRows(r.id),
-//   ]);
-//   const dishIds = dishes.map(d => String(d.id));
-//   const [dishCategories, groups] = await Promise.all([
-//     fetchDishCategoriesByDishIds(dishIds),
-//     fetchComplementGroupsByDishIds(dishIds),
-//   ]);
-//   const groupIds = groups.map(g => g.id);
-//   const complements = await fetchComplementsByGroupIds(groupIds);
-//   return composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
-// }
+export async function fetchRestaurantBySlugWithData(slug: string): Promise<Restaurant | null> {
+  // Salvaguarda mínima para build/export do Next que pode invocar com o literal "[slug]"
+  if (slug === '[slug]') {
+    return null;
+  }
+
+  try {
+    // Primeiro tenta buscar por slug
+    let rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
+    let r = rows && rows[0];
+
+    // Se não encontrou por slug, tenta por ID (para compatibilidade)
+    if (!r) {
+      rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(slug)}&limit=1`);
+      r = rows && rows[0];
+    }
+
+    if (!r) return null;
+    
+    const [cats, dishes] = await Promise.all([
+      fetchCategoriesRows(r.id),
+      fetchDishesRows(r.id),
+    ]);
+    const dishIds = dishes.map(d => String(d.id));
+    const [dishCategories, groups] = await Promise.all([
+      fetchDishCategoriesByDishIds(dishIds),
+      fetchComplementGroupsByDishIds(dishIds),
+    ]);
+    const groupIds = groups.map(g => g.id);
+    const complements = await fetchComplementsByGroupIds(groupIds);
+    const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
+
+    return result;
+  } catch (error) {
+    console.error('Erro ao buscar restaurante por slug:', error);
+    return null;
+  }
+}
 
 export async function fetchRestaurantByCuisineWithData(cuisineType: string): Promise<Restaurant | null> {
   const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&cuisine_type=eq.${encodeURIComponent(cuisineType)}&limit=1`);
@@ -450,10 +468,11 @@ export async function fetchRestaurantByCuisineWithData(cuisineType: string): Pro
 }
 
 // Leve: lista apenas dados básicos dos restaurantes para páginas estáticas (evita fetch dinâmico)
-export async function fetchRestaurantsBasic(): Promise<Array<{ id: string; name: string; image: string; welcome_message: string }>> {
+export async function fetchRestaurantsBasic(): Promise<Array<{ id: string; slug: string; name: string; image: string; welcome_message: string }>> {
   const rows = await fetchRestaurantsRows();
   return rows.map(r => ({
     id: String(r.id),
+    slug: r.slug || String(r.id),
     name: r.name,
     image: r.image_url || '',
     welcome_message: r.description || `Bem-vindo ao ${r.name}`,

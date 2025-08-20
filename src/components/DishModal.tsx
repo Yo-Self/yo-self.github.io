@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Dish, MenuItem } from "./data";
 import ComplementGrid from "./ComplementGrid";
 import ImageWithLoading from "./ImageWithLoading";
@@ -20,30 +20,13 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   const [isClosing, setIsClosing] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Interceptar o botão voltar do navegador quando o modal estiver aberto
-  useEffect(() => {
-    if (!open) return;
-
-    const handlePopState = (event: PopStateEvent) => {
-      // Prevenir a navegação padrão e fechar o modal
-      event.preventDefault();
-      handleClose();
-      
-      // Adicionar uma entrada no histórico para compensar a que foi removida
-      window.history.pushState(null, '', window.location.href);
-    };
-
-    // Adicionar entrada no histórico
-    window.history.pushState(null, '', window.location.href);
-
-    // Adicionar o listener para o evento popstate
-    window.addEventListener('popstate', handlePopState);
-
-    // Cleanup: remover o listener quando o modal fechar
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [open]);
+  const handleClose = React.useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 300); // Tempo da animação de saída
+  }, [onClose]);
 
   // Resetar seleções quando o prato mudar
   useEffect(() => {
@@ -53,13 +36,21 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     }
   }, [dish]);
 
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-      setIsClosing(false);
-    }, 300); // Tempo da animação de saída
-  };
+  // Adicionar listener para o botão voltar do navegador
+  useEffect(() => {
+    const handlePopState = () => {
+      if (open) {
+        handleClose();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup: remover o listener quando o modal fechar
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [open, handleClose]);
 
   const handleComplementToggle = (groupTitle: string, complementName: string) => {
     setSelectedComplements(prev => {

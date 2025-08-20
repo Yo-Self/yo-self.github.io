@@ -258,7 +258,7 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
             <button
               key={r.id}
               className={`relative w-full h-20 rounded-2xl overflow-hidden transition ring-offset-2 focus:outline-none ${r.id === selectedRestaurantId ? 'ring-2 ring-cyan-500' : ''}`}
-              onClick={() => { onSelect(r.id); setOpen(false); router.push(`/restaurant/${r.id}`); }}
+                              onClick={() => { onSelect(r.id); setOpen(false); router.push(`/restaurant/${r.slug || r.id}`); }}
             >
               <ImageWithLoading
                 src={r.image}

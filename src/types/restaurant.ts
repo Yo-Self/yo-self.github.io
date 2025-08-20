@@ -5,6 +5,9 @@ export interface Restaurant {
   /** ID único do restaurante */
   id: string;
   
+  /** Slug único para identificação amigável na URL */
+  slug: string;
+  
   /** Nome do restaurante */
   name: string;
   
@@ -200,6 +203,7 @@ export function isValidComplement(obj: any): obj is Complement {
 // Exemplo de uso e documentação
 export const RESTAURANT_SCHEMA_EXAMPLE = {
   id: "moendo",
+  slug: "moendo",
   name: "Moendo",
   welcome_message: "Bem-vindo ao Moendo - Experiência gastronômica única com pratos sofisticados e sabores inovadores",
   image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",

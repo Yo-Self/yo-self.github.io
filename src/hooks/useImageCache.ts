@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface CachedImage {
   src: string;
@@ -86,29 +86,29 @@ export function useImageCache() {
   const [cacheReady, setCacheReady] = useState(false);
   const cacheRef = useRef(globalImageCache);
 
-  const preloadImage = async (src: string): Promise<boolean> => {
+  const preloadImage = useCallback(async (src: string): Promise<boolean> => {
     return await cacheRef.current.preloadImage(src);
-  };
+  }, []);
 
-  const preloadImages = async (sources: string[]): Promise<void> => {
+  const preloadImages = useCallback(async (sources: string[]): Promise<void> => {
     await cacheRef.current.preloadImages(sources);
-  };
+  }, []);
 
-  const isImageLoaded = (src: string): boolean => {
+  const isImageLoaded = useCallback((src: string): boolean => {
     return cacheRef.current.isImageLoaded(src);
-  };
+  }, []);
 
-  const isImageError = (src: string): boolean => {
+  const isImageError = useCallback((src: string): boolean => {
     return cacheRef.current.isImageError(src);
-  };
+  }, []);
 
-  const getCachedImage = (src: string) => {
+  const getCachedImage = useCallback((src: string) => {
     return cacheRef.current.getCachedImage(src);
-  };
+  }, []);
 
-  const clearCache = () => {
+  const clearCache = useCallback(() => {
     cacheRef.current.clearCache();
-  };
+  }, []);
 
   return {
     preloadImage,
@@ -145,10 +145,10 @@ export function usePreloadDishImages(dishes: Array<{ image: string }>) {
     preloadAll();
   }, [dishes, preloadImages]);
 
-  const getPreloadProgress = () => {
+  const getPreloadProgress = useCallback(() => {
     if (dishes.length === 0) return 0;
     return (preloadedCount / dishes.length) * 100;
-  };
+  }, [dishes.length, preloadedCount]);
 
   return {
     preloadedCount,

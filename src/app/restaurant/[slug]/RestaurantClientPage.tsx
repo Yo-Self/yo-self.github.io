@@ -27,7 +27,13 @@ const getGridSteps = (hasMultiple: boolean) => [
     arrow: 'down',
   },
 ];
-const journalSteps = [
+
+const getJournalSteps = (hasMultiple: boolean) => [
+  ...(hasMultiple ? [{
+    selector: '[data-tutorial="restaurant-switch"]',
+    text: 'Aqui você pode trocar de restaurante.',
+    arrow: 'left',
+  }] : []),
   {
     selector: '[data-tutorial="journal-button"]',
     text: 'Aqui você acessa o modo jornal e ter a experiência de folhear o menu.',
@@ -45,7 +51,7 @@ const journalSteps = [
   },
 ];
 
-function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
+const FirstTimeTutorialGrid = ({ onDone }: { onDone: () => void }) => {
   const searchParams = useSearchParams();
   const hasMultiple = searchParams.has("multiple");
   const steps = React.useMemo(() => getGridSteps(hasMultiple), [hasMultiple]);
@@ -53,16 +59,18 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
   const [show, setShow] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const [pos, setPos] = React.useState({top:0,left:0,width:0,height:0});
-  const [tutorialTimers, setTutorialTimers] = React.useState<NodeJS.Timeout[]>([]);
+  
+  // Use useRef to store timers instead of state to avoid re-renders
+  const tutorialTimersRef = React.useRef<NodeJS.Timeout[]>([]);
   
   // Função para limpar todos os timers de tutorial
   const clearTutorialTimers = React.useCallback(() => {
-    tutorialTimers.forEach(timer => clearTimeout(timer));
-    setTutorialTimers([]);
-  }, [tutorialTimers]);
+    tutorialTimersRef.current.forEach(timer => clearTimeout(timer));
+    tutorialTimersRef.current = [];
+  }, []);
   
   // Função para pular para o próximo tutorial
-  const skipToNextTutorial = () => {
+  const skipToNextTutorial = React.useCallback(() => {
     clearTutorialTimers();
     
     if (step < steps.length - 1) {
@@ -72,7 +80,7 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
       if (typeof window !== 'undefined') localStorage.setItem('gridTutorialDone', '1');
       onDone();
     }
-  };
+  }, [step, steps.length, clearTutorialTimers, onDone]);
   
   React.useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('gridTutorialDone')) {
@@ -84,6 +92,7 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
   React.useEffect(() => {
     if (!show) return;
     if (step >= steps.length) return;
+    
     const el = document.querySelector(steps[step].selector) as HTMLElement;
     if (el) {
       const rect = el.getBoundingClientRect();
@@ -99,14 +108,16 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
         if (typeof window !== 'undefined') localStorage.setItem('gridTutorialDone', '1');
         onDone();
       }
-    }, 5000); // 4 segundos por passo
+    }, 5000); // 5 segundos por passo
     
-    setTutorialTimers([timer]);
+    // Store timer in ref instead of state
+    tutorialTimersRef.current = [timer];
     
     return () => {
-      clearTutorialTimers();
+      clearTimeout(timer);
+      tutorialTimersRef.current = [];
     };
-  }, [step, show, steps, onDone, clearTutorialTimers]);
+  }, [step, show, steps, onDone]); // Removed clearTutorialTimers from dependencies
   if (!isClient || !show || step >= steps.length) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;
@@ -164,22 +175,26 @@ function FirstTimeTutorialGrid({ onDone }: { onDone: () => void }) {
   );
 }
 
-function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
-  const steps = journalSteps;
+const FirstTimeTutorialJournal = ({ onDone }: { onDone: () => void }) => {
+  const searchParams = useSearchParams();
+  const hasMultiple = searchParams.has("multiple");
+  const steps = React.useMemo(() => getJournalSteps(hasMultiple), [hasMultiple]);
   const [step, setStep] = React.useState(0);
   const [show, setShow] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const [pos, setPos] = React.useState({top:0,left:0,width:0,height:0});
-  const [tutorialTimers, setTutorialTimers] = React.useState<NodeJS.Timeout[]>([]);
+  
+  // Use useRef to store timers instead of state to avoid re-renders
+  const tutorialTimersRef = React.useRef<NodeJS.Timeout[]>([]);
   
   // Função para limpar todos os timers de tutorial
   const clearTutorialTimers = React.useCallback(() => {
-    tutorialTimers.forEach(timer => clearTimeout(timer));
-    setTutorialTimers([]);
-  }, [tutorialTimers]);
+    tutorialTimersRef.current.forEach(timer => clearTimeout(timer));
+    tutorialTimersRef.current = [];
+  }, []);
   
   // Função para pular para o próximo tutorial
-  const skipToNextTutorial = () => {
+  const skipToNextTutorial = React.useCallback(() => {
     clearTutorialTimers();
     
     if (step < steps.length - 1) {
@@ -189,7 +204,7 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
       if (typeof window !== 'undefined') localStorage.setItem('journalTutorialDone', '1');
       onDone();
     }
-  };
+  }, [step, steps.length, clearTutorialTimers, onDone]);
   
   React.useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('journalTutorialDone')) {
@@ -201,6 +216,7 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
   React.useEffect(() => {
     if (!show) return;
     if (step >= steps.length) return;
+    
     const el = document.querySelector(steps[step].selector) as HTMLElement;
     if (!el) return;
     
@@ -217,12 +233,14 @@ function FirstTimeTutorialJournal({ onDone }: { onDone: () => void }) {
       }
     }, 4000); // 4 segundos por passo
     
-    setTutorialTimers([timer]);
+    // Store timer in ref instead of state
+    tutorialTimersRef.current = [timer];
     
     return () => {
-      clearTutorialTimers();
+      clearTimeout(timer);
+      tutorialTimersRef.current = [];
     };
-  }, [step, show, steps, onDone, clearTutorialTimers]);
+  }, [step, show, steps, onDone]); // Removed clearTutorialTimers from dependencies
   if (!isClient || !show || step >= steps.length) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;
@@ -397,7 +415,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
             searchTerm={searchTerm}
             onSearchTermChange={setSearchTerm}
             selectedCategory={selectedCategory}
-            data-tutorial-search
+            data-tutorial="search-button"
           />
         </>
       )}

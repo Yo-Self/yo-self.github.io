@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import RestaurantClientPage from "../[id]/RestaurantClientPage";
+import RestaurantClientPage from "../[slug]/RestaurantClientPage";
 import type { Restaurant } from "@/components/data";
 import { fetchFullRestaurants, fetchRestaurantByIdWithData } from "@/services/restaurants";
 

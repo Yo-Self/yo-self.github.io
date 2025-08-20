@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Restaurant, Dish } from "./data";
 import CardJornal from "./CardJornal";
 import DishModal from "./DishModal";
@@ -24,7 +24,9 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const [showCategoriesTutorial, setShowCategoriesTutorial] = useState(false);
   const [showPinTutorial, setShowPinTutorial] = useState(false);
   const [pinButtonPosition, setPinButtonPosition] = useState({ top: 0, left: 0 });
-  const [tutorialTimers, setTutorialTimers] = useState<NodeJS.Timeout[]>([]);
+  
+  // Use useRef instead of state for tutorial timers to avoid infinite re-renders
+  const tutorialTimersRef = useRef<NodeJS.Timeout[]>([]);
   
   // Refs para áudio
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -38,13 +40,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   // A prop é apenas para referência, mas o JournalView mantém sua própria lógica
   
   // Função para limpar todos os timers de tutorial
-  const clearTutorialTimers = React.useCallback(() => {
-    tutorialTimers.forEach(timer => clearTimeout(timer));
-    setTutorialTimers([]);
-  }, [tutorialTimers]);
+  const clearTutorialTimers = useCallback(() => {
+    tutorialTimersRef.current.forEach(timer => clearTimeout(timer));
+    tutorialTimersRef.current = [];
+  }, []);
   
   // Função para pular para o próximo tutorial
-  const skipToNextTutorial = () => {
+  const skipToNextTutorial = useCallback(() => {
     clearTutorialTimers();
     
     if (showSwipeTutorial) {
@@ -74,9 +76,9 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
           setShowPinTutorial(false);
           localStorage.setItem('journalSwipeTutorialDone', '1');
         }, 6000);
-        setTutorialTimers([pinTimer]);
+        tutorialTimersRef.current = [pinTimer];
       }, 6000);
-      setTutorialTimers([categoriesTimer]);
+      tutorialTimersRef.current = [categoriesTimer];
     } else if (showCategoriesTutorial) {
       setShowCategoriesTutorial(false);
       setShowPinTutorial(true);
@@ -101,12 +103,12 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         setShowPinTutorial(false);
         localStorage.setItem('journalSwipeTutorialDone', '1');
       }, 6000);
-      setTutorialTimers([pinTimer]);
+      tutorialTimersRef.current = [pinTimer];
     } else if (showPinTutorial) {
       setShowPinTutorial(false);
       localStorage.setItem('journalSwipeTutorialDone', '1');
     }
-  };
+  }, [showSwipeTutorial, showCategoriesTutorial, showPinTutorial, clearTutorialTimers]);
 
   // Funções de áudio para o som de virar página
   const initAudioContext = () => {
@@ -222,17 +224,17 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
               setShowPinTutorial(false);
               localStorage.setItem('journalSwipeTutorialDone', '1');
             }, 6000);
-            setTutorialTimers([pinTimer]);
+            tutorialTimersRef.current = [pinTimer];
           }, 6000);
-          setTutorialTimers([categoriesTimer]);
+          tutorialTimersRef.current = [categoriesTimer];
         }, 4000);
-        setTutorialTimers([timer]);
+        tutorialTimersRef.current = [timer];
       }
     }
     
     // Cleanup dos timers quando o componente for desmontado
     return () => {
-      tutorialTimers.forEach(timer => clearTimeout(timer));
+      tutorialTimersRef.current.forEach(timer => clearTimeout(timer));
     };
   }, [open]);
   
@@ -282,7 +284,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     window.addEventListener('resize', calculateCardsPerPage);
     
     return () => window.removeEventListener('resize', calculateCardsPerPage);
-  }, [tutorialTimers]);
+  }, []);
 
   // Detectar botão voltar do navegador e fechar o modo jornal
   useEffect(() => {
@@ -596,7 +598,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     });
     
     return pageToCategoryIdx;
-  }, [grouped, pinnedDishes, cardsPerPage, allPinnedDishes]);
+  }, [grouped, cardsPerPage, allPinnedDishes]);
   
   // Índice da categoria atual
   const currentCategoryIdx = React.useMemo(() => pageToCategoryIdx[page] || 0, [pageToCategoryIdx, page]);

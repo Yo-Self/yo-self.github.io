@@ -37,10 +37,10 @@ export type MenuItem = Omit<Dish, 'category'> & {
 
 export type Restaurant = {
   id: string;
+  slug: string;
   name: string;
   welcome_message: string;
   image: string;
-  slug?: string;
   waiter_call_enabled?: boolean;
   menu_categories: string[];
   featured_dishes: Dish[];

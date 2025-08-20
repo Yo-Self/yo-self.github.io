@@ -224,6 +224,7 @@ export default function Home() {
   // Use fallback data initially to avoid build issues
   const [moendoRestaurant, setMoendoRestaurant] = useState<Restaurant | null>({
     id: "fallback",
+    slug: "cafe-moendo",
     name: "Café Moendo",
     welcome_message: "Bem-vindo ao Café Moendo!",
     image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
