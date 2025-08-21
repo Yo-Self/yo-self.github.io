@@ -231,6 +231,16 @@ function composeRestaurantModel(
     categoriesByDishId.set(dc.dish_id, arr);
   }
 
+  // Mapear posições por prato para ordenação
+  const positionByDishId = new Map<string, number>();
+  for (const dc of dishCategories) {
+    // Se um prato tem múltiplas categorias, usar a menor posição
+    const currentPosition = positionByDishId.get(dc.dish_id);
+    if (currentPosition === undefined || dc.position < currentPosition) {
+      positionByDishId.set(dc.dish_id, dc.position);
+    }
+  }
+
   const groupsByDishId = new Map<string, DbComplementGroup[]>();
   for (const g of groups) {
     const arr = groupsByDishId.get(g.dish_id) || [];
@@ -244,6 +254,9 @@ function composeRestaurantModel(
     arr.push(c);
     complementsByGroupId.set(c.group_id, arr);
   }
+
+  // Tipo temporário para incluir a posição durante a ordenação
+  type MenuItemWithPosition = MenuItem & { _position: number };
 
   const menuItems: MenuItem[] = dishes
     .filter(d => d.name && d.name.trim() !== '') // Filtrar apenas pratos com nome válido
@@ -278,8 +291,19 @@ function composeRestaurantModel(
         allergens: d.allergens || 'Nenhum',
         portion: d.portion || 'Serve 1 pessoa',
         complement_groups: mappedGroups.length > 0 ? mappedGroups : undefined,
-      };
-    });
+        // Adicionar posição para ordenação
+        _position: positionByDishId.get(String(d.id)) ?? Number.MAX_SAFE_INTEGER,
+      } as MenuItemWithPosition;
+    })
+    // Ordenar por posição (menor primeiro) e depois por nome para pratos sem posição
+    .sort((a, b) => {
+      if (a._position !== b._position) {
+        return a._position - b._position;
+      }
+      return a.name.localeCompare(b.name);
+    })
+    // Remover o campo _position após ordenação
+    .map(({ _position, ...item }) => item);
 
   const featured = dishes
     .filter(d => !!d.is_featured && !!d.is_available && d.name && d.name.trim() !== '')
@@ -312,8 +336,20 @@ function composeRestaurantModel(
             ingredients: c.ingredients || '',
           })),
         })),
-      };
-    }).filter(dish => dish.name && dish.name.trim() !== ''); // Filtro adicional para garantir que o nome seja válido
+        // Adicionar posição para ordenação
+        _position: positionByDishId.get(String(d.id)) ?? Number.MAX_SAFE_INTEGER,
+      } as MenuItemWithPosition;
+    })
+    // Ordenar por posição (menor primeiro) e depois por nome para pratos sem posição
+    .sort((a, b) => {
+      if (a._position !== b._position) {
+        return a._position - b._position;
+      }
+      return a.name.localeCompare(b.name);
+    })
+    // Remover o campo _position após ordenação
+    .map(({ _position, ...item }) => item)
+    .filter(dish => dish.name && dish.name.trim() !== ''); // Filtro adicional para garantir que o nome seja válido
 
 
 
