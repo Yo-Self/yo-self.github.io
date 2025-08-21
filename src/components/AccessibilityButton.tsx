@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useAccessibility } from "./AccessibilityContext";
+import { useModalScroll } from '../hooks/useModalScroll';
 
 export default function AccessibilityButton() {
   const { fontSize, increaseFontSize, decreaseFontSize, resetFontSize, theme, setTheme } = useAccessibility();
@@ -31,6 +32,9 @@ export default function AccessibilityButton() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMenu]);
+
+  // Controlar o scroll do body quando o menu abrir/fechar
+  useModalScroll(showMenu);
 
   const handleMenuToggle = () => {
     if (showMenu) {

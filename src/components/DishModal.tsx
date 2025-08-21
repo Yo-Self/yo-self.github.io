@@ -5,6 +5,7 @@ import { Dish, MenuItem } from "./data";
 import ComplementGrid from "./ComplementGrid";
 import ImageWithLoading from "./ImageWithLoading";
 import WhatsAppButton from "./WhatsAppButton";
+import { useModalScroll } from '../hooks/useModalScroll';
 import "./dishModal.css";
 
 type DishModalProps = {
@@ -51,6 +52,9 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
       window.removeEventListener('popstate', handlePopState);
     };
   }, [open, handleClose]);
+
+  // Controlar o scroll do body quando o modal abrir/fechar
+  useModalScroll(open);
 
   const handleComplementToggle = (groupTitle: string, complementName: string) => {
     setSelectedComplements(prev => {

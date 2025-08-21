@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useIntegratedSearch, SearchResult } from '../hooks/useIntegratedSearch';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
+import { useModalScroll } from '../hooks/useModalScroll';
 import { Restaurant, Dish, MenuItem } from './data';
 import ChatDishCards from './ChatDishCards';
 import VoiceNotification from './VoiceNotification';
@@ -82,6 +83,9 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
       }, 1000);
     }
   }, [isOpen]);
+
+  // Controlar o scroll do body quando o chat abrir/fechar
+  useModalScroll(isOpen);
 
   // Efeito de entrada animada
   useEffect(() => {

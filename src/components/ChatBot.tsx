@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useWebLLM, ChatMessage } from '../hooks/useWebLLM';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
+import { useModalScroll } from '../hooks/useModalScroll';
 import { Restaurant, Dish } from './data';
 import ChatDishCards from './ChatDishCards';
 import VoiceNotification from './VoiceNotification';
@@ -61,6 +62,9 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
       }, 1000);
     }
   }, [isOpen]);
+
+  // Controlar o scroll do body quando o chat abrir/fechar
+  useModalScroll(isOpen);
 
   // Ler automaticamente novas mensagens do assistente
   useEffect(() => {

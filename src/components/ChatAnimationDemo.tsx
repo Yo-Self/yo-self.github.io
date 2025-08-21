@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useModalScroll } from '../hooks/useModalScroll';
 
 export default function ChatAnimationDemo() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,6 +27,9 @@ export default function ChatAnimationDemo() {
       setIsEntering(false);
     }
   }, [isOpen]);
+
+  // Controlar o scroll do body quando o chat abrir/fechar
+  useModalScroll(isOpen);
 
   const getButtonPosition = () => {
     if (!buttonRef?.current) return { x: 0, y: 0 };

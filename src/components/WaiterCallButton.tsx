@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useWaiterCalls } from '@/hooks/useWaiterCalls';
+import { useModalScroll } from '../hooks/useModalScroll';
 
 interface WaiterCallButtonProps {
   restaurantId: string;
@@ -219,6 +220,8 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     setShowModal(true);
   };
 
+  // Controlar o scroll do body quando o modal abrir/fechar
+  useModalScroll(showModal);
 
 
   return (

@@ -8,6 +8,7 @@ import SearchBar from "@/components/SearchBar";
 import AnimatedCategoryGrid from "@/components/AnimatedCategoryGrid";
 import { useSearchParams } from "next/navigation";
 import { SortOption } from "@/components/SortModal";
+import { useModalScroll } from "@/hooks/useModalScroll";
 
 interface RestaurantClientPageProps {
   initialRestaurant: Restaurant;
@@ -212,6 +213,9 @@ const FirstTimeTutorialJournal = ({ onDone }: { onDone: () => void }) => {
     }
     setIsClient(true);
   }, []);
+
+  // Controlar o scroll do body quando o tutorial abrir/fechar
+  useModalScroll(show);
   
   React.useEffect(() => {
     if (!show) return;

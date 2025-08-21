@@ -8,6 +8,7 @@ import DishCard from "./DishCard";
 import JournalView from "./JournalView";
 import IntegratedChatBot from "./IntegratedChatBot";
 import WaiterCallButton from "./WaiterCallButton";
+import { useModalScroll } from '../hooks/useModalScroll';
 
 
 interface SearchBarProps {
@@ -92,6 +93,9 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       }
     };
   }, [showSheet]);
+
+  // Controlar o scroll do body quando o sheet abrir/fechar
+  useModalScroll(showSheet);
 
   // Função para alternar o campo de busca corretamente
   const handleSearchButtonClick = () => {

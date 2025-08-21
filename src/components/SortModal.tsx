@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useModalScroll } from '../hooks/useModalScroll';
 
 export type SortOption = {
   field: "name" | "price" | "default";
@@ -23,6 +24,9 @@ export default function SortModal({ open, onClose, currentSort, onSortChange }: 
       setIsClosing(false);
     }
   }, [open]);
+
+  // Controlar o scroll do body quando o modal abrir/fechar
+  useModalScroll(open);
 
   const handleClose = () => {
     setIsClosing(true);
