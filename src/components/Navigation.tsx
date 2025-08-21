@@ -7,7 +7,7 @@ export default function Navigation() {
   const pathname = usePathname();
   
   // Não mostrar navegação em páginas específicas de restaurante
-  if (pathname.startsWith('/restaurant/') && pathname !== '/restaurant/') {
+  if (pathname.startsWith('/restaurant/')) {
     return null;
   }
 
@@ -37,26 +37,7 @@ export default function Navigation() {
             >
               Início
             </Link>
-            <Link
-              href="/restaurant/"
-              className={`text-sm font-medium transition-colors ${
-                pathname.startsWith('/restaurant/')
-                  ? 'text-cyan-600 dark:text-cyan-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400'
-              }`}
-            >
-              Restaurantes
-            </Link>
-            <Link
-              href="/organization/"
-              className={`text-sm font-medium transition-colors ${
-                pathname.startsWith('/organization/')
-                  ? 'text-cyan-600 dark:text-cyan-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400'
-              }`}
-            >
-              Organizações
-            </Link>
+
           </div>
         </div>
       </div>

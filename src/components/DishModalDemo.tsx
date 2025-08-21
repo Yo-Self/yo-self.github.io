@@ -6,7 +6,6 @@ import { Dish } from "./data";
 
 // Dados de exemplo para demonstração
 const demoDish: Dish = {
-  id: "demo-1",
   name: "Prato de Demonstração",
   description: "Este é um prato de exemplo para demonstrar as animações de abertura e fechamento do modal. Ele contém ingredientes frescos e é preparado com técnicas culinárias tradicionais.",
   price: "29,90",
@@ -21,9 +20,9 @@ const demoDish: Dish = {
       required: false,
       max_selections: 2,
       complements: [
-        { name: "Molho Branco", price: "3,00" },
-        { name: "Molho de Ervas", price: "2,50" },
-        { name: "Molho Picante", price: "2,00" }
+        { name: "Molho Branco", price: "3,00", description: "Molho cremoso branco", image: "/window.svg" },
+        { name: "Molho de Ervas", price: "2,50", description: "Molho com ervas frescas", image: "/window.svg" },
+        { name: "Molho Picante", price: "2,00", description: "Molho apimentado", image: "/window.svg" }
       ]
     },
     {
@@ -31,9 +30,9 @@ const demoDish: Dish = {
       required: true,
       max_selections: 1,
       complements: [
-        { name: "Arroz", price: "4,00" },
-        { name: "Feijão", price: "3,50" },
-        { name: "Salada", price: "5,00" }
+        { name: "Arroz", price: "4,00", description: "Arroz branco cozido", image: "/window.svg" },
+        { name: "Feijão", price: "3,50", description: "Feijão carioca", image: "/window.svg" },
+        { name: "Salada", price: "5,00", description: "Salada verde mista", image: "/window.svg" }
       ]
     }
   ]

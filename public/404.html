@@ -32,16 +32,10 @@
             return;
           }
           
-          // Se estiver acessando uma rota de restaurante que não existe, redireciona para a lista
+          // Se estiver acessando uma rota de restaurante que não existe, redireciona para a home
           var restaurantMatch = path.match(/^\/restaurant\/([^\/]+)\/$/);
           if (restaurantMatch) {
-            // Redireciona para a página de seleção de restaurantes
-            window.location.replace('/restaurant/' + search + hash);
-            return;
-          }
-          
-          // Se estiver na raiz do projeto, redireciona para a home
-          if (path === '/restaurant/') {
+            // Redireciona para a home (rota /restaurant/ removida por segurança)
             window.location.replace('/' + search + hash);
             return;
           }

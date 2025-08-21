@@ -101,7 +101,7 @@ export default function DynamicCarousel({
 
   const handleCardClick = (dish: any) => {
     // Na home institucional, não abrimos modal, apenas navegamos para o cardápio
-    window.location.href = '/restaurant/';
+    // Rota /restaurant/ removida por segurança - acesso apenas por slug
   };
 
   // Swipe handlers
