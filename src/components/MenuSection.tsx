@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import CategoriesBar from "./CategoriesBar";
 import useSwipeCategory from "./useSwipeCategory";
 import { MenuItem } from "./data";
@@ -23,13 +23,26 @@ interface MenuSectionProps {
   restaurant?: any; // Para acessar configurações do restaurante
 }
 
-export default function MenuSection({ searchTerm = "", menuItems, categories, fallbackImage, activeCategory, setActiveCategory, onGridClick, currentSort, onSortChange, restaurantId, restaurant }: MenuSectionProps) {
+export default function MenuSection({ 
+  searchTerm = "", 
+  menuItems, 
+  categories, 
+  fallbackImage, 
+  activeCategory, 
+  setActiveCategory, 
+  onGridClick, 
+  currentSort, 
+  onSortChange, 
+  restaurantId, 
+  restaurant 
+}: MenuSectionProps) {
   const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const isSearching = !!searchTerm.trim();
-  const [showFloatingCategories, setShowFloatingCategories] = useState(false);
+  const [isCategoriesFixed, setIsCategoriesFixed] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
+  const categoriesContainerRef = useRef<HTMLDivElement>(null);
   const prevSearchTerm = useRef(searchTerm);
 
   // Filtra categorias para mostrar apenas as que possuem produtos
@@ -52,15 +65,32 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
     // Se necessário, implemente scroll para a categoria ativa aqui
   }, [activeCategory, isSearching]);
 
+  // Função para verificar se a barra de categorias deve ser fixada
+  const checkCategoriesPosition = useCallback(() => {
+    if (!categoriesRef.current) return;
+    
+    const rect = categoriesRef.current.getBoundingClientRect();
+    const shouldBeFixed = rect.top <= 0;
+    
+    if (shouldBeFixed !== isCategoriesFixed) {
+      setIsCategoriesFixed(shouldBeFixed);
+    }
+  }, [isCategoriesFixed]);
+
+  // Listener de scroll para controlar a fixação da barra de categorias
   useEffect(() => {
     const handleScroll = () => {
-      if (!categoriesRef.current) return;
-      const rect = categoriesRef.current.getBoundingClientRect();
-      setShowFloatingCategories(rect.top < 0);
+      checkCategoriesPosition();
     };
+    
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [checkCategoriesPosition]);
+
+  // Verificar posição inicial
+  useEffect(() => {
+    checkCategoriesPosition();
+  }, [checkCategoriesPosition]);
 
   const handleCategoryClick = (category: string) => {
     setActiveCategory(category);
@@ -87,7 +117,7 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
       } else {
         // Ordenação por preço
         const priceA = parseFloat(a.price.replace(/[^\d,.-]/g, '').replace(',', '.'));
-        const priceB = parseFloat(b.price.replace(/[^\d,.-]/g, '').replace(',', '.'));
+        const priceB = parseFloat(a.price.replace(/[^\d,.-]/g, '').replace(',', '.'));
         return currentSort.direction === "asc" ? priceA - priceB : priceB - priceA;
       }
     });
@@ -110,21 +140,36 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
   return (
     <section className="menu-section py-0 bg-white dark:bg-black">
       <div className="container mx-auto px-0 pb-20">
-        {/* Barra de categorias sticky, fica no topo quando rola */}
+        {/* Container de referência para detectar quando a barra atinge o topo */}
+        <div ref={categoriesRef} className="h-0" />
+        
+        {/* Barra de categorias que pode ser fixa ou normal */}
         <div
-          ref={categoriesRef}
-          className="sticky top-0 z-40 bg-white dark:bg-black px-0 pb-1 md:pb-2 pl-4"
+          ref={categoriesContainerRef}
+          className={`categories-container transition-all duration-300 ease-in-out ${
+            isCategoriesFixed 
+              ? 'fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-700' 
+              : 'relative'
+          }`}
         >
-          <CategoriesBar
-            allCategories={availableCategories}
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            t={t}
-            menuItems={menuItems}
-            fallbackImage={fallbackImage}
-            onGridClick={onGridClick}
-          />
+          <div className={`px-0 pb-1 md:pb-2 pl-4 ${isCategoriesFixed ? 'pt-2' : ''}`}>
+            <CategoriesBar
+              allCategories={availableCategories}
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+              t={t}
+              menuItems={menuItems}
+              fallbackImage={fallbackImage}
+              onGridClick={onGridClick}
+            />
+          </div>
         </div>
+        
+        {/* Espaçador para compensar a altura da barra quando fixa */}
+        {isCategoriesFixed && (
+          <div className="h-32 md:h-36" />
+        )}
+        
         <div
           className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4"
           onTouchStart={handleTouchStart}
@@ -143,7 +188,13 @@ export default function MenuSection({ searchTerm = "", menuItems, categories, fa
           ))}
         </div>
       </div>
-      <DishModal open={modalOpen} dish={selectedDish} restaurantId={restaurantId} restaurant={restaurant} onClose={() => setModalOpen(false)} />
+      <DishModal 
+        open={modalOpen} 
+        dish={selectedDish} 
+        restaurantId={restaurantId} 
+        restaurant={restaurant} 
+        onClose={() => setModalOpen(false)} 
+      />
     </section>
   );
-} 
+}
