@@ -478,6 +478,31 @@ html:not(.dark) {
   color: #ededed !important;
 }
 
+/* Exceção para tags de complementos - manter cores específicas */
+.dark span.bg-red-500,
+.dark span.bg-blue-500,
+.dark span.bg-red-600,
+.dark span.bg-blue-600 {
+  color: inherit !important;
+}
+
+/* Garantir que as cores de fundo das tags de complementos sejam mantidas */
+.dark span.bg-red-500 {
+  background-color: #ef4444 !important;
+}
+
+.dark span.bg-red-600 {
+  background-color: #dc2626 !important;
+}
+
+.dark span.bg-blue-500 {
+  background-color: #3b82f6 !important;
+}
+
+.dark span.bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
 /* Garantir que elementos de fundo tenham o tema aplicado */
 .dark .bg-white {
   background-color: #0a0a0a !important;

@@ -24,13 +24,15 @@ export default function ComplementGrid({
             {complementGroup.description}
           </p>
         )}
+        {/* Tag "Obrigatório" - visível em ambos os temas */}
         {complementGroup.required && (
-          <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full mb-2">
+          <span className="inline-block bg-red-500 dark:bg-red-600 text-white text-xs px-2 py-1 rounded-full mb-2 font-medium shadow-sm">
             Obrigatório
           </span>
         )}
+        {/* Tag "Máximo X opção" - visível em ambos os temas */}
         {complementGroup.max_selections && (
-          <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full ml-2 mb-2">
+          <span className="inline-block bg-blue-500 dark:bg-blue-600 text-white text-xs px-2 py-1 rounded-full ml-2 mb-2 font-medium shadow-sm">
             Máximo {complementGroup.max_selections} opç{complementGroup.max_selections > 1 ? 'ões' : 'ão'}
           </span>
         )}
