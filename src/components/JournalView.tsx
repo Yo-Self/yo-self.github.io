@@ -32,6 +32,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const currentAudioSourceRef = useRef<AudioBufferSourceNode | null>(null);
   
   const itemsPerPage = 3;
   const categories = Array.from(new Set(restaurant.menu_items.flatMap(item => item.categories || [item.category]).filter(Boolean)));
@@ -134,6 +135,30 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   };
 
   const playPageFlipSound = React.useCallback(async () => {
+    // Parar qualquer som anterior
+    try {
+      if (currentAudioSourceRef.current) {
+        currentAudioSourceRef.current.stop();
+        currentAudioSourceRef.current = null;
+      }
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    } catch (error) {
+      // Silenciar erro
+    }
+
+    // Garantir que o áudio esteja disponível
+    if (!audioRef.current) {
+      const audioElement = document.createElement('audio');
+      audioElement.preload = 'auto';
+      audioElement.src = '/page-flip.mp3';
+      audioElement.muted = false;
+      audioElement.volume = 0.15;
+      audioRef.current = audioElement;
+    }
+
     // Primeiro, tentar com o elemento de áudio HTML
     try {
       if (audioRef.current) {
@@ -141,53 +166,118 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
           audioRef.current.src = '/page-flip.mp3';
         }
         
-        if (audioRef.current.readyState < 2) {
-          throw new Error('Audio not ready');
-        }
-        
-        audioRef.current.muted = false;
-        audioRef.current.volume = 0.3; // Volume mais baixo para o som de página
-        audioRef.current.currentTime = 0;
-        
-        const playPromise = audioRef.current.play();
-        
-        try {
-          await Promise.race([
-            playPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('HTML Audio timeout')), 1000))
-          ]);
-          return;
-        } catch (playError: any) {
-          // Silenciar erro
+        // Para navegação rápida, não aguardar o carregamento completo
+        // Se estiver pronto, tocar imediatamente
+        if (audioRef.current.readyState >= 2) {
+          audioRef.current.muted = false;
+          audioRef.current.volume = 0.15; // Volume reduzido em 50% (de 0.3 para 0.15)
+          audioRef.current.currentTime = 0;
+          
+          const playPromise = audioRef.current.play();
+          
+          try {
+            await Promise.race([
+              playPromise,
+              new Promise((_, reject) => setTimeout(() => reject(new Error('HTML Audio timeout')), 500))
+            ]);
+            return;
+          } catch (playError: any) {
+            // Continuar para Web Audio API
+          }
         }
       }
     } catch (error) {
-      // Silenciar erro
+      // Continuar para Web Audio API
     }
 
-    // Se HTML Audio falhar, tentar com Web Audio API
+    // Se HTML Audio falhar ou não estiver pronto, usar Web Audio API
     try {
       initAudioContext();
       await loadAudioFile();
       
       if (audioContextRef.current && audioBufferRef.current) {
         const source = audioContextRef.current.createBufferSource();
+        const gainNode = audioContextRef.current.createGain();
+        
         source.buffer = audioBufferRef.current;
-        source.connect(audioContextRef.current.destination);
+        source.connect(gainNode);
+        gainNode.connect(audioContextRef.current.destination);
+        
+        // Aplicar volume reduzido em 50% (0.15)
+        gainNode.gain.setValueAtTime(0.15, audioContextRef.current.currentTime);
+        
+        // Salvar referência do source atual
+        currentAudioSourceRef.current = source;
+        
         source.start(0);
+        
+        // Limpar referência quando o som terminar
+        source.onended = () => {
+          if (currentAudioSourceRef.current === source) {
+            currentAudioSourceRef.current = null;
+          }
+        };
+        
         return;
+      } else {
+        // Fallback: gerar um som simples
+        const fallbackContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = fallbackContext.createOscillator();
+        const gainNode = fallbackContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(fallbackContext.destination);
+        
+        oscillator.frequency.setValueAtTime(800, fallbackContext.currentTime);
+        // Volume reduzido em 50% (de 0.1 para 0.05)
+        gainNode.gain.setValueAtTime(0.05, fallbackContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.005, fallbackContext.currentTime + 0.1);
+        
+        oscillator.start(fallbackContext.currentTime);
+        oscillator.stop(fallbackContext.currentTime + 0.1);
       }
     } catch (error) {
       // Silenciar erro
     }
   }, []);
 
-  // Tocar som quando a página mudar
+  // Tocar som quando a página mudar (mantido para compatibilidade)
   useEffect(() => {
     if (open && page > 0) { // Não tocar na primeira página
-      playPageFlipSound();
+      // O som já foi tocado pelas funções de navegação, então não precisamos tocar novamente
     }
-  }, [page, open, playPageFlipSound]);
+  }, [page, open]);
+
+  // Inicializar áudio quando o componente for aberto
+  useEffect(() => {
+    if (open) {
+      // Garantir que o elemento de áudio exista
+      if (!audioRef.current) {
+        const audioElement = document.createElement('audio');
+        audioElement.preload = 'auto';
+        audioElement.src = '/page-flip.mp3';
+        audioElement.muted = false;
+        audioElement.volume = 0.15;
+        audioRef.current = audioElement;
+        
+        // Aguardar o carregamento do áudio
+        audioElement.addEventListener('canplaythrough', () => {
+        });
+        
+        audioElement.addEventListener('error', (e) => {
+        });
+      } else {
+        // Se já existe, garantir que esteja configurado corretamente
+        if (!audioRef.current.src || audioRef.current.src === '') {
+          audioRef.current.src = '/page-flip.mp3';
+        }
+        audioRef.current.muted = false;
+        audioRef.current.volume = 0.15;
+        // Pré-carregar o áudio
+        audioRef.current.load();
+      }
+    }
+  }, [open]);
   
   // Tutorial de primeira acesso para swipe
   useEffect(() => {
@@ -212,7 +302,6 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
                   left: rect.left
                 });
               } else {
-                console.log('Pin button not found, using fallback position');
                 // Fallback: posição estimada no primeiro card
                 setPinButtonPosition({
                   top: 120,
@@ -460,6 +549,33 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const pages = createPagesWithPinnedFirst;
   const totalPages = pages.length;
 
+  // Função para navegar para a próxima página com som
+  const goToNextPage = useCallback(() => {
+    if (page < totalPages - 1) {
+      setPage(prev => prev + 1);
+      // Tocar som imediatamente ao navegar
+      playPageFlipSound();
+    }
+  }, [page, totalPages, playPageFlipSound]);
+
+  // Função para navegar para a página anterior com som
+  const goToPrevPage = useCallback(() => {
+    if (page > 0) {
+      setPage(prev => prev - 1);
+      // Tocar som imediatamente ao navegar
+      playPageFlipSound();
+    }
+  }, [page, playPageFlipSound]);
+
+  // Função para navegar para uma página específica com som
+  const goToPage = useCallback((targetPage: number) => {
+    if (targetPage >= 0 && targetPage < totalPages) {
+      setPage(targetPage);
+      // Tocar som imediatamente ao navegar
+      playPageFlipSound();
+    }
+  }, [totalPages, playPageFlipSound]);
+
   // Remover este efeito:
   // useEffect(() => {
   //   if (grouped.length > 0) {
@@ -495,11 +611,11 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       if (distance > 0 && page < totalPages - 1) {
         newDirection = 'next';
         setFlipDirection('next');
-        setPage(prev => prev + 1);
+        goToNextPage();
       } else if (distance < 0 && page > 0) {
         newDirection = 'prev';
         setFlipDirection('prev');
-        setPage(prev => prev - 1);
+        goToPrevPage();
       }
     }
     touchStartX.current = null;
@@ -649,19 +765,11 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ 
-        duration: 0.5, 
+        duration: 0.3, 
         ease: [0.25, 0.46, 0.45, 0.94] 
       }}
     >
-      {/* Áudio para o som de virar página */}
-      <audio 
-        ref={audioRef} 
-        preload="auto" 
-        muted
-        src="/page-flip.mp3"
-      >
-        Seu navegador não suporta o elemento de áudio.
-      </audio>
+      {/* Áudio para o som de virar página - criado dinamicamente */}
       {/* Áreas clicáveis para avançar/retroceder página - apenas nas bordas laterais */}
       <button
         className="fixed left-0 top-0 h-full w-1/8 z-10 bg-transparent p-0 m-0 border-none outline-none"
@@ -672,7 +780,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
           if (e.clientX < 32) {
             if (page > 0) {
               setFlipDirection('prev');
-              setPage(prev => prev - 1);
+              goToPrevPage();
             }
           }
         }}
@@ -687,7 +795,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
           if (e.clientX > window.innerWidth - 32) {
             if (page < totalPages - 1) {
               setFlipDirection('next');
-              setPage(prev => prev + 1);
+              goToNextPage();
             }
           }
         }}
@@ -701,7 +809,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         onClick={() => {
           if (page > 0) {
             setFlipDirection('prev');
-            setPage(prev => prev - 1);
+            goToPrevPage();
           }
         }}
         disabled={page <= 0}
@@ -718,7 +826,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         }}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        transition={{ duration: 0.3, delay: 0.12 }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6" />
@@ -730,7 +838,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         onClick={() => {
           if (page < totalPages - 1) {
             setFlipDirection('next');
-            setPage(prev => prev + 1);
+            goToNextPage();
           }
         }}
         disabled={page >= totalPages - 1}
@@ -747,7 +855,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         }}
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        transition={{ duration: 0.3, delay: 0.12 }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6" />
@@ -770,7 +878,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
                 }}
                 initial={{ opacity: 0, scale: 0.8, y: -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                transition={{ duration: 0.24, delay: idx * 0.06 }}
                 whileHover={{
                   scale: 1.05,
                   y: -2,
@@ -787,12 +895,14 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
                   // Navegar para a primeira página da categoria clicada
                   const catIdx = categoryList.indexOf(cat);
                   const targetPage = pageToCategoryIdx.findIndex(idx => idx === catIdx);
-                  if (targetPage !== -1) setPage(targetPage);
+                  if (targetPage !== -1) {
+                    goToPage(targetPage);
+                  }
                 }}
                 aria-label={`Ir para categoria ${cat}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                transition={{ duration: 0.24, delay: idx * 0.06 }}
                 whileHover={{
                   scale: 1.2,
                   y: -2,
@@ -825,7 +935,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
+            transition={{ duration: 0.24, delay: 0.18 }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </motion.button>
@@ -854,13 +964,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
               scale: 1,
               filter: 'blur(0px)',
               transition: { 
-                duration: 0.8, 
+                duration: 0.48, 
                 ease: [0.25, 0.46, 0.45, 0.94],
-                rotateY: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
-                x: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
-                opacity: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
-                scale: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
-                filter: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
+                rotateY: { duration: 0.36, ease: [0.25, 0.46, 0.45, 0.94] },
+                x: { duration: 0.48, ease: [0.25, 0.46, 0.45, 0.94] },
+                opacity: { duration: 0.24, ease: [0.25, 0.46, 0.45, 0.94] },
+                scale: { duration: 0.36, ease: [0.25, 0.46, 0.45, 0.94] },
+                filter: { duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }
               }
             }}
             exit={{
@@ -871,13 +981,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
               filter: 'blur(2px)',
               transformOrigin: flipDirection === 'next' ? 'right center' : 'left center',
               transition: { 
-                duration: 0.6, 
+                duration: 0.36, 
                 ease: [0.25, 0.46, 0.45, 0.94],
-                rotateY: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
-                x: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
-                opacity: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-                scale: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
-                filter: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }
+                rotateY: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
+                x: { duration: 0.36, ease: [0.25, 0.46, 0.45, 0.94] },
+                opacity: { duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] },
+                scale: { duration: 0.24, ease: [0.25, 0.46, 0.45, 0.94] },
+                filter: { duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] }
               }
             }}
             style={{
