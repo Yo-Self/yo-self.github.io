@@ -97,6 +97,16 @@ export default function MenuSection({
     console.log('🔄 MenuSection: Ordenação mudou para:', currentSort);
   }, [currentSort]);
 
+  // Hook para controlar overflow - deve vir antes de qualquer return
+  React.useEffect(() => {
+    document.documentElement.style.overflowX = 'hidden';
+    document.body.style.overflowX = 'hidden';
+    return () => {
+      document.documentElement.style.overflowX = '';
+      document.body.style.overflowX = '';
+    };
+  }, []);
+
   const handleCategoryClick = (category: string) => {
     setActiveCategory(category);
   };
@@ -203,7 +213,7 @@ export default function MenuSection({
     return (
       <section className="menu-section py-0 bg-white dark:bg-black">
         <div className="container mx-auto px-4 py-8">
-          <p className="text-center text-gray-500 dark:text-gray-400">
+          <p className="text-center text-gray-500 dark:text-gray-100">
             Nenhum item encontrado para a categoria selecionada.
           </p>
         </div>
@@ -215,15 +225,6 @@ export default function MenuSection({
     setSelectedDish(item);
     setModalOpen(true);
   };
-
-  React.useEffect(() => {
-    document.documentElement.style.overflowX = 'hidden';
-    document.body.style.overflowX = 'hidden';
-    return () => {
-      document.documentElement.style.overflowX = '';
-      document.body.style.overflowX = '';
-    };
-  }, []);
 
   return (
     <section className="menu-section py-0 bg-white dark:bg-black">

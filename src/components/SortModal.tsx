@@ -171,9 +171,6 @@ export default function SortModal({ open, onClose, currentSort, onSortChange }: 
             </div>
           </div>
         </div>
-
-
-
       </div>
     </div>
   );
