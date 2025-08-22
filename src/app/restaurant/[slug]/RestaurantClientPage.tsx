@@ -308,6 +308,12 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [viewMode, setViewMode] = useState<"grid"|"list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentSort, setCurrentSort] = useState<SortOption>({ field: "default", direction: "asc" });
+  
+  // Log para debug da ordenação
+  const handleSortChange = (sort: SortOption) => {
+    console.log('🔄 RestaurantClientPage: Mudando ordenação para:', sort);
+    setCurrentSort(sort);
+  };
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
   
 
@@ -348,7 +354,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         selectedRestaurantId={selectedRestaurantId}
         onSelectRestaurant={setSelectedRestaurantId}
         currentSort={viewMode === "list" ? currentSort : undefined}
-        onSortChange={viewMode === "list" ? setCurrentSort : undefined}
+        onSortChange={viewMode === "list" ? handleSortChange : undefined}
         data-tutorial="restaurant-switch"
       />
       {/* Anchor do Carousel para scroll controlado */}
@@ -409,7 +415,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
             setActiveCategory={setSelectedCategory}
             onGridClick={handleGridClick}
             currentSort={currentSort}
-            onSortChange={setCurrentSort}
+            onSortChange={handleSortChange}
             restaurantId={selectedRestaurant.id}
             restaurant={selectedRestaurant}
           />

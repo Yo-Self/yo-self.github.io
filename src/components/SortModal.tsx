@@ -39,6 +39,7 @@ export default function SortModal({ open, onClose, currentSort, onSortChange }: 
   if (!open) return null;
 
   const handleSortChange = (field: "name" | "price" | "default", direction: "asc" | "desc") => {
+    console.log('🔄 SortModal: Mudando ordenação para:', { field, direction });
     onSortChange({ field, direction });
     handleClose();
   };
@@ -171,19 +172,8 @@ export default function SortModal({ open, onClose, currentSort, onSortChange }: 
           </div>
         </div>
 
-        <div 
-          className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 transform transition-all duration-300 delay-250"
-          style={{
-            animation: isClosing ? 'none' : 'fadeInUp 0.4s ease-out forwards'
-          }}
-        >
-          <button
-            onClick={handleClose}
-            className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-105 active:scale-95"
-          >
-            Cancelar
-          </button>
-        </div>
+
+
       </div>
     </div>
   );
