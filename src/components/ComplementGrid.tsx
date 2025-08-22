@@ -38,7 +38,7 @@ export default function ComplementGrid({
         )}
       </div>
       
-      <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
         {complementGroup.complements.map((complement) => {
           const isSelected = selectedComplements.has(complement.name);
           const isDisabled = complementGroup.max_selections && 

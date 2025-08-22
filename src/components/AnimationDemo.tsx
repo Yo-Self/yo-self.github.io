@@ -9,7 +9,7 @@ export default function AnimationDemo() {
       {/* Fade In */}
       <div className="max-w-4xl mx-auto px-4">
         <h3 className="text-xl font-semibold mb-4">Fade In</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <FadeInCard key={i} index={i} />
           ))}
@@ -19,7 +19,7 @@ export default function AnimationDemo() {
       {/* Slide Up */}
       <div className="max-w-4xl mx-auto px-4">
         <h3 className="text-xl font-semibold mb-4">Slide Up</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <SlideUpCard key={i} index={i} />
           ))}
@@ -29,7 +29,7 @@ export default function AnimationDemo() {
       {/* Scale In */}
       <div className="max-w-4xl mx-auto px-4">
         <h3 className="text-xl font-semibold mb-4">Scale In</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <ScaleInCard key={i} index={i} />
           ))}
@@ -39,7 +39,7 @@ export default function AnimationDemo() {
       {/* Rotate In */}
       <div className="max-w-4xl mx-auto px-4">
         <h3 className="text-xl font-semibold mb-4">Rotate In</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <RotateInCard key={i} index={i} />
           ))}

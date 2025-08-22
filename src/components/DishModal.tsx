@@ -160,7 +160,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">{dish.description}</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-3">
                 <div className="modal-info-item">
                   <span className="font-semibold text-gray-800 dark:text-gray-200">Ingredientes: </span>

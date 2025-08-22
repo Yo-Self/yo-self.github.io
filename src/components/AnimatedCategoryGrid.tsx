@@ -28,7 +28,7 @@ export default function AnimatedCategoryGrid({ categories, menuItems, onSelectCa
   );
   
   return (
-    <div className="grid grid-cols-2 gap-4 px-4 pt-4 pb-8 relative z-1">
+    <div className="grid grid-cols-2 gap-3 px-3 pt-3 pb-6 relative z-1">
       {filteredCategories.map((category, index) => {
         const items = menuItems.filter(item => 
           item.categories && item.categories.includes(category)

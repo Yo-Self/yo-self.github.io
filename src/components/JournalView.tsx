@@ -697,7 +697,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       {/* Botões visíveis de navegação (meio da página, cantos esquerdo e direito) */}
       <motion.button
         aria-label="Página anterior"
-        className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
+        className="fixed left-1 md:left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
         onClick={() => {
           if (page > 0) {
             setFlipDirection('prev');
@@ -720,13 +720,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </motion.button>
       <motion.button
         aria-label="Próxima página"
-        className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
+        className="fixed right-1 md:right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/50 hover:bg-black/60 text-white shadow-lg flex items-center justify-center"
         onClick={() => {
           if (page < totalPages - 1) {
             setFlipDirection('next');
@@ -749,18 +749,18 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6" />
         </svg>
       </motion.button>
       {/* Indicador de categoria no topo + botão de fechar alinhados */}
-      <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-1 mb-1 px-4" style={{maxWidth: 600, margin: '0 auto'}}>
-        <div className="flex gap-2 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
+      <div className="flex flex-row items-center w-full justify-between z-30 gap-0 mt-0 mb-0.5 px-1" style={{maxWidth: 600, margin: '0 auto'}}>
+        <div className="flex gap-1 flex-1 justify-center min-w-0 overflow-x-auto items-center" style={{maxWidth: 'calc(100vw - 64px)'}}>
           {categoryList.map((cat, idx) => (
             idx === currentCategoryIdx ? (
               <motion.span
                 key={cat}
-                className="text-xs font-bold text-white text-center leading-tight flex items-center justify-center bg-primary dark:bg-cyan-600 px-3 h-8 rounded-full shadow-lg whitespace-nowrap"
+                className="text-xs font-bold text-white text-center leading-tight flex items-center justify-center bg-primary dark:bg-cyan-600 px-2 h-7 rounded-full shadow-lg whitespace-nowrap"
                 style={{
                   minWidth: 'fit-content',
                   maxWidth: 150,
@@ -782,7 +782,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             ) : (
               <motion.button
                 key={cat}
-                className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-400 dark:border-gray-500"
+                className="h-5 w-5 rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-400 dark:border-gray-500"
                 onClick={() => {
                   // Navegar para a primeira página da categoria clicada
                   const catIdx = categoryList.indexOf(cat);
@@ -810,7 +810,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         {/* Botão de fechar */}
         <div className="flex flex-row items-center gap-0">
           <motion.button
-            className="w-10 h-10 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0"
+            className="w-8 h-8 flex items-center justify-center z-40 bg-transparent border-none shadow-none p-0 m-0 flex-shrink-0"
             onClick={onClose}
             aria-label="Fechar jornal"
             style={{ background: 'none', border: 'none', boxShadow: 'none' }}
@@ -827,13 +827,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </motion.button>
         </div>
       </div>
       {/* Cards de pratos em grid */}
       <div 
-        className="flex flex-col items-center w-full flex-1 relative px-4 md:px-8 max-w-screen-md mx-auto z-10" 
+        className="flex flex-col items-center w-full flex-1 relative px-1 md:px-2 max-w-screen-md mx-auto z-10 pt-0" 
         style={{perspective: 2000}}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -1141,9 +1141,9 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
               }}
             />
             
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 w-full max-w-7xl mx-auto px-2 md:px-4">
-                              {pages[page]?.map((item, idx) => {
-                  return (
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-0.5 w-full max-w-7xl mx-auto px-0.5 md:px-1">
+              {pages[page]?.map((item, idx) => {
+                return (
                   <div key={`${item.dish.name}-${item.category}-${page}-${idx}`} className="flex justify-center items-center">
                     <div className="w-full max-w-xs">
                       <motion.div

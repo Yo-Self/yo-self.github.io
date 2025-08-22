@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Dish } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
+import { useCardVisibility } from "../hooks/useCardVisibility";
 
 interface CardJornalProps {
   dish: Dish;
@@ -12,8 +13,24 @@ interface CardJornalProps {
 }
 
 export default function CardJornal({ dish, onClick, size = "small", fallbackImage, isPinned = false, onPinToggle }: CardJornalProps) {
+  const { cardRef, isVisible } = useCardVisibility();
+
+  // Só começa a verificar a visibilidade após o primeiro render
+  // Isso evita que o card desapareça imediatamente
+  const [hasRendered, setHasRendered] = useState(false);
+  
+  useEffect(() => {
+    setHasRendered(true);
+  }, []);
+
+  // Se ainda não renderizou ou se está visível, mostra o card
+  if (hasRendered && !isVisible) {
+    return null;
+  }
+
   return (
     <div
+      ref={cardRef}
       className={`menu-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col items-center ${size === "small" ? "max-w-2xl" : ""}`}
       onClick={onClick}
       style={{ paddingBottom: 0, minHeight: 144 }}
@@ -87,14 +104,14 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
           </span>
           {/* Nome do prato no canto inferior esquerdo */}
           <div className="absolute bottom-2 left-2 right-16">
-            <h3 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight">
+            <h3 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight line-clamp-3 overflow-hidden">
               {dish.name}
             </h3>
           </div>
         </ImageWithLoading>
       </div>
-      <div className="w-full p-2">
-        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-tight">
+      <div className="w-full p-2 min-h-[3rem] flex items-start">
+        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-tight w-full">
           {dish.description}
         </p>
       </div>

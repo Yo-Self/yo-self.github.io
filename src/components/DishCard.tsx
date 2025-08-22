@@ -35,7 +35,7 @@ export default function DishCard({ dish, onClick, size = "large", fallbackImage 
           </div>
         </ImageWithLoading>
       </div>
-      <div className="w-full p-4">
+      <div className="w-full p-3">
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>
         <div className="flex items-center justify-between">
           <span className="font-bold text-primary dark:text-cyan-300">R${dish.price}</span>

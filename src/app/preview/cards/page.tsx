@@ -109,7 +109,7 @@ export default function CardsPreviewPage() {
           <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
             Características do Carrossel Melhorado:
           </h3>
-          <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
             <div>
               <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Animações:</h4>
               <ul className="space-y-1">

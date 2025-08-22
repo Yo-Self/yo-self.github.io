@@ -260,7 +260,7 @@ export default function MenuSection({
         )}
         
         <div
-          className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4"
+          className="menu-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 px-3"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}

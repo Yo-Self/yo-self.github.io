@@ -15,7 +15,7 @@ export default function AnimatedChatDishCards({ dishes, onDishClick }: AnimatedC
       <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
         🍽️ Pratos recomendados:
       </p>
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-1">
         {dishes.map((dish, index) => (
           <AnimatedChatDishCard 
             key={`${dish.name}-${index}`} 

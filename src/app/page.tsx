@@ -193,7 +193,7 @@ export default function Home() {
           <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-fuchsia-300/30 blur-3xl" />
         </div>
         <div className="mx-auto max-w-6xl px-6 py-24 md:py-28 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
                 Plataforma de cardápio digital focada em experiência e acessibilidade
@@ -230,7 +230,7 @@ export default function Home() {
 
       {/* Features */}
       <section id="features" className="mx-auto max-w-6xl px-6 py-16 md:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 shadow">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Acessibilidade real</h3>
             <p className="mt-2 text-gray-600 dark:text-gray-300">Contraste adequado, suporte a leitores de tela, fontes ajustáveis e navegação por teclado e gestos. Seu cardápio para todos.</p>
@@ -276,7 +276,7 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-6 pb-16 md:pb-24">
         <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white text-center">Um cardápio que conquista no primeiro olhar</h2>
         <p className="mt-3 text-center text-gray-600 dark:text-gray-300 mb-12">Veja exemplos de como seu cardápio pode ficar dentro do Yoself.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 p-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">Cards de Pratos</h3>
             <div className="space-y-4">
