@@ -1463,6 +1463,11 @@ button span.text-white {
   }
 }
 
+/* Animações personalizadas para o carrossel */
+.carousel-card {
+  transition: transform 0.5s ease-in-out;
+}
+
 /* Dispositivos móveis em geral */
 @media (max-width: 768px), (max-device-width: 768px) {
   /* Carousel */
