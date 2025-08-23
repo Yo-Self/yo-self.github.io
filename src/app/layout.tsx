@@ -22,12 +22,10 @@ export const metadata = {
   description: "Digital menu for restaurants",
   icons: {
     icon: [
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/yoself.png", sizes: "any", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.png",
-    shortcut: "/favicon.ico",
+    apple: "/yoself.png",
+    shortcut: "/yoself.png",
   },
   openGraph: {
     title: "Restaurant Menu",
@@ -50,10 +48,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
-        <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/yoself.png" type="image/png" />
+        <link rel="shortcut icon" href="/yoself.png" />
+        <link rel="apple-touch-icon" href="/yoself.png" />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="/og-image.png" />
