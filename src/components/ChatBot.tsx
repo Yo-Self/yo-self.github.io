@@ -34,21 +34,99 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
   const [showVoiceNotification, setShowVoiceNotification] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [userScrolling, setUserScrolling] = useState(false);
 
   // Auto-scroll para a última mensagem
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = useCallback(() => {
+    // Não fazer scroll automático se o usuário estiver fazendo scroll manualmente
+    if (userScrolling) return;
+    
+    if (messagesEndRef.current) {
+      // Usar scrollIntoView com opções mais suaves
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
+    }
+  }, [userScrolling]);
+
+  // Função para scroll manual para o topo
+  const scrollToTop = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, []);
+
+  // Função para scroll manual para o final
+  const scrollToBottomManual = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+      setUserScrolling(false); // Resetar flag de scroll manual
+    }
+  }, []);
+
+  // Detectar scroll manual do usuário
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      setUserScrolling(true);
+      
+      // Resetar flag após um tempo de inatividade
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        setUserScrolling(false);
+      }, 1000);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Aguardar um pouco para garantir que o DOM foi atualizado
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [messages, scrollToBottom]);
+
+  // Scroll automático também quando estiver carregando
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 200);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, scrollToBottom]);
 
   // Focar no input quando abrir
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => {
         inputRef.current?.focus();
+        // Garantir que o scroll esteja funcionando
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
       }, 300);
     }
   }, [isOpen]);
@@ -191,6 +269,43 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Botões de navegação de scroll */}
+            <div className="flex items-center gap-1 mr-2">
+              <button
+                onClick={scrollToTop}
+                className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                title="Ir para o topo"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+              </button>
+              <button
+                onClick={scrollToBottomManual}
+                className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                title="Ir para o final"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </button>
+              {userScrolling && (
+                <div className="ml-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                  Scroll manual
+                </div>
+              )}
+              {/* Debug: mostrar status do scroll */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                  {messagesContainerRef.current ? 
+                    `Scroll: ${Math.round(messagesContainerRef.current.scrollTop)}/${Math.round(messagesContainerRef.current.scrollHeight - messagesContainerRef.current.clientHeight)}` : 
+                    'No container'
+                  }
+                </div>
+              )}
+            </div>
+            
             {/* Botão de configurações de voz */}
             <button
               onClick={() => setShowVoiceSettings(!showVoiceSettings)}
@@ -319,7 +434,7 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-messages" ref={messagesContainerRef}>
           {messages.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">

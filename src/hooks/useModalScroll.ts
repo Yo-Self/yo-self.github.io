@@ -12,11 +12,13 @@ export function useModalScroll(isOpen: boolean) {
     const scrollY = window.scrollY;
     const scrollX = window.scrollX;
 
-    // Adicionar classes para bloquear scroll
+    // Adicionar classes para bloquear scroll apenas do body principal
+    // Não bloquear completamente para permitir scroll interno nos modais
     document.documentElement.classList.add('modal-open');
     document.body.classList.add('modal-open');
     
     // Aplicar posição fixa para manter a posição do scroll
+    // Mas permitir scroll interno nos modais
     document.body.style.top = `-${scrollY}px`;
     document.body.style.left = `-${scrollX}px`;
 

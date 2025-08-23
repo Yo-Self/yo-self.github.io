@@ -19,12 +19,76 @@ html, body {
 }
 
 /* Classe para bloquear scroll quando modal está aberto */
-html.modal-open,
+/* Modificado para permitir scroll interno nos modais */
+html.modal-open {
+  overflow: hidden;
+}
+
 body.modal-open {
-  overflow: hidden !important;
-  position: fixed !important;
-  width: 100% !important;
-  height: 100% !important;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  /* Permitir scroll interno nos modais */
+  overscroll-behavior: contain;
+}
+
+/* Garantir que modais internos possam fazer scroll */
+.modal-open .overflow-y-auto,
+.modal-open .overflow-auto {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* Permitir scroll interno */
+  overscroll-behavior: contain;
+}
+
+/* Garantir que o chat possa fazer scroll */
+.modal-open .chat-messages,
+.modal-open [class*="overflow-y-auto"] {
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+/* Regras específicas para o chat */
+.chat-messages {
+  /* Garantir que o scroll funcione corretamente */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* Permitir scroll interno */
+  overscroll-behavior: contain;
+  /* Melhorar a experiência de scroll */
+  scroll-behavior: smooth;
+  /* Garantir que o scroll funcione mesmo com o modal aberto */
+  position: relative;
+  z-index: 1;
+  /* Garantir que o scroll funcione em todos os navegadores */
+  -webkit-overflow-scrolling: touch;
+  /* Prevenir conflitos de scroll */
+  isolation: isolate;
+}
+
+/* Garantir que os botões de scroll sejam visíveis */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* Para Firefox */
+.chat-messages {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
 }
 
 body {
