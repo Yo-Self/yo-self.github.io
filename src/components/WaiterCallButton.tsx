@@ -241,24 +241,14 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
       {/* Botão de chamar garçom */}
       <button
         onClick={handleButtonClick}
-        className={`${className || "w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 shadow-lg flex items-center justify-center"} transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-xl`}
+        className={`${className || "w-8 h-8 rounded-full bg-white/80 hover:bg-white/90 dark:!bg-gray-900/80 dark:hover:!bg-gray-900/90 border-2 border-white/60 dark:!border-gray-800/60 shadow-lg backdrop-blur-sm flex items-center justify-center"} transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-xl`}
         aria-label="Chamar garçom"
         title="Chamar garçom"
         data-waiter-button
         {...props}
       >
-        <svg width="45" height="45" viewBox="0 0 258 234" fill="none" style={{ display: 'block' }}>
-          <defs>
-            <linearGradient id="waiter-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#06b6d4">
-                <animate attributeName="stop-color" values="#06b6d4;#818cf8;#f472b6;#facc15;#06b6d4" dur="2.5s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor="#facc15">
-                <animate attributeName="stop-color" values="#facc15;#06b6d4;#818cf8;#f472b6;#facc15" dur="2.5s" repeatCount="indefinite" />
-              </stop>
-            </linearGradient>
-          </defs>
-          <g transform="translate(0.000000,234.000000) scale(0.100000,-0.100000)" fill="url(#waiter-gradient)" stroke="none">
+        <svg width="55" height="55" viewBox="0 0 258 234" fill="none" style={{ display: 'block' }}>
+          <g transform="translate(0.000000,234.000000) scale(0.100000,-0.100000)" className="fill-gray-700 dark:fill-white" stroke="none">
             <path d="M2014 2098 c-34 -34 -131 -98 -319 -210 -303 -181 -982 -644 -1003 -684 -29 -56 21 -134 87 -134 31 0 83 33 351 219 l315 219 40 -28 c22 -15 73 -46 114 -71 l74 -43 -189 -182 c-186 -180 -189 -182 -189 -224 0 -35 6 -47 33 -71 23 -20 43 -29 68 -29 32 0 52 17 231 188 187 179 197 187 243 193 147 20 360 229 360 355 0 28 12 44 89 116 l89 83 -173 176 -173 177 -48 -50z m196 -150 c77 -78 140 -146 140 -151 0 -13 -129 -135 -136 -128 -3 3 -4 2 -3 -4 6 -23 -36 -151 -59 -177 -8 -10 -13 -18 -10 -18 10 0 -95 -105 -138 -138 -23 -18 -51 -32 -62 -32 -12 0 -23 -4 -27 -9 -3 -5 -29 -15 -58 -21 -42 -9 -63 -21 -112 -68 -269 -255 -323 -302 -349 -302 -31 0 -66 32 -66 60 0 22 82 117 142 165 20 17 37 36 37 43 1 6 5 12 10 12 16 0 171 163 171 180 0 9 -9 26 -20 38 -21 22 -135 92 -151 92 -5 0 -9 4 -9 8 0 11 -45 32 -67 32 -17 0 -35 -11 -146 -86 -32 -21 -65 -43 -74 -49 -9 -5 -26 -18 -37 -28 -11 -10 -31 -20 -43 -23 -13 -4 -23 -10 -23 -14 0 -5 -33 -30 -72 -56 -40 -27 -75 -50 -78 -54 -3 -3 -27 -21 -55 -39 -27 -19 -53 -40 -57 -45 -4 -6 -8 -7 -8 -2 0 5 -8 2 -17 -6 -34 -30 -61 -31 -88 -4 -46 46 -31 71 90 154 34 23 64 42 67 42 7 0 45 30 84 66 12 12 25 20 28 17 3 -3 12 2 21 10 9 9 64 49 123 88 59 39 126 87 150 106 23 19 42 32 42 28 0 -3 12 6 27 20 15 14 31 25 35 25 4 0 32 16 62 35 30 19 58 35 61 35 4 0 25 13 48 29 50 34 145 91 153 91 5 0 64 40 74 50 3 3 23 14 45 26 81 42 105 58 164 111 20 18 40 33 44 33 4 0 71 -64 147 -142z"/>
             <path d="M1338 1402 c-94 -65 -98 -69 -124 -135 -36 -90 -29 -105 66 -140 l72 -27 69 63 c38 34 69 64 69 67 0 3 -20 12 -45 19 -25 7 -45 16 -45 20 0 4 16 47 35 96 51 130 42 133 -97 37z m66 -24 c-4 -13 -11 -34 -17 -48 -17 -43 -15 -63 10 -87 12 -13 23 -28 23 -32 0 -19 -72 -72 -89 -66 -9 4 -29 12 -46 17 -53 19 -60 30 -44 83 15 49 41 79 110 124 54 36 62 37 53 9z"/>
             <path d="M1463 1361 l-30 -79 41 -16 41 -16 43 44 44 44 -52 17 c-41 13 -50 20 -45 34 11 26 11 44 -1 48 -6 2 -25 -32 -41 -76z m51 -27 c17 -7 10 -34 -9 -34 -17 0 -28 17 -20 30 7 12 8 12 29 4z"/>

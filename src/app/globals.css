@@ -1550,3 +1550,27 @@ button span.text-white {
     padding-top: 0 !important;
   }
 }
+
+/* Garantir que os botões tenham fundo preto no modo escuro */
+.dark [data-tutorial="journal-button"],
+.dark [data-tutorial="waiter-button"],
+.dark [data-tutorial="search-button"] {
+  background-color: rgba(17, 24, 39, 0.8) !important;
+  border-color: rgba(17, 24, 39, 0.6) !important;
+}
+
+.dark [data-tutorial="journal-button"]:hover,
+.dark [data-tutorial="waiter-button"]:hover,
+.dark [data-tutorial="search-button"]:hover {
+  background-color: rgba(17, 24, 39, 0.9) !important;
+}
+
+/* Forçar ícones brancos no modo escuro */
+.dark [data-tutorial="journal-button"] svg path,
+.dark [data-tutorial="waiter-button"] svg path,
+.dark [data-tutorial="search-button"] svg path,
+.dark [data-tutorial="search-button"] svg circle,
+.dark [data-tutorial="search-button"] svg line {
+  fill: white !important;
+  stroke: white !important;
+}
