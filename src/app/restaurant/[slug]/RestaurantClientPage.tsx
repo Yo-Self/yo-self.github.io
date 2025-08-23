@@ -359,8 +359,8 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
       />
       {/* Anchor do Carousel para scroll controlado */}
       <div ref={carouselRef} />
-      {/* Carousel: mostra todos os destaques na home, só os da categoria selecionada na categoria */}
-      {viewMode === 'grid' ? (
+      {/* Carousel: mostra apenas na home (modo grid) */}
+      {viewMode === 'grid' && (
         <Carousel 
           restaurant={{
             ...selectedRestaurant,
@@ -370,25 +370,6 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
           }} 
           data-tutorial="carousel" 
         />
-      ) : (
-        (() => {
-          // Filtra destaques da categoria selecionada e remove itens undefined
-          const featured = selectedCategory === 'all'
-            ? (Array.isArray(selectedRestaurant.featured_dishes) ? selectedRestaurant.featured_dishes : []).filter(dish => dish && dish.name && dish.name.trim() !== '')
-            : (Array.isArray(selectedRestaurant.featured_dishes) ? selectedRestaurant.featured_dishes : []).filter(dish => 
-                dish && dish.name && dish.name.trim() !== '' && (dish.category === selectedCategory || 
-                (dish.categories && dish.categories.includes(selectedCategory)))
-              );
-          
-
-          
-          if (!featured || featured.length === 0) return null;
-          // Cria um objeto restaurant fake só com os destaques filtrados
-          const filteredRestaurant = { ...selectedRestaurant, featured_dishes: featured };
-          return (
-            <Carousel restaurant={filteredRestaurant} data-tutorial="carousel" showMostOrderedTitle={selectedCategory !== 'all'} />
-          );
-        })()
       )}
       {viewMode === "grid" ? (
         <>
