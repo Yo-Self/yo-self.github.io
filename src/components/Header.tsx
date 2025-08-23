@@ -263,6 +263,7 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
               <ImageWithLoading
                 src={r.image}
                 alt={r.name}
+                clickable={false}
                 className="object-cover w-full h-full rounded-2xl"
                 fallbackSrc="/window.svg"
               />

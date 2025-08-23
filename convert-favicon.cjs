@@ -31,7 +31,7 @@ async function main() {
     fs.writeFileSync(icoPath, icoBuf);
   }
 
-  console.log('Gerados: favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png, apple-touch-icon-precomposed.png, og-image.png');
+
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

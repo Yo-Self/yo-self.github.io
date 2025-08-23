@@ -44,6 +44,7 @@ export default function AnimatedDishCard({
           src={dish.image}
           alt={dish.name}
           fallbackSrc={fallbackImage}
+          clickable={false}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
         >
           <div 

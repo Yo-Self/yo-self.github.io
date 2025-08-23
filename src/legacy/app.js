@@ -411,7 +411,7 @@ function initShareButton() {
             try {
                 await navigator.share(shareData);
             } catch (err) {
-                console.log('Error sharing:', err);
+                // Error sharing
             }
         } else {
             // Fallback - copy to clipboard

@@ -46,6 +46,7 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
         <ImageWithLoading
           src={dish.image || '/window.svg'}
           alt={dish.name || 'Item do cardápio'}
+          clickable={false}
           className="w-full h-full object-cover animate-kenburns"
           fallbackSrc="/window.svg"
         >

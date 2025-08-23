@@ -69,7 +69,6 @@ async function main() {
   ];
 
   await Promise.all(tasks);
-  console.log('PNG favicons and OG image generated in /public');
 }
 
 main().catch((err) => {

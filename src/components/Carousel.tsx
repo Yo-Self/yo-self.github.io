@@ -24,6 +24,7 @@ function CarouselCard({ dish, onClick, isActive, showMostOrderedTitle }: Carouse
         <ImageWithLoading
           src={dish.image || '/window.svg'}
           alt={dish.name || 'Item do cardápio'}
+          clickable={false}
           className="w-full h-full object-cover"
         >
           {showMostOrderedTitle && (

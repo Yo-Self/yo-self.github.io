@@ -108,6 +108,7 @@ function AnimatedCategoryCard({
       <ImageWithLoading
         src={currentImg}
         alt={category}
+        clickable={false}
         className="object-cover w-full h-full absolute inset-0 z-0"
         fallbackSrc={fallbackImage}
       />
@@ -116,6 +117,7 @@ function AnimatedCategoryCard({
         <ImageWithLoading
           src={nextImg}
           alt={category}
+          clickable={false}
           className="object-cover w-full h-full absolute inset-0 z-10 transition-opacity duration-1000 opacity-0 animate-fadein"
           fallbackSrc={fallbackImage}
         />

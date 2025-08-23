@@ -307,6 +307,7 @@ export default function Home() {
                     <ImageWithLoading
                       src={dish.image}
                       alt={dish.name}
+                      clickable={false}
                       className="w-full h-20 object-cover rounded-lg"
                       fallbackSrc="/window.svg"
                     >

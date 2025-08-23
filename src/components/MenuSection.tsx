@@ -94,7 +94,7 @@ export default function MenuSection({
   
   // Forçar re-renderização quando a ordenação mudar
   useEffect(() => {
-    console.log('🔄 MenuSection: Ordenação mudou para:', currentSort);
+    // Ordenação mudou
   }, [currentSort]);
 
   // Hook para controlar overflow - deve vir antes de qualquer return
@@ -114,20 +114,15 @@ export default function MenuSection({
   let filteredItems: MenuItem[] = [];
   if (activeCategory === "all") {
     filteredItems = [...menuItems]; // Criar uma cópia para não modificar o array original
-    console.log('🔍 Mostrando todos os itens:', menuItems.length);
   } else {
     filteredItems = menuItems.filter(item => 
       item.categories && Array.isArray(item.categories) && item.categories.includes(activeCategory)
     );
-    console.log(`🔍 Filtrando por categoria "${activeCategory}":`, filteredItems.length, 'de', menuItems.length);
   }
 
   // Aplica ordenação se especificada
-  console.log('🔍 Verificando ordenação:', { currentSort, filteredItemsLength: filteredItems.length });
   
   if (currentSort && currentSort.field !== "default") {
-    console.log('🔍 Aplicando ordenação:', currentSort);
-    console.log('📊 Itens antes da ordenação:', filteredItems.length);
     
     // Criar uma cópia para ordenação
     const itemsToSort = [...filteredItems];
@@ -148,7 +143,6 @@ export default function MenuSection({
           ? nameA.localeCompare(nameB, 'pt-BR')
           : nameB.localeCompare(nameA, 'pt-BR');
         
-        console.log(`📝 Comparando nomes: "${a.name}" vs "${b.name}" = ${result}`);
         return result;
       } else if (currentSort.field === "price") {
         // Ordenação por preço - melhorada para diferentes formatos
@@ -167,8 +161,6 @@ export default function MenuSection({
         const priceA = extractPrice(a.price);
         const priceB = extractPrice(b.price);
         
-        console.log(`💰 Comparando preços: "${a.price}" (${priceA}) vs "${b.price}" (${priceB})`);
-        
         const result = currentSort.direction === "asc" ? priceA - priceB : priceB - priceA;
         return result;
       }
@@ -177,35 +169,9 @@ export default function MenuSection({
     
     // Atualizar a variável filteredItems com os itens ordenados
     filteredItems = itemsToSort;
-    
-    console.log('✅ Itens após ordenação:', filteredItems.length);
-    console.log('📋 Primeiros itens ordenados:', filteredItems.slice(0, 3).map(item => ({ name: item.name, price: item.price })));
-    console.log('🔄 Ordenação aplicada com sucesso!');
-  } else {
-    console.log('ℹ️ Nenhuma ordenação aplicada (campo padrão ou não especificado)');
   }
   
-  console.log('🎨 Renderizando', filteredItems.length, 'itens na grade');
-  console.log('📊 Estrutura dos dados:', {
-    totalMenuItems: menuItems.length,
-    filteredItemsCount: filteredItems.length,
-    currentSort,
-    activeCategory,
-    sampleItems: filteredItems.slice(0, 2).map(item => ({
-      name: item.name,
-      price: item.price,
-      categories: item.categories
-    }))
-  });
-  
-  // Teste de ordenação para debug
-  if (filteredItems.length > 0) {
-    const testSort = [...filteredItems].sort((a, b) => a.name.localeCompare(b.name));
-    console.log('🧪 Teste de ordenação por nome:', {
-      original: filteredItems.slice(0, 3).map(item => item.name),
-      sorted: testSort.slice(0, 3).map(item => item.name)
-    });
-  }
+
   
   // Verificar se há itens para renderizar
   if (filteredItems.length === 0) {

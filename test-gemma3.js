@@ -53,13 +53,10 @@ const testMessages = [
 ];
 
 async function testGemma3() {
-  console.log('🚀 Testando Gemma 3 SuperTo...\n');
-  
   const functionUrl = `${SUPABASE_URL}/functions/v1/ai-chat`;
   
   for (let i = 0; i < testMessages.length; i++) {
     const message = testMessages[i];
-    console.log(`📝 Teste ${i + 1}: "${message}"`);
     
     try {
       const startTime = Date.now();
@@ -96,24 +93,12 @@ async function testGemma3() {
         continue;
       }
 
-      console.log(`✅ Resposta (${responseTime}ms):`);
-      console.log(`   Modelo usado: ${data.model || 'N/A'}`);
-      console.log(`   Resposta: ${data.message.substring(0, 100)}${data.message.length > 100 ? '...' : ''}`);
-      console.log('');
+      // Resposta recebida com sucesso
 
     } catch (error) {
-      console.error(`❌ Erro de rede: ${error.message}`);
-      console.log('');
+      // Erro de rede
     }
   }
-  
-  console.log('🎉 Teste concluído!');
-  console.log('\n📊 Verificações realizadas:');
-  console.log('   ✅ Conectividade com Supabase');
-  console.log('   ✅ Edge Function respondendo');
-  console.log('   ✅ Google AI API funcionando');
-  console.log('   ✅ Modelo Gemma 3 SuperTo disponível');
-  console.log('   ✅ Sistema de fallback funcionando');
 }
 
 // Executar teste

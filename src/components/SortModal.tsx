@@ -39,7 +39,6 @@ export default function SortModal({ open, onClose, currentSort, onSortChange }: 
   if (!open) return null;
 
   const handleSortChange = (field: "name" | "price" | "default", direction: "asc" | "desc") => {
-    console.log('🔄 SortModal: Mudando ordenação para:', { field, direction });
     onSortChange({ field, direction });
     handleClose();
   };

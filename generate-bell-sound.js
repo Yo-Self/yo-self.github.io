@@ -80,24 +80,19 @@ function float32ToWav(audioData, sampleRate) {
 
 // Gerar e salvar o arquivo
 try {
-  console.log('Gerando som de sino...');
   const bellData = generateBellSound();
   const wavData = float32ToWav(bellData, 44100);
   const buffer = Buffer.from(wavData);
   
   // Salvar como WAV
   fs.writeFileSync('public/restaurant-bell.wav', buffer);
-  console.log('Som de sino gerado com sucesso: public/restaurant-bell.wav');
   
   // Tentar converter para MP3 usando ffmpeg (se disponível)
   try {
     const { execSync } = require('child_process');
     execSync('ffmpeg -i public/restaurant-bell.wav -acodec mp3 -ab 128k public/restaurant-bell.mp3 -y', { stdio: 'ignore' });
-    console.log('Arquivo MP3 criado: public/restaurant-bell.mp3');
   } catch (error) {
-    console.log('ffmpeg não encontrado. Arquivo WAV salvo: public/restaurant-bell.wav');
-    console.log('Para converter para MP3, instale o ffmpeg e execute:');
-    console.log('ffmpeg -i public/restaurant-bell.wav -acodec mp3 -ab 128k public/restaurant-bell.mp3');
+    // ffmpeg não encontrado
   }
 } catch (error) {
   console.error('Erro ao gerar som:', error);

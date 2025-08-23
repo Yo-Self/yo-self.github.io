@@ -43,6 +43,7 @@ export default function AnimatedStaticDishCard({
         <ImageWithLoading
           src={dish.image}
           alt={dish.name}
+          clickable={false}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
           fallbackSrc="/window.svg"
         >

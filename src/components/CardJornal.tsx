@@ -40,6 +40,7 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
           src={dish.image}
           alt={dish.name}
           fallbackSrc={fallbackImage}
+          clickable={false}
           className={`w-full h-28 object-cover rounded-t-lg`}
         >
           {/* Tag no canto superior direito */}

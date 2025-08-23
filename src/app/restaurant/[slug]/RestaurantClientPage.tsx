@@ -311,7 +311,6 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   
   // Log para debug da ordenação
   const handleSortChange = (sort: SortOption) => {
-    console.log('🔄 RestaurantClientPage: Mudando ordenação para:', sort);
     setCurrentSort(sort);
   };
   const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;

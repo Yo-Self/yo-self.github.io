@@ -64,6 +64,7 @@ export default function ComplementGrid({
                 <ImageWithLoading
                   src={complement.image}
                   alt={complement.name}
+                  clickable={false}
                   className="w-full h-full object-cover rounded-t-lg"
                   fallbackSrc="/window.svg"
                 >

@@ -27,7 +27,6 @@ export default async function RestaurantMenuPage({ params }: { params: { slug: s
   const initialRestaurant = await fetchRestaurantBySlugWithData(decoded);
   
   if (!initialRestaurant) {
-    console.log('Restaurante não encontrado por slug:', decoded);
     return notFound();
   }
   

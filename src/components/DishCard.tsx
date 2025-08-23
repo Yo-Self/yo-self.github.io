@@ -19,6 +19,7 @@ export default function DishCard({ dish, onClick, size = "large", fallbackImage 
           src={dish.image}
           alt={dish.name}
           fallbackSrc={fallbackImage}
+          clickable={false}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
         >
           <div 
@@ -41,7 +42,7 @@ export default function DishCard({ dish, onClick, size = "large", fallbackImage 
           <span className="font-bold text-primary dark:text-cyan-300">R${dish.price}</span>
           <div className="flex gap-1">
             {dish.tags?.map((tag) => (
-              <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
+              <span key={tag} className="bg-primary dark:text-cyan-700 text-xs px-2 py-0.5 rounded-full">
                 {tag}
               </span>
             ))}

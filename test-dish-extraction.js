@@ -23,13 +23,10 @@ function extractRecommendedDishes(message, restaurantData) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
 
-  console.log('📝 Mensagem normalizada:', normalizedMessage);
-
   // Buscar por nomes de pratos na mensagem
   menuItems.forEach((item, index) => {
     // Se já foi adicionado por ID, pular
     if (addedDishIds.has(item.id || item.name)) {
-      console.log(`⏭️  Prato ${index + 1} já adicionado por ID: ${item.name}`);
       return;
     }
 
@@ -39,12 +36,8 @@ function extractRecommendedDishes(message, restaurantData) {
       .replace(/[\u0300-\u036f]/g, '') // Remove acentos
       .trim(); // Remove espaços no início e fim
     
-    console.log(`\n🍽️  Analisando prato ${index + 1}: "${item.name}"`);
-    console.log(`   Nome normalizado: "${normalizedDishName}"`);
-    
     // Se já foi adicionado um prato com nome similar, pular
     if (addedNormalizedNames.has(normalizedDishName)) {
-      console.log(`   ⏭️  Prato com nome similar já adicionado: ${normalizedDishName}`);
       return;
     }
     
@@ -60,11 +53,7 @@ function extractRecommendedDishes(message, restaurantData) {
       normalizedDishName.replace(/\s+DE\s+/g, ' '),
     ];
     
-    console.log(`   Variações testadas:`);
-    variations.forEach((variation, vIndex) => {
-      const isIncluded = normalizedMessage.includes(variation);
-      console.log(`     ${vIndex + 1}. "${variation}" - ${isIncluded ? '✅ Encontrado' : '❌ Não encontrado'}`);
-    });
+
     
     // Verificar se alguma variação aparece na mensagem
     const isMentioned = variations.some(variation => 
@@ -75,9 +64,6 @@ function extractRecommendedDishes(message, restaurantData) {
       recommendedDishes.push(item);
       addedDishIds.add(item.id || item.name); // Marcar como adicionado por ID
       addedNormalizedNames.add(normalizedDishName); // Marcar como adicionado por nome normalizado
-      console.log(`   ✅ ADICIONADO: ${item.name}`);
-    } else {
-      console.log(`   ❌ NÃO ADICIONADO: ${item.name}`);
     }
   });
 
@@ -130,30 +116,7 @@ const testMessages = [
   'Quais são os pratos com peixe?'
 ];
 
-console.log('🧪 Testando Extração de Pratos Recomendados\n');
-
+// Executar testes
 testMessages.forEach((message, index) => {
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(`📝 TESTE ${index + 1}: "${message}"`);
-  console.log(`${'='.repeat(60)}`);
-  
   const result = extractRecommendedDishes(message, testRestaurantData);
-  
-  console.log(`\n📊 RESULTADO:`);
-  if (result.length === 0) {
-    console.log('   ❌ Nenhum prato encontrado');
-  } else {
-    console.log(`   ✅ ${result.length} prato(s) encontrado(s):`);
-    result.forEach((dish, i) => {
-      console.log(`      ${i + 1}. ${dish.name} - R$ ${dish.price}`);
-    });
-  }
 });
-
-console.log(`\n${'='.repeat(60)}`);
-console.log('🎉 Teste concluído!');
-console.log('\n📋 Verificações realizadas:');
-console.log('   ✅ Detecção de variações de nomes');
-console.log('   ✅ Prevenção de duplicatas');
-console.log('   ✅ Normalização de texto');
-console.log('   ✅ Casos de teste diversos');
