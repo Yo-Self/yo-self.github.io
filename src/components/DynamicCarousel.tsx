@@ -36,8 +36,8 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
     <div
       className={`carousel-card flex flex-col items-center cursor-pointer bg-transparent shadow-none p-0 transition-all duration-300
         ${size === 'main'
-          ? 'w-[85vw] md:w-[600px] h-[50vw] md:h-[340px] scale-100 z-20'
-          : 'w-[72vw] md:w-[510px] lg:w-[510px] xl:w-[510px] h-[42vw] md:h-[289px] lg:h-[289px] xl:h-[289px] scale-90 md:scale-95 lg:scale-100 opacity-60 md:opacity-80 lg:opacity-100 z-10'}
+          ? 'w-[85vw] md:w-[450px] lg:w-[500px] xl:w-[550px] h-[50vw] md:h-[250px] lg:h-[280px] xl:h-[310px] scale-100 z-20'
+          : 'w-[72vw] md:w-[380px] lg:w-[425px] xl:w-[468px] h-[42vw] md:h-[214px] lg:h-[238px] xl:h-[262px] scale-90 md:scale-95 lg:scale-100 opacity-60 md:opacity-80 lg:opacity-100 z-10'}
       `}
       onClick={onClick}
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
@@ -156,14 +156,14 @@ export default function DynamicCarousel({
   return (
     <section className="carousel-section py-0 bg-transparent w-full" {...props}>
       <div className="w-full overflow-hidden">
-        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[384px] w-full"
+        <div className="relative flex items-center justify-center min-h-[260px] md:min-h-[280px] lg:min-h-[320px] xl:min-h-[360px] w-full max-w-6xl mx-auto"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {featured.length === 1 ? (
-            <div className="flex justify-center w-full px-4">
-              <div className="max-w-[480px] w-full">
+            <div className="flex justify-center w-full px-4 max-w-6xl mx-auto">
+              <div className="max-w-[480px] md:max-w-[450px] lg:max-w-[500px] xl:max-w-[550px] w-full">
                 {featured[0] && (
                   <CarouselCard
                     key={restaurant.id + '-0'}
@@ -197,7 +197,7 @@ export default function DynamicCarousel({
                 </svg>
               </button>
               <div className="flex items-center justify-center w-full gap-1 md:gap-4 select-none">
-                <div className="flex items-center justify-center w-full max-w-[480px] mx-auto">
+                <div className="flex items-center justify-center w-full max-w-[480px] md:max-w-[450px] lg:max-w-[500px] xl:max-w-[550px] mx-auto">
                   {getDisplayDishes().map(({ dish, size, position }, idx) => (
                     <CarouselCard
                       key={restaurant.id + '-' + (dish?.name ?? 'dish') + '-' + (dish?.image ?? 'img') + '-' + idx}

@@ -1468,6 +1468,45 @@ button span.text-white {
   transition: transform 0.5s ease-in-out;
 }
 
+/* Garantir proporções adequadas do carousel em diferentes tamanhos de tela */
+.carousel-section {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Desktop - limitar altura máxima do carousel */
+@media (min-width: 768px) {
+  .carousel-section {
+    max-height: 400px;
+  }
+  
+  .carousel-section .relative {
+    max-height: 400px;
+  }
+}
+
+/* Desktop grande - permitir altura um pouco maior */
+@media (min-width: 1024px) {
+  .carousel-section {
+    max-height: 450px;
+  }
+  
+  .carousel-section .relative {
+    max-height: 450px;
+  }
+}
+
+/* Desktop extra grande - altura máxima */
+@media (min-width: 1280px) {
+  .carousel-section {
+    max-height: 500px;
+  }
+  
+  .carousel-section .relative {
+    max-height: 500px;
+  }
+}
+
 /* Dispositivos móveis em geral */
 @media (max-width: 768px), (max-device-width: 768px) {
   /* Carousel */
