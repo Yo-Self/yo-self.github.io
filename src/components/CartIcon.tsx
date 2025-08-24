@@ -30,8 +30,6 @@ export function CartIconHeader() {
   if (isEmpty) {
     return null;
   }
-  
-
   return (
     <button
       onClick={openCart}
