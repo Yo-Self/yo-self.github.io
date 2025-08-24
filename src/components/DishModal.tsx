@@ -7,7 +7,8 @@ import ComplementGrid from "./ComplementGrid";
 import ImageWithLoading from "./ImageWithLoading";
 import WhatsAppButton from "./WhatsAppButton";
 import { useModalScroll } from '../hooks/useModalScroll';
-import { useCart } from '../hooks/useCart';
+import { useCart, useCartAdvanced } from '../hooks/useCart';
+import { CartUtils } from '../types/cart';
 import CartIcon from './CartIcon';
 import "./dishModal.css";
 
@@ -26,7 +27,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   const modalRef = useRef<HTMLDivElement>(null);
   
   // Hook da comanda
-  const { addItem, isItemInCart, getItemQuantity } = useCart();
+  const { addItem, isItemInCart, getItemQuantity, openCart, removeItem } = useCart();
+  const { incrementQuantity, decrementQuantity } = useCartAdvanced();
 
   // Função helper para converter Dish para MenuItem
   const convertToMenuItem = useCallback((dishItem: Dish | MenuItem): MenuItemType => {
@@ -48,6 +50,37 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     };
   }, []);
 
+  // Função para obter o ID do item no carrinho
+  const getCartItemId = useCallback(() => {
+    if (!dish) return null;
+    const menuItem = convertToMenuItem(dish);
+    // Gerar o mesmo ID que é usado no carrinho
+    return CartUtils.generateItemId(menuItem, selectedComplements);
+  }, [dish, selectedComplements, convertToMenuItem]);
+
+  // Funções para incrementar e decrementar quantidade
+  const handleIncrementQuantity = useCallback(() => {
+    const itemId = getCartItemId();
+    if (itemId) {
+      incrementQuantity(itemId);
+    }
+  }, [getCartItemId, incrementQuantity]);
+
+  const handleDecrementQuantity = useCallback(() => {
+    const itemId = getCartItemId();
+    if (itemId) {
+      decrementQuantity(itemId);
+    }
+  }, [getCartItemId, decrementQuantity]);
+
+  // Função para remover item da comanda
+  const handleRemoveItem = useCallback(() => {
+    const itemId = getCartItemId();
+    if (itemId) {
+      removeItem(itemId);
+    }
+  }, [getCartItemId, removeItem]);
+
   const handleClose = React.useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
@@ -55,6 +88,12 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
       setIsClosing(false);
     }, 400); // Aumentado para dar tempo das animações completarem
   }, [onClose]);
+
+  // Função para ir para o carrinho
+  const handleGoToCart = useCallback(() => {
+    openCart();
+    handleClose();
+  }, [openCart, handleClose]);
 
   // Resetar seleções quando o prato mudar
   useEffect(() => {
@@ -338,36 +377,92 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
             )}
             
             {/* Botões de ação */}
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              {/* Botão Adicionar à Comanda */}
-              <button
-                onClick={handleAddToCart}
-                disabled={hasUnfilledRequiredGroups()}
-                className={`
-                  flex items-center justify-center gap-2 px-4 py-3 
-                  ${hasUnfilledRequiredGroups() 
-                    ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' 
-                    : 'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'
-                  }
-                  text-white font-semibold rounded-lg transition-all duration-200 
-                  shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]
-                  focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800
-                  flex-1 sm:flex-1 modal-button
-                  ${showAddedFeedback ? 'animate-pulse bg-green-500 hover:bg-green-600' : ''}
-                `}
-                aria-label="Adicionar à comanda"
-              >
-                <CartIcon className="w-5 h-5" />
-                {showAddedFeedback ? 'Adicionado!' : 'Adicionar à Comanda'}
-              </button>
+            <div className="mt-6 flex flex-col gap-3">
+              {/* Quando o item já está na comanda, mostrar dois botões */}
+              {currentItemInCart && currentItemQuantity > 0 ? (
+                <div className="flex flex-row gap-3">
+                  {/* Botão Ir para Comanda */}
+                  <button
+                    onClick={handleGoToCart}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 flex-1 modal-button"
+                    aria-label="Ir para comanda"
+                  >
+                    <CartIcon className="w-5 h-5" />
+                    Ir para Comanda
+                  </button>
 
-              {/* Botão WhatsApp - Só exibir se o restaurante tiver WhatsApp habilitado */}
-              {restaurant?.whatsapp_enabled !== false && (
+                  {/* Controles de quantidade */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-lg justify-center">
+                    {currentItemQuantity === 1 ? (
+                      /* Botão excluir quando quantidade = 1 */
+                      <button
+                        onClick={handleRemoveItem}
+                        className="w-8 h-8 flex items-center justify-center bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-400 rounded-full transition-colors"
+                        aria-label="Remover item da comanda"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    ) : (
+                      /* Botão diminuir quando quantidade > 1 */
+                      <button
+                        onClick={handleDecrementQuantity}
+                        className="w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full transition-colors"
+                        aria-label="Diminuir quantidade"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                    )}
+                    
+                    <span className="w-8 text-center font-medium text-gray-800 dark:text-gray-200">
+                      {currentItemQuantity}
+                    </span>
+                    
+                    <button
+                      onClick={handleIncrementQuantity}
+                      className="w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-400 rounded-full transition-colors"
+                      aria-label="Aumentar quantidade"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Botão Adicionar à Comanda (comportamento original) */
+                <button
+                  onClick={handleAddToCart}
+                  disabled={hasUnfilledRequiredGroups()}
+                  className={`
+                    flex items-center justify-center gap-2 px-4 py-3 
+                    ${hasUnfilledRequiredGroups() 
+                      ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' 
+                      : 'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'
+                    }
+                    text-white font-semibold rounded-lg transition-all duration-200 
+                    shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]
+                    focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800
+                    modal-button
+                    ${showAddedFeedback ? 'animate-pulse bg-green-500 hover:bg-green-600' : ''}
+                  `}
+                  aria-label="Adicionar à comanda"
+                >
+                  <CartIcon className="w-5 h-5" />
+                  {showAddedFeedback ? 'Adicionado!' : 'Adicionar à Comanda'}
+                </button>
+              )}
+
+              {/* Botão WhatsApp - Só exibir se o restaurante tiver WhatsApp habilitado E o item não estiver na comanda */}
+              {restaurant?.whatsapp_enabled !== false && !currentItemInCart && (
                 <WhatsAppButton 
                   dish={dish}
                   selectedComplements={selectedComplements}
                   restaurantId={restaurantId}
-                  className="flex-1 sm:flex-1 modal-button"
+                  className="modal-button"
                 />
               )}
             </div>
