@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from 'react';
-import WaiterCallButton from './WaiterCallButton';
+import dynamic from 'next/dynamic';
+
+// Dynamically import WaiterCallButton to avoid SSR issues with Web Audio API
+const WaiterCallButton = dynamic(() => import('./WaiterCallButton'), {
+  ssr: false,
+  loading: () => <div className="w-16 h-16 rounded-full bg-gray-200 animate-pulse"></div>
+});
 
 export default function WaiterCallAnimationDemo() {
   const [restaurantId] = useState('demo-restaurant-123');

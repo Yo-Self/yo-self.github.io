@@ -1,14 +1,24 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useTranslation } from "./i18n";
 import { Restaurant, Dish, MenuItem } from "./data";
 import DishModal from "./DishModal";
 import DishCard from "./DishCard";
 import JournalView from "./JournalView";
-import IntegratedChatBot from "./IntegratedChatBot";
-import WaiterCallButton from "./WaiterCallButton";
+// Dynamically import WaiterCallButton to avoid SSR issues with Web Audio API
+const WaiterCallButton = dynamic(() => import("./WaiterCallButton"), {
+  ssr: false,
+  loading: () => null
+});
 import { useModalScroll } from '../hooks/useModalScroll';
+
+// Dynamically import IntegratedChatBot to avoid SSR issues
+const IntegratedChatBot = dynamic(() => import("./IntegratedChatBot"), {
+  ssr: false,
+  loading: () => null
+});
 
 
 interface SearchBarProps {
