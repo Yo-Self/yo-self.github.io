@@ -22,6 +22,11 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
 
+  // Se a funcionalidade não estiver habilitada, não renderizar nada
+  if (!waiterCallEnabled) {
+    return null;
+  }
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
