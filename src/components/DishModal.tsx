@@ -2,10 +2,13 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Dish, MenuItem } from "./data";
+import { MenuItem as MenuItemType } from "../types/restaurant";
 import ComplementGrid from "./ComplementGrid";
 import ImageWithLoading from "./ImageWithLoading";
 import WhatsAppButton from "./WhatsAppButton";
 import { useModalScroll } from '../hooks/useModalScroll';
+import { useCart } from '../hooks/useCart';
+import CartIcon from './CartIcon';
 import "./dishModal.css";
 
 type DishModalProps = {
@@ -19,7 +22,31 @@ type DishModalProps = {
 export default function DishModal({ open, dish, restaurantId = "default", restaurant, onClose }: DishModalProps) {
   const [selectedComplements, setSelectedComplements] = useState<Map<string, Set<string>>>(new Map());
   const [isClosing, setIsClosing] = useState(false);
+  const [showAddedFeedback, setShowAddedFeedback] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  
+  // Hook da comanda
+  const { addItem, isItemInCart, getItemQuantity } = useCart();
+
+  // Função helper para converter Dish para MenuItem
+  const convertToMenuItem = useCallback((dishItem: Dish | MenuItem): MenuItemType => {
+    return {
+      ...dishItem,
+      category: dishItem.category || (dishItem.categories ? dishItem.categories[0] : 'Outros'),
+      categories: dishItem.categories || [dishItem.category || 'Outros'],
+      tags: dishItem.tags || [],
+      complement_groups: dishItem.complement_groups?.map(group => ({
+        ...group,
+        description: group.description || '',
+        required: group.required || false,
+        max_selections: group.max_selections || 1,
+        complements: group.complements.map(complement => ({
+          ...complement,
+          ingredients: complement.ingredients || ''
+        }))
+      }))
+    };
+  }, []);
 
   const handleClose = React.useCallback(() => {
     setIsClosing(true);
@@ -108,6 +135,36 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
       return selections.size === 0;
     });
   };
+
+  // Adicionar item à comanda
+  const handleAddToCart = () => {
+    if (!dish || hasUnfilledRequiredGroups()) return;
+    
+    try {
+      const menuItem = convertToMenuItem(dish);
+      addItem(menuItem, selectedComplements);
+      
+      // Feedback visual
+      setShowAddedFeedback(true);
+      setTimeout(() => setShowAddedFeedback(false), 2000);
+      
+      // Opcional: fechar modal após adicionar
+      // handleClose();
+    } catch (error) {
+      console.error('Erro ao adicionar item à comanda:', error);
+    }
+  };
+
+  // Verificar se o item atual já está na comanda
+  const currentItemInCart = dish ? (() => {
+    const menuItem = convertToMenuItem(dish);
+    return isItemInCart(menuItem, selectedComplements);
+  })() : false;
+  
+  const currentItemQuantity = dish ? (() => {
+    const menuItem = convertToMenuItem(dish);
+    return getItemQuantity(menuItem, selectedComplements);
+  })() : 0;
 
   if (!open || !dish) return null;
   
@@ -263,19 +320,57 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
                 * Selecione os complementos obrigatórios
               </div>
             )}
+
+            {/* Feedback de item adicionado */}
+            {showAddedFeedback && (
+              <div className="mt-3 text-sm text-green-600 dark:text-green-400 flex items-center animate-fade-in">
+                <span className="mr-2">✅</span>
+                Item adicionado à comanda com sucesso!
+              </div>
+            )}
+
+            {/* Informação sobre item já na comanda */}
+            {currentItemInCart && currentItemQuantity > 0 && (
+              <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 flex items-center">
+                <span className="mr-2">🛒</span>
+                Este item já está na comanda ({currentItemQuantity}x)
+              </div>
+            )}
             
-            {/* Botão WhatsApp - Canto inferior direito */}
-            {/* Só exibir se o restaurante tiver WhatsApp habilitado */}
-            {restaurant?.whatsapp_enabled !== false && (
-              <div className="mt-6 flex justify-end whatsapp-section">
+            {/* Botões de ação */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              {/* Botão Adicionar à Comanda */}
+              <button
+                onClick={handleAddToCart}
+                disabled={hasUnfilledRequiredGroups()}
+                className={`
+                  flex items-center justify-center gap-2 px-4 py-3 
+                  ${hasUnfilledRequiredGroups() 
+                    ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' 
+                    : 'bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'
+                  }
+                  text-white font-semibold rounded-lg transition-all duration-200 
+                  shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]
+                  focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800
+                  flex-1 sm:flex-1 modal-button
+                  ${showAddedFeedback ? 'animate-pulse bg-green-500 hover:bg-green-600' : ''}
+                `}
+                aria-label="Adicionar à comanda"
+              >
+                <CartIcon className="w-5 h-5" />
+                {showAddedFeedback ? 'Adicionado!' : 'Adicionar à Comanda'}
+              </button>
+
+              {/* Botão WhatsApp - Só exibir se o restaurante tiver WhatsApp habilitado */}
+              {restaurant?.whatsapp_enabled !== false && (
                 <WhatsAppButton 
                   dish={dish}
                   selectedComplements={selectedComplements}
                   restaurantId={restaurantId}
-                  className="w-full sm:w-auto modal-button"
+                  className="flex-1 sm:flex-1 modal-button"
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

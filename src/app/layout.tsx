@@ -2,9 +2,11 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "./scroll-animations.css";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
+import { CartProvider } from "@/context/CartContext";
 import Analytics from "@/components/Analytics";
 import Navigation from "@/components/Navigation";
 import ThemeScript from "@/components/ThemeScript";
+import CartModal from "@/components/CartModal";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -57,9 +59,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white`}>
         <AccessibilityProvider>
-          <ThemeScript />
-          <Navigation />
-          {children}
+          <CartProvider>
+            <ThemeScript />
+            <Navigation />
+            {children}
+            {/* Componentes globais do carrinho */}
+            <CartModal />
+          </CartProvider>
         </AccessibilityProvider>
         <Analytics />
       </body>
