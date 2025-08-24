@@ -22,6 +22,9 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
 
+  // Controlar o scroll do body quando o modal abrir/fechar
+  useModalScroll(showModal);
+
   // Se a funcionalidade não estiver habilitada, não renderizar nada
   if (!waiterCallEnabled) {
     return null;
@@ -224,10 +227,6 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     
     setShowModal(true);
   };
-
-  // Controlar o scroll do body quando o modal abrir/fechar
-  useModalScroll(showModal);
-
 
   return (
     <>
