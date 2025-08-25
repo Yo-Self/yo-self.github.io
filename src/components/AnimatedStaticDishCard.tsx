@@ -60,10 +60,10 @@ export default function AnimatedStaticDishCard({
           </div>
         </ImageWithLoading>
       </div>
-      <div className="w-full p-4 min-w-0">
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">{dish.description}</p>
+      <div className="w-full p-4 min-w-0 bg-white/50 dark:bg-transparent">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2 drop-shadow-[0_1px_3px_rgba(255,255,255,0.8)]">{dish.description}</p>
         <div className="flex items-center justify-between gap-2 min-w-0">
-          <span className="font-bold text-cyan-600 dark:text-cyan-300 text-sm truncate">{dish.price}</span>
+          <span className="font-bold text-cyan-600 dark:text-cyan-300 text-sm truncate drop-shadow-[0_1px_3px_rgba(255,255,255,0.8)]">{dish.price}</span>
           {/* Tags na parte inferior - apenas para cards grandes */}
           {size === "large" && (
             <div className="flex gap-1 flex-wrap flex-shrink-0">

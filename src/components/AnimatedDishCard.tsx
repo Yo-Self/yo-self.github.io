@@ -61,10 +61,10 @@ export default function AnimatedDishCard({
           </div>
         </ImageWithLoading>
       </div>
-      <div className="w-full p-3">
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>
+      <div className="w-full p-3 bg-white/50 dark:bg-transparent">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 drop-shadow-[0_1px_3px_rgba(255,255,255,0.8)]">{dish.description}</p>
         <div className="flex items-center justify-between">
-          <span className="font-bold text-primary dark:text-cyan-300">R${dish.price}</span>
+          <span className="font-bold text-primary dark:text-cyan-300 drop-shadow-[0_1px_3px_rgba(255,255,255,0.8)]">R${dish.price}</span>
           <div className="flex gap-1">
             {dish.tags?.map((tag) => (
               <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">

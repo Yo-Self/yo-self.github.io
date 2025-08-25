@@ -66,16 +66,16 @@ function AnimatedChatDishCard({
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="flex-1 p-3">
+          <div className="flex-1 p-3 bg-white/50 dark:bg-transparent">
             <div className="flex justify-between items-start">
               <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
                 {dish.name}
               </h4>
-              <span className="text-sm font-bold text-primary dark:text-cyan-500 ml-2">
+              <span className="text-sm font-bold text-primary dark:text-cyan-500 ml-2 drop-shadow-[0_1px_3px_rgba(255,255,255,0.8)]">
                 R$ {dish.price}
               </span>
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 drop-shadow-[0_1px_3px_rgba(255,255,255,0.8)]">
               {dish.description}
             </p>
             {dish.tags && dish.tags.length > 0 && (

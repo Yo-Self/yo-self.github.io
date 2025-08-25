@@ -48,4 +48,6 @@ export type Restaurant = {
   whatsapp_phone?: string;
   whatsapp_enabled?: boolean;
   whatsapp_custom_message?: string;
+  background_light?: string;
+  background_night?: string;
 };

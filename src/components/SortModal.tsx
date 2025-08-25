@@ -58,7 +58,7 @@ export default function SortModal({ open, onClose, currentSort, onSortChange }: 
       }}
     >
       <div 
-        className={`bg-white dark:bg-gray-900 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl menu-transition ${
+        className={`sort-modal bg-white dark:bg-gray-900 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl menu-transition ${
           isClosing 
             ? 'animate-sort-modal-close' 
             : 'animate-sort-modal-open'

@@ -30,6 +30,12 @@ export interface Restaurant {
   whatsapp_phone?: string;
   whatsapp_enabled?: boolean;
   whatsapp_custom_message?: string;
+  
+  /** URL da imagem de fundo para modo claro */
+  background_light?: string;
+  
+  /** URL da imagem de fundo para modo escuro */
+  background_night?: string;
 }
 
 export interface MenuItem {

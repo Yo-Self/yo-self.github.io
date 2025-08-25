@@ -51,6 +51,8 @@ export type DbRestaurant = {
   whatsapp_phone?: string;
   whatsapp_enabled?: boolean;
   whatsapp_custom_message?: string;
+  background_light?: string | null;
+  background_night?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -367,6 +369,8 @@ function composeRestaurantModel(
     whatsapp_phone: r.whatsapp_phone,
     whatsapp_enabled: r.whatsapp_enabled !== false, // Padrão true se não especificado
     whatsapp_custom_message: r.whatsapp_custom_message,
+    background_light: r.background_light || undefined,
+    background_night: r.background_night || undefined,
     menu_categories: categories.map(c => c.name),
     featured_dishes: featured,
     menu_items: menuItems,

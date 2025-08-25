@@ -24,11 +24,74 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   const [selectedComplements, setSelectedComplements] = useState<Map<string, Set<string>>>(new Map());
   const [isClosing, setIsClosing] = useState(false);
   const [showAddedFeedback, setShowAddedFeedback] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   
   // Hook da comanda
   const { addItem, isItemInCart, getItemQuantity, openCart, removeItem } = useCart();
   const { incrementQuantity, decrementQuantity } = useCartAdvanced();
+
+  // Detectar modo escuro/claro
+  useEffect(() => {
+    const checkDarkMode = () => {
+      // Verificar se há classe dark no HTML
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      
+      // Verificar preferência do sistema
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      // Usar classe dark se disponível, senão usar preferência do sistema
+      const isDark = hasDarkClass || prefersDark;
+      
+      setIsDarkMode(isDark);
+    };
+
+    checkDarkMode();
+    
+    // Observer para mudanças na classe dark
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    
+    // Listener para mudanças na preferência do sistema
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', checkDarkMode);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener('change', checkDarkMode);
+    };
+  }, []);
+
+  // Função para obter o background personalizado
+  const getCustomBackground = useCallback(() => {
+    if (!restaurant) return null;
+    
+    const backgroundField = isDarkMode ? restaurant.background_night : restaurant.background_light;
+    
+    if (!backgroundField) return null;
+    
+    // Verificar se é uma URL de imagem
+    if (backgroundField.startsWith('http') || backgroundField.startsWith('/')) {
+      return { type: 'image', value: backgroundField };
+    }
+    
+    // Verificar se é um código de cor (hex, rgb, hsl, etc.)
+    if (backgroundField.startsWith('#') || 
+        backgroundField.startsWith('rgb') || 
+        backgroundField.startsWith('hsl') ||
+        backgroundField.startsWith('var(')) {
+      return { type: 'color', value: backgroundField };
+    }
+    
+    // Verificar se é uma cor CSS válida
+    const tempDiv = document.createElement('div');
+    tempDiv.style.color = backgroundField;
+    if (tempDiv.style.color !== '') {
+      return { type: 'color', value: backgroundField };
+    }
+    
+    return null;
+  }, [restaurant, isDarkMode]);
 
   // Função helper para converter Dish para MenuItem
   const convertToMenuItem = useCallback((dishItem: Dish | MenuItem): MenuItemType => {
@@ -122,6 +185,20 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   // Controlar o scroll do body quando o modal abrir/fechar
   useModalScroll(open);
 
+  // Verificar se os estilos estão sendo aplicados corretamente
+  useEffect(() => {
+    if (modalRef.current && open && dish) {
+      // Aguardar um pouco para o modal renderizar
+      const timer = setTimeout(() => {
+        if (modalRef.current) {
+          // Log silencioso para debug se necessário
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [open, dish]);
+
   const handleComplementToggle = (groupTitle: string, complementName: string) => {
     setSelectedComplements(prev => {
       const newMap = new Map(prev);
@@ -207,6 +284,28 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
 
   if (!open || !dish) return null;
   
+  // Obter background personalizado
+  const customBackground = getCustomBackground();
+  
+  // Estilos do backdrop com background personalizado
+  const backdropStyle: React.CSSProperties = {
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)'
+  };
+
+  if (customBackground) {
+    if (customBackground.type === 'image') {
+      backdropStyle.background = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${customBackground.value})`;
+      backdropStyle.backgroundSize = 'cover';
+      backdropStyle.backgroundPosition = 'center';
+      backdropStyle.backgroundRepeat = 'no-repeat';
+    } else if (customBackground.type === 'color') {
+      backdropStyle.background = customBackground.value;
+    }
+  } else {
+    backdropStyle.background = 'rgba(0, 0, 0, 0.5)';
+  }
+  
   return (
     <div 
       ref={modalRef}
@@ -214,11 +313,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
         isClosing ? 'modal-backdrop-exit' : 'modal-backdrop'
       }`} 
       onClick={handleClose}
-      style={{
-        background: 'rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)'
-      }}
+      style={backdropStyle}
     >
       <div 
         className={`bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden relative z-[999999] ${
@@ -237,11 +332,11 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
             fallbackSrc="/window.svg"
           >
             <button
-              className="modal-close-button absolute top-3 right-3 w-12 h-12 flex items-center justify-center p-0 m-0 focus:outline-none z-10 transition-all duration-200 hover:scale-110"
+              className="modal-close-button absolute top-3 right-3 w-10 h-10 flex items-center justify-center p-0 m-0 focus:outline-none z-10 transition-all duration-200 hover:scale-110 bg-black/20 hover:bg-black/40 rounded-full"
               onClick={handleClose}
               aria-label="Close"
             >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>

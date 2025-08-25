@@ -93,14 +93,14 @@ export default function AccessibilityButton() {
         ref={buttonRef}
         type="button"
         onClick={handleMenuToggle}
-        className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-200 shadow-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring-offset-2 hover:scale-110 active:scale-95 hover:shadow-xl"
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-200 shadow-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 focus:ring-offset-2 hover:scale-110 active:scale-95 hover:shadow-xl"
         aria-label="Configurações de acessibilidade"
         title="Configurações de acessibilidade"
         aria-expanded={showMenu}
       >
         <div className="w-4 h-4 flex items-center justify-center font-bold text-xs text-white">
-          <span className="text-xs text-white">a</span>
-          <span className="text-sm text-white">A</span>
+          <span className="text-xs text-white font-bold">a</span>
+          <span className="text-sm text-white font-bold">A</span>
         </div>
       </button>
 
