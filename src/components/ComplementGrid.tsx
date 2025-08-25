@@ -38,12 +38,15 @@ export default function ComplementGrid({
         )}
       </div>
       
-              <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {complementGroup.complements.map((complement) => {
           const isSelected = selectedComplements.has(complement.name);
           const isDisabled = complementGroup.max_selections && 
             selectedComplements.size >= complementGroup.max_selections && 
             !isSelected;
+          
+          // Verificar se o complemento tem descrição
+          const hasDescription = complement.description && complement.description.trim() !== '';
           
           return (
             <div
@@ -58,9 +61,17 @@ export default function ComplementGrid({
                   onComplementToggle(complement.name);
                 }
               }}
-              style={{ height: '90px', paddingBottom: 0 }}
+              style={{ 
+                height: hasDescription ? '120px' : '90px', 
+                paddingBottom: 0 
+              }}
             >
-              <div className="relative w-full" style={{ height: '60%' }}>
+              <div 
+                className="relative w-full" 
+                style={{ 
+                  height: hasDescription ? '60%' : '100%' 
+                }}
+              >
                 <ImageWithLoading
                   src={complement.image}
                   alt={complement.name}
@@ -103,21 +114,23 @@ export default function ComplementGrid({
                 </ImageWithLoading>
               </div>
               
-              {/* Detalhes abaixo da foto (40% do card) */}
-              <div className="w-full px-3 pb-3 pt-2 flex flex-col justify-center items-start text-left" style={{ height: '40%', minHeight: '36px' }}>
-                <p className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0" style={{
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'normal',
-                  lineHeight: '1.2',
-                  maxHeight: '3.6em', // Max 3 lines
-                }}>
-                  {complement.description}
-                </p>
-              </div>
+              {/* Detalhes abaixo da foto - só exibir quando há descrição */}
+              {hasDescription && (
+                <div className="w-full px-3 pb-3 pt-2 flex flex-col justify-center items-start text-left" style={{ height: '40%', minHeight: '36px' }}>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0" style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'normal',
+                    lineHeight: '1.2',
+                    maxHeight: '3.6em', // Max 3 lines
+                  }}>
+                    {complement.description}
+                  </p>
+                </div>
+              )}
             </div>
           );
         })}
