@@ -258,18 +258,51 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-3">
-                <div className="modal-info-item">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">Ingredientes: </span>
-                  <span className="text-gray-700 dark:text-gray-300">{dish.ingredients}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">Alérgenos: </span>
-                  <span className="text-gray-700 dark:text-gray-300">{dish.allergens}</span>
-                </div>
-                <div className="modal-info-item">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">Porção: </span>
-                  <span className="text-gray-700 dark:text-gray-300">{dish.portion}</span>
-                </div>
+                {dish.ingredients && dish.ingredients.trim() !== '' && (
+                  <div className="modal-info-item flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                      <img 
+                        src="/ingredients.svg" 
+                        alt="Ingredientes" 
+                        className="w-4 h-4 text-green-600 dark:text-green-400"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(34%) sepia(95%) saturate(2476%) hue-rotate(86deg) brightness(94%) contrast(101%)' }}
+                      />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">Ingredientes: </span>
+                      <span className="text-gray-700 dark:text-gray-300">{dish.ingredients}</span>
+                    </div>
+                  </div>
+                )}
+                {dish.allergens && dish.allergens.trim() !== '' && (
+                  <div className="modal-info-item flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">Alérgenos: </span>
+                      <span className="text-gray-700 dark:text-gray-300">{dish.allergens}</span>
+                    </div>
+                  </div>
+                )}
+                {dish.portion && dish.portion.trim() !== '' && (
+                  <div className="modal-info-item flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                      <img 
+                        src="/portion.svg" 
+                        alt="Porção" 
+                        className="w-4 h-4 text-blue-600 dark:text-blue-400"
+                        style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%)' }}
+                      />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">Porção: </span>
+                      <span className="text-gray-700 dark:text-gray-300">{dish.portion}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             
