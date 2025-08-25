@@ -71,7 +71,7 @@ const mockRestaurant: Restaurant = {
     }
   ],
   menu_items: [],
-  whatsapp_phone: "+5511999999999",
+  whatsapp_phone: "+5511999999981",
   whatsapp_enabled: true,
   whatsapp_custom_message: "Olá! Gostaria de fazer um pedido."
 };

@@ -3,12 +3,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useCart } from '../hooks/useCart';
 import { useModalScroll } from '../hooks/useModalScroll';
+import { useCurrentRestaurant } from '../hooks/useCurrentRestaurant';
 import { CartItem, CartUtils } from '../types/cart';
 import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
 import CartIcon from './CartIcon';
 
-export default function CartModal() {
+interface CartModalProps {
+  restaurantId?: string;
+}
+
+export default function CartModal({ restaurantId: propRestaurantId }: CartModalProps) {
   const { 
     items, 
     totalItems, 
@@ -21,6 +26,10 @@ export default function CartModal() {
     clearCart,
     isEmpty 
   } = useCart();
+
+  // Usar o restaurantId passado como prop ou detectar automaticamente
+  const detectedRestaurantId = useCurrentRestaurant();
+  const restaurantId = propRestaurantId || detectedRestaurantId;
 
   const [isClosing, setIsClosing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
@@ -191,7 +200,7 @@ export default function CartModal() {
                   </button>
                   
                   <div className="flex-2">
-                    <CartWhatsAppButton />
+                    <CartWhatsAppButton restaurantId={restaurantId} />
                   </div>
                 </div>
               </div>

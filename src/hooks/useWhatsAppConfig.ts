@@ -8,8 +8,8 @@ export interface WhatsAppConfig {
 
 export function useWhatsAppConfig(restaurantId?: string) {
   const [config, setConfig] = useState<WhatsAppConfig>({
-    phoneNumber: "5511999999999", // Número padrão como fallback
-    enabled: true,
+    phoneNumber: "", // Sem número padrão
+    enabled: false, // Desabilitado por padrão até confirmar configuração
     customMessage: "Olá! Gostaria de fazer este pedido."
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +17,10 @@ export function useWhatsAppConfig(restaurantId?: string) {
 
   useEffect(() => {
     const loadWhatsAppConfig = async () => {
-      if (!restaurantId || restaurantId === "default") return;
+      if (!restaurantId || restaurantId === "default") {
+        setConfig(prev => ({ ...prev, enabled: false }));
+        return;
+      }
       
       setIsLoading(true);
       setError(null);
@@ -28,17 +31,30 @@ export function useWhatsAppConfig(restaurantId?: string) {
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         
         if (!supabaseUrl || !supabaseKey) {
-          console.warn('Configuração do Supabase não encontrada - usando configuração padrão do WhatsApp');
+          console.warn('Configuração do Supabase não encontrada - WhatsApp indisponível');
+          setConfig(prev => ({ ...prev, enabled: false }));
           return;
         }
         
-        const response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${restaurantId}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message`, {
+        // Tentar buscar por ID primeiro, depois por slug
+        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${restaurantId}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message`, {
           headers: {
             'apikey': supabaseKey,
             'Authorization': `Bearer ${supabaseKey}`,
             'Content-Type': 'application/json',
           },
         });
+
+        // Se não encontrar por ID, tentar por slug
+        if (!response.ok || (await response.json()).length === 0) {
+          response = await fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${restaurantId}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message`, {
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        }
 
         if (!response.ok) {
           throw new Error('Erro ao buscar configuração do WhatsApp');
@@ -49,19 +65,38 @@ export function useWhatsAppConfig(restaurantId?: string) {
         if (data && data.length > 0) {
           const restaurant = data[0];
           
-          // Se o restaurante tem configuração personalizada, usar ela
-          if (restaurant.whatsapp_phone || restaurant.whatsapp_enabled !== undefined) {
+          // Só habilitar se tiver número de telefone configurado
+          if (restaurant.whatsapp_phone && restaurant.whatsapp_phone.trim() !== '') {
             setConfig({
-              phoneNumber: restaurant.whatsapp_phone || "5511999999999",
+              phoneNumber: restaurant.whatsapp_phone,
               enabled: restaurant.whatsapp_enabled !== false, // Padrão true se não especificado
               customMessage: restaurant.whatsapp_custom_message || "Olá! Gostaria de fazer este pedido."
             });
+          } else {
+            // WhatsApp indisponível - sem número configurado
+            setConfig({
+              phoneNumber: "",
+              enabled: false,
+              customMessage: "Olá! Gostaria de fazer este pedido."
+            });
           }
+        } else {
+          // Restaurante não encontrado
+          setConfig({
+            phoneNumber: "",
+            enabled: false,
+            customMessage: "Olá! Gostaria de fazer este pedido."
+          });
         }
       } catch (err) {
         console.error('Erro ao carregar configuração do WhatsApp:', err);
         setError('Erro ao carregar configuração');
-        // Em caso de erro, manter configuração padrão
+        // Em caso de erro, WhatsApp indisponível
+        setConfig({
+          phoneNumber: "",
+          enabled: false,
+          customMessage: "Olá! Gostaria de fazer este pedido."
+        });
       } finally {
         setIsLoading(false);
       }
