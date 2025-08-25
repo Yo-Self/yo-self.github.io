@@ -54,8 +54,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (items.length === 0) {
         localStorage.removeItem(CART_STORAGE_KEY);
       } else {
+        // Verificar se CartUtils está disponível e tem os métodos necessários
+        if (!CartUtils || typeof CartUtils.itemToSerializable !== 'function') {
+          console.error('CartUtils não está disponível ou não tem o método itemToSerializable');
+          return;
+        }
+        
         const serializableCart: SerializableCart = {
-          items: items.map(CartUtils.itemToSerializable),
+          items: items.map(item => {
+            try {
+              return CartUtils.itemToSerializable(item);
+            } catch (itemError) {
+              console.error('Erro ao serializar item:', item, itemError);
+              // Retornar um item básico em caso de erro
+              return {
+                id: item.id,
+                dish: item.dish,
+                selectedComplements: [],
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.totalPrice,
+              };
+            }
+          }),
           timestamp: Date.now(),
         };
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(serializableCart));
