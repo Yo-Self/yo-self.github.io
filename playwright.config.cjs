@@ -35,15 +35,6 @@ module.exports = defineConfig({
       use: { ...devices['iPhone 12'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    // Configurações específicas para CI
-    env: {
-      CI: 'true',
-      NODE_ENV: 'development'
-    }
-  },
+  // Removido webServer para evitar problemas no CI
+  // Os testes standalone não precisam de servidor web
 });
