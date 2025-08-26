@@ -116,7 +116,7 @@ jobs:
             
             🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             
-            ⏰ **Executado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}
+            ⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}
 
   # Notification job - Failure
   notify-failure:
@@ -140,4 +140,4 @@ jobs:
             
             🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             
-            ⏰ **Executado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}
+            ⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}
