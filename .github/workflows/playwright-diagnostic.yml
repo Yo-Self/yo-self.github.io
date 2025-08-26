@@ -1,0 +1,50 @@
+name: Playwright Tests - Diagnostic
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnostic:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Check Node.js version
+      run: |
+        node --version
+        npm --version
+    
+    - name: Check project structure
+      run: |
+        ls -la
+        ls -la tests/
+        ls -la .github/workflows/
+    
+    - name: Check package.json
+      run: |
+        cat package.json | jq '.scripts'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Check Playwright installation
+      run: |
+        npx playwright --version
+        npx playwright install --dry-run
+    
+    - name: Check if tests can be discovered
+      run: |
+        npx playwright test --list --project=chromium
+    
+    - name: Try to run a single test
+      run: |
+        npx playwright test tests/homepage.spec.cjs --project=chromium --reporter=line --timeout=30000

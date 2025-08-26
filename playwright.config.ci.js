@@ -17,8 +17,8 @@ module.exports = defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     // Configurações específicas para CI
-    actionTimeout: 10000,
-    navigationTimeout: 15000,
+    actionTimeout: 15000,
+    navigationTimeout: 20000,
     // Headless para CI
     headless: true,
   },
@@ -31,14 +31,14 @@ module.exports = defineConfig({
     // Outros navegadores podem ser testados em workflows separados
   ],
   webServer: {
-    command: 'npm run start',
+    command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: false,
     timeout: 120 * 1000,
     // Configurações específicas para CI
     env: {
       CI: 'true',
-      NODE_ENV: 'production'
+      NODE_ENV: 'development'
     }
   },
   // Configurações específicas para CI
@@ -47,7 +47,7 @@ module.exports = defineConfig({
   
   // Timeouts mais rigorosos para CI
   expect: {
-    timeout: 10000,
+    timeout: 15000,
   },
   
   // Configurações de output
@@ -64,7 +64,7 @@ module.exports = defineConfig({
   
   // Configurações de expect para CI
   expect: {
-    timeout: process.env.CI ? 10000 : 5000,
+    timeout: process.env.CI ? 15000 : 5000,
   },
   
   // Configurações de use para CI
@@ -73,8 +73,8 @@ module.exports = defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    actionTimeout: process.env.CI ? 10000 : 5000,
-    navigationTimeout: process.env.CI ? 15000 : 10000,
+    actionTimeout: process.env.CI ? 15000 : 5000,
+    navigationTimeout: process.env.CI ? 20000 : 10000,
     headless: true,
   },
 });

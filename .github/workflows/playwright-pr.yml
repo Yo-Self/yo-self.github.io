@@ -35,8 +35,9 @@ jobs:
       run: |
         npm run start &
         echo "Waiting for app to start..."
-        sleep 40
+        sleep 60
         echo "App should be ready now"
+        curl -f http://localhost:3000 || exit 1
       env:
         CI: true
     

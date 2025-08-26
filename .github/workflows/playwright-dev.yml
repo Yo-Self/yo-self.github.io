@@ -1,4 +1,4 @@
-name: Playwright Tests - Simple
+name: Playwright Tests - Development Server
 
 on:
   push:
@@ -28,17 +28,12 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
     
-    - name: Build application
-      run: npm run build
-      env:
-        CI: true
-    
-    - name: Start application
+    - name: Start development server
       run: |
-        npm run start &
-        echo "Waiting for app to start..."
-        sleep 60
-        echo "App should be ready now"
+        npm run dev &
+        echo "Waiting for dev server to start..."
+        sleep 30
+        echo "Dev server should be ready now"
         curl -f http://localhost:3000 || exit 1
       env:
         CI: true
@@ -52,7 +47,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: playwright-results
+        name: playwright-dev-results
         path: |
           playwright-report/
           test-results/

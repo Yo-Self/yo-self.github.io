@@ -34,12 +34,17 @@ jobs:
     - name: Start the application
       run: |
         npm run start &
-        sleep 30
+        echo "Waiting for app to start..."
+        sleep 60
+        echo "App should be ready now"
+        curl -f http://localhost:3000 || exit 1
       env:
         CI: true
     
     - name: Run Playwright tests
       run: npx playwright test --reporter=line
+      env:
+        CI: true
     
     - name: Upload test results
       if: always()
@@ -82,12 +87,17 @@ jobs:
     - name: Start the application
       run: |
         npm run start &
-        sleep 30
+        echo "Waiting for app to start..."
+        sleep 60
+        echo "App should be ready now"
+        curl -f http://localhost:3000 || exit 1
       env:
         CI: true
     
     - name: Run Playwright tests on ${{ matrix.browser }}
       run: npx playwright test --project=${{ matrix.browser }} --reporter=line
+      env:
+        CI: true
     
     - name: Upload test results
       if: always()
@@ -130,12 +140,17 @@ jobs:
     - name: Start the application
       run: |
         npm run start &
-        sleep 30
+        echo "Waiting for app to start..."
+        sleep 60
+        echo "App should be ready now"
+        curl -f http://localhost:3000 || exit 1
       env:
         CI: true
     
     - name: Run Playwright tests on ${{ matrix.device }}
       run: npx playwright test --project="${{ matrix.device }}" --reporter=line
+      env:
+        CI: true
     
     - name: Upload test results
       if: always()
