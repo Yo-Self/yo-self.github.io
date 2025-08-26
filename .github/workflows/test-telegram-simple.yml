@@ -1,0 +1,44 @@
+name: Test Telegram - Simple
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_message:
+        description: 'Mensagem de teste para enviar no Telegram'
+        required: false
+        default: '🧪 Teste Simples - Notificações do Telegram!'
+        type: string
+
+jobs:
+  test-simple:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug secrets
+        run: |
+          echo "🔍 Debug dos secrets..."
+          echo "Token existe: ${{ secrets.TELEGRAM_BOT_TOKEN != '' }}"
+          echo "Chat ID existe: ${{ secrets.TELEGRAM_CHAT_ID != '' }}"
+          echo "Token length: ${#TELEGRAM_BOT_TOKEN}"
+          echo "Chat ID length: ${#TELEGRAM_CHAT_ID}"
+          echo "Token (primeiros 15 chars): ${TELEGRAM_BOT_TOKEN:0:15}..."
+          echo "Chat ID: $TELEGRAM_CHAT_ID"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Test with alternative action
+        uses: appleboy/telegram-action@v0.0.9
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🧪 **Teste Simples - Notificações do Telegram!**
+            
+            📋 **Status:** ✅ Teste
+            🌿 **Branch:** ${{ github.ref_name }}
+            📝 **Mensagem:** ${{ inputs.test_message }}
+            🔗 **Repositório:** ${{ github.repository }}
+            ⏰ **Testado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}
+            
+            ---
+            ℹ️ Esta é uma mensagem de teste usando uma versão específica da action.
