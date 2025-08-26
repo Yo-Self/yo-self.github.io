@@ -175,4 +175,44 @@ test.describe('Testes Standalone (Sem Servidor)', () => {
       await expect(link).toHaveAttribute('href');
     }
   });
+
+  test('deve testar seletores CSS complexos', async ({ page }) => {
+    await page.setContent(`
+      <html>
+        <head><title>CSS Selectors Test</title></head>
+        <body>
+          <div class="container">
+            <header class="header">
+              <h1 class="title">Título Principal</h1>
+              <nav class="navigation">
+                <ul class="nav-list">
+                  <li class="nav-item"><a href="#" class="nav-link">Link 1</a></li>
+                  <li class="nav-item"><a href="#" class="nav-link">Link 2</a></li>
+                  <li class="nav-item"><a href="#" class="nav-link">Link 3</a></li>
+                </ul>
+              </nav>
+            </header>
+            <main class="main-content">
+              <section class="content-section">
+                <h2 class="section-title">Seção de Conteúdo</h2>
+                <p class="section-text">Texto da seção</p>
+              </section>
+            </main>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    // Testar seletores CSS complexos
+    await expect(page.locator('.container .header .title')).toBeVisible();
+    await expect(page.locator('.container .main-content .content-section')).toBeVisible();
+    await expect(page.locator('.nav-list .nav-item .nav-link').first()).toBeVisible();
+    
+    // Verificar contagem de elementos
+    const navItems = page.locator('.nav-item');
+    expect(await navItems.count()).toBe(3);
+    
+    const navLinks = page.locator('.nav-link');
+    expect(await navLinks.count()).toBe(3);
+  });
 });
