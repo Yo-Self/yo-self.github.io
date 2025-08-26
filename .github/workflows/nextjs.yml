@@ -98,7 +98,7 @@ jobs:
   notify-success:
     needs: [build, deploy]
     if: always() && (needs.build.result == 'success' && needs.deploy.result == 'success')
-    uses: ./.github/workflows/telegram-notification.yml
+    uses: ./.github/workflows/telegram-notification-curl.yml
     with:
       message: "✅ Build e deploy concluídos com sucesso! O site foi publicado no GitHub Pages."
       status: "success"
@@ -110,7 +110,7 @@ jobs:
   notify-failure:
     needs: [build, deploy]
     if: always() && (needs.build.result == 'failure' || needs.deploy.result == 'failure')
-    uses: ./.github/workflows/telegram-notification.yml
+    uses: ./.github/workflows/telegram-notification-curl.yml
     with:
       message: "❌ Falha no build ou deploy. Verifique os logs para mais detalhes."
       status: "failure"

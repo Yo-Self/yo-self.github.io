@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 15
+    timeout-minutes: 25
     runs-on: ubuntu-latest
     
     steps:
@@ -28,13 +28,10 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
     
-    - name: Run standalone tests only (no server required)
-      run: npx playwright test tests/standalone-tests.spec.cjs --project=chromium
+    - name: Run Playwright tests
+      run: npx playwright test --project=chromium
       env:
         CI: true
-        # Variáveis de ambiente mock para evitar erros
-        NEXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.co"
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-key-for-testing"
     
     - name: Upload test results
       if: always()
@@ -50,7 +47,7 @@ jobs:
   notify-success:
     needs: test
     if: always() && needs.test.result == 'success'
-    uses: ./.github/workflows/telegram-notification.yml
+    uses: ./.github/workflows/telegram-notification-curl.yml
     with:
       message: "✅ Todos os testes Playwright passaram com sucesso!"
       status: "success"
@@ -62,7 +59,7 @@ jobs:
   notify-failure:
     needs: test
     if: always() && needs.test.result == 'failure'
-    uses: ./.github/workflows/telegram-notification.yml
+    uses: ./.github/workflows/telegram-notification-curl.yml
     with:
       message: "❌ Alguns testes Playwright falharam. Verifique os resultados para mais detalhes."
       status: "failure"

@@ -1,0 +1,72 @@
+name: Telegram Notification (Curl)
+
+on:
+  workflow_call:
+    inputs:
+      message:
+        description: 'Mensagem para enviar no Telegram'
+        required: true
+        type: string
+      status:
+        description: 'Status do workflow (success, failure, cancelled)'
+        required: true
+        type: string
+      workflow_name:
+        description: 'Nome do workflow que executou'
+        required: true
+        type: string
+      run_url:
+        description: 'URL da execução do workflow'
+        required: true
+        type: string
+      branch:
+        description: 'Branch que foi executada'
+        required: false
+        type: string
+        default: 'main'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram notification via curl
+        run: |
+          echo "📤 Enviando notificação no Telegram..."
+          
+          # Preparar a mensagem
+          MESSAGE="🤖 **GitHub Actions - ${{ inputs.workflow_name }}**
+          
+          📋 **Status:** ${{ inputs.status == 'success' && '✅ Sucesso' || inputs.status == 'failure' && '❌ Falha' || '⚠️ Cancelado' }}
+          
+          🌿 **Branch:** ${{ inputs.branch }}
+          
+          📝 **Detalhes:** ${{ inputs.message }}
+          
+          🔗 **Ver execução:** [${{ inputs.workflow_name }}](${{ inputs.run_url }})
+          
+          ⏰ **Executado em:** $(date -u +'%d/%m/%Y %H:%M:%S') UTC"
+          
+          # Enviar via curl
+          RESPONSE=$(curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${TELEGRAM_CHAT_ID}\",
+              \"text\": \"${MESSAGE}\",
+              \"parse_mode\": \"Markdown\"
+            }")
+          
+          echo "📥 Resposta da API:"
+          echo "$RESPONSE"
+          
+          # Verificar se foi bem-sucedido
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "✅ Notificação enviada com sucesso!"
+          else
+            echo "❌ Falha ao enviar notificação"
+            echo "🔍 Verifique o token e chat_id"
+            exit 1
+          fi
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
