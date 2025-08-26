@@ -1,0 +1,105 @@
+name: Debug Telegram API
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug Telegram Configuration
+        run: |
+          echo "🔍 DEBUG COMPLETO DA CONFIGURAÇÃO TELEGRAM"
+          echo "=========================================="
+          echo ""
+          
+          # Verificar secrets
+          echo "📋 SECRETS CONFIGURADOS:"
+          echo "   TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && '✅ Configurado' || '❌ Não configurado' }}"
+          echo "   TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID != '' && '✅ Configurado' || '❌ Não configurado' }}"
+          echo ""
+          
+          # Verificar valores (mascarados)
+          if [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
+            TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
+            echo "🔑 TOKEN (mascarado):"
+            echo "   Comprimento: ${#TOKEN} caracteres"
+            echo "   Primeiros 15 chars: ${TOKEN:0:15}..."
+            echo "   Últimos 10 chars: ...${TOKEN: -10}"
+          fi
+          
+          if [ -n "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}"
+            echo "👥 CHAT ID:"
+            echo "   Valor: $CHAT_ID"
+            echo "   Comprimento: ${#CHAT_ID} caracteres"
+          fi
+          
+          echo ""
+          echo "🔗 TESTES DE CONECTIVIDADE:"
+          
+          # Testar se o bot existe
+          echo "📱 Testando se o bot existe..."
+          BOT_RESPONSE=$(curl -s "https://api.telegram.org/bot${TOKEN}/getMe")
+          echo "   Resposta: $BOT_RESPONSE"
+          
+          if echo "$BOT_RESPONSE" | grep -q '"ok":true'; then
+            echo "   ✅ Bot encontrado!"
+            
+            # Extrair informações do bot
+            BOT_NAME=$(echo "$BOT_RESPONSE" | grep -o '"first_name":"[^"]*"' | cut -d'"' -f4)
+            BOT_USERNAME=$(echo "$BOT_RESPONSE" | grep -o '"username":"[^"]*"' | cut -d'"' -f4)
+            echo "   📝 Nome: $BOT_NAME"
+            echo "   🆔 Username: @$BOT_USERNAME"
+            
+            # Testar se pode acessar o chat
+            echo "👥 Testando acesso ao chat..."
+            CHAT_RESPONSE=$(curl -s "https://api.telegram.org/bot${TOKEN}/getChat?chat_id=${CHAT_ID}")
+            echo "   Resposta: $CHAT_RESPONSE"
+            
+            if echo "$CHAT_RESPONSE" | grep -q '"ok":true'; then
+              echo "   ✅ Chat acessível!"
+              
+              # Extrair informações do chat
+              CHAT_TITLE=$(echo "$CHAT_RESPONSE" | grep -o '"title":"[^"]*"' | cut -d'"' -f4)
+              CHAT_TYPE=$(echo "$CHAT_RESPONSE" | grep -o '"type":"[^"]*"' | cut -d'"' -f4)
+              echo "   📝 Título: $CHAT_TITLE"
+              echo "   🏷️ Tipo: $CHAT_TYPE"
+              
+              # Testar envio de mensagem
+              echo "📤 Testando envio de mensagem..."
+              SEND_RESPONSE=$(curl -s -X POST \
+                "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+                -H "Content-Type: application/json" \
+                -d "{
+                  \"chat_id\": \"${CHAT_ID}\",
+                  \"text\": \"🧪 Teste de debug - API funcionando!\",
+                  \"parse_mode\": \"Markdown\"
+                }")
+              echo "   Resposta: $SEND_RESPONSE"
+              
+              if echo "$SEND_RESPONSE" | grep -q '"ok":true'; then
+                echo "   ✅ Mensagem enviada com sucesso!"
+                echo ""
+                echo "🎯 STATUS: TUDO FUNCIONANDO PERFEITAMENTE!"
+              else
+                echo "   ❌ Falha ao enviar mensagem"
+                echo "   🔍 Verifique as permissões do bot no chat"
+              fi
+            else
+              echo "   ❌ Chat não acessível"
+              echo "   🔍 Verifique se o bot foi adicionado ao grupo/canal"
+            fi
+          else
+            echo "   ❌ Bot não encontrado"
+            echo "   🔍 Verifique o token do bot"
+          fi
+          
+          echo ""
+          echo "📊 RESUMO FINAL:"
+          echo "   Bot válido: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && '✅ Sim' || '❌ Não' }}"
+          echo "   Chat acessível: ${{ secrets.TELEGRAM_CHAT_ID != '' && '✅ Sim' || '❌ Não' }}"
+          echo "   API funcionando: ${{ '✅ Sim' || '❌ Não' }}"
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

@@ -29,11 +29,52 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Telegram notification via curl
+      - name: Debug configuration
+        run: |
+          echo "🔍 Verificando configuração antes de enviar..."
+          echo "Token configurado: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && '✅ Sim' || '❌ Não' }}"
+          echo "Chat ID configurado: ${{ secrets.TELEGRAM_CHAT_ID != '' && '✅ Sim' || '❌ Não' }}"
+          echo "Token length: ${#TELEGRAM_BOT_TOKEN}"
+          echo "Chat ID: $TELEGRAM_CHAT_ID"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Test bot connection
+        run: |
+          echo "📱 Testando conexão com o bot..."
+          BOT_RESPONSE=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe")
+          echo "Resposta getMe: $BOT_RESPONSE"
+          
+          if ! echo "$BOT_RESPONSE" | grep -q '"ok":true'; then
+            echo "❌ Bot não encontrado ou token inválido"
+            exit 1
+          fi
+          echo "✅ Bot encontrado e válido"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+      - name: Test chat access
+        run: |
+          echo "👥 Testando acesso ao chat..."
+          CHAT_RESPONSE=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getChat?chat_id=${TELEGRAM_CHAT_ID}")
+          echo "Resposta getChat: $CHAT_RESPONSE"
+          
+          if ! echo "$CHAT_RESPONSE" | grep -q '"ok":true'; then
+            echo "❌ Chat não acessível"
+            echo "Verifique se o bot foi adicionado ao grupo/canal"
+            exit 1
+          fi
+          echo "✅ Chat acessível"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Send Telegram notification
         run: |
           echo "📤 Enviando notificação no Telegram..."
           
-          # Preparar a mensagem
+          # Preparar a mensagem (escapar caracteres especiais)
           MESSAGE="🤖 **GitHub Actions - ${{ inputs.workflow_name }}**
           
           📋 **Status:** ${{ inputs.status == 'success' && '✅ Sucesso' || inputs.status == 'failure' && '❌ Falha' || '⚠️ Cancelado' }}
@@ -46,8 +87,10 @@ jobs:
           
           ⏰ **Executado em:** $(date -u +'%d/%m/%Y %H:%M:%S') UTC"
           
-          # Enviar via curl
-          RESPONSE=$(curl -s -X POST \
+          # Enviar via curl com melhor tratamento de erros
+          echo "Enviando mensagem para chat_id: $TELEGRAM_CHAT_ID"
+          
+          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -H "Content-Type: application/json" \
             -d "{
@@ -56,15 +99,38 @@ jobs:
               \"parse_mode\": \"Markdown\"
             }")
           
+          # Separar resposta e código HTTP
+          HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE:" | cut -d: -f2)
+          API_RESPONSE=$(echo "$RESPONSE" | grep -v "HTTP_CODE:")
+          
           echo "📥 Resposta da API:"
-          echo "$RESPONSE"
+          echo "$API_RESPONSE"
+          echo "📊 Código HTTP: $HTTP_CODE"
           
           # Verificar se foi bem-sucedido
-          if echo "$RESPONSE" | grep -q '"ok":true'; then
+          if echo "$API_RESPONSE" | grep -q '"ok":true'; then
             echo "✅ Notificação enviada com sucesso!"
           else
             echo "❌ Falha ao enviar notificação"
-            echo "🔍 Verifique o token e chat_id"
+            echo "🔍 Erro detalhado: $API_RESPONSE"
+            echo "📊 Código HTTP: $HTTP_CODE"
+            
+            # Sugestões baseadas no erro
+            if [ "$HTTP_CODE" = "404" ]; then
+              echo "🚨 ERRO 404: Bot ou chat não encontrado"
+              echo "   - Verifique se o token está correto"
+              echo "   - Verifique se o chat ID está correto"
+              echo "   - Verifique se o bot foi adicionado ao grupo/canal"
+            elif [ "$HTTP_CODE" = "403" ]; then
+              echo "🚨 ERRO 403: Bot bloqueado ou sem permissões"
+              echo "   - Verifique se o bot não foi bloqueado"
+              echo "   - Verifique as permissões do bot no chat"
+            elif [ "$HTTP_CODE" = "400" ]; then
+              echo "🚨 ERRO 400: Parâmetros inválidos"
+              echo "   - Verifique o formato da mensagem"
+              echo "   - Verifique o chat ID"
+            fi
+            
             exit 1
           fi
         env:
