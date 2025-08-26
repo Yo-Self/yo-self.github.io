@@ -1,0 +1,81 @@
+name: Playwright Tests - Development Server
+
+on:
+  push:
+    branches: [ main, develop, feature/*, bugfix/* ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test-dev-server:
+    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+    
+    - name: Start development server with proper wait
+      run: |
+        echo "Starting development server..."
+        npm run dev &
+        DEV_PID=$!
+        
+        echo "Waiting for development server to start..."
+        for i in {1..25}; do
+          if curl -f http://localhost:3000 > /dev/null 2>&1; then
+            echo "Development server is ready after $i attempts!"
+            break
+          fi
+          echo "Attempt $i: Development server not ready yet, waiting..."
+          sleep 2
+        done
+        
+        # Final check
+        if ! curl -f http://localhost:3000 > /dev/null 2>&1; then
+          echo "Development server failed to start after 50 seconds"
+          exit 1
+        fi
+        
+        echo "Development server is running and responding!"
+        
+        # Keep server running in background
+        wait $DEV_PID &
+      env:
+        CI: true
+    
+    - name: Verify development server is running
+      run: |
+        echo "Verifying development server is running..."
+        curl -f http://localhost:3000
+        echo "Development server verification successful!"
+    
+    - name: Run all tests
+      run: |
+        echo "Running all Playwright tests..."
+        npx playwright test --project=chromium --reporter=line
+      env:
+        CI: true
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-dev-server-results
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 7

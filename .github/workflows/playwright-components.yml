@@ -1,0 +1,44 @@
+name: Playwright Component Tests
+
+on:
+  push:
+    branches: [ main, develop, feature/*, bugfix/* ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test-components:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+    
+    - name: Run component tests only
+      run: npx playwright test tests/component-tests.spec.cjs --project=chromium --reporter=line
+      env:
+        CI: true
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-component-results
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 7
