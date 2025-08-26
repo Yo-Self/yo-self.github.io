@@ -47,22 +47,46 @@ jobs:
   notify-success:
     needs: test
     if: always() && needs.test.result == 'success'
-    uses: ./.github/workflows/telegram-notification-curl.yml
-    with:
-      message: "✅ Todos os testes Playwright passaram com sucesso!"
-      status: "success"
-      workflow_name: "Playwright Tests"
-      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      branch: ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send success notification
+        uses: appleboy/telegram-action@v0.0.9
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🤖 **GitHub Actions - Playwright Tests**
+            
+            📋 **Status:** ✅ Sucesso
+            
+            🌿 **Branch:** ${{ github.ref_name }}
+            
+            📝 **Detalhes:** Todos os testes Playwright passaram com sucesso!
+            
+            🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ⏰ **Executado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}
 
   # Notification job - Failure
   notify-failure:
     needs: test
     if: always() && needs.test.result == 'failure'
-    uses: ./.github/workflows/telegram-notification-curl.yml
-    with:
-      message: "❌ Alguns testes Playwright falharam. Verifique os resultados para mais detalhes."
-      status: "failure"
-      workflow_name: "Playwright Tests"
-      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      branch: ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send failure notification
+        uses: appleboy/telegram-action@v0.0.9
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🤖 **GitHub Actions - Playwright Tests**
+            
+            📋 **Status:** ❌ Falha
+            
+            🌿 **Branch:** ${{ github.ref_name }}
+            
+            📝 **Detalhes:** Alguns testes Playwright falharam. Verifique os resultados para mais detalhes.
+            
+            🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ⏰ **Executado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}

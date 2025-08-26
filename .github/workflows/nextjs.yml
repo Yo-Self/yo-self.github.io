@@ -98,22 +98,46 @@ jobs:
   notify-success:
     needs: [build, deploy]
     if: always() && (needs.build.result == 'success' && needs.deploy.result == 'success')
-    uses: ./.github/workflows/telegram-notification-curl.yml
-    with:
-      message: "✅ Build e deploy concluídos com sucesso! O site foi publicado no GitHub Pages."
-      status: "success"
-      workflow_name: "Deploy Next.js"
-      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      branch: ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send success notification
+        uses: appleboy/telegram-action@v0.0.9
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🤖 **GitHub Actions - Deploy Next.js**
+            
+            📋 **Status:** ✅ Sucesso
+            
+            🌿 **Branch:** ${{ github.ref_name }}
+            
+            📝 **Detalhes:** Build e deploy concluídos com sucesso! O site foi publicado no GitHub Pages.
+            
+            🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ⏰ **Executado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}
 
   # Notification job - Failure
   notify-failure:
     needs: [build, deploy]
     if: always() && (needs.build.result == 'failure' || needs.deploy.result == 'failure')
-    uses: ./.github/workflows/telegram-notification-curl.yml
-    with:
-      message: "❌ Falha no build ou deploy. Verifique os logs para mais detalhes."
-      status: "failure"
-      workflow_name: "Deploy Next.js"
-      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      branch: ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send failure notification
+        uses: appleboy/telegram-action@v0.0.9
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🤖 **GitHub Actions - Deploy Next.js**
+            
+            📋 **Status:** ❌ Falha
+            
+            🌿 **Branch:** ${{ github.ref_name }}
+            
+            📝 **Detalhes:** Falha no build ou deploy. Verifique os logs para mais detalhes.
+            
+            🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ⏰ **Executado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}
