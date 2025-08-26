@@ -13,6 +13,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@openreplay/tracker": "^16.4.7",
+    "@playwright/test": "^1.40.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
     "framer-motion": "^12.23.0",

@@ -43,3 +43,10 @@ next-env.d.ts
 
 # supabase edge functions (not part of Next.js build)
 supabase-functions/
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

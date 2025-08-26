@@ -1,0 +1,67 @@
+name: Playwright Regression Tests
+
+on:
+  schedule:
+    # Roda todos os dias às 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  regression-test:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+    
+    - name: Build application
+      run: npm run build
+      env:
+        CI: true
+    
+    - name: Start application
+      run: |
+        npm run start &
+        echo "Waiting for app to start..."
+        sleep 60
+        echo "App should be ready now"
+      env:
+        CI: true
+    
+    - name: Run all Playwright tests
+      run: npx playwright test --reporter=line
+      env:
+        CI: true
+    
+    - name: Generate HTML report
+      run: npx playwright show-report --host 0.0.0.0 &
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: regression-test-results
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 30
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Regression tests failed!"
+        echo "Check the test results in the artifacts above."
+        echo "Failed tests may indicate a regression in the application."
