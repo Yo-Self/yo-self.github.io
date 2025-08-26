@@ -99,6 +99,23 @@ Para testar a funcionalidade de text-to-speech:
 node test-voice.js
 ```
 
+## 📱 Notificações no Telegram
+
+O projeto inclui notificações automáticas no Telegram para todos os workflows do GitHub Actions:
+
+- ✅ **Deploy**: Notificações de sucesso/falha do build e deploy
+- 🧪 **Testes**: Notificações de sucesso/falha dos testes Playwright
+- 🔔 **Teste Manual**: Workflow para testar as notificações
+
+### Configuração
+Veja o arquivo [TELEGRAM_NOTIFICATION_SETUP.md](./TELEGRAM_NOTIFICATION_SETUP.md) para instruções detalhadas de configuração.
+
+### Teste das Notificações
+Para testar se as notificações estão funcionando:
+1. Vá para a aba **Actions** no GitHub
+2. Execute o workflow **"Test Telegram Notification"**
+3. Verifique se a mensagem chega no seu grupo/canal do Telegram
+
 Ou abra o console do navegador e execute o código fornecido pelo script.
 
 ## 📚 Documentação

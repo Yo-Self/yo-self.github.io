@@ -1,0 +1,48 @@
+name: Telegram Notification
+
+on:
+  workflow_call:
+    inputs:
+      message:
+        description: 'Mensagem para enviar no Telegram'
+        required: true
+        type: string
+      status:
+        description: 'Status do workflow (success, failure, cancelled)'
+        required: true
+        type: string
+      workflow_name:
+        description: 'Nome do workflow que executou'
+        required: true
+        type: string
+      run_url:
+        description: 'URL da execução do workflow'
+        required: true
+        type: string
+      branch:
+        description: 'Branch que foi executada'
+        required: false
+        type: string
+        default: 'main'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🤖 **GitHub Actions - ${{ inputs.workflow_name }}**
+            
+            📋 **Status:** ${{ inputs.status == 'success' && '✅ Sucesso' || inputs.status == 'failure' && '❌ Falha' || '⚠️ Cancelado' }}
+            
+            🌿 **Branch:** ${{ inputs.branch }}
+            
+            📝 **Detalhes:** ${{ inputs.message }}
+            
+            🔗 **Ver execução:** [${{ inputs.workflow_name }}](${{ inputs.run_url }})
+            
+            ⏰ **Executado em:** ${{ format('dd/MM/yyyy HH:mm:ss', 'UTC') }}

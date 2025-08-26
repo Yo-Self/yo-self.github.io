@@ -42,3 +42,27 @@ jobs:
           playwright-report/
           test-results/
         retention-days: 7
+
+  # Notification job - Success
+  notify-success:
+    needs: test
+    if: always() && needs.test.result == 'success'
+    uses: ./.github/workflows/telegram-notification.yml
+    with:
+      message: "✅ Todos os testes Playwright passaram com sucesso!"
+      status: "success"
+      workflow_name: "Playwright Tests"
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      branch: ${{ github.ref_name }}
+
+  # Notification job - Failure
+  notify-failure:
+    needs: test
+    if: always() && needs.test.result == 'failure'
+    uses: ./.github/workflows/telegram-notification.yml
+    with:
+      message: "❌ Alguns testes Playwright falharam. Verifique os resultados para mais detalhes."
+      status: "failure"
+      workflow_name: "Playwright Tests"
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      branch: ${{ github.ref_name }}
