@@ -65,6 +65,10 @@ TELEGRAM_CHAT_ID = <chat_id_do_grupo_ou_canal>
 - **Notificações**: Sucesso/falha dos testes
 - **Mensagem**: Status da execução dos testes
 
+### 3. Teste de Notificações
+- **Test Telegram Notification**: Testa a action do Telegram
+- **Test Telegram with Curl**: Testa a API diretamente via curl
+
 ## 📝 Estrutura das Mensagens
 
 As notificações seguem este formato:
@@ -84,6 +88,30 @@ As notificações seguem este formato:
 ```
 
 ## 🚨 Troubleshooting
+
+### Erro: "missing telegram token or user list"
+
+Este erro indica que os secrets não estão sendo passados corretamente para a action. **Soluções:**
+
+1. **Verificar se os secrets existem**:
+   - Vá para Settings → Secrets and variables → Actions
+   - Confirme que `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` existem
+
+2. **Verificar os nomes dos secrets**:
+   - Os nomes devem ser **exatamente** como mostrado acima
+   - Não use espaços ou caracteres especiais
+
+3. **Verificar os valores dos secrets**:
+   - O token deve começar com números (ex: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`)
+   - O chat ID deve ser um número (ex: `-1001234567890`)
+
+4. **Testar com o workflow curl**:
+   - Execute o workflow "Test Telegram with Curl"
+   - Este workflow mostra informações detalhadas sobre a configuração
+
+5. **Verificar permissões do bot**:
+   - O bot deve estar no grupo/canal
+   - O bot deve ter permissão para enviar mensagens
 
 ### Bot não envia mensagens:
 1. Verifique se o token está correto

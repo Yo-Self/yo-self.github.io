@@ -13,6 +13,29 @@ jobs:
   test-notification:
     runs-on: ubuntu-latest
     steps:
+      - name: Check secrets
+        run: |
+          echo "🔍 Verificando configuração dos secrets..."
+          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
+            echo "❌ TELEGRAM_BOT_TOKEN não está configurado"
+            exit 1
+          else
+            echo "✅ TELEGRAM_BOT_TOKEN configurado"
+          fi
+          
+          if [ -z "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            echo "❌ TELEGRAM_CHAT_ID não está configurado"
+            exit 1
+          else
+            echo "✅ TELEGRAM_CHAT_ID configurado"
+          fi
+          
+          echo "🔑 Token (primeiros 10 caracteres): ${TELEGRAM_BOT_TOKEN:0:10}..."
+          echo "👥 Chat ID: $TELEGRAM_CHAT_ID"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
       - name: Test Telegram notification
         uses: appleboy/telegram-action@master
         with:
