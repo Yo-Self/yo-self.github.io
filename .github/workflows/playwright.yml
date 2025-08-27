@@ -46,7 +46,8 @@ jobs:
   # Notification job - Success
   notify-success:
     needs: test
-    if: always() && needs.test.result == 'success'
+    # Skip on Dependabot or when secrets are unavailable (e.g., PRs from forks/Dependabot)
+    if: always() && needs.test.result == 'success' && github.actor != 'dependabot[bot]' && secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != ''
     runs-on: ubuntu-latest
     steps:
       - name: Send success notification
@@ -70,7 +71,8 @@ jobs:
   # Notification job - Failure
   notify-failure:
     needs: test
-    if: always() && needs.test.result == 'failure'
+    # Skip on Dependabot or when secrets are unavailable (e.g., PRs from forks/Dependabot)
+    if: always() && needs.test.result == 'failure' && github.actor != 'dependabot[bot]' && secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != ''
     runs-on: ubuntu-latest
     steps:
       - name: Send failure notification
