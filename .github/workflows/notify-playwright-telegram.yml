@@ -37,20 +37,36 @@ jobs:
           echo "url=$URL" >> $GITHUB_OUTPUT
           echo "updated_at=$UPDATED_AT" >> $GITHUB_OUTPUT
 
-      - name: Send Telegram notification
-        uses: appleboy/telegram-action@v0.0.9
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            🤖 **GitHub Actions - Playwright Tests**
-
-            📋 **Status:** ${{ steps.msg.outputs.status_emoji }}
-
-            🌿 **Branch:** ${{ steps.msg.outputs.branch }}
-
-            👤 **Autor:** ${{ steps.msg.outputs.actor }}
-
-            🔗 **Ver execução:** [Abrir execução](${{ steps.msg.outputs.url }})
-
-            ⏰ **Executado em:** ${{ steps.msg.outputs.updated_at }}
+      - name: Send Telegram notification to CI/CD tab
+        run: |
+          # Primeiro, tenta enviar para o chat_id atual
+          RESPONSE=$(curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "message_thread_id": 2,
+              "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ${{ steps.msg.outputs.status_emoji }}\n\n🌿 **Branch:** ${{ steps.msg.outputs.branch }}\n\n👤 **Autor:** ${{ steps.msg.outputs.actor }}\n\n🔗 **Ver execução:** [Abrir execução](${{ steps.msg.outputs.url }})\n\n⏰ **Executado em:** ${{ steps.msg.outputs.updated_at }}",
+              "parse_mode": "Markdown"
+            }')
+          
+          # Se falhar com erro de supergrupo, usa o migrate_to_chat_id
+          if echo "$RESPONSE" | grep -q "migrate_to_chat_id"; then
+            echo "🔄 Chat foi convertido para supergrupo, usando migrate_to_chat_id..."
+            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' }')
+            echo "📱 Usando chat_id: $MIGRATE_ID"
+            
+            # Envia a mensagem com o chat_id correto
+            curl -X POST \
+              "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "chat_id": '$MIGRATE_ID',
+                "message_thread_id": 2,
+                "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ${{ steps.msg.outputs.status_emoji }}\n\n🌿 **Branch:** ${{ steps.msg.outputs.branch }}\n\n👤 **Autor:** ${{ steps.msg.outputs.actor }}\n\n🔗 **Ver execução:** [Abrir execução](${{ steps.msg.outputs.url }})\n\n⏰ **Executado em:** ${{ steps.msg.outputs.updated_at }}",
+                "parse_mode": "Markdown"
+              }'
+          else
+            echo "✅ Notificação enviada com sucesso!"
+            echo "$RESPONSE"
+          fi

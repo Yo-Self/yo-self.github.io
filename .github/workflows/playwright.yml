@@ -89,23 +89,39 @@ jobs:
     if: always() && needs.test.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Send success notification
-        uses: appleboy/telegram-action@v0.0.9
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            🤖 **GitHub Actions - Playwright Tests**
+      - name: Send success notification to CI/CD tab
+        run: |
+          # Primeiro, tenta enviar para o chat_id atual
+          RESPONSE=$(curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "message_thread_id": 2,
+              "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ✅ Sucesso\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Todos os testes Playwright passaram com sucesso!\n\n🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+              "parse_mode": "Markdown"
+            }')
+          
+          # Se falhar com erro de supergrupo, usa o migrate_to_chat_id
+          if echo "$RESPONSE" | grep -q "migrate_to_chat_id"; then
+            echo "🔄 Chat foi convertido para supergrupo, usando migrate_to_chat_id..."
+            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' }')
+            echo "📱 Usando chat_id: $MIGRATE_ID"
             
-            📋 **Status:** ✅ Sucesso
-            
-            🌿 **Branch:** ${{ github.ref_name }}
-            
-            📝 **Detalhes:** Todos os testes Playwright passaram com sucesso!
-            
-            🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            
-            ⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}
+            # Envia a mensagem com o chat_id correto
+            curl -X POST \
+              "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "chat_id": '$MIGRATE_ID',
+                "message_thread_id": 2,
+                "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ✅ Sucesso\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Todos os testes Playwright passaram com sucesso!\n\n🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+                "parse_mode": "Markdown"
+              }'
+          else
+            echo "✅ Notificação enviada com sucesso!"
+            echo "$RESPONSE"
+          fi
 
   # Notification job - Failure
   notify-failure:
@@ -113,20 +129,36 @@ jobs:
     if: always() && needs.test.result == 'failure'
     runs-on: ubuntu-latest
     steps:
-      - name: Send failure notification
-        uses: appleboy/telegram-action@v0.0.9
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            🤖 **GitHub Actions - Playwright Tests**
+      - name: Send failure notification to CI/CD tab
+        run: |
+          # Primeiro, tenta enviar para o chat_id atual
+          RESPONSE=$(curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "message_thread_id": 2,
+              "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ❌ Falha\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Alguns testes Playwright falharam. Verifique os resultados para mais detalhes.\n\n🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+              "parse_mode": "Markdown"
+            }')
+          
+          # Se falhar com erro de supergrupo, usa o migrate_to_chat_id
+          if echo "$RESPONSE" | grep -q "migrate_to_chat_id"; then
+            echo "🔄 Chat foi convertido para supergrupo, usando migrate_to_chat_id..."
+            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' }')
+            echo "📱 Usando chat_id: $MIGRATE_ID"
             
-            📋 **Status:** ❌ Falha
-            
-            🌿 **Branch:** ${{ github.ref_name }}
-            
-            📝 **Detalhes:** Alguns testes Playwright falharam. Verifique os resultados para mais detalhes.
-            
-            🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            
-            ⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}
+            # Envia a mensagem com o chat_id correto
+            curl -X POST \
+              "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "chat_id": '$MIGRATE_ID',
+                "message_thread_id": 2,
+                "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ❌ Falha\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Alguns testes Playwright falharam. Verifique os resultados para mais detalhes.\n\n🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+                "parse_mode": "Markdown"
+              }'
+          else
+            echo "✅ Notificação enviada com sucesso!"
+            echo "$RESPONSE"
+          fi
