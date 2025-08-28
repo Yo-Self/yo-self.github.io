@@ -93,7 +93,6 @@ export type DbDishCategory = {
 
 export type DbComplementGroup = {
   id: string;
-  dish_id: string;
   title: string;
   description: string | null;
   required: boolean;
@@ -153,8 +152,6 @@ async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T>
   
   const data = await res.json() as T;
   
-
-  
   return data;
 }
 
@@ -195,26 +192,46 @@ async function fetchDishCategoriesByDishIds(dishIds: string[]): Promise<DbDishCa
   return rows ?? [];
 }
 
-async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<DbComplementGroup[]> {
-  if (dishIds.length === 0) return [];
+type ComplementGroupsResult = {
+  groups: DbComplementGroup[];
+  associations: Map<string, string[]>;
+};
+
+async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<ComplementGroupsResult> {
+  if (dishIds.length === 0) return { groups: [], associations: new Map() };
   
   try {
     // Primeiro buscar os IDs dos complement groups através da tabela de junção
     const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
-    const junctionRows = await sbFetch<{complement_group_id: string}[]>(`dish_complement_groups?select=complement_group_id&dish_id=in.(${inList})`);
+    const junctionRows = await sbFetch<{dish_id: string, complement_group_id: string}[]>(`dish_complement_groups?select=dish_id,complement_group_id&dish_id=in.(${inList})`);
     
-    if (!junctionRows || junctionRows.length === 0) return [];
+    if (!junctionRows || junctionRows.length === 0) {
+      return { groups: [], associations: new Map() };
+    }
+    
+    // Criar mapa de associações dish_id -> complement_group_ids
+    const associations = new Map<string, string[]>();
+    for (const row of junctionRows) {
+      const dishId = row.dish_id;
+      const groupId = row.complement_group_id;
+      const existing = associations.get(dishId) || [];
+      existing.push(groupId);
+      associations.set(dishId, existing);
+    }
     
     // Extrair IDs únicos dos grupos
     const groupIds = [...new Set(junctionRows.map(row => row.complement_group_id))];
     const groupInList = groupIds.map(id => encodeURIComponent(id)).join(',');
     
     // Buscar os grupos propriamente ditos
-    const rows = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&id=in.(${groupInList})&order=title.asc`);
-    return rows ?? [];
+    const groups = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&id=in.(${groupInList})&order=title.asc`);
+    
+
+    
+    return { groups: groups ?? [], associations };
   } catch (error) {
     console.error('Erro ao buscar complement groups:', error);
-    return [];
+    return { groups: [], associations: new Map() };
   }
 }
 
@@ -232,7 +249,8 @@ function composeRestaurantModel(
   dishes: DbDish[],
   dishCategories: DbDishCategory[],
   groups: DbComplementGroup[],
-  complements: DbComplement[]
+  complements: DbComplement[],
+  associations: Map<string, string[]>
 ): Restaurant {
   const categoryIdToName = new Map<string | number, string>();
   for (const c of categories) categoryIdToName.set(c.id, c.name);
@@ -256,11 +274,27 @@ function composeRestaurantModel(
     }
   }
 
+  // Mapear grupos por prato usando as associações
   const groupsByDishId = new Map<string, DbComplementGroup[]>();
+  const groupsById = new Map<string, DbComplementGroup>();
+  
+  // Criar mapa de grupos por ID para acesso rápido
   for (const g of groups) {
-    const arr = groupsByDishId.get(g.dish_id) || [];
-    arr.push(g);
-    groupsByDishId.set(g.dish_id, arr);
+    groupsById.set(g.id, g);
+  }
+  
+  // Usar as associações da tabela dish_complement_groups
+  for (const [dishId, groupIds] of associations.entries()) {
+    const dishGroups: DbComplementGroup[] = [];
+    for (const groupId of groupIds) {
+      const group = groupsById.get(groupId);
+      if (group) {
+        dishGroups.push(group);
+      }
+    }
+    if (dishGroups.length > 0) {
+      groupsByDishId.set(dishId, dishGroups);
+    }
   }
 
   const complementsByGroupId = new Map<string, DbComplement[]>();
@@ -403,14 +437,14 @@ export async function fetchFullRestaurants(): Promise<Restaurant[]> {
         fetchComplementGroupsByDishIds(dishIds),
         (async () => {
           const g = await fetchComplementGroupsByDishIds(dishIds);
-          const groupIds = g.map(x => x.id);
+          const groupIds = g.groups.map(x => x.id);
           return fetchComplementsByGroupIds(groupIds);
         })()
       ]);
       // Nota: chamamos fetchComplementGroupsByDishIds duas vezes para extrair groupIds; otimizações possíveis
-      const realGroups = groups; // groups já carregados
+      const realGroups = groups.groups; // groups já carregados
       const realComplements = complements;
-      results.push(composeRestaurantModel(r, cats, dishes, dishCategories, realGroups, realComplements));
+      results.push(composeRestaurantModel(r, cats, dishes, dishCategories, realGroups, realComplements, groups.associations));
     }
     return results;
   } catch (error) {
@@ -450,9 +484,9 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
       fetchDishCategoriesByDishIds(dishIds),
       fetchComplementGroupsByDishIds(dishIds),
     ]);
-    const groupIds = groups.map(g => g.id);
+    const groupIds = groups.groups.map(g => g.id);
     const complements = await fetchComplementsByGroupIds(groupIds);
-    const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
+    const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups.groups, complements, groups.associations);
 
     return result;
   } catch (error) {
@@ -489,9 +523,9 @@ export async function fetchRestaurantBySlugWithData(slug: string): Promise<Resta
       fetchDishCategoriesByDishIds(dishIds),
       fetchComplementGroupsByDishIds(dishIds),
     ]);
-    const groupIds = groups.map(g => g.id);
+    const groupIds = groups.groups.map(g => g.id);
     const complements = await fetchComplementsByGroupIds(groupIds);
-    const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
+    const result = composeRestaurantModel(r, cats, dishes, dishCategories, groups.groups, complements, groups.associations);
 
     return result;
   } catch (error) {
@@ -513,9 +547,9 @@ export async function fetchRestaurantByCuisineWithData(cuisineType: string): Pro
     fetchDishCategoriesByDishIds(dishIds),
     fetchComplementGroupsByDishIds(dishIds),
   ]);
-  const groupIds = groups.map(g => g.id);
+  const groupIds = groups.groups.map(g => g.id);
   const complements = await fetchComplementsByGroupIds(groupIds);
-  return composeRestaurantModel(r, cats, dishes, dishCategories, groups, complements);
+  return composeRestaurantModel(r, cats, dishes, dishCategories, groups.groups, complements, groups.associations);
 }
 
 // Leve: lista apenas dados básicos dos restaurantes para páginas estáticas (evita fetch dinâmico)

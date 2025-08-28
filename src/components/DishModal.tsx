@@ -103,6 +103,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     }
   }, [dish]);
 
+
+
   // Adicionar listener para o botão voltar do navegador
   useEffect(() => {
     const handlePopState = () => {
