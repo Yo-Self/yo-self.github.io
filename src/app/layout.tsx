@@ -11,7 +11,9 @@ import Navigation from "@/components/Navigation";
 import ThemeScript from "@/components/ThemeScript";
 import CartModal from "@/components/CartModal";
 import InstallPrompt from "@/components/InstallPrompt";
-import DynamicManifestProvider from "@/components/DynamicManifestProvider";
+import DynamicMetaTags from "@/components/DynamicMetaTags";
+import StartupRedirect from "@/components/StartupRedirect";
+import A2HSUrlTagger from "@/components/A2HSUrlTagger";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +29,6 @@ export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://yo-self.github.io"),
   title: "Restaurant Menu",
   description: "Digital menu for restaurants",
-  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/yoself.png", sizes: "any", type: "image/png" },
@@ -59,7 +60,6 @@ export default function RootLayout({
         <link rel="icon" href="/yoself.png" type="image/png" />
         <link rel="shortcut icon" href="/yoself.png" />
         <link rel="apple-touch-icon" href="/yoself.png" />
-        <link rel="manifest" href="/manifest.json" />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="/og-image.png" />
@@ -85,7 +85,9 @@ export default function RootLayout({
             {/* Componentes globais do carrinho */}
             <CartModal />
             <InstallPrompt />
-            <DynamicManifestProvider />
+            <DynamicMetaTags />
+            <StartupRedirect />
+            <A2HSUrlTagger />
           </CartProvider>
         </AccessibilityProvider>
         <Analytics />

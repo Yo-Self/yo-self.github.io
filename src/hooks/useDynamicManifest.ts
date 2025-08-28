@@ -5,11 +5,16 @@ export function useDynamicManifest() {
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
 
   useEffect(() => {
+    console.log('useDynamicManifest: Route changed to:', currentRoute);
+    console.log('useDynamicManifest: isRestaurantPage:', isRestaurantPage);
+    console.log('useDynamicManifest: restaurantName:', restaurantName);
+    
     // Só modificar o manifest se estivermos em uma página de restaurante
     if (isRestaurantPage && restaurantName) {
+      console.log('useDynamicManifest: Updating manifest for restaurant:', restaurantName);
       updateManifestForRestaurant(currentRoute, restaurantName);
     } else {
-      // Reset para o manifest padrão
+      console.log('useDynamicManifest: Resetting to default manifest');
       resetManifest();
     }
   }, [currentRoute, isRestaurantPage, restaurantName]);
@@ -107,6 +112,8 @@ export function useDynamicManifest() {
 
   const updateManifest = (manifestData: any) => {
     try {
+      console.log('updateManifest: Updating manifest with data:', manifestData);
+      
       // Criar um blob com o novo manifest
       const manifestBlob = new Blob([JSON.stringify(manifestData, null, 2)], {
         type: 'application/json'
@@ -114,31 +121,51 @@ export function useDynamicManifest() {
       
       // Criar URL para o blob
       const manifestUrl = URL.createObjectURL(manifestBlob);
+      console.log('updateManifest: Created blob URL:', manifestUrl);
       
       // Encontrar e atualizar o link do manifest
       let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
       
       if (manifestLink) {
+        console.log('updateManifest: Found existing manifest link:', manifestLink.href);
+        
         // Remover URL anterior se existir
         if (manifestLink.dataset.blobUrl) {
           URL.revokeObjectURL(manifestLink.dataset.blobUrl);
+          console.log('updateManifest: Revoked previous blob URL');
         }
         
         // Atualizar com nova URL
         manifestLink.href = manifestUrl;
         manifestLink.dataset.blobUrl = manifestUrl;
+        console.log('updateManifest: Updated manifest link to:', manifestUrl);
       } else {
+        console.log('updateManifest: Creating new manifest link');
         // Criar novo link se não existir
         manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
         manifestLink.href = manifestUrl;
         manifestLink.dataset.blobUrl = manifestUrl;
         document.head.appendChild(manifestLink);
+        console.log('updateManifest: Added new manifest link to head');
       }
 
-      console.log('Manifest atualizado para:', manifestData.start_url);
+      // Forçar atualização do manifest no navegador
+      setTimeout(() => {
+        console.log('updateManifest: Forcing manifest refresh...');
+        // Tentar forçar o navegador a reconhecer o novo manifest
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => {
+              console.log('updateManifest: Found service worker registration');
+            });
+          });
+        }
+      }, 100);
+
+      console.log('updateManifest: Manifest successfully updated for:', manifestData.start_url);
     } catch (error) {
-      console.error('Erro ao atualizar manifest:', error);
+      console.error('updateManifest: Error updating manifest:', error);
     }
   };
 

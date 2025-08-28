@@ -28,12 +28,22 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     };
   }
   
+  // Canonical absoluto e manifest dinâmico com start_url correto
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || '';
+  const path = `/restaurant/${decoded}`;
+  const absolute = origin ? `${origin}${path}` : path;
+  
   return {
     title: `Cardápio digital ${restaurant.name}`,
     description: `Cardápio digital do ${restaurant.name}`,
+    alternates: {
+      canonical: absolute,
+    },
+    manifest: `/api/manifest?start_url=${encodeURIComponent(path)}&name=${encodeURIComponent(restaurant.name + ' - Cardápio')}&short_name=${encodeURIComponent(restaurant.name)}`,
     openGraph: {
       title: `Cardápio digital ${restaurant.name}`,
       description: `Cardápio digital do ${restaurant.name}`,
+      url: absolute,
     },
     twitter: {
       title: `Cardápio digital ${restaurant.name}`,
