@@ -194,7 +194,7 @@ async function fetchDishCategoriesByDishIds(dishIds: string[]): Promise<DbDishCa
 
 type ComplementGroupsResult = {
   groups: DbComplementGroup[];
-  associations: Map<string, string[]>;
+  associations: Map<string, Array<{groupId: string, position: number | null}>>;
 };
 
 async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<ComplementGroupsResult> {
@@ -202,20 +202,22 @@ async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<Comple
   
   try {
     // Primeiro buscar os IDs dos complement groups através da tabela de junção
+    // Incluir também a posição para ordenação correta
     const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
-    const junctionRows = await sbFetch<{dish_id: string, complement_group_id: string}[]>(`dish_complement_groups?select=dish_id,complement_group_id&dish_id=in.(${inList})`);
+    const junctionRows = await sbFetch<{dish_id: string, complement_group_id: string, position: number | null}[]>(`dish_complement_groups?select=dish_id,complement_group_id,position&dish_id=in.(${inList})`);
     
     if (!junctionRows || junctionRows.length === 0) {
       return { groups: [], associations: new Map() };
     }
     
-    // Criar mapa de associações dish_id -> complement_group_ids
-    const associations = new Map<string, string[]>();
+    // Criar mapa de associações dish_id -> complement_group_ids com posições
+    const associations = new Map<string, Array<{groupId: string, position: number | null}>>();
     for (const row of junctionRows) {
       const dishId = row.dish_id;
       const groupId = row.complement_group_id;
+      const position = row.position;
       const existing = associations.get(dishId) || [];
-      existing.push(groupId);
+      existing.push({ groupId, position });
       associations.set(dishId, existing);
     }
     
@@ -224,9 +226,7 @@ async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<Comple
     const groupInList = groupIds.map(id => encodeURIComponent(id)).join(',');
     
     // Buscar os grupos propriamente ditos
-    const groups = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&id=in.(${groupInList})&order=title.asc`);
-    
-
+    const groups = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&id=in.(${groupInList})`);
     
     return { groups: groups ?? [], associations };
   } catch (error) {
@@ -250,7 +250,7 @@ function composeRestaurantModel(
   dishCategories: DbDishCategory[],
   groups: DbComplementGroup[],
   complements: DbComplement[],
-  associations: Map<string, string[]>
+  associations: Map<string, Array<{groupId: string, position: number | null}>>
 ): Restaurant {
   const categoryIdToName = new Map<string | number, string>();
   for (const c of categories) categoryIdToName.set(c.id, c.name);
@@ -284,16 +284,44 @@ function composeRestaurantModel(
   }
   
   // Usar as associações da tabela dish_complement_groups
-  for (const [dishId, groupIds] of associations.entries()) {
-    const dishGroups: DbComplementGroup[] = [];
-    for (const groupId of groupIds) {
+  for (const [dishId, groupAssociations] of associations.entries()) {
+    const dishGroups: Array<{group: DbComplementGroup, position: number | null}> = [];
+    for (const { groupId, position } of groupAssociations) {
       const group = groupsById.get(groupId);
       if (group) {
-        dishGroups.push(group);
+        dishGroups.push({ group, position });
       }
     }
-    if (dishGroups.length > 0) {
-      groupsByDishId.set(dishId, dishGroups);
+    
+    // Ordenar os grupos por posição e depois alfabeticamente por título
+    dishGroups.sort((a, b) => {
+      // Se ambos têm posição definida
+      if (a.position !== null && b.position !== null) {
+        // Se posições são diferentes, ordenar por posição
+        if (a.position !== b.position) {
+          return a.position - b.position;
+        }
+        // Se posições são iguais, ordenar alfabeticamente por título
+        return a.group.title.localeCompare(b.group.title);
+      }
+      
+      // Se apenas um tem posição definida, o com posição vem primeiro
+      if (a.position !== null && b.position === null) {
+        return -1;
+      }
+      if (a.position === null && b.position !== null) {
+        return 1;
+      }
+      
+      // Se ambos não têm posição, ordenar alfabeticamente por título
+      return a.group.title.localeCompare(b.group.title);
+    });
+    
+    // Extrair apenas os grupos ordenados
+    const orderedGroups = dishGroups.map(item => item.group);
+    
+    if (orderedGroups.length > 0) {
+      groupsByDishId.set(dishId, orderedGroups);
     }
   }
 
