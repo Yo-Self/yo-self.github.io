@@ -197,10 +197,25 @@ async function fetchDishCategoriesByDishIds(dishIds: string[]): Promise<DbDishCa
 
 async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<DbComplementGroup[]> {
   if (dishIds.length === 0) return [];
-  // Usar cache padrão para geração estática
-  const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
-  const rows = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&dish_id=in.(${inList})&order=position.asc`);
-  return rows ?? [];
+  
+  try {
+    // Primeiro buscar os IDs dos complement groups através da tabela de junção
+    const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
+    const junctionRows = await sbFetch<{complement_group_id: string}[]>(`dish_complement_groups?select=complement_group_id&dish_id=in.(${inList})`);
+    
+    if (!junctionRows || junctionRows.length === 0) return [];
+    
+    // Extrair IDs únicos dos grupos
+    const groupIds = [...new Set(junctionRows.map(row => row.complement_group_id))];
+    const groupInList = groupIds.map(id => encodeURIComponent(id)).join(',');
+    
+    // Buscar os grupos propriamente ditos
+    const rows = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&id=in.(${groupInList})&order=title.asc`);
+    return rows ?? [];
+  } catch (error) {
+    console.error('Erro ao buscar complement groups:', error);
+    return [];
+  }
 }
 
 async function fetchComplementsByGroupIds(groupIds: string[]): Promise<DbComplement[]> {

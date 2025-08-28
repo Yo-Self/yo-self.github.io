@@ -11,6 +11,80 @@ import AccessibilityButton from "./AccessibilityButton";
 import ImageWithLoading from "./ImageWithLoading";
 import { CartIconHeader } from "./CartIcon";
 
+// Smart Restaurant Title Component
+function SmartRestaurantTitle({ name }: { name: string }) {
+  const [titleRef, setTitleRef] = useState<HTMLElement | null>(null);
+  const [fontSize, setFontSize] = useState('text-xl');
+  const [shouldTruncate, setShouldTruncate] = useState(false);
+
+  useEffect(() => {
+    if (!titleRef || !name) return;
+
+    const measureText = () => {
+      // Reset to default state
+      setFontSize('text-xl');
+      setShouldTruncate(false);
+      
+      // Force layout recalculation
+      setTimeout(() => {
+        const element = titleRef;
+        if (!element) return;
+
+        const lineHeight = 24; // Approximate line height for text-xl
+        const maxHeight = 48; // Max height for 2 lines
+        const maxLines = 2;
+        
+        // Check if text overflows
+        if (element.scrollHeight > maxHeight) {
+          // Try smaller font first
+          setFontSize('text-lg');
+          
+          setTimeout(() => {
+            if (element.scrollHeight > maxHeight) {
+              // If still overflows, check if we should truncate
+              const charLimit = Math.floor(name.length * (maxHeight / element.scrollHeight));
+              const overflow = name.length - charLimit;
+              
+              if (overflow > 10) {
+                setShouldTruncate(true);
+              } else {
+                // Try even smaller font
+                setFontSize('text-base');
+              }
+            }
+          }, 10);
+        }
+      }, 10);
+    };
+
+    measureText();
+  }, [name, titleRef]);
+
+  const titleClasses = `
+    logo font-bold text-gray-900 dark:text-white text-center max-w-full
+    ${fontSize}
+    ${shouldTruncate 
+      ? 'line-clamp-2' 
+      : 'leading-tight'
+    }
+  `.trim();
+
+  return (
+    <h1 
+      ref={setTitleRef}
+      className={titleClasses}
+      style={{
+        display: '-webkit-box',
+        WebkitBoxOrient: 'vertical',
+        WebkitLineClamp: shouldTruncate ? 2 : 'unset',
+        overflow: shouldTruncate ? 'hidden' : 'visible',
+        lineHeight: fontSize === 'text-base' ? '1.25' : '1.2'
+      }}
+    >
+      {name}
+    </h1>
+  );
+}
 
 interface HeaderProps {
   restaurant?: Restaurant;
@@ -291,9 +365,9 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
           )}
         </div>
         
-        <h1 className="logo text-2xl font-bold text-gray-900 dark:text-white flex-1 text-center">
-          {restaurant?.name}
-        </h1>
+        <div className="flex-1 px-2 flex items-center justify-center">
+          <SmartRestaurantTitle name={restaurant?.name || ''} />
+        </div>
         
         {restaurant && (
           <div className="flex items-center gap-2 w-20 justify-end">

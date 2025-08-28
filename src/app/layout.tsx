@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "./scroll-animations.css";
+import "./tailwind.css";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
 import { CartProvider } from "@/context/CartContext";
 import Analytics from "@/components/Analytics";
