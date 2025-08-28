@@ -1,4 +1,4 @@
-name: Test Telegram Supergroup Notifications
+name: Test Telegram Notifications
 
 on:
   workflow_dispatch:

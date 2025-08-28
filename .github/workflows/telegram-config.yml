@@ -1,9 +1,0 @@
-# Configuração centralizada para notificações do Telegram
-# Este arquivo define as configurações comuns para todos os workflows
-
-# Configurações do Telegram
-telegram:
-  bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-  chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
-  message_thread_id: 2  # ID da aba CI/CD no supergrupo
-  chat_type: "supergroup"  # Tipo do chat (supergrupo com abas)
