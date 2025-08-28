@@ -44,7 +44,10 @@ module.exports = defineConfig({
     timeout: 120 * 1000,
     env: {
       CI: 'true',
-      NODE_ENV: 'development'
+      NODE_ENV: 'development',
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL_FALLBACK || 'https://demo.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_FALLBACK || 'demo-key',
+      GOOGLE_AI_API_KEY: process.env.GOOGLE_AI_API_KEY || 'demo-key'
     }
   },
 });

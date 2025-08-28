@@ -10,11 +10,29 @@ interface OrganizationPageProps {
 }
 
 export async function generateStaticParams() {
-  const organizations = await OrganizationService.listForStatic();
-  
-  return organizations.map((organization) => ({
-    slug: organization.slug,
-  }));
+  try {
+    const organizations = await OrganizationService.listForStatic();
+    
+    if (!organizations || organizations.length === 0) {
+      console.warn('No organizations found for static generation, using fallback');
+      // Return fallback params for common organization slugs
+      return [
+        { slug: 'auri-monteiro' },
+        { slug: 'test-org' }
+      ];
+    }
+    
+    return organizations.map((organization) => ({
+      slug: organization.slug,
+    }));
+  } catch (error) {
+    console.warn('Failed to generate static params for organizations:', error);
+    // Return fallback params when database is not available
+    return [
+      { slug: 'auri-monteiro' },
+      { slug: 'test-org' }
+    ];
+  }
 }
 
 export default async function OrganizationPage({ params }: OrganizationPageProps) {
