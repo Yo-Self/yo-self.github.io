@@ -116,18 +116,19 @@ jobs:
           # Se falhar com erro de supergrupo, usa o migrate_to_chat_id
           if echo "$RESPONSE" | grep -q "migrate_to_chat_id"; then
             echo "🔄 Chat foi convertido para supergrupo, usando migrate_to_chat_id..."
-            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' ')
+            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' }')
             echo "📱 Usando chat_id: $MIGRATE_ID"
             
+            # Envia a mensagem com o chat_id correto
             curl -X POST \
               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"chat_id\": $MIGRATE_ID,
-                \"message_thread_id\": 2,
-                \"text\": \"🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ✅ Sucesso\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Build e deploy concluídos com sucesso! O site foi publicado no GitHub Pages.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}\",
-                \"parse_mode\": \"Markdown\"
-              }"
+              -d '{
+                "chat_id": '$MIGRATE_ID',
+                "message_thread_id": 2,
+                "text": "🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ✅ Sucesso\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Build e deploy concluídos com sucesso! O site foi publicado no GitHub Pages.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+                "parse_mode": "Markdown"
+              }'
           else
             echo "✅ Notificação enviada com sucesso!"
             echo "$RESPONSE"
@@ -155,18 +156,19 @@ jobs:
           # Se falhar com erro de supergrupo, usa o migrate_to_chat_id
           if echo "$RESPONSE" | grep -q "migrate_to_chat_id"; then
             echo "🔄 Chat foi convertido para supergrupo, usando migrate_to_chat_id..."
-            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' ')
+            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' }')
             echo "📱 Usando chat_id: $MIGRATE_ID"
             
+            # Envia a mensagem com o chat_id correto
             curl -X POST \
               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"chat_id\": $MIGRATE_ID,
-                \"message_thread_id\": 2,
-                \"text\": \"🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ❌ Falha\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Falha no build ou deploy. Verifique os logs para mais detalhes.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}\",
-                \"parse_mode\": \"Markdown\"
-              }"
+              -d '{
+                "chat_id": '$MIGRATE_ID',
+                "message_thread_id": 2,
+                "text": "🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ❌ Falha\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Falha no build ou deploy. Verifique os logs para mais detalhes.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+                "parse_mode": "Markdown"
+              }'
           else
             echo "✅ Notificação enviada com sucesso!"
             echo "$RESPONSE"
