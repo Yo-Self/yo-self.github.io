@@ -102,7 +102,8 @@ jobs:
     steps:
       - name: Send success notification to CI/CD tab
         run: |
-          curl -X POST \
+          # Primeiro, tenta enviar para o chat_id atual
+          RESPONSE=$(curl -s -X POST \
             "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
@@ -110,7 +111,27 @@ jobs:
               "message_thread_id": 2,
               "text": "🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ✅ Sucesso\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Build e deploy concluídos com sucesso! O site foi publicado no GitHub Pages.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
               "parse_mode": "Markdown"
-            }'
+            }')
+          
+          # Se falhar com erro de supergrupo, usa o migrate_to_chat_id
+          if echo "$RESPONSE" | grep -q "migrate_to_chat_id"; then
+            echo "🔄 Chat foi convertido para supergrupo, usando migrate_to_chat_id..."
+            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' ')
+            echo "📱 Usando chat_id: $MIGRATE_ID"
+            
+            curl -X POST \
+              "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"chat_id\": $MIGRATE_ID,
+                \"message_thread_id\": 2,
+                \"text\": \"🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ✅ Sucesso\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Build e deploy concluídos com sucesso! O site foi publicado no GitHub Pages.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}\",
+                \"parse_mode\": \"Markdown\"
+              }"
+          else
+            echo "✅ Notificação enviada com sucesso!"
+            echo "$RESPONSE"
+          fi
 
   # Notification job - Failure
   notify-failure:
@@ -120,7 +141,8 @@ jobs:
     steps:
       - name: Send failure notification to CI/CD tab
         run: |
-          curl -X POST \
+          # Primeiro, tenta enviar para o chat_id atual
+          RESPONSE=$(curl -s -X POST \
             "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
             -d '{
@@ -128,4 +150,24 @@ jobs:
               "message_thread_id": 2,
               "text": "🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ❌ Falha\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Falha no build ou deploy. Verifique os logs para mais detalhes.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
               "parse_mode": "Markdown"
-            }'
+            }')
+          
+          # Se falhar com erro de supergrupo, usa o migrate_to_chat_id
+          if echo "$RESPONSE" | grep -q "migrate_to_chat_id"; then
+            echo "🔄 Chat foi convertido para supergrupo, usando migrate_to_chat_id..."
+            MIGRATE_ID=$(echo "$RESPONSE" | grep -o '"migrate_to_chat_id":[^,]*' | cut -d':' -f2 | tr -d ' ')
+            echo "📱 Usando chat_id: $MIGRATE_ID"
+            
+            curl -X POST \
+              "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"chat_id\": $MIGRATE_ID,
+                \"message_thread_id\": 2,
+                \"text\": \"🤖 **GitHub Actions - Deploy Next.js**\n\n📋 **Status:** ❌ Falha\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Falha no build ou deploy. Verifique os logs para mais detalhes.\n\n🔗 **Ver execução:** [Deploy Next.js](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}\",
+                \"parse_mode\": \"Markdown\"
+              }"
+          else
+            echo "✅ Notificação enviada com sucesso!"
+            echo "$RESPONSE"
+          fi
