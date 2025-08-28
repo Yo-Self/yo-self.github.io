@@ -9,8 +9,24 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 15
+    timeout-minutes: 20
     runs-on: ubuntu-latest
+    
+    services:
+      # Optional: Add PostgreSQL service for local database tests
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     
     steps:
     - name: Checkout code
@@ -28,10 +44,27 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
     
-    - name: Run standalone tests only (no server required)
+    # First run standalone tests (no server required)
+    - name: Run standalone tests
       run: npx playwright test tests/standalone-tests.spec.cjs --project=chromium
       env:
         CI: true
+    
+    # Then run full test suite with server
+    - name: Build Next.js application
+      run: npm run build
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co' }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key' }}
+        GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY || 'demo-key' }}
+    
+    - name: Run comprehensive tests with server
+      run: npx playwright test --config=playwright.config.ci.js --project=chromium --grep="^(?!.*Standalone).*"
+      env:
+        CI: true
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co' }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key' }}
+        GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY || 'demo-key' }}
     
     - name: Upload test results
       if: always()
@@ -42,6 +75,16 @@ jobs:
           playwright-report/
           test-results/
         retention-days: 7
+    
+    - name: Upload build artifacts (for debugging)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          .next/
+          out/
+        retention-days: 1
 
   # Notification job - Success
   notify-success:

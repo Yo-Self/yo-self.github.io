@@ -1,8 +1,22 @@
 const { test, expect } = require('@playwright/test');
+const { DatabaseHelper } = require('./utils/database-helper.cjs');
+
+let dbHelper;
+
+test.beforeAll(async () => {
+  dbHelper = new DatabaseHelper();
+  await dbHelper.initialize();
+});
 
 test.describe('Funcionalidade do Carrinho de Compras', () => {
+  let testRestaurant;
+  
+  test.beforeAll(async () => {
+    testRestaurant = await dbHelper.getTestRestaurant();
+  });
+  
   test.beforeEach(async ({ page }) => {
-    await page.goto('/restaurant/auri-monteiro');
+    await page.goto(`/restaurant/${testRestaurant.slug}`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
   });

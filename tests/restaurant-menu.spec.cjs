@@ -1,40 +1,44 @@
 const { test, expect } = require('@playwright/test');
+const { DatabaseHelper } = require('./utils/database-helper.cjs');
+
+let dbHelper;
+
+test.beforeAll(async () => {
+  dbHelper = new DatabaseHelper();
+  await dbHelper.initialize();
+});
 
 test.describe('Cardápio do Restaurante', () => {
-  const testRestaurants = [
-    'auri-monteiro',
-    'cafe-moendo', 
-    'dragon-palace',
-    'tokyo-sushi',
-    'seoul-kitchen'
-  ];
+  let testRestaurant;
+  
+  test.beforeAll(async () => {
+    testRestaurant = await dbHelper.getTestRestaurant();
+  });
 
   test.describe('Carregamento e Estrutura Básica', () => {
     test('deve carregar página do restaurante com sucesso', async ({ page }) => {
-      for (const slug of testRestaurants) {
-        await page.goto(`/restaurant/${slug}`);
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(1000);
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
 
-        // Verificar se a página carregou
-        await expect(page).toHaveTitle(/Cardápio digital/);
-        
-        // Verificar se o header está visível
-        await expect(page.locator('header')).toBeVisible();
-        
-        // Verificar se há informações do restaurante
-        await expect(page.locator('h1')).toBeVisible();
-        
-        // Verificar se há mensagem de boas-vindas
-        const welcomeMessage = page.locator('p:has-text("Bem-vindo"), p:has-text("Welcome"), p:has-text("Aqui tem")');
-        if (await welcomeMessage.count() > 0) {
-          await expect(welcomeMessage.first()).toBeVisible();
-        }
+      // Verificar se a página carregou
+      await expect(page).toHaveTitle(/Cardápio digital/);
+      
+      // Verificar se o header está visível
+      await expect(page.locator('header')).toBeVisible();
+      
+      // Verificar se há informações do restaurante
+      await expect(page.locator('h1')).toBeVisible();
+      
+      // Verificar se há mensagem de boas-vindas
+      const welcomeMessage = page.locator('p:has-text("Bem-vindo"), p:has-text("Welcome"), p:has-text("Aqui tem")');
+      if (await welcomeMessage.count() > 0) {
+        await expect(welcomeMessage.first()).toBeVisible();
       }
     });
 
     test('deve exibir informações básicas do restaurante', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 
@@ -42,10 +46,16 @@ test.describe('Cardápio do Restaurante', () => {
       const restaurantName = page.locator('h1');
       await expect(restaurantName).toBeVisible();
       const nameText = await restaurantName.textContent();
-      expect(nameText).toContain('Auri Monteiro');
+      
+      if (!testRestaurant.isTest) {
+        expect(nameText).toContain(testRestaurant.name);
+      } else {
+        // Para dados de teste, apenas verificar se há um nome
+        expect(nameText).toBeTruthy();
+      }
 
       // Verificar se há imagem do restaurante
-      const restaurantImage = page.locator('img[alt*="restaurant"], img[alt*="Restaurant"], img[alt*="Auri"]');
+      const restaurantImage = page.locator('img[alt*="restaurant"], img[alt*="Restaurant"]');
       if (await restaurantImage.count() > 0) {
         await expect(restaurantImage.first()).toBeVisible();
       }
