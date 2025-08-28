@@ -1,0 +1,102 @@
+name: Playwright Tests with Supergroup Notifications
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+    
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      # First run standalone tests (no server required)
+      - name: Run standalone tests
+        run: npx playwright test tests/standalone-tests.spec.cjs --project=chromium --config=playwright.config.cjs
+        env:
+          CI: true
+          SKIP_WEBSERVER: true
+      
+      # Then run full test suite with server
+      - name: Run comprehensive tests with server
+        run: npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
+        env:
+          CI: true
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
+          # Fallback values for when secrets are not set
+          NEXT_PUBLIC_SUPABASE_URL_FALLBACK: https://demo.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY_FALLBACK: demo-key
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+      
+      - name: Upload build artifacts (for debugging)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            .next/
+            out/
+          retention-days: 1
+
+  # Notification job - Success
+  notify-success:
+    needs: test
+    if: always() && needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send success notification to CI/CD tab
+        run: |
+          curl -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "message_thread_id": 2,
+              "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ✅ Sucesso\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Todos os testes Playwright passaram com sucesso!\n\n🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+              "parse_mode": "Markdown"
+            }'
+
+  # Notification job - Failure
+  notify-failure:
+    needs: test
+    if: always() && needs.test.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send failure notification to CI/CD tab
+        run: |
+          curl -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "message_thread_id": 2,
+              "text": "🤖 **GitHub Actions - Playwright Tests**\n\n📋 **Status:** ❌ Falha\n\n🌿 **Branch:** ${{ github.ref_name }}\n\n📝 **Detalhes:** Alguns testes Playwright falharam. Verifique os resultados para mais detalhes.\n\n🔗 **Ver execução:** [Playwright Tests](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n⏰ **Executado em:** ${{ github.event.head_commit.timestamp || github.event.schedule || 'Agora' }}",
+              "parse_mode": "Markdown"
+            }'
