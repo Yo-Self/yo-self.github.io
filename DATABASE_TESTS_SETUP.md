@@ -33,7 +33,7 @@ if (dbHelper.isAvailable()) {
 - ✅ Logs informativos sobre status da conexão
 - ✅ Métodos para skip automático de testes dependentes do DB
 
-### 2. Configuração CI Específica (`playwright.config.ci.js`)
+### 2. Configuração CI Específica (`playwright.config.ci.cjs`)
 
 Configuração otimizada para GitHub Actions:
 
@@ -98,7 +98,7 @@ test('test', async ({ page }) => {
 
 ### Modificados:
 - `playwright.config.cjs` - Re-habilitado webServer
-- `playwright.config.ci.js` - Configuração específica para CI
+- `playwright.config.ci.cjs` - Configuração específica para CI (CommonJS)
 - `.github/workflows/playwright.yml` - Workflow com suporte a DB
 - `tests/restaurant-menu.spec.cjs` - Usando database helper
 - `tests/cart-functionality.spec.cjs` - Usando database helper
@@ -130,56 +130,30 @@ npx playwright test
 # Standalone tests sempre passam
 npx playwright test tests/standalone-tests.spec.cjs
 
-# Comprehensive tests com fallback automático
-npx playwright test --config=playwright.config.ci.js
-```
-
-## 📊 Tipos de Testes
+#    - name: Run comprehensive tests with server
+      run: npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"s
 
 ### 1. **Always Run** (Sempre executam)
 - Testes standalone básicos
 - Testes de UI que não dependem de dados específicos
 - Testes de acessibilidade
-- Testes de responsividade
-
-### 2. **Database Dependent** (Dependem do DB)
-- Testes de integração com dados reais
-- Validação de restaurantes específicos
-- Testes de funcionalidades que dependem de dados do Supabase
-
-### 3. **Resilient** (Resilientes)
-- Adaptam comportamento baseado na disponibilidade do DB
-- Usam dados de fallback quando necessário
-- Validações flexíveis
-
-## ⚙️ Configuração de Secrets no GitHub
-
-Para habilitar testes com database real no CI:
-
-```
-Repository Settings > Secrets and Variables > Actions
-
-Adicionar:
-- NEXT_PUBLIC_SUPABASE_URL: https://your-project.supabase.co  
-- NEXT_PUBLIC_SUPABASE_ANON_KEY: your_anon_key_here
-- GOOGLE_AI_API_KEY: your_google_ai_key_here (opcional)
-```
-
-**Sem estes secrets:** Testes funcionam com dados de fallback ✅  
-**Com estes secrets:** Testes usam dados reais do Supabase ✅
+{{ ... }}
 
 ## 🐛 Debugging
 
 ### Database Connection Issues:
 ```bash
-# Verificar logs do teste
-npx playwright test --reporter=line
+# Executar com retry (como no CI)
+npx playwright test --retries=2
+
+# Executar com configuração CI
+npx playwright test --config=playwright.config.ci.cjsline
 
 # Procurar por:
 ✅ Database connection successful  # Sucesso
 ⚠️  Database connection failed     # Falha
 ⚠️  Supabase credentials not found # Sem credentials
-```
+{{ ... }}
 
 ### CI Failures:
 ```bash

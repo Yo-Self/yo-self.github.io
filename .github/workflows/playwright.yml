@@ -53,7 +53,7 @@ jobs:
     
     # Then run full test suite with server
     - name: Run comprehensive tests with server
-      run: npx playwright test --config=playwright.config.ci.js --project=chromium --grep="^(?!.*Standalone).*"
+      run: npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
       env:
         CI: true
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
