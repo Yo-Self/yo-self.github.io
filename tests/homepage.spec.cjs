@@ -9,7 +9,7 @@ test.describe('Página Inicial', () => {
 
   test('deve carregar a página inicial com sucesso', async ({ page }) => {
     // Verificar se a página carregou
-    await expect(page).toHaveTitle(/Restaurant App/);
+    await expect(page).toHaveTitle(/Restaurant Menu/);
     
     // Verificar se o header está visível (nav com logo Yoself)
     await expect(page.locator('nav')).toBeVisible();
@@ -23,7 +23,7 @@ test.describe('Página Inicial', () => {
 
   test('deve exibir carrossel de pratos em destaque', async ({ page }) => {
     // Verificar se o carrossel está visível
-    await expect(page.locator('.carousel-section')).toBeVisible();
+    await expect(page.locator('section:has-text("Destaques que chamam atenção")')).toBeVisible();
     
     // Verificar se há pratos em destaque
     const featuredDishes = page.locator('.carousel-card');

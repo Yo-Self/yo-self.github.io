@@ -22,7 +22,7 @@ test.describe('Cardápio do Restaurante', () => {
       await page.waitForTimeout(1000);
 
       // Verificar se a página carregou
-      await expect(page).toHaveTitle(/Auri Monteiro/);
+      await expect(page).toHaveTitle(/Meu Teste/);
       
       // Verificar se o header está visível
       await expect(page.locator('header')).toBeVisible();
