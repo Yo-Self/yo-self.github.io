@@ -17,7 +17,8 @@ test.describe('Funcionalidade do Carrinho de Compras', () => {
   
   test.beforeEach(async ({ page }) => {
     await page.goto(`/restaurant/${testRestaurant.slug}`);
-    await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
+    await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(2000); // Aguardar 2s para JavaScript executar
     await page.waitForTimeout(1000);
   });
 
@@ -559,7 +560,8 @@ test.describe('Funcionalidade do Carrinho de Compras', () => {
       
       // Navegar para outra página
       await page.goto('/restaurant/cafe-moendo');
-      await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(2000); // Aguardar 2s para JavaScript executar
       await page.waitForTimeout(1000);
       
       // Verificar se o contador do carrinho ainda mostra o item

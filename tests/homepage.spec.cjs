@@ -3,7 +3,8 @@ const { test, expect } = require('@playwright/test');
 test.describe('Página Inicial', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
+    await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(2000); // Aguardar 2s para JavaScript executar
     await page.waitForTimeout(1000);
   });
 

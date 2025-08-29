@@ -6,24 +6,56 @@ const nextConfig = {
   trailingSlash: process.env.NODE_ENV === 'production' && process.env.NODE_ENV !== 'test',
   // Para repositório yo-self.github.io, não precisamos de basePath
   // basePath: process.env.NODE_ENV === 'production' ? '/restaurant' : '',
-  // Fix for Tone.js and other libraries that use 'self'
-  webpack: (config, { isServer, webpack }) => {
-    if (isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
+  
+  // Desabilitar otimização CSS durante testes para evitar erros de compilação
+  ...(process.env.NODE_ENV === 'test' && {
+    experimental: {
+      optimizeCss: false,
+    },
+    webpack: (config, { isServer, webpack }) => {
+      if (isServer) {
+        config.resolve.fallback = {
+          ...config.resolve.fallback,
+          fs: false,
+        };
+        
+        // Define self in Node.js environment to prevent "self is not defined" errors
+        config.plugins.push(
+          new webpack.DefinePlugin({
+            self: 'global',
+          })
+        );
+      }
       
-      // Define self in Node.js environment to prevent "self is not defined" errors
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          self: 'global',
-        })
+      // Desabilitar plugins CSS problemáticos durante testes
+      config.plugins = config.plugins.filter(plugin => 
+        plugin.constructor.name !== 'CssMinimizerPlugin'
       );
-    }
-    
-    return config;
-  },
+      
+      return config;
+    },
+  }),
+  
+  // Configuração padrão para produção e desenvolvimento
+  ...(process.env.NODE_ENV !== 'test' && {
+    webpack: (config, { isServer, webpack }) => {
+      if (isServer) {
+        config.resolve.fallback = {
+          ...config.resolve.fallback,
+          fs: false,
+        };
+        
+        // Define self in Node.js environment to prevent "self is not defined" errors
+        config.plugins.push(
+          new webpack.DefinePlugin({
+            self: 'global',
+          })
+        );
+      }
+      
+      return config;
+    },
+  }),
 };
 
 export default nextConfig;
