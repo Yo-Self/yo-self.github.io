@@ -6,6 +6,8 @@ class DatabaseHelper {
     this.supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     this.client = null;
     this.isConnected = false;
+    this.connectionTimeout = 10000; // 10 seconds timeout
+    this.queryTimeout = 5000; // 5 seconds timeout for queries
   }
 
   async initialize() {
@@ -17,11 +19,17 @@ class DatabaseHelper {
     try {
       this.client = createClient(this.supabaseUrl, this.supabaseAnonKey);
       
-      // Test connection with a simple query
-      const { data, error } = await this.client
+      // Test connection with timeout
+      const connectionPromise = this.client
         .from('restaurants')
         .select('id')
         .limit(1);
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), this.connectionTimeout)
+      );
+
+      const { data, error } = await Promise.race([connectionPromise, timeoutPromise]);
 
       if (error) {
         console.warn('⚠️  Database connection failed:', error.message);
@@ -41,14 +49,21 @@ class DatabaseHelper {
     if (!this.isConnected) return false;
 
     try {
-      const { data, error } = await this.client
+      const queryPromise = this.client
         .from('restaurants')
         .select('id')
         .eq('slug', slug)
         .single();
 
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), this.queryTimeout)
+      );
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
       return !error && data;
-    } catch {
+    } catch (error) {
+      console.warn(`⚠️  Query timeout for slug ${slug}:`, error.message);
       return false;
     }
   }
@@ -64,11 +79,17 @@ class DatabaseHelper {
     }
 
     try {
-      const { data, error } = await this.client
+      const queryPromise = this.client
         .from('restaurants')
         .select('slug, name')
         .limit(1)
         .single();
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), this.queryTimeout)
+      );
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
 
       if (error || !data) {
         return {
@@ -79,7 +100,8 @@ class DatabaseHelper {
       }
 
       return { ...data, isTest: false };
-    } catch {
+    } catch (error) {
+      console.warn('⚠️  Failed to get test restaurant, using fallback:', error.message);
       return {
         slug: 'auri-monteiro',
         name: 'Auri Monteiro',
@@ -92,14 +114,21 @@ class DatabaseHelper {
     if (!this.isConnected) return [];
 
     try {
-      const { data, error } = await this.client
+      const queryPromise = this.client
         .from('dishes')
         .select('id, name, price')
         .eq('restaurant_id', restaurantId)
         .limit(5);
 
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), this.queryTimeout)
+      );
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
       return error ? [] : data;
-    } catch {
+    } catch (error) {
+      console.warn('⚠️  Failed to get test dishes, using empty array:', error.message);
       return [];
     }
   }
@@ -113,6 +142,12 @@ class DatabaseHelper {
       testInstance.skip();
       console.log(`⏭️  Skipping test: ${message}`);
     }
+  }
+
+  // Add method to force fallback mode for testing
+  forceFallbackMode() {
+    this.isConnected = false;
+    console.log('🔄 Forcing fallback mode for tests');
   }
 }
 

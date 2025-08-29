@@ -53,7 +53,9 @@ jobs:
     
     # Then run full test suite with server
     - name: Run comprehensive tests with server
-      run: npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
+      run: |
+        # Use the timeout script to prevent hanging tests
+        ./scripts/run-tests-with-timeout.sh
       env:
         CI: true
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -62,6 +64,7 @@ jobs:
         # Fallback values for when secrets are not set
         NEXT_PUBLIC_SUPABASE_URL_FALLBACK: https://demo.supabase.co
         NEXT_PUBLIC_SUPABASE_ANON_KEY_FALLBACK: demo-key
+      timeout-minutes: 12 # Increased to allow for script execution
     
     - name: Upload test results
       if: always()
