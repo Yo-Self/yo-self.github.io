@@ -10,9 +10,11 @@ export function useStartupRedirect() {
   const pathname = usePathname();
   const { isStandalone } = useStandaloneMode();
   const { isRestaurantPage, currentRoute } = useCurrentRoute();
+  const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
 
   // Sempre salvar o último restaurante visitado
   useEffect(() => {
+    if (disableSw) return;
     if (isRestaurantPage) {
       const slug = currentRoute.split('/')[2];
       if (slug) {
@@ -21,10 +23,11 @@ export function useStartupRedirect() {
         } catch {}
       }
     }
-  }, [isRestaurantPage, currentRoute]);
+  }, [isRestaurantPage, currentRoute, disableSw]);
 
   // No modo standalone, se abrir na home "/", redirecionar para o último restaurante
   useEffect(() => {
+    if (disableSw) return;
     if (!isStandalone) return;
     if (pathname === '/') {
       try {
@@ -34,5 +37,5 @@ export function useStartupRedirect() {
         }
       } catch {}
     }
-  }, [isStandalone, pathname, router]);
+  }, [isStandalone, pathname, router, disableSw]);
 }

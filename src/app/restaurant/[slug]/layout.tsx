@@ -7,6 +7,12 @@ interface LayoutProps {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  if (process.env.DISABLE_API_CALLS === 'true') {
+    return {
+      title: "Cardápio digital",
+      description: "Cardápio digital para restaurantes",
+    };
+  }
   const { slug } = params;
   
   // Protege contra chamada acidental com literal "[slug]" durante o export estático

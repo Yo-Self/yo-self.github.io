@@ -40,7 +40,7 @@ module.exports = defineConfig({
     }
   ],
   
-  webServer: {
+  webServer: process.env.SKIP_WEBSERVER ? undefined : {
     command: 'NODE_ENV=test npm run dev:test',
     url: 'http://localhost:3000',
     reuseExistingServer: true,

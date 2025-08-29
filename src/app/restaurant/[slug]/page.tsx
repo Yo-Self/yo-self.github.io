@@ -7,6 +7,7 @@ export const revalidate = 60;
 export const dynamicParams = true; // permitir params dinâmicos
 
 export async function generateStaticParams() {
+  if (process.env.DISABLE_API_CALLS === 'true') return [];
   // Buscar todos os restaurantes para gerar slugs
   const restaurants = await fetchFullRestaurants();
   return restaurants.map(restaurant => ({ 
@@ -15,6 +16,9 @@ export async function generateStaticParams() {
 }
 
 export default async function RestaurantMenuPage({ params }: { params: { slug: string } }) {
+  if (process.env.DISABLE_API_CALLS === 'true') {
+    return notFound();
+  }
   const { slug } = params;
   
   // Protege contra chamada acidental com literal "[slug]" durante o export estático
