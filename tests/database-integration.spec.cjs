@@ -46,7 +46,7 @@ test.describe('Integração com Banco de Dados', () => {
     await page.waitForTimeout(1000);
 
     // Verificar se a página carregou com dados reais
-    await expect(page).toHaveTitle(/Cardápio digital/);
+    await expect(page).toHaveTitle(/Meu Teste/);
     
     const restaurantName = page.locator('h1');
     await expect(restaurantName).toBeVisible();

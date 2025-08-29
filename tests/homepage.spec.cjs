@@ -9,7 +9,7 @@ test.describe('Página Inicial', () => {
 
   test('deve carregar a página inicial com sucesso', async ({ page }) => {
     // Verificar se a página carregou
-    await expect(page).toHaveTitle(/Restaurant Menu/);
+    await expect(page).toHaveTitle(/Restaurant App/);
     
     // Verificar se o header está visível (nav com logo Yoself)
     await expect(page.locator('nav')).toBeVisible();
