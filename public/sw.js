@@ -73,7 +73,7 @@ self.addEventListener('fetch', (event) => {
         const restaurantName = restaurantSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         
         const dynamicManifest = {
-          name: `${restaurantName} - Cardápio`,
+          name: `${restaurantName}`,
           short_name: restaurantName,
           description: `Cardápio digital de ${restaurantName}`,
           start_url: `/restaurant/${restaurantSlug}`,

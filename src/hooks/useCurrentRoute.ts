@@ -25,7 +25,7 @@ export function useCurrentRoute() {
   const getPageTitle = () => {
     if (isRestaurantPage) {
       const restaurantName = getRestaurantName();
-      return restaurantName ? `${restaurantName} - Cardápio` : 'Restaurante';
+      return restaurantName ? `${restaurantName}` : 'Restaurante';
     }
     
     switch (currentRoute) {

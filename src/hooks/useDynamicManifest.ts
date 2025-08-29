@@ -22,7 +22,7 @@ export function useDynamicManifest() {
   const updateManifestForRestaurant = (route: string, name: string) => {
     // Criar um novo manifest dinâmico
     const dynamicManifest = {
-      name: `${name} - Cardápio`,
+      name: `${name}`,
       short_name: name,
       description: `Cardápio digital de ${name}`,
       start_url: route,

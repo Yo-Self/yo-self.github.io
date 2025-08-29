@@ -46,7 +46,7 @@ export default function InstallPrompt() {
             </p>
             {isRestaurantPage && (
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                Salvará: {restaurantName} - Cardápio
+                Salvará: {restaurantName}
               </p>
             )}
           </div>

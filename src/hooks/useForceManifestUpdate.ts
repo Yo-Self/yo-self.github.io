@@ -26,7 +26,7 @@ export function useForceManifestUpdate() {
     try {
       // Criar manifest dinâmico
       const dynamicManifest = {
-        name: `${name} - Cardápio`,
+        name: `${name}`,
         short_name: name,
         description: `Cardápio digital de ${name}`,
         start_url: route,
@@ -131,10 +131,10 @@ export function useForceManifestUpdate() {
   const updateCriticalMetaTags = (name: string, route: string) => {
     // Atualizar meta tags críticas para iOS
     const criticalTags = [
-      { name: 'apple-mobile-web-app-title', content: `${name} - Cardápio` },
+      { name: 'apple-mobile-web-app-title', content: `${name}` },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-      { property: 'og:title', content: `${name} - Cardápio` },
+      { property: 'og:title', content: `${name}` },
       { property: 'og:url', content: `${window.location.origin}${route}` },
     ];
 
@@ -157,7 +157,7 @@ export function useForceManifestUpdate() {
     });
 
     // Atualizar título da página
-    document.title = `${name} - Cardápio`;
+    document.title = `${name}`;
     
     console.log('useForceManifestUpdate: Critical meta tags updated for:', name);
   };

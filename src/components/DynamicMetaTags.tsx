@@ -21,7 +21,7 @@ export default function DynamicMetaTags() {
   const updateManifestLink = useCallback((route: string, name: string) => {
     // Criar manifest dinâmico
     const dynamicManifest = {
-      name: `${name} - Cardápio`,
+      name: `${name}`,
       short_name: name,
       description: `Cardápio digital de ${name}`,
       start_url: route,
@@ -100,14 +100,14 @@ export default function DynamicMetaTags() {
   const updateMetaTags = useCallback((name: string, route: string) => {
     // Atualizar meta tags existentes ou criar novas
     const metaTags = [
-      { name: 'apple-mobile-web-app-title', content: `${name} - Cardápio` },
-      { name: 'application-name', content: `${name} - Cardápio` },
+      { name: 'apple-mobile-web-app-title', content: `${name}` },
+      { name: 'application-name', content: `${name}` },
       { name: 'msapplication-TileColor', content: '#000000' },
       { name: 'theme-color', content: '#000000' },
-      { property: 'og:title', content: `${name} - Cardápio` },
+      { property: 'og:title', content: `${name}` },
       { property: 'og:description', content: `Cardápio digital de ${name}` },
       { property: 'og:url', content: `${window.location.origin}${route}` },
-      { name: 'twitter:title', content: `${name} - Cardápio` },
+      { name: 'twitter:title', content: `${name}` },
       { name: 'twitter:description', content: `Cardápio digital de ${name}` },
     ];
 
@@ -130,7 +130,7 @@ export default function DynamicMetaTags() {
     });
 
     // Atualizar o título da página
-    document.title = `${name} - Cardápio`;
+    document.title = `${name}`;
     
     // Forçar atualização do manifest link
     updateManifestLink(route, name);
