@@ -38,7 +38,7 @@ module.exports = defineConfig({
   ],
   
   webServer: {
-    command: 'npm run dev',
+    command: 'NODE_ENV=test npm run dev:test',
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 60 * 1000, // Reduced from 120s to 60s
@@ -46,7 +46,7 @@ module.exports = defineConfig({
     stdout: 'pipe',
     env: {
       CI: 'true',
-      NODE_ENV: 'development',
+      NODE_ENV: 'test', // Force test environment
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL_FALLBACK || 'https://demo.supabase.co',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_FALLBACK || 'demo-key', // Fixed the variable name
       GOOGLE_AI_API_KEY: process.env.GOOGLE_AI_API_KEY || 'demo-key'

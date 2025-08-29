@@ -50,13 +50,13 @@ run_test_with_timeout() {
 # Executar testes standalone primeiro
 echo "🔧 Executando testes standalone..."
 run_test_with_timeout \
-    "npx playwright test tests/standalone-tests.spec.cjs --project=chromium --config=playwright.config.cjs" \
+    "NODE_ENV=test npx playwright test tests/standalone-tests.spec.cjs --project=chromium --config=playwright.config.cjs" \
     "Testes Standalone"
 
 # Executar testes principais com timeout geral
 echo "🚀 Executando testes principais..."
 if timeout $TEST_TIMEOUT bash -c '
-    npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
+    NODE_ENV=test npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
 '; then
     echo "🎉 Todos os testes executaram com sucesso!"
     exit 0

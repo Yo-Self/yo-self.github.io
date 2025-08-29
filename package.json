@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "dev:test": "next dev -p 3000",
     "build": "next build && touch out/.nojekyll",
     "start": "next start",
     "lint": "next lint",

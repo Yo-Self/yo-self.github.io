@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
+  output: process.env.NODE_ENV === 'production' && process.env.NODE_ENV !== 'test' ? 'export' : undefined,
   images: { unoptimized: true },
   // Configuração para GitHub Pages - apenas em produção
-  trailingSlash: process.env.NODE_ENV === 'production',
+  trailingSlash: process.env.NODE_ENV === 'production' && process.env.NODE_ENV !== 'test',
   // Para repositório yo-self.github.io, não precisamos de basePath
   // basePath: process.env.NODE_ENV === 'production' ? '/restaurant' : '',
   // Fix for Tone.js and other libraries that use 'self'

@@ -55,9 +55,10 @@ jobs:
     - name: Run comprehensive tests with server
       run: |
         # Use the timeout script to prevent hanging tests
-        ./scripts/run-tests-with-timeout.sh
+        NODE_ENV=test ./scripts/run-tests-with-timeout.sh
       env:
         CI: true
+        NODE_ENV: test # Force test environment
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
