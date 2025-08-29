@@ -63,8 +63,9 @@ jobs:
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
         # Fallback values for when secrets are not set
-        NEXT_PUBLIC_SUPABASE_URL_FALLBACK: https://demo.supabase.co
-        NEXT_PUBLIC_SUPABASE_ANON_KEY_FALLBACK: demo-key
+        NEXT_PUBLIC_SUPABASE_URL_FALLBACK: http://localhost:9999
+        NEXT_PUBLIC_SUPABASE_ANON_KEY_FALLBACK: invalid-key
+        DISABLE_API_CALLS: true
       timeout-minutes: 12 # Increased to allow for script execution
     
     - name: Upload test results

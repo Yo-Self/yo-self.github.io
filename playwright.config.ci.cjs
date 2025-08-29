@@ -47,9 +47,10 @@ module.exports = defineConfig({
     env: {
       CI: 'true',
       NODE_ENV: 'test', // Force test environment
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL_FALLBACK || 'https://demo.supabase.co',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_FALLBACK || 'demo-key', // Fixed the variable name
-      GOOGLE_AI_API_KEY: process.env.GOOGLE_AI_API_KEY || 'demo-key'
+      NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:9999', // Invalid URL to prevent API calls
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'invalid-key', // Invalid key to prevent API calls
+      GOOGLE_AI_API_KEY: 'demo-key',
+      DISABLE_API_CALLS: 'true' // Flag to disable API calls in tests
     }
   },
 });

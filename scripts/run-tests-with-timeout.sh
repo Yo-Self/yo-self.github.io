@@ -55,25 +55,38 @@ run_test_with_timeout \
 
 # Executar testes principais com timeout geral
 echo "🚀 Executando testes principais..."
-if timeout $TEST_TIMEOUT bash -c '
-    NODE_ENV=test npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
-'; then
-    echo "🎉 Todos os testes executaram com sucesso!"
-    exit 0
-else
-    local exit_code=$?
-    if [ $exit_code -eq 124 ]; then
-        echo "⏰ Timeout geral após $TEST_TIMEOUT - alguns testes podem ter falhado"
-        echo "📊 Verificando resultados parciais..."
-        
-        # Tentar gerar relatório mesmo com timeout
-        if [ -d "test-results" ]; then
-            echo "📋 Resultados parciais disponíveis em test-results/"
-            ls -la test-results/
-        fi
-        
-        exit 1
+if [ -n "$TIMEOUT_CMD" ]; then
+    # Com timeout
+    if $TIMEOUT_CMD $TEST_TIMEOUT bash -c '
+        npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
+    '; then
+        echo "🎉 Todos os testes executaram com sucesso!"
+        exit 0
     else
+        exit_code=$?
+        if [ $exit_code -eq 124 ]; then
+            echo "⏰ Timeout geral após $TEST_TIMEOUT - alguns testes podem ter falhado"
+            echo "📊 Verificando resultados parciais..."
+            
+            # Tentar gerar relatório mesmo com timeout
+            if [ -d "test-results" ]; then
+                echo "📋 Resultados parciais disponíveis em test-results/"
+                ls -la test-results/
+            fi
+            
+            exit 1
+        else
+            echo "❌ Testes falharam com código $exit_code"
+            exit $exit_code
+        fi
+    fi
+else
+    # Sem timeout
+    if npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"; then
+        echo "🎉 Todos os testes executaram com sucesso!"
+        exit 0
+    else
+        exit_code=$?
         echo "❌ Testes falharam com código $exit_code"
         exit $exit_code
     fi

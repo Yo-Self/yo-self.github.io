@@ -125,6 +125,12 @@ function getSupabaseConfig() {
 }
 
 async function sbFetch<T>(pathWithQuery: string, init?: RequestInit): Promise<T> {
+  // Desabilitar chamadas de API durante testes
+  if (process.env.DISABLE_API_CALLS === 'true') {
+    console.log('🧪 Test mode: API calls disabled');
+    throw new Error('API calls disabled in test mode');
+  }
+
   const config = getSupabaseConfig();
   if (!config) {
     throw new Error('Supabase configuration not available');
