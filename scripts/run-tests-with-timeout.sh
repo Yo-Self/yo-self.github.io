@@ -49,7 +49,7 @@ run_test_with_timeout() {
 
 # Iniciar servidor de desenvolvimento para testes standalone
 echo "🟢 Iniciando servidor de desenvolvimento para testes standalone..."
-NODE_ENV=test npm run dev:test &
+NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npm run dev:test &
 DEV_SERVER_PID=$!
 
 # Aguardar servidor ficar pronto
@@ -65,7 +65,7 @@ echo "✅ Servidor pronto (PID: $DEV_SERVER_PID)"
 # Executar testes standalone primeiro (sem webServer do Playwright)
 echo "🔧 Executando testes standalone..."
 run_test_with_timeout \
-    "SKIP_WEBSERVER=1 NODE_ENV=test npx playwright test tests/standalone-tests.spec.cjs --project=chromium --config=playwright.config.cjs" \
+    "SKIP_WEBSERVER=1 NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npx playwright test tests/standalone-tests.spec.cjs --project=chromium --config=playwright.config.cjs" \
     "Testes Standalone"
 
 # Parar servidor standalone
@@ -73,12 +73,27 @@ echo "🛑 Encerrando servidor de desenvolvimento (standalone)"
 kill $DEV_SERVER_PID || true
 sleep 2
 
-# Executar testes principais com timeout geral
+# Iniciar servidor para suíte principal (também sem webServer do Playwright)
+echo "🟢 Iniciando servidor de desenvolvimento para suíte principal..."
+NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npm run dev:test &
+MAIN_SERVER_PID=$!
+
+echo "⏳ Aguardando servidor (http://localhost:3000) ficar pronto..."
+if ! timeout 60s bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'; then
+  echo "❌ Servidor (principal) não ficou pronto em 60s. Encerrando."
+  kill $MAIN_SERVER_PID || true
+  exit 1
+fi
+
+echo "✅ Servidor principal pronto (PID: $MAIN_SERVER_PID)"
+
+# Executar testes principais com timeout geral (sem webServer do Playwright)
 echo "🚀 Executando testes principais..."
 if timeout $TEST_TIMEOUT bash -c '
-    npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
+    SKIP_WEBSERVER=1 NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
 '; then
     echo "🎉 Todos os testes executaram com sucesso!"
+    kill $MAIN_SERVER_PID || true
     exit 0
 else
     exit_code=$?
@@ -91,10 +106,11 @@ else
             echo "📋 Resultados parciais disponíveis em test-results/"
             ls -la test-results/
         fi
-        
+        kill $MAIN_SERVER_PID || true
         exit 1
     else
         echo "❌ Testes falharam com código $exit_code"
+        kill $MAIN_SERVER_PID || true
         exit $exit_code
     fi
 fi

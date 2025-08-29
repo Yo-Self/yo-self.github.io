@@ -4,8 +4,10 @@ import { useCurrentRoute } from './useCurrentRoute';
 export function useForceManifestUpdate() {
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
   const manifestRef = useRef<string>('');
+  const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
 
   useEffect(() => {
+    if (disableSw) return;
     if (isRestaurantPage && restaurantName && currentRoute !== manifestRef.current) {
       console.log('useForceManifestUpdate: Forcing manifest update for:', restaurantName, 'at route:', currentRoute);
       
@@ -20,9 +22,10 @@ export function useForceManifestUpdate() {
       
       manifestRef.current = currentRoute;
     }
-  }, [currentRoute, isRestaurantPage, restaurantName]);
+  }, [currentRoute, isRestaurantPage, restaurantName, disableSw]);
 
   const updateManifestLink = (route: string, name: string) => {
+    if (disableSw) return;
     try {
       // Criar manifest dinâmico
       const dynamicManifest = {
@@ -82,13 +85,13 @@ export function useForceManifestUpdate() {
       
       if (manifestLink) {
         // Remover URL anterior se existir
-        if (manifestLink.dataset.blobUrl) {
-          URL.revokeObjectURL(manifestLink.dataset.blobUrl);
+        if ((manifestLink as any).dataset.blobUrl) {
+          URL.revokeObjectURL((manifestLink as any).dataset.blobUrl as string);
         }
         
         // Atualizar com nova URL
         manifestLink.href = manifestUrl;
-        manifestLink.dataset.blobUrl = manifestUrl;
+        (manifestLink as any).dataset.blobUrl = manifestUrl;
         
         // Forçar atualização removendo e readicionando
         manifestLink.remove();
@@ -98,7 +101,7 @@ export function useForceManifestUpdate() {
         manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
         manifestLink.href = manifestUrl;
-        manifestLink.dataset.blobUrl = manifestUrl;
+        (manifestLink as any).dataset.blobUrl = manifestUrl;
         document.head.appendChild(manifestLink);
       }
 
@@ -117,6 +120,7 @@ export function useForceManifestUpdate() {
   };
 
   const forceServiceWorkerUpdate = () => {
+    if (disableSw) return;
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         registrations.forEach(registration => {
@@ -167,6 +171,7 @@ export function useForceManifestUpdate() {
     isRestaurantPage,
     restaurantName,
     forceUpdate: () => {
+      if (disableSw) return;
       if (isRestaurantPage && restaurantName) {
         updateManifestLink(currentRoute, restaurantName);
       }

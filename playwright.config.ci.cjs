@@ -28,6 +28,9 @@ module.exports = defineConfig({
     actionTimeout: process.env.CI ? 10000 : 5000, // Reduced from 15s to 10s
     navigationTimeout: process.env.CI ? 15000 : 10000, // Reduced from 20s to 15s
     headless: true,
+    contextOptions: {
+      serviceWorkers: 'block'
+    }
   },
   
   projects: [
@@ -47,6 +50,7 @@ module.exports = defineConfig({
     env: {
       CI: 'true',
       NODE_ENV: 'test', // Force test environment
+      NEXT_PUBLIC_DISABLE_SW: 'true',
       NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:9999', // Invalid URL to prevent API calls
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'invalid-key', // Invalid key to prevent API calls
       GOOGLE_AI_API_KEY: 'demo-key',

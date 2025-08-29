@@ -3,8 +3,10 @@ import { useCurrentRoute } from './useCurrentRoute';
 
 export function useDynamicManifest() {
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
+  const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
 
   useEffect(() => {
+    if (disableSw) return;
     console.log('useDynamicManifest: Route changed to:', currentRoute);
     console.log('useDynamicManifest: isRestaurantPage:', isRestaurantPage);
     console.log('useDynamicManifest: restaurantName:', restaurantName);
@@ -17,9 +19,10 @@ export function useDynamicManifest() {
       console.log('useDynamicManifest: Resetting to default manifest');
       resetManifest();
     }
-  }, [currentRoute, isRestaurantPage, restaurantName]);
+  }, [currentRoute, isRestaurantPage, restaurantName, disableSw]);
 
   const updateManifestForRestaurant = (route: string, name: string) => {
+    if (disableSw) return;
     // Criar um novo manifest dinâmico
     const dynamicManifest = {
       name: `${name}`,
@@ -66,6 +69,7 @@ export function useDynamicManifest() {
   };
 
   const resetManifest = () => {
+    if (disableSw) return;
     // Reset para o manifest padrão
     const defaultManifest = {
       name: 'Restaurant App',
@@ -111,6 +115,7 @@ export function useDynamicManifest() {
   };
 
   const updateManifest = (manifestData: any) => {
+    if (disableSw) return;
     try {
       console.log('updateManifest: Updating manifest with data:', manifestData);
       
@@ -130,14 +135,14 @@ export function useDynamicManifest() {
         console.log('updateManifest: Found existing manifest link:', manifestLink.href);
         
         // Remover URL anterior se existir
-        if (manifestLink.dataset.blobUrl) {
-          URL.revokeObjectURL(manifestLink.dataset.blobUrl);
+        if ((manifestLink as any).dataset.blobUrl) {
+          URL.revokeObjectURL((manifestLink as any).dataset.blobUrl as string);
           console.log('updateManifest: Revoked previous blob URL');
         }
         
         // Atualizar com nova URL
         manifestLink.href = manifestUrl;
-        manifestLink.dataset.blobUrl = manifestUrl;
+        (manifestLink as any).dataset.blobUrl = manifestUrl;
         console.log('updateManifest: Updated manifest link to:', manifestUrl);
       } else {
         console.log('updateManifest: Creating new manifest link');
@@ -145,7 +150,7 @@ export function useDynamicManifest() {
         manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
         manifestLink.href = manifestUrl;
-        manifestLink.dataset.blobUrl = manifestUrl;
+        (manifestLink as any).dataset.blobUrl = manifestUrl;
         document.head.appendChild(manifestLink);
         console.log('updateManifest: Added new manifest link to head');
       }

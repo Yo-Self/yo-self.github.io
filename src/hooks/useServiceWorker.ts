@@ -7,7 +7,12 @@ export function useServiceWorker() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
 
+  const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
+
   useEffect(() => {
+    if (disableSw) {
+      return;
+    }
     // Registrar service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
@@ -46,7 +51,7 @@ export function useServiceWorker() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [disableSw]);
 
   const installApp = async () => {
     if (deferredPrompt) {
