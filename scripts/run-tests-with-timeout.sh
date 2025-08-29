@@ -47,46 +47,53 @@ run_test_with_timeout() {
     return 1
 }
 
-# Executar testes standalone primeiro
+# Iniciar servidor de desenvolvimento para testes standalone
+echo "🟢 Iniciando servidor de desenvolvimento para testes standalone..."
+NODE_ENV=test npm run dev:test &
+DEV_SERVER_PID=$!
+
+# Aguardar servidor ficar pronto
+echo "⏳ Aguardando servidor (http://localhost:3000) ficar pronto..."
+if ! timeout 60s bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'; then
+  echo "❌ Servidor não ficou pronto em 60s. Encerrando."
+  kill $DEV_SERVER_PID || true
+  exit 1
+fi
+
+echo "✅ Servidor pronto (PID: $DEV_SERVER_PID)"
+
+# Executar testes standalone primeiro (sem webServer do Playwright)
 echo "🔧 Executando testes standalone..."
 run_test_with_timeout \
-    "NODE_ENV=test npx playwright test tests/standalone-tests.spec.cjs --project=chromium --config=playwright.config.cjs" \
+    "SKIP_WEBSERVER=1 NODE_ENV=test npx playwright test tests/standalone-tests.spec.cjs --project=chromium --config=playwright.config.cjs" \
     "Testes Standalone"
+
+# Parar servidor standalone
+echo "🛑 Encerrando servidor de desenvolvimento (standalone)"
+kill $DEV_SERVER_PID || true
+sleep 2
 
 # Executar testes principais com timeout geral
 echo "🚀 Executando testes principais..."
-if [ -n "$TIMEOUT_CMD" ]; then
-    # Com timeout
-    if $TIMEOUT_CMD $TEST_TIMEOUT bash -c '
-        npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
-    '; then
-        echo "🎉 Todos os testes executaram com sucesso!"
-        exit 0
-    else
-        exit_code=$?
-        if [ $exit_code -eq 124 ]; then
-            echo "⏰ Timeout geral após $TEST_TIMEOUT - alguns testes podem ter falhado"
-            echo "📊 Verificando resultados parciais..."
-            
-            # Tentar gerar relatório mesmo com timeout
-            if [ -d "test-results" ]; then
-                echo "📋 Resultados parciais disponíveis em test-results/"
-                ls -la test-results/
-            fi
-            
-            exit 1
-        else
-            echo "❌ Testes falharam com código $exit_code"
-            exit $exit_code
-        fi
-    fi
+if timeout $TEST_TIMEOUT bash -c '
+    npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
+'; then
+    echo "🎉 Todos os testes executaram com sucesso!"
+    exit 0
 else
-    # Sem timeout
-    if npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"; then
-        echo "🎉 Todos os testes executaram com sucesso!"
-        exit 0
+    exit_code=$?
+    if [ $exit_code -eq 124 ]; then
+        echo "⏰ Timeout geral após $TEST_TIMEOUT - alguns testes podem ter falhado"
+        echo "📊 Verificando resultados parciais..."
+        
+        # Tentar gerar relatório mesmo com timeout
+        if [ -d "test-results" ]; then
+            echo "📋 Resultados parciais disponíveis em test-results/"
+            ls -la test-results/
+        fi
+        
+        exit 1
     else
-        exit_code=$?
         echo "❌ Testes falharam com código $exit_code"
         exit $exit_code
     fi
