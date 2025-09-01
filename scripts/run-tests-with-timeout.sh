@@ -98,7 +98,7 @@ echo "✅ Servidor principal pronto (PID: $MAIN_SERVER_PID)"
 # Executar testes principais com timeout geral (sem webServer do Playwright)
 echo "🚀 Executando testes principais..."
 if timeout $TEST_TIMEOUT bash -c '
-    SKIP_WEBSERVER=1 NEXT_PUBLIC_DISABLE_SW=true NODE_ENV=test npx playwright test --config=playwright.config.ci-no-server.js --project=chromium --grep="^(?!.*Standalone).*"
+    SKIP_WEBSERVER=1 NEXT_PUBLIC_DISABLE_SW=true NODE_ENV=test npx playwright test --config=playwright.config.ci-no-server.cjs --project=chromium --grep="^(?!.*Standalone).*"
 '; then
     echo "🎉 Todos os testes executaram com sucesso!"
     kill $MAIN_SERVER_PID || true
