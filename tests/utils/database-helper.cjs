@@ -11,6 +11,13 @@ class DatabaseHelper {
   }
 
   async initialize() {
+    // Force fallback mode when API calls are disabled
+    if (process.env.DISABLE_API_CALLS === 'true') {
+      console.log('🧪 Test mode: Database connections disabled, using fallback data');
+      this.isConnected = false;
+      return false;
+    }
+
     if (!this.supabaseUrl || !this.supabaseAnonKey) {
       console.warn('⚠️  Supabase credentials not found. Database tests will be skipped.');
       return false;
