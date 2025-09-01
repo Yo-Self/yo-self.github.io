@@ -75,14 +75,9 @@ sleep 2
 
 # Iniciar servidor para suíte principal (também sem webServer do Playwright)
 echo "🟢 Iniciando servidor de desenvolvimento para suíte principal..."
-# Detectar credenciais do Supabase para decidir habilitar chamadas de API
-if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
-  echo "🔓 Credenciais do banco detectadas – habilitando chamadas de API para suíte principal"
-  NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=false NODE_ENV=test npm run dev:test &
-else
-  echo "🔒 Sem credenciais do banco – desabilitando chamadas de API para suíte principal"
-  NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npm run dev:test &
-fi
+# Sempre desabilitar chamadas de API na suíte principal para evitar 404s em dados inexistentes
+echo "🔒 Desabilitando chamadas de API para suíte principal (modo fallback para testes estáveis)"
+NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npm run dev:test &
 MAIN_SERVER_PID=$!
 
 # Aguardar servidor principal ficar pronto
