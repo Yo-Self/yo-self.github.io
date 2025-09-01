@@ -75,9 +75,17 @@ sleep 2
 
 # Iniciar servidor para suíte principal (também sem webServer do Playwright)
 echo "🟢 Iniciando servidor de desenvolvimento para suíte principal..."
-NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npm run dev:test &
+# Detectar credenciais do Supabase para decidir habilitar chamadas de API
+if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+  echo "🔓 Credenciais do banco detectadas – habilitando chamadas de API para suíte principal"
+  NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=false NODE_ENV=test npm run dev:test &
+else
+  echo "🔒 Sem credenciais do banco – desabilitando chamadas de API para suíte principal"
+  NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npm run dev:test &
+fi
 MAIN_SERVER_PID=$!
 
+# Aguardar servidor principal ficar pronto
 echo "⏳ Aguardando servidor (http://localhost:3000) ficar pronto..."
 if ! timeout 60s bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'; then
   echo "❌ Servidor (principal) não ficou pronto em 60s. Encerrando."
@@ -90,7 +98,7 @@ echo "✅ Servidor principal pronto (PID: $MAIN_SERVER_PID)"
 # Executar testes principais com timeout geral (sem webServer do Playwright)
 echo "🚀 Executando testes principais..."
 if timeout $TEST_TIMEOUT bash -c '
-    SKIP_WEBSERVER=1 NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npx playwright test --config=playwright.config.ci.cjs --project=chromium --grep="^(?!.*Standalone).*"
+    SKIP_WEBSERVER=1 NEXT_PUBLIC_DISABLE_SW=true NODE_ENV=test npx playwright test --config=playwright.config.ci-no-server.js --project=chromium --grep="^(?!.*Standalone).*"
 '; then
     echo "🎉 Todos os testes executaram com sucesso!"
     kill $MAIN_SERVER_PID || true

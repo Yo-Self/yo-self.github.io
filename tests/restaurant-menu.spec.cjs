@@ -3,6 +3,8 @@ const { DatabaseHelper } = require('./utils/database-helper.cjs');
 
 let dbHelper;
 
+let testRestaurant;
+
 test.beforeAll(async () => {
   dbHelper = new DatabaseHelper();
   await dbHelper.initialize();
@@ -76,7 +78,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Carrossel de Pratos em Destaque', () => {
     test('deve exibir carrossel de pratos em destaque', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -98,7 +100,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve exibir informações dos pratos em destaque', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -131,7 +133,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Categorias do Menu', () => {
     test('deve exibir categorias do menu', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -153,7 +155,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve permitir navegação entre categorias', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -172,7 +174,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Lista de Pratos', () => {
     test('deve exibir lista de pratos por categoria', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -188,7 +190,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve exibir informações completas dos pratos', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -227,7 +229,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Modal de Detalhes do Prato', () => {
     test('deve abrir modal ao clicar em um prato', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -246,7 +248,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve exibir informações detalhadas no modal', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -285,7 +287,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve permitir fechar o modal', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -312,7 +314,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Funcionalidade de Carrinho', () => {
     test('deve permitir adicionar prato ao carrinho', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -343,7 +345,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve exibir contador do carrinho', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -363,7 +365,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Funcionalidade de Busca', () => {
     test('deve exibir campo de busca', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -375,7 +377,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve permitir buscar por nome do prato', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -398,7 +400,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Funcionalidade de Chamar Garçom', () => {
     test('deve exibir botão de chamar garçom quando habilitado', async ({ page }) => {
-      await page.goto('/restaurant/cafe-moendo');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -410,7 +412,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve abrir modal de chamar garçom', async ({ page }) => {
-      await page.goto('/restaurant/cafe-moendo');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -436,7 +438,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Funcionalidade de WhatsApp', () => {
     test('deve exibir botão de WhatsApp quando habilitado', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -448,7 +450,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve abrir modal de pedido WhatsApp', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -475,7 +477,7 @@ test.describe('Cardápio do Restaurante', () => {
   test.describe('Responsividade', () => {
     test('deve ser responsivo em dispositivos móveis', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -492,7 +494,7 @@ test.describe('Cardápio do Restaurante', () => {
 
     test('deve ser responsivo em tablets', async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 });
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -506,7 +508,7 @@ test.describe('Cardápio do Restaurante', () => {
 
   test.describe('Acessibilidade', () => {
     test('deve ter navegação por teclado', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -518,7 +520,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve ter textos alternativos para imagens', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 
@@ -538,7 +540,7 @@ test.describe('Cardápio do Restaurante', () => {
     test('deve carregar em tempo razoável', async ({ page }) => {
       const startTime = Date.now();
       
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       
       const loadTime = Date.now() - startTime;
@@ -546,7 +548,7 @@ test.describe('Cardápio do Restaurante', () => {
     });
 
     test('deve carregar imagens em tempo razoável', async ({ page }) => {
-      await page.goto('/restaurant/auri-monteiro');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
 

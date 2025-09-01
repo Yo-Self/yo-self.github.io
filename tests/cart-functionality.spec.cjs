@@ -3,6 +3,8 @@ const { DatabaseHelper } = require('./utils/database-helper.cjs');
 
 let dbHelper;
 
+let testRestaurant;
+
 test.beforeAll(async () => {
   dbHelper = new DatabaseHelper();
   await dbHelper.initialize();
@@ -559,7 +561,7 @@ test.describe('Funcionalidade do Carrinho de Compras', () => {
       }
       
       // Navegar para outra página
-      await page.goto('/restaurant/cafe-moendo');
+      await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000); // Aguardar 2s para JavaScript executar
       await page.waitForTimeout(1000);
