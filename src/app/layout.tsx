@@ -57,9 +57,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/yoself.png" type="image/png" />
-        <link rel="shortcut icon" href="/yoself.png" />
-        <link rel="apple-touch-icon" href="/yoself.png" />
+        {/* Favicon default links kept minimal; route-specific pages override dynamically */}
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="/og-image.png" />

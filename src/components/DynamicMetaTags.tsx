@@ -2,9 +2,11 @@
 
 import { useEffect, useCallback } from 'react';
 import { useCurrentRoute } from '@/hooks/useCurrentRoute';
+import { useCurrentRestaurant } from '@/hooks/useCurrentRestaurant';
 
 export default function DynamicMetaTags() {
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
+  const restaurantId = useCurrentRestaurant();
 
   const setCanonical = useCallback((absoluteUrl: string) => {
     const existing = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
@@ -136,6 +138,52 @@ export default function DynamicMetaTags() {
     updateManifestLink(route, name);
   }, [updateManifestLink]);
 
+  const setFavicon = useCallback((iconUrl: string) => {
+    // Replace generic rel=icon without sizes (common precedence)
+    let generic = document.querySelector('link[rel="icon"]:not([sizes])') as HTMLLinkElement | null;
+    if (!generic) {
+      generic = document.createElement('link');
+      generic.rel = 'icon';
+      document.head.appendChild(generic);
+    }
+    generic.href = iconUrl;
+
+    // Update or create sized icons without forcing type
+    const ensureLink = (rel: string, sizes?: string) => {
+      let link = document.querySelector(`link[rel="${rel}"]${sizes ? `[sizes="${sizes}"]` : ''}`) as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = rel;
+        if (sizes) link.sizes = sizes as any;
+        document.head.appendChild(link);
+      }
+      return link;
+    };
+    ensureLink('icon', '32x32')!.href = iconUrl;
+    ensureLink('icon', '16x16')!.href = iconUrl;
+    ensureLink('apple-touch-icon')!.href = iconUrl;
+    ensureLink('shortcut icon')!.href = iconUrl;
+  }, []);
+
+  const resetFavicon = useCallback(() => {
+    const defaults = {
+      generic: '/favicon.svg',
+      icon32: '/favicon-32x32.png',
+      icon16: '/favicon-16x16.png',
+      apple: '/apple-touch-icon.png',
+      shortcut: '/favicon.ico',
+    } as const;
+    const setIfFound = (selector: string, href: string) => {
+      const el = document.querySelector(selector) as HTMLLinkElement | null;
+      if (el) el.href = href;
+    };
+    setIfFound('link[rel="icon"]:not([sizes])', defaults.generic);
+    setIfFound('link[rel="icon"][sizes="32x32"]', defaults.icon32);
+    setIfFound('link[rel="icon"][sizes="16x16"]', defaults.icon16);
+    setIfFound('link[rel="apple-touch-icon"]', defaults.apple);
+    setIfFound('link[rel="shortcut icon"]', defaults.shortcut);
+  }, []);
+
   const resetMetaTags = useCallback(() => {
     // Reset para valores padrão
     const metaTags = [
@@ -172,12 +220,18 @@ export default function DynamicMetaTags() {
       // Atualizar meta tags para forçar o salvamento da rota atual
       updateMetaTags(restaurantName, currentRoute);
       setCanonical(`${window.location.origin}${currentRoute}`);
+      // Se houver imagem do restaurante embutida na página via meta (opcional) ou padrão baseada no slug/id
+      const metas = Array.from(document.querySelectorAll('meta[property="og:image"]')) as HTMLMetaElement[];
+      const imageFromMeta = metas.length > 0 ? metas[metas.length - 1].content : '';
+      const logoUrl = imageFromMeta || '';
+      if (logoUrl) setFavicon(logoUrl);
     } else {
       console.log('DynamicMetaTags: Resetting meta tags to default');
       resetMetaTags();
       setCanonical(window.location.origin);
+      resetFavicon();
     }
-  }, [currentRoute, isRestaurantPage, restaurantName, updateMetaTags, resetMetaTags]);
+  }, [currentRoute, isRestaurantPage, restaurantName, restaurantId, updateMetaTags, resetMetaTags, setFavicon, resetFavicon]);
 
   // Componente não renderiza nada
   return null;
