@@ -116,6 +116,12 @@ export class OrganizationService {
    * Busca uma organização com seus restaurantes para geração estática (sem cookies)
    */
   static async getWithRestaurantsForStatic(slug: string): Promise<{ organization: Organization; restaurants: Restaurant[] } | null> {
+    // Return null when API calls are disabled
+    if (process.env.DISABLE_API_CALLS === 'true') {
+      console.log('🧪 Test mode: Organization API calls disabled');
+      return null;
+    }
+
     const supabase = createStaticClient();
     
     if (!supabase) {
@@ -181,6 +187,12 @@ export class OrganizationService {
    * Lista todas as organizações para geração estática (sem cookies)
    */
   static async listForStatic(): Promise<Organization[]> {
+    // Return empty array when API calls are disabled
+    if (process.env.DISABLE_API_CALLS === 'true') {
+      console.log('🧪 Test mode: Organization API calls disabled');
+      return [];
+    }
+
     const supabase = createStaticClient();
     
     if (!supabase) {
