@@ -22,15 +22,12 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
     toggleSpeech, 
     speak, 
     stop,
-    clearReadHistory,
-    availableVoices,
-    selectedVoice,
-    setVoice
+    clearReadHistory
   } = useTextToSpeech();
   const [inputMessage, setInputMessage] = useState('');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [showDishModal, setShowDishModal] = useState(false);
-  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+
   const [showVoiceNotification, setShowVoiceNotification] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -306,17 +303,7 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
               )}
             </div>
             
-            {/* Botão de configurações de voz */}
-            <button
-              onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              title="Configurações de voz"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
+
             
             {/* Botão de ativar/desativar leitura */}
             <button
@@ -360,78 +347,7 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
           </div>
         </div>
 
-        {/* Painel de configurações de voz */}
-        {showVoiceSettings && (
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                  Configurações de Voz
-                </h4>
-                <button
-                  onClick={() => setShowVoiceSettings(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Seletor de voz */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Voz
-                </label>
-                <select
-                  value={selectedVoice?.name || ''}
-                  onChange={(e) => {
-                    const voice = availableVoices.find(v => v.name === e.target.value);
-                    setVoice(voice || null);
-                  }}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  {availableVoices.map((voice) => (
-                    <option key={voice.name} value={voice.name}>
-                      {voice.name} ({voice.lang})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Status da funcionalidade */}
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Leitura automática: {isSpeechEnabled ? 'Ativada' : 'Desativada'}
-                </span>
-                {isSpeaking && (
-                  <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    Falando...
-                  </span>
-                )}
-              </div>
-              
-              {/* Botões de ação */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => speak('Olá! Esta é uma mensagem de teste para verificar se a leitura de voz está funcionando corretamente.', true)}
-                  disabled={isSpeaking}
-                  className="flex-1 px-3 py-2 text-sm bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-300 text-white rounded-md transition-colors"
-                >
-                  Testar Voz
-                </button>
-                <button
-                  onClick={clearReadHistory}
-                  className="px-3 py-2 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
-                  title="Limpar histórico de mensagens lidas"
-                >
-                  🔄
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-messages" ref={messagesContainerRef}>
