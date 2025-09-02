@@ -28,11 +28,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   // Use useRef instead of state for tutorial timers to avoid infinite re-renders
   const tutorialTimersRef = useRef<NodeJS.Timeout[]>([]);
   
-  // Refs para áudio
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioBufferRef = useRef<AudioBuffer | null>(null);
-  const currentAudioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+
   
   const itemsPerPage = 3;
   const categories = Array.from(new Set(restaurant.menu_items.flatMap(item => item.categories || [item.category]).filter(Boolean)));
@@ -111,173 +107,9 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
     }
   }, [showSwipeTutorial, showCategoriesTutorial, showPinTutorial, clearTutorialTimers]);
 
-  // Funções de áudio para o som de virar página
-  const initAudioContext = () => {
-    if (!audioContextRef.current) {
-      try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch (error) {
-        // Silenciar erro
-      }
-    }
-  };
 
-  const loadAudioFile = async () => {
-    if (!audioContextRef.current || audioBufferRef.current) return;
-    
-    try {
-      const response = await fetch('/page-flip.mp3');
-      const arrayBuffer = await response.arrayBuffer();
-      audioBufferRef.current = await audioContextRef.current.decodeAudioData(arrayBuffer);
-    } catch (error) {
-      // Silenciar erro
-    }
-  };
 
-  const playPageFlipSound = React.useCallback(async () => {
-    // Parar qualquer som anterior
-    try {
-      if (currentAudioSourceRef.current) {
-        currentAudioSourceRef.current.stop();
-        currentAudioSourceRef.current = null;
-      }
-      if (audioRef.current && !audioRef.current.paused) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    } catch (error) {
-      // Silenciar erro
-    }
 
-    // Garantir que o áudio esteja disponível
-    if (!audioRef.current) {
-      const audioElement = document.createElement('audio');
-      audioElement.preload = 'auto';
-      audioElement.src = '/page-flip.mp3';
-      audioElement.muted = false;
-      audioElement.volume = 0.15;
-      audioRef.current = audioElement;
-    }
-
-    // Primeiro, tentar com o elemento de áudio HTML
-    try {
-      if (audioRef.current) {
-        if (!audioRef.current.src || audioRef.current.src === '') {
-          audioRef.current.src = '/page-flip.mp3';
-        }
-        
-        // Para navegação rápida, não aguardar o carregamento completo
-        // Se estiver pronto, tocar imediatamente
-        if (audioRef.current.readyState >= 2) {
-          audioRef.current.muted = false;
-          audioRef.current.volume = 0.15; // Volume reduzido em 50% (de 0.3 para 0.15)
-          audioRef.current.currentTime = 0;
-          
-          const playPromise = audioRef.current.play();
-          
-          try {
-            await Promise.race([
-              playPromise,
-              new Promise((_, reject) => setTimeout(() => reject(new Error('HTML Audio timeout')), 500))
-            ]);
-            return;
-          } catch (playError: any) {
-            // Continuar para Web Audio API
-          }
-        }
-      }
-    } catch (error) {
-      // Continuar para Web Audio API
-    }
-
-    // Se HTML Audio falhar ou não estiver pronto, usar Web Audio API
-    try {
-      initAudioContext();
-      await loadAudioFile();
-      
-      if (audioContextRef.current && audioBufferRef.current) {
-        const source = audioContextRef.current.createBufferSource();
-        const gainNode = audioContextRef.current.createGain();
-        
-        source.buffer = audioBufferRef.current;
-        source.connect(gainNode);
-        gainNode.connect(audioContextRef.current.destination);
-        
-        // Aplicar volume reduzido em 50% (0.15)
-        gainNode.gain.setValueAtTime(0.15, audioContextRef.current.currentTime);
-        
-        // Salvar referência do source atual
-        currentAudioSourceRef.current = source;
-        
-        source.start(0);
-        
-        // Limpar referência quando o som terminar
-        source.onended = () => {
-          if (currentAudioSourceRef.current === source) {
-            currentAudioSourceRef.current = null;
-          }
-        };
-        
-        return;
-      } else {
-        // Fallback: gerar um som simples
-        const fallbackContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = fallbackContext.createOscillator();
-        const gainNode = fallbackContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(fallbackContext.destination);
-        
-        oscillator.frequency.setValueAtTime(800, fallbackContext.currentTime);
-        // Volume reduzido em 50% (de 0.1 para 0.05)
-        gainNode.gain.setValueAtTime(0.05, fallbackContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.005, fallbackContext.currentTime + 0.1);
-        
-        oscillator.start(fallbackContext.currentTime);
-        oscillator.stop(fallbackContext.currentTime + 0.1);
-      }
-    } catch (error) {
-      // Silenciar erro
-    }
-  }, []);
-
-  // Tocar som quando a página mudar (mantido para compatibilidade)
-  useEffect(() => {
-    if (open && page > 0) { // Não tocar na primeira página
-      // O som já foi tocado pelas funções de navegação, então não precisamos tocar novamente
-    }
-  }, [page, open]);
-
-  // Inicializar áudio quando o componente for aberto
-  useEffect(() => {
-    if (open) {
-      // Garantir que o elemento de áudio exista
-      if (!audioRef.current) {
-        const audioElement = document.createElement('audio');
-        audioElement.preload = 'auto';
-        audioElement.src = '/page-flip.mp3';
-        audioElement.muted = false;
-        audioElement.volume = 0.15;
-        audioRef.current = audioElement;
-        
-        // Aguardar o carregamento do áudio
-        audioElement.addEventListener('canplaythrough', () => {
-        });
-        
-        audioElement.addEventListener('error', (e) => {
-        });
-      } else {
-        // Se já existe, garantir que esteja configurado corretamente
-        if (!audioRef.current.src || audioRef.current.src === '') {
-          audioRef.current.src = '/page-flip.mp3';
-        }
-        audioRef.current.muted = false;
-        audioRef.current.volume = 0.15;
-        // Pré-carregar o áudio
-        audioRef.current.load();
-      }
-    }
-  }, [open]);
   
   // Tutorial de primeira acesso para swipe
   useEffect(() => {
@@ -549,32 +381,26 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   const pages = createPagesWithPinnedFirst;
   const totalPages = pages.length;
 
-  // Função para navegar para a próxima página com som
+  // Função para navegar para a próxima página
   const goToNextPage = useCallback(() => {
     if (page < totalPages - 1) {
       setPage(prev => prev + 1);
-      // Tocar som imediatamente ao navegar
-      playPageFlipSound();
     }
-  }, [page, totalPages, playPageFlipSound]);
+  }, [page, totalPages]);
 
-  // Função para navegar para a página anterior com som
+  // Função para navegar para a página anterior
   const goToPrevPage = useCallback(() => {
     if (page > 0) {
       setPage(prev => prev - 1);
-      // Tocar som imediatamente ao navegar
-      playPageFlipSound();
     }
-  }, [page, playPageFlipSound]);
+  }, [page]);
 
-  // Função para navegar para uma página específica com som
+  // Função para navegar para uma página específica
   const goToPage = useCallback((targetPage: number) => {
     if (targetPage >= 0 && targetPage < totalPages) {
       setPage(targetPage);
-      // Tocar som imediatamente ao navegar
-      playPageFlipSound();
     }
-  }, [totalPages, playPageFlipSound]);
+  }, [totalPages]);
 
   // Remover este efeito:
   // useEffect(() => {
@@ -769,7 +595,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         ease: [0.25, 0.46, 0.45, 0.94] 
       }}
     >
-      {/* Áudio para o som de virar página - criado dinamicamente */}
+
       {/* Áreas clicáveis para avançar/retroceder página - apenas nas bordas laterais */}
       <button
         className="fixed left-0 top-0 h-full w-1/8 z-10 bg-transparent p-0 m-0 border-none outline-none"
@@ -868,13 +694,15 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             idx === currentCategoryIdx ? (
               <motion.span
                 key={cat}
-                className="text-xs font-bold text-white text-center leading-tight flex items-center justify-center bg-primary dark:bg-cyan-600 px-2 h-7 rounded-full shadow-lg whitespace-nowrap"
+                className="text-xs font-bold text-white text-center leading-tight flex items-center justify-center bg-primary dark:bg-cyan-600 px-2 rounded-full shadow-lg whitespace-nowrap"
                 style={{
                   minWidth: 'fit-content',
                   maxWidth: 150,
                   wordBreak: 'break-word',
                   display: 'inline-flex',
-                  minHeight: 32
+                  height: '36px',
+                  minHeight: '36px',
+                  lineHeight: '1.2'
                 }}
                 initial={{ opacity: 0, scale: 0.8, y: -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -890,7 +718,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             ) : (
               <motion.button
                 key={cat}
-                className="h-5 w-5 rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-400 dark:border-gray-500"
+                className="rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 scale-100 transition-all duration-200 flex-shrink-0 border border-gray-400 dark:border-gray-500"
+                style={{
+                  width: '30px',
+                  height: '20px',
+                  minWidth: '20px',
+                  minHeight: '16px'
+                }}
                 onClick={() => {
                   // Navegar para a primeira página da categoria clicada
                   const catIdx = categoryList.indexOf(cat);
