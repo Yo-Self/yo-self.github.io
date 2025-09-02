@@ -6,43 +6,41 @@ interface UseTextToSpeechReturn {
   toggleSpeech: () => void;
   speak: (text: string, isManual?: boolean) => void;
   stop: () => void;
-  setVoice: (voice: SpeechSynthesisVoice | null) => void;
   clearReadHistory: () => void;
-  availableVoices: SpeechSynthesisVoice[];
-  selectedVoice: SpeechSynthesisVoice | null;
 }
 
 export function useTextToSpeech(): UseTextToSpeechReturn {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [readMessages, setReadMessages] = useState<Set<string>>(new Set());
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Verificar se o navegador suporta speech synthesis
   const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-  // Carregar vozes disponíveis
+  // Carregar vozes disponíveis e definir Luciana como fixa
   const loadVoices = useCallback(() => {
     if (!isSupported) return;
 
     const voices = window.speechSynthesis.getVoices();
-    const portugueseVoices = voices.filter(voice => 
-      voice.lang.startsWith('pt') || voice.lang.startsWith('pt-BR')
+    
+    // Buscar especificamente pela voz Luciana (pt-BR)
+    const lucianaVoice = voices.find(voice => 
+      voice.name.toLowerCase().includes('luciana') && 
+      (voice.lang.startsWith('pt-BR') || voice.lang.startsWith('pt'))
     );
     
-    // Priorizar vozes em português, depois outras
-    const sortedVoices = [
-      ...portugueseVoices,
-      ...voices.filter(voice => !voice.lang.startsWith('pt'))
-    ];
-
-    setAvailableVoices(sortedVoices);
+    // Se não encontrar Luciana, buscar por qualquer voz em português brasileiro
+    const fallbackVoice = lucianaVoice || voices.find(voice => 
+      voice.lang.startsWith('pt-BR')
+    ) || voices.find(voice => 
+      voice.lang.startsWith('pt')
+    );
     
-    // Selecionar a primeira voz em português ou a primeira disponível
-    if (!selectedVoice && sortedVoices.length > 0) {
-      setSelectedVoice(sortedVoices[0]);
+    // Definir a voz selecionada
+    if (fallbackVoice && !selectedVoice) {
+      setSelectedVoice(fallbackVoice);
     }
   }, [isSupported, selectedVoice]);
 
@@ -130,10 +128,6 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     window.speechSynthesis.speak(utterance);
   }, [isSupported, isEnabled, selectedVoice, readMessages, stop]);
 
-  const setVoice = useCallback((voice: SpeechSynthesisVoice | null) => {
-    setSelectedVoice(voice);
-  }, []);
-
   const clearReadHistory = useCallback(() => {
     setReadMessages(new Set());
   }, []);
@@ -144,9 +138,6 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     toggleSpeech,
     speak,
     stop,
-    setVoice,
     clearReadHistory,
-    availableVoices,
-    selectedVoice,
   };
 }
