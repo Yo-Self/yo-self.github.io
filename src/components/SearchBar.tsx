@@ -281,6 +281,7 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       
       {/* Botão modo jornal */}
       <button
+        id="journal-tutorial-button"
         className="w-16 h-16 rounded-full bg-white/80 hover:bg-white/90 dark:!bg-gray-900/80 dark:hover:!bg-gray-900/90 border-2 border-white/60 dark:!border-gray-800/60 shadow-2xl backdrop-blur-sm flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
         data-tutorial="journal-button"
         aria-label={t("Modo jornal")}
@@ -290,14 +291,12 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       </button>
       {/* Botão chamar garçom */}
       {restaurant.waiter_call_enabled && (
-        <div className="mb-2">
           <WaiterCallButton 
             restaurantId={restaurant.id} 
             waiterCallEnabled={restaurant.waiter_call_enabled}
-            className="w-16 h-16 rounded-full bg-white/80 hover:bg-white/90 dark:!bg-gray-900/80 dark:hover:!bg-gray-900/90 border-2 border-white/60 dark:!border-gray-800/60 shadow-2xl backdrop-blur-sm flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group"
+            className="w-16 h-16 rounded-full bg-white/80 hover:bg-white/90 dark:!bg-gray-900/80 dark:hover:!bg-gray-900/90 border-2 border-white/60 dark:!border-gray-800/60 shadow-2xl backdrop-blur-sm flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 hover:shadow-3xl focus:outline-none group mb-2"
             data-tutorial="waiter-button"
           />
-        </div>
       )}
       {/* Botão de busca integrada */}
       <button

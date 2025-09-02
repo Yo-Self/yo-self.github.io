@@ -29,22 +29,22 @@ const getGridSteps = (hasMultiple: boolean) => [
   },
 ];
 
-const getJournalSteps = (hasMultiple: boolean) => [
+const getJournalSteps = (hasMultiple: boolean, restaurant?: Restaurant) => [
   ...(hasMultiple ? [{
     selector: '[data-tutorial="restaurant-switch"]',
     text: 'Aqui você pode trocar de restaurante.',
     arrow: 'left',
   }] : []),
   {
-    selector: '[data-tutorial="journal-button"]',
+    selector: '#journal-tutorial-button',
     text: 'Aqui você acessa o modo jornal e ter a experiência de folhear o menu.',
     arrow: 'left',
   },
-  {
+  ...(restaurant?.waiter_call_enabled ? [{
     selector: '[data-tutorial="waiter-button"]',
     text: 'Aqui você pode chamar o garçom.',
     arrow: 'left',
-  },
+  }] : []),
   {
     selector: '[data-tutorial="search-button"]',
     text: 'Aqui você pode realizar buscas ou conversar com a nossa Inteligência Artificial.',
@@ -59,6 +59,7 @@ const FirstTimeTutorialGrid = ({ onDone }: { onDone: () => void }) => {
   const [step, setStep] = React.useState(0);
   const [show, setShow] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
+  const [isLayoutStable, setIsLayoutStable] = React.useState(false);
   const [pos, setPos] = React.useState({top:0,left:0,width:0,height:0});
   
   // Use useRef to store timers instead of state to avoid re-renders
@@ -84,24 +85,54 @@ const FirstTimeTutorialGrid = ({ onDone }: { onDone: () => void }) => {
   }, [step, steps.length, clearTutorialTimers, onDone]);
   
   React.useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem('gridTutorialDone')) {
-      setShow(true);
-    }
     setIsClient(true);
   }, []);
+
+  // Aguardar layout estabilizar antes de mostrar tutorial
+  React.useEffect(() => {
+    if (!isClient) return;
+    if (typeof window !== 'undefined' && localStorage.getItem('gridTutorialDone')) return;
+
+    // Aguardar um tempo para garantir que o layout estabilizou
+    const stabilizeTimer = setTimeout(() => {
+      setIsLayoutStable(true);
+    }, 500); // 500ms para o grid tutorial (menos crítico)
+
+    return () => clearTimeout(stabilizeTimer);
+  }, [isClient]);
+
+  // Só mostrar tutorial depois que layout estiver estável
+  React.useEffect(() => {
+    if (isLayoutStable && typeof window !== 'undefined' && !localStorage.getItem('gridTutorialDone')) {
+      setShow(true);
+    }
+  }, [isLayoutStable]);
   
   React.useEffect(() => {
     if (!show) return;
     if (step >= steps.length) return;
-    
-    const el = document.querySelector(steps[step].selector) as HTMLElement;
-    if (el) {
+
+    setPos({top:0,left:0,width:0,height:0});
+
+    const handler = () => {
+      const el = document.querySelector(steps[step].selector) as HTMLElement;
+      if (!el) {
+        if (step < steps.length - 1) {
+          setStep(step + 1);
+        } else {
+          setShow(false);
+          if (typeof window !== 'undefined') localStorage.setItem('gridTutorialDone', '1');
+          onDone();
+        }
+        return;
+      }
       const rect = el.getBoundingClientRect();
       setPos({top:rect.top,left:rect.left,width:rect.width,height:rect.height});
-    }
-    
-    // Timer automático para avançar para o próximo passo
-    const timer = setTimeout(() => {
+    };
+
+    const findTimer = setTimeout(handler, 150);
+
+    const advanceTimer = setTimeout(() => {
       if (step < steps.length - 1) {
         setStep(step + 1);
       } else {
@@ -109,25 +140,24 @@ const FirstTimeTutorialGrid = ({ onDone }: { onDone: () => void }) => {
         if (typeof window !== 'undefined') localStorage.setItem('gridTutorialDone', '1');
         onDone();
       }
-    }, 5000); // 5 segundos por passo
-    
-    // Store timer in ref instead of state
-    tutorialTimersRef.current = [timer];
-    
+    }, 5000);
+
+    tutorialTimersRef.current = [findTimer, advanceTimer];
+
     return () => {
-      clearTimeout(timer);
+      tutorialTimersRef.current.forEach(clearTimeout);
       tutorialTimersRef.current = [];
     };
-  }, [step, show, steps, onDone]); // Removed clearTutorialTimers from dependencies
-  if (!isClient || !show || step >= steps.length) return null;
+  }, [step, show, steps, onDone]);
+  if (!isClient || !show || step >= steps.length || (pos.width === 0 && pos.height === 0)) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;
   let boxTop = steps[step].arrow === 'down' ? pos.top + pos.height + 16 : pos.top;
   const boxWidth = 260;
   const padding = 12;
   if (steps[step].arrow === 'left') {
-    // Para a primeira dica (chevron), priorize mostrar à esquerda se não couber à direita
-    if (step === 0) {
+    // Para a dica do restaurant-switch (dropdown), priorize mostrar à esquerda se não couber à direita
+    if (steps[step].selector === '[data-tutorial="restaurant-switch"]') {
       // Sempre priorize centralizar abaixo do botão do dropdown
       boxLeft = Math.max(8, pos.left + pos.width/2 - boxWidth/2);
       // Se a caixa sair da tela para a direita, tente alinhar à direita do botão
@@ -176,13 +206,14 @@ const FirstTimeTutorialGrid = ({ onDone }: { onDone: () => void }) => {
   );
 }
 
-const FirstTimeTutorialJournal = ({ onDone }: { onDone: () => void }) => {
+const FirstTimeTutorialJournal = ({ onDone, restaurant }: { onDone: () => void; restaurant: Restaurant }) => {
   const searchParams = useSearchParams();
   const hasMultiple = searchParams.has("multiple");
-  const steps = React.useMemo(() => getJournalSteps(hasMultiple), [hasMultiple]);
+  const steps = React.useMemo(() => getJournalSteps(hasMultiple, restaurant), [hasMultiple, restaurant]);
   const [step, setStep] = React.useState(0);
   const [show, setShow] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
+  const [isLayoutStable, setIsLayoutStable] = React.useState(false);
   const [pos, setPos] = React.useState({top:0,left:0,width:0,height:0});
   
   // Use useRef to store timers instead of state to avoid re-renders
@@ -208,11 +239,28 @@ const FirstTimeTutorialJournal = ({ onDone }: { onDone: () => void }) => {
   }, [step, steps.length, clearTutorialTimers, onDone]);
   
   React.useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem('journalTutorialDone')) {
-      setShow(true);
-    }
     setIsClient(true);
   }, []);
+
+  // Aguardar layout estabilizar antes de mostrar tutorial
+  React.useEffect(() => {
+    if (!isClient) return;
+    if (typeof window !== 'undefined' && localStorage.getItem('journalTutorialDone')) return;
+
+    // Aguardar um tempo para garantir que os dados carregaram e o layout estabilizou
+    const stabilizeTimer = setTimeout(() => {
+      setIsLayoutStable(true);
+    }, 800); // 800ms para garantir que os dados do restaurant carregaram
+
+    return () => clearTimeout(stabilizeTimer);
+  }, [isClient, restaurant.waiter_call_enabled]);
+
+  // Só mostrar tutorial depois que layout estiver estável
+  React.useEffect(() => {
+    if (isLayoutStable && typeof window !== 'undefined' && !localStorage.getItem('journalTutorialDone')) {
+      setShow(true);
+    }
+  }, [isLayoutStable]);
 
   // Controlar o scroll do body quando o tutorial abrir/fechar
   useModalScroll(show);
@@ -220,14 +268,28 @@ const FirstTimeTutorialJournal = ({ onDone }: { onDone: () => void }) => {
   React.useEffect(() => {
     if (!show) return;
     if (step >= steps.length) return;
-    
-    const el = document.querySelector(steps[step].selector) as HTMLElement;
-    if (!el) return;
-    
-    const rect = el.getBoundingClientRect();
-    setPos({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-    
-    const timer = setTimeout(() => {
+
+    setPos({top:0,left:0,width:0,height:0});
+
+    const handler = () => {
+      const el = document.querySelector(steps[step].selector) as HTMLElement;
+      if (!el) {
+        if (step < steps.length - 1) {
+          setStep(step + 1);
+        } else {
+          setShow(false);
+          if (typeof window !== 'undefined') localStorage.setItem('journalTutorialDone', '1');
+          onDone();
+        }
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      setPos({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+    };
+
+    const findTimer = setTimeout(handler, 150);
+
+    const advanceTimer = setTimeout(() => {
       if (step < steps.length - 1) {
         setStep(step + 1);
       } else {
@@ -235,25 +297,24 @@ const FirstTimeTutorialJournal = ({ onDone }: { onDone: () => void }) => {
         if (typeof window !== 'undefined') localStorage.setItem('journalTutorialDone', '1');
         onDone();
       }
-    }, 4000); // 4 segundos por passo
-    
-    // Store timer in ref instead of state
-    tutorialTimersRef.current = [timer];
-    
+    }, 4000);
+
+    tutorialTimersRef.current = [findTimer, advanceTimer];
+
     return () => {
-      clearTimeout(timer);
+      tutorialTimersRef.current.forEach(clearTimeout);
       tutorialTimersRef.current = [];
     };
-  }, [step, show, steps, onDone]); // Removed clearTutorialTimers from dependencies
-  if (!isClient || !show || step >= steps.length) return null;
+  }, [step, show, steps, onDone]);
+  if (!isClient || !show || step >= steps.length || (pos.width === 0 && pos.height === 0)) return null;
   // Lógica para posicionar a caixa de texto do tutorial
   let boxLeft = pos.left;
-  let boxTop = steps[step].arrow === 'down' ? pos.top + pos.height + 16 : pos.top;
+  let boxTop = steps[step].arrow === 'down' ? pos.top + pos.height + 16 : (pos.top + pos.height / 2 - 60);
   const boxWidth = 260;
   const padding = 12;
   if (steps[step].arrow === 'left') {
-    // Para a primeira dica (chevron), priorize mostrar à esquerda se não couber à direita
-    if (step === 0) {
+    // Para a dica do restaurant-switch (dropdown), priorize mostrar à esquerda se não couber à direita
+    if (steps[step].selector === '[data-tutorial="restaurant-switch"]') {
       // Sempre priorize centralizar abaixo do botão do dropdown
       boxLeft = Math.max(8, pos.left + pos.width/2 - boxWidth/2);
       // Se a caixa sair da tela para a direita, tente alinhar à direita do botão
@@ -345,7 +406,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100">
       <Suspense fallback={null}>
         {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} />}
-        {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} />}
+        {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} restaurant={selectedRestaurant} />}
       </Suspense>
       <Header
         restaurant={selectedRestaurant}
