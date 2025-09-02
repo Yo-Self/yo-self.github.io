@@ -19,6 +19,45 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system');
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Função para atualizar meta tags baseado no tema
+  const updateMetaTagsForTheme = (isDark: boolean) => {
+    const themeColor = isDark ? '#000000' : '#ffffff';
+    const statusBarStyle = isDark ? 'black-translucent' : 'default';
+    
+    // Atualizar theme-color
+    let themeColorMeta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement;
+    if (themeColorMeta) {
+      themeColorMeta.content = themeColor;
+    } else {
+      themeColorMeta = document.createElement('meta');
+      themeColorMeta.name = 'theme-color';
+      themeColorMeta.content = themeColor;
+      document.head.appendChild(themeColorMeta);
+    }
+    
+    // Atualizar apple-mobile-web-app-status-bar-style
+    let statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]') as HTMLMetaElement;
+    if (statusBarMeta) {
+      statusBarMeta.content = statusBarStyle;
+    } else {
+      statusBarMeta = document.createElement('meta');
+      statusBarMeta.name = 'apple-mobile-web-app-status-bar-style';
+      statusBarMeta.content = statusBarStyle;
+      document.head.appendChild(statusBarMeta);
+    }
+    
+    // Atualizar msapplication-TileColor
+    let tileColorMeta = document.querySelector('meta[name="msapplication-TileColor"]') as HTMLMetaElement;
+    if (tileColorMeta) {
+      tileColorMeta.content = themeColor;
+    } else {
+      tileColorMeta = document.createElement('meta');
+      tileColorMeta.name = 'msapplication-TileColor';
+      tileColorMeta.content = themeColor;
+      document.head.appendChild(tileColorMeta);
+    }
+  };
+
   // Carrega as preferências salvas no localStorage
   useEffect(() => {
     try {
@@ -68,6 +107,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     if (theme === 'dark') {
       root.classList.add('dark');
       body.classList.add('dark');
+      updateMetaTagsForTheme(true);
       try {
         localStorage.setItem('theme', 'dark');
         // Dispara evento para sincronizar outras abas
@@ -78,6 +118,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     } else if (theme === 'light') {
       root.classList.remove('dark');
       body.classList.remove('dark');
+      updateMetaTagsForTheme(false);
       try {
         localStorage.setItem('theme', 'light');
         // Dispara evento para sincronizar outras abas
@@ -100,9 +141,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       if (prefersDark) {
         root.classList.add('dark');
         body.classList.add('dark');
+        updateMetaTagsForTheme(true);
       } else {
         root.classList.remove('dark');
         body.classList.remove('dark');
+        updateMetaTagsForTheme(false);
       }
     }
   }, [theme, isInitialized]);

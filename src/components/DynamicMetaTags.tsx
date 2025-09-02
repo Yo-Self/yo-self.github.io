@@ -100,12 +100,20 @@ export default function DynamicMetaTags() {
   }, []);
 
   const updateMetaTags = useCallback((name: string, route: string) => {
+    // Detectar tema atual
+    const isDark = document.documentElement.classList.contains('dark') || 
+                   document.body.classList.contains('dark');
+    
+    const themeColor = isDark ? '#000000' : '#ffffff';
+    const statusBarStyle = isDark ? 'black-translucent' : 'default';
+    
     // Atualizar meta tags existentes ou criar novas
     const metaTags = [
       { name: 'apple-mobile-web-app-title', content: `${name}` },
       { name: 'application-name', content: `${name}` },
-      { name: 'msapplication-TileColor', content: '#000000' },
-      { name: 'theme-color', content: '#000000' },
+      { name: 'msapplication-TileColor', content: themeColor },
+      { name: 'theme-color', content: themeColor },
+      { name: 'apple-mobile-web-app-status-bar-style', content: statusBarStyle },
       { property: 'og:title', content: `${name}` },
       { property: 'og:description', content: `Cardápio digital de ${name}` },
       { property: 'og:url', content: `${window.location.origin}${route}` },
@@ -185,12 +193,20 @@ export default function DynamicMetaTags() {
   }, []);
 
   const resetMetaTags = useCallback(() => {
+    // Detectar tema atual
+    const isDark = document.documentElement.classList.contains('dark') || 
+                   document.body.classList.contains('dark');
+    
+    const themeColor = isDark ? '#000000' : '#ffffff';
+    const statusBarStyle = isDark ? 'black-translucent' : 'default';
+    
     // Reset para valores padrão
     const metaTags = [
       { name: 'apple-mobile-web-app-title', content: 'Restaurant App' },
       { name: 'application-name', content: 'Restaurant App' },
-      { name: 'msapplication-TileColor', content: '#000000' },
-      { name: 'theme-color', content: '#000000' },
+      { name: 'msapplication-TileColor', content: themeColor },
+      { name: 'theme-color', content: themeColor },
+      { name: 'apple-mobile-web-app-status-bar-style', content: statusBarStyle },
       { property: 'og:title', content: 'Restaurant App' },
       { property: 'og:description', content: 'Aplicativo de restaurante com cardápio digital e pedidos' },
       { property: 'og:url', content: window.location.origin },
