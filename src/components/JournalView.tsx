@@ -31,7 +31,8 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
 
   
   const itemsPerPage = 3;
-  const categories = Array.from(new Set(restaurant.menu_items.flatMap(item => item.categories || [item.category]).filter(Boolean)));
+  // Usar as categorias ordenadas do restaurante (mesma ordem da home) em vez de extrair dinamicamente
+  const categories = restaurant.menu_categories;
   
   // O JournalView deve funcionar independentemente da prop selectedCategory
   // A prop é apenas para referência, mas o JournalView mantém sua própria lógica
