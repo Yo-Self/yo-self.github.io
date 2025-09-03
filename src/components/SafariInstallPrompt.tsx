@@ -16,8 +16,18 @@ export default function SafariInstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-50">
-      <div className="flex items-start space-x-3">
+    <div className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-[200] relative" style={{ bottom: 'max(1rem, env(safe-area-inset-bottom) + 1rem)' }}>
+      {/* Botão de fechar no canto superior direito */}
+      <button
+        onClick={dismissPrompt}
+        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <div className="flex items-start space-x-3 pr-8">
         <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg
             className="w-6 h-6 text-blue-600 dark:text-blue-400"
@@ -52,25 +62,17 @@ export default function SafariInstallPrompt() {
             </p>
             <ol className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
               <li>1. Toque no botão <span className="font-semibold">Compartilhar</span> <span className="inline-block w-4 h-4 bg-gray-400 rounded ml-1"></span></li>
-              <li>2. Role para baixo e toque em <span className="font-semibold">"Adicionar à Tela Inicial"</span></li>
-              <li>3. Toque em <span className="font-semibold">"Adicionar"</span></li>
+              <li>2. Role para baixo e toque em <span className="font-semibold">&quot;Adicionar à Tela Inicial&quot;</span></li>
+              <li>3. Toque em <span className="font-semibold">&quot;Adicionar&quot;</span></li>
             </ol>
           </div>
           
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center justify-start mt-3">
             <button
               onClick={handleInstallClick}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
             >
               Entendi
-            </button>
-            <button
-              onClick={dismissPrompt}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
             </button>
           </div>
         </div>

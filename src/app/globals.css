@@ -16,6 +16,44 @@
 html, body {
   overflow-x: hidden;
   max-width: 100%;
+  overflow-y: auto;
+}
+
+/* iOS specific fixes for status bar bleeding */
+@supports (-webkit-touch-callout: none) {
+  html {
+    background-color: white;
+  }
+  
+  html.dark {
+    background-color: black;
+  }
+  
+  body {
+    background-color: white;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body.dark {
+    background-color: black;
+  }
+}
+
+/* Fix for status bar area transparency in webapp */
+html {
+  background-color: white !important;
+}
+
+html.dark {
+  background-color: black !important;
+}
+
+body {
+  background-color: white !important;
+}
+
+body.dark {
+  background-color: black !important;
 }
 
 /* Classe para bloquear scroll quando modal está aberto */

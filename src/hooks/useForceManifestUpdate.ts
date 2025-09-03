@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useCurrentRoute } from './useCurrentRoute';
 
 export function useForceManifestUpdate() {
@@ -6,25 +6,7 @@ export function useForceManifestUpdate() {
   const manifestRef = useRef<string>('');
   const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
 
-  useEffect(() => {
-    if (disableSw) return;
-    if (isRestaurantPage && restaurantName && currentRoute !== manifestRef.current) {
-      console.log('useForceManifestUpdate: Forcing manifest update for:', restaurantName, 'at route:', currentRoute);
-      
-      // Estratégia 1: Atualizar manifest link
-      updateManifestLink(currentRoute, restaurantName);
-      
-      // Estratégia 2: Forçar reload do service worker
-      forceServiceWorkerUpdate();
-      
-      // Estratégia 3: Atualizar meta tags críticas
-      updateCriticalMetaTags(restaurantName, currentRoute);
-      
-      manifestRef.current = currentRoute;
-    }
-  }, [currentRoute, isRestaurantPage, restaurantName, disableSw]);
-
-  const updateManifestLink = (route: string, name: string) => {
+  const updateManifestLink = useCallback((route: string, name: string) => {
     if (disableSw) return;
     try {
       // Criar manifest dinâmico
@@ -117,9 +99,9 @@ export function useForceManifestUpdate() {
     } catch (error) {
       console.error('useForceManifestUpdate: Error updating manifest:', error);
     }
-  };
+  }, [disableSw]);
 
-  const forceServiceWorkerUpdate = () => {
+  const forceServiceWorkerUpdate = useCallback(() => {
     if (disableSw) return;
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -130,7 +112,7 @@ export function useForceManifestUpdate() {
         });
       });
     }
-  };
+  }, [disableSw]);
 
   const updateCriticalMetaTags = (name: string, route: string) => {
     // Atualizar meta tags críticas para iOS
@@ -165,6 +147,24 @@ export function useForceManifestUpdate() {
     
     console.log('useForceManifestUpdate: Critical meta tags updated for:', name);
   };
+
+  useEffect(() => {
+    if (disableSw) return;
+    if (isRestaurantPage && restaurantName && currentRoute !== manifestRef.current) {
+      console.log('useForceManifestUpdate: Forcing manifest update for:', restaurantName, 'at route:', currentRoute);
+      
+      // Estratégia 1: Atualizar manifest link
+      updateManifestLink(currentRoute, restaurantName);
+      
+      // Estratégia 2: Forçar reload do service worker
+      forceServiceWorkerUpdate();
+      
+      // Estratégia 3: Atualizar meta tags críticas
+      updateCriticalMetaTags(restaurantName, currentRoute);
+      
+      manifestRef.current = currentRoute;
+    }
+  }, [currentRoute, isRestaurantPage, restaurantName, disableSw, forceServiceWorkerUpdate, updateManifestLink]);
 
   return {
     currentRoute,

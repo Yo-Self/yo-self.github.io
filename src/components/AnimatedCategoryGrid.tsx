@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MenuItem } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 interface AnimatedCategoryGridProps {
   categories: string[];
@@ -28,7 +27,7 @@ export default function AnimatedCategoryGrid({ categories, menuItems, onSelectCa
   );
   
   return (
-    <div className="grid grid-cols-2 gap-3 px-3 pt-3 pb-6 relative z-1">
+    <div className="grid grid-cols-2 gap-3 px-3 pt-3 pb-6 relative z-1 animated-category-grid">
       {filteredCategories.map((category, index) => {
         const items = menuItems.filter(item => 
           item.categories && item.categories.includes(category)
@@ -67,11 +66,8 @@ function AnimatedCategoryCard({
   const [current, setCurrent] = React.useState(0);
   const [next, setNext] = React.useState<number|null>(null);
   const [showNext, setShowNext] = React.useState(false);
-  const { elementRef, isVisible } = useScrollAnimation<HTMLButtonElement>({
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px',
-    triggerOnce: true
-  });
+  // Removed scroll animation - show all cards immediately
+  const isVisible = true;
 
   React.useEffect(() => {
     if (images.length <= 1) return;
@@ -93,15 +89,7 @@ function AnimatedCategoryCard({
 
   return (
     <button
-      ref={elementRef}
-      className={`relative aspect-square rounded-2xl overflow-hidden shadow-lg group focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-gray-100 dark:bg-gray-800 transition-all duration-700 ease-out ${
-        isVisible 
-          ? 'opacity-100 translate-y-0 scale-100' 
-          : 'opacity-0 translate-y-8 scale-95'
-      }`}
-      style={{
-        /* Delay removido para sincronizar animações */
-      }}
+      className="relative aspect-square rounded-2xl overflow-hidden shadow-lg group focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-out opacity-100 translate-y-0 scale-100"
       onClick={onClick}
     >
       {/* Imagem base (sempre visível) */}

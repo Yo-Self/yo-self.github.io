@@ -201,7 +201,7 @@ export default function DynamicMetaTags() {
       setCanonical(window.location.origin);
       resetFavicon();
     }
-  }, [currentRoute, isRestaurantPage, restaurantName, restaurantId, updateMetaTags, resetMetaTags, setFavicon, resetFavicon]);
+  }, [currentRoute, isRestaurantPage, restaurantName, restaurantId, updateMetaTags, resetMetaTags, setFavicon, resetFavicon, setCanonical]);
 
   // Componente não renderiza nada
   return null;

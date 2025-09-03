@@ -403,7 +403,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const [gridTutorialDone, setGridTutorialDone] = React.useState(false);
   const [journalTutorialDone, setJournalTutorialDone] = React.useState(false);
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100">
+    <div className={`bg-white dark:bg-black text-gray-900 dark:text-gray-100 relative webapp-main-container with-categories ${viewMode === 'list' ? 'list-view' : ''}`}>
       <Suspense fallback={null}>
         {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} />}
         {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} restaurant={selectedRestaurant} />}

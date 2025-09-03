@@ -44,6 +44,13 @@ export default function MenuSection({
   const categoriesRef = useRef<HTMLDivElement>(null);
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
   const prevSearchTerm = useRef(searchTerm);
+  
+  // Check if we're in webapp mode
+  const isWebAppMode = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://')
+  );
 
   // Filtra categorias para mostrar apenas as que possuem produtos
   const availableCategories = categories.filter(category =>
@@ -83,8 +90,20 @@ export default function MenuSection({
       checkCategoriesPosition();
     };
     
+    // Adicionar listener tanto no window quanto no container do menu
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    
+    const menuSection = document.querySelector('.menu-section');
+    if (menuSection) {
+      menuSection.addEventListener("scroll", handleScroll, { passive: true });
+    }
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (menuSection) {
+        menuSection.removeEventListener("scroll", handleScroll);
+      }
+    };
   }, [checkCategoriesPosition]);
 
   // Verificar posição inicial
@@ -92,20 +111,20 @@ export default function MenuSection({
     checkCategoriesPosition();
   }, [checkCategoriesPosition]);
   
+  // No modo webapp, sempre fixar o categories bar
+  useEffect(() => {
+    if (isWebAppMode) {
+      setIsCategoriesFixed(true);
+    }
+    // No modo navegador, deixar a lógica de scroll funcionar normalmente
+  }, [isWebAppMode]);
+  
   // Forçar re-renderização quando a ordenação mudar
   useEffect(() => {
     // Ordenação mudou
   }, [currentSort]);
 
-  // Hook para controlar overflow - deve vir antes de qualquer return
-  React.useEffect(() => {
-    document.documentElement.style.overflowX = 'hidden';
-    document.body.style.overflowX = 'hidden';
-    return () => {
-      document.documentElement.style.overflowX = '';
-      document.body.style.overflowX = '';
-    };
-  }, []);
+
 
   const handleCategoryClick = (category: string) => {
     setActiveCategory(category);
@@ -193,7 +212,7 @@ export default function MenuSection({
   };
 
   return (
-    <section className="menu-section py-0 bg-white dark:bg-black">
+    <section className="menu-section py-0 bg-white dark:bg-black relative">
       <div className="container mx-auto px-0 pb-20">
         {/* Container de referência para detectar quando a barra atinge o topo */}
         <div ref={categoriesRef} className="h-0" />
@@ -203,9 +222,21 @@ export default function MenuSection({
           ref={categoriesContainerRef}
           className={`categories-container transition-all duration-300 ease-in-out ${
             isCategoriesFixed 
-              ? 'fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black shadow-lg border-b border-gray-200 dark:border-gray-700' 
+              ? 'webapp-categories-fixed' 
               : 'relative'
           }`}
+          style={{
+            ...(isCategoriesFixed && {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 20,
+              backgroundColor: 'white',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              borderBottom: '1px solid #e5e7eb'
+            })
+          }}
         >
           <div className={`px-0 pb-1 md:pb-2 pl-4 ${isCategoriesFixed ? 'pt-2' : ''}`}>
             <CategoriesBar
@@ -222,7 +253,7 @@ export default function MenuSection({
         
         {/* Espaçador para compensar a altura da barra quando fixa */}
         {isCategoriesFixed && (
-          <div className="h-32 md:h-36" />
+          <div className="h-32 md:h-36 webapp-categories-spacer" />
         )}
         
         <div

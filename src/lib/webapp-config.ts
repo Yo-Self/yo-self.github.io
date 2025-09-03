@@ -43,7 +43,7 @@ export const getWebAppMetaTags = (isDark: boolean = false) => ({
   'apple-mobile-web-app-title': WEBAPP_CONFIG.name,
   'mobile-web-app-capable': 'yes',
   'theme-color': isDark ? '#000000' : '#ffffff',
-  'viewport': 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
+  'viewport': 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   'format-detection': 'telephone=no',
   'apple-touch-fullscreen': 'yes',
 });

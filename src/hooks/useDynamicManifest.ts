@@ -1,27 +1,51 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useCurrentRoute } from './useCurrentRoute';
 
 export function useDynamicManifest() {
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
   const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
 
-  useEffect(() => {
+  const updateManifest = useCallback((manifestData: any) => {
     if (disableSw) return;
-    console.log('useDynamicManifest: Route changed to:', currentRoute);
-    console.log('useDynamicManifest: isRestaurantPage:', isRestaurantPage);
-    console.log('useDynamicManifest: restaurantName:', restaurantName);
-    
-    // Só modificar o manifest se estivermos em uma página de restaurante
-    if (isRestaurantPage && restaurantName) {
-      console.log('useDynamicManifest: Updating manifest for restaurant:', restaurantName);
-      updateManifestForRestaurant(currentRoute, restaurantName);
-    } else {
-      console.log('useDynamicManifest: Resetting to default manifest');
-      resetManifest();
-    }
-  }, [currentRoute, isRestaurantPage, restaurantName, disableSw]);
+    try {
+      console.log('updateManifest: Updating manifest with data:', manifestData);
+      
+      // Usar a API route em vez de blob para evitar URLs inválidas
+      const manifestUrl = '/api/manifest';
+      
+      // Encontrar e atualizar o link do manifest
+      let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+      
+      if (manifestLink) {
+        console.log('updateManifest: Found existing manifest link:', manifestLink.href);
+        
+        // Remover URL anterior se existir (blob)
+        if ((manifestLink as any).dataset.blobUrl) {
+          URL.revokeObjectURL((manifestLink as any).dataset.blobUrl as string);
+          delete (manifestLink as any).dataset.blobUrl;
+          console.log('updateManifest: Revoked previous blob URL');
+        }
+        
+        // Atualizar com nova URL
+        manifestLink.href = manifestUrl;
+        console.log('updateManifest: Updated manifest link to:', manifestUrl);
+      } else {
+        console.log('updateManifest: Creating new manifest link');
+        // Criar novo link se não existir
+        manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestUrl;
+        document.head.appendChild(manifestLink);
+        console.log('updateManifest: Added new manifest link to head');
+      }
 
-  const updateManifestForRestaurant = (route: string, name: string) => {
+      console.log('updateManifest: Manifest successfully updated for:', manifestData.start_url);
+    } catch (error) {
+      console.error('updateManifest: Error updating manifest:', error);
+    }
+  }, [disableSw]);
+
+  const updateManifestForRestaurant = useCallback((route: string, name: string) => {
     if (disableSw) return;
     // Criar um novo manifest dinâmico
     const dynamicManifest = {
@@ -66,9 +90,9 @@ export function useDynamicManifest() {
 
     // Atualizar o manifest dinamicamente
     updateManifest(dynamicManifest);
-  };
+  }, [disableSw, updateManifest]);
 
-  const resetManifest = () => {
+  const resetManifest = useCallback(() => {
     if (disableSw) return;
     // Reset para o manifest padrão
     const defaultManifest = {
@@ -112,48 +136,25 @@ export function useDynamicManifest() {
     };
 
     updateManifest(defaultManifest);
-  };
+  }, [disableSw, updateManifest]);
 
-  const updateManifest = (manifestData: any) => {
+
+
+  useEffect(() => {
     if (disableSw) return;
-    try {
-      console.log('updateManifest: Updating manifest with data:', manifestData);
-      
-      // Usar a API route em vez de blob para evitar URLs inválidas
-      const manifestUrl = `/api/manifest?start_url=${encodeURIComponent(manifestData.start_url)}&name=${encodeURIComponent(manifestData.name)}&short_name=${encodeURIComponent(manifestData.short_name)}`;
-      console.log('updateManifest: Using API route URL:', manifestUrl);
-      
-      // Encontrar e atualizar o link do manifest
-      let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-      
-      if (manifestLink) {
-        console.log('updateManifest: Found existing manifest link:', manifestLink.href);
-        
-        // Remover URL anterior se existir (blob)
-        if ((manifestLink as any).dataset.blobUrl) {
-          URL.revokeObjectURL((manifestLink as any).dataset.blobUrl as string);
-          delete (manifestLink as any).dataset.blobUrl;
-          console.log('updateManifest: Revoked previous blob URL');
-        }
-        
-        // Atualizar com nova URL
-        manifestLink.href = manifestUrl;
-        console.log('updateManifest: Updated manifest link to:', manifestUrl);
-      } else {
-        console.log('updateManifest: Creating new manifest link');
-        // Criar novo link se não existir
-        manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = manifestUrl;
-        document.head.appendChild(manifestLink);
-        console.log('updateManifest: Added new manifest link to head');
-      }
-
-      console.log('updateManifest: Manifest successfully updated for:', manifestData.start_url);
-    } catch (error) {
-      console.error('updateManifest: Error updating manifest:', error);
+    console.log('useDynamicManifest: Route changed to:', currentRoute);
+    console.log('useDynamicManifest: isRestaurantPage:', isRestaurantPage);
+    console.log('useDynamicManifest: restaurantName:', restaurantName);
+    
+    // Só modificar o manifest se estivermos em uma página de restaurante
+    if (isRestaurantPage && restaurantName) {
+      console.log('useDynamicManifest: Updating manifest for restaurant:', restaurantName);
+      updateManifestForRestaurant(currentRoute, restaurantName);
+    } else {
+      console.log('useDynamicManifest: Resetting to default manifest');
+      resetManifest();
     }
-  };
+  }, [currentRoute, isRestaurantPage, restaurantName, disableSw, resetManifest, updateManifestForRestaurant]);
 
   return {
     currentRoute,

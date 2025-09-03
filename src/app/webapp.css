@@ -1,33 +1,404 @@
 /* WebApp specific styles */
 
-/* Hide navigation bars in standalone mode */
+/* Default: header should NOT be fixed */
+.header {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  z-index: auto !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Force header to top in webapp mode - highest priority */
 @media (display-mode: standalone) {
-  /* Hide Safari UI elements */
-  body {
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
+  .header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 30 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: white !important;
+    height: 60px !important;
+    transform: translateY(0) !important;
   }
   
-  /* Prevent pull-to-refresh on iOS */
-  html, body {
-    overscroll-behavior: none;
+  .dark .header {
+    background-color: black !important;
+  }
+  
+  /* Cover status bar area with header background */
+  .header::before {
+    content: '';
+    position: absolute;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top, 0px);
+    background-color: white;
+    z-index: -1;
+  }
+  
+  .dark .header::before {
+    background-color: black;
+  }
+  
+  /* Additional coverage for status bar area - only above header */
+  .header::after {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: white;
+    z-index: -1;
+  }
+  
+  .dark .header::after {
+    background-color: black;
+  }
+  
+
+  
+  /* Ensure html and body have solid background in status bar area */
+  html {
+    background-color: white !important;
+  }
+  
+  html.dark {
+    background-color: black !important;
+  }
+  
+  body {
+    background-color: white !important;
+  }
+  
+  body.dark {
+    background-color: black !important;
+  }
+}
+
+/* Ensure scroll works properly */
+html, body {
+  position: relative !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remove any scroll restrictions for category grid */
+.grid.grid-cols-2 {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+}
+
+/* Ensure category grid container allows scroll */
+.animated-category-grid {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+}
+
+/* Force scroll to work on category grid */
+.grid.grid-cols-2.animated-category-grid {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+}
+
+/* Ensure parent containers don't restrict scroll */
+.menu-section {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+}
+
+.container.mx-auto {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+}
+
+/* Force category cards to be always visible */
+.animated-category-grid button {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  scale: 1 !important;
+  animation: none !important;
+}
+
+/* Remove any scroll-based animations from category cards */
+.grid.grid-cols-2 button {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  scale: 1 !important;
+  animation: none !important;
+}
+
+/* Ensure main container allows scroll */
+.webapp-main-container {
+  overflow-y: visible !important;
+  height: auto !important;
+  min-height: auto !important;
+  position: relative !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* iOS specific fixes for status bar bleeding */
+@supports (-webkit-touch-callout: none) {
+  html {
+    background-color: white;
+  }
+  
+  html.dark {
+    background-color: black;
+  }
+  
+  body {
+    background-color: white;
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Hide address bar on scroll (iOS) */
-  .standalone-only {
-    display: block;
+  body.dark {
+    background-color: black;
+  }
+}
+
+/* Webapp mode - standalone display */
+@media (display-mode: standalone) {
+  /* Reset everything first */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 100vh !important;
   }
   
-  /* Optimize for fullscreen */
-  .webapp-container {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+  /* Force header to absolute top */
+  .header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 30 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: white !important;
+    height: 60px !important;
+    transform: translateY(0) !important;
+  }
+  
+  /* Force header to absolute top with higher specificity */
+  header.header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 30 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: white !important;
+    height: 60px !important;
+    transform: translateY(0) !important;
+  }
+  
+  .dark .header {
+    background-color: black !important;
+  }
+  
+  /* Force header to absolute top with maximum specificity */
+  header.header.header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 30 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: white !important;
+    height: 60px !important;
+    transform: translateY(0) !important;
+  }
+  
+  .dark header.header.header {
+    background-color: black !important;
+  }
+  
+  /* Categories bar below header */
+  .categories-container {
+    position: fixed !important;
+    top: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 25 !important;
+    background-color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+  
+  .dark .categories-container {
+    background-color: black !important;
+    border-bottom-color: #374151 !important;
+  }
+  
+  /* Main container with proper spacing */
+  .webapp-main-container {
+    padding-top: 60px !important;
+    margin: 0 !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+  
+  /* Categories spacer */
+  .webapp-categories-spacer {
+    height: 120px !important;
+  }
+  
+  /* List view pages - add extra padding for categories bar */
+  .webapp-main-container.with-categories.list-view {
+    padding-top: 160px !important;
+  }
+  
+  /* Grid view and home - normal padding */
+  .webapp-main-container.with-categories:not(.list-view) {
+    padding-top: 60px !important;
+  }
+  
+  /* Home page - normal padding */
+  .webapp-main-container:not(.with-categories) {
+    padding-top: 60px !important;
+  }
+  
+
+  
+  /* Position categories bar below fixed header in webapp mode */
+  .webapp-categories-fixed {
+    top: 60px !important;
+  }
+}
+
+/* Browser mode - header should NOT be fixed */
+@media not (display-mode: standalone) {
+  .header {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Remove padding in browser mode */
+  .webapp-main-container {
+    padding-top: 0 !important;
+  }
+  
+  /* Categories bar behavior in browser mode */
+  .webapp-categories-fixed {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 20 !important;
+    background-color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    transform: translateZ(0) !important;
+  }
+  
+  .dark .webapp-categories-fixed {
+    background-color: black !important;
+    border-bottom-color: #374151 !important;
+  }
+  
+  /* Also apply to the container directly */
+  .categories-container.webapp-categories-fixed {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 20 !important;
+    background-color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    transform: translateZ(0) !important;
+  }
+  
+  .dark .categories-container.webapp-categories-fixed {
+    background-color: black !important;
+    border-bottom-color: #374151 !important;
+  }
+  
+  /* Adjust categories spacer height in browser mode */
+  .webapp-categories-spacer {
+    height: 120px !important;
+  }
+}
+
+/* Force header to be relative in browser mode with higher specificity */
+@media (display-mode: browser) {
+  .header {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* Additional force for browser mode */
+@media screen and (max-width: 1024px) {
+  .header {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* Force header to be relative when not in standalone mode - highest specificity */
+@media not (display-mode: standalone) {
+  header.header {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* Force header to be relative when not in standalone mode - even higher specificity */
+@media not (display-mode: standalone) {
+  header.header.header {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -38,59 +409,16 @@
   }
 }
 
-/* iOS specific optimizations */
-@supports (-webkit-touch-callout: none) {
-  .webapp-container {
-    min-height: -webkit-fill-available;
-  }
-  
-  /* Prevent zoom on input focus */
-  input, textarea, select {
-    font-size: 16px;
-  }
+/* Fix floating action buttons positioning */
+.fixed.bottom-\[max\(1\.5rem\,env\(safe-area-inset-bottom\)\+1\.5rem\)\] {
+  bottom: max(1.5rem, env(safe-area-inset-bottom) + 1.5rem) !important;
+  z-index: 60 !important;
 }
 
-/* Android specific optimizations */
-@supports not (-webkit-touch-callout: none) {
-  .webapp-container {
-    min-height: 100vh;
-  }
-}
-
-/* Prevent text selection on interactive elements */
-button, a, [role="button"] {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Smooth scrolling for webapp */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Optimize touch targets */
-button, a, input, select, textarea {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* Hide scrollbars but keep functionality */
-.webapp-container::-webkit-scrollbar {
-  display: none;
-}
-
-.webapp-container {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Safe area handling for notches and home indicators */
-@supports (padding: max(0px)) {
-  .webapp-container {
-    padding-top: max(env(safe-area-inset-top), 0px);
-    padding-bottom: max(env(safe-area-inset-bottom), 0px);
-    padding-left: max(env(safe-area-inset-left), 0px);
-    padding-right: max(env(safe-area-inset-right), 0px);
+/* Ensure floating buttons are above browser UI */
+@media not (display-mode: standalone) {
+  .fixed.bottom-\[max\(1\.5rem\,env\(safe-area-inset-bottom\)\+1\.5rem\)\] {
+    bottom: max(2rem, env(safe-area-inset-bottom) + 2rem) !important;
+    z-index: 100 !important;
   }
 }
