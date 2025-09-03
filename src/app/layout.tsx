@@ -15,6 +15,7 @@ import SafariInstallPrompt from "@/components/SafariInstallPrompt";
 import DynamicMetaTags from "@/components/DynamicMetaTags";
 import StartupRedirect from "@/components/StartupRedirect";
 import A2HSUrlTagger from "@/components/A2HSUrlTagger";
+import DynamicManifestUpdater from "@/components/DynamicManifestUpdater";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -91,6 +92,7 @@ export default function RootLayout({
             <DynamicMetaTags />
             <StartupRedirect />
             <A2HSUrlTagger />
+            <DynamicManifestUpdater />
           </CartProvider>
         </AccessibilityProvider>
         <Analytics />
