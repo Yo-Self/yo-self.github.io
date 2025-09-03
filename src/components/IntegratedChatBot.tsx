@@ -37,8 +37,11 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
     toggleSpeech, 
     speak, 
     stop,
-    clearReadHistory
+    clearReadHistory,
+    resetStopFlag
   } = useTextToSpeech();
+  
+
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -71,6 +74,13 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
     }
   }, [isOpen]);
 
+  // Resetar flag de parada quando abrir o chatbot
+  useEffect(() => {
+    if (isOpen) {
+      resetStopFlag();
+    }
+  }, [isOpen, resetStopFlag]);
+
   // Mostrar notificação de voz na primeira vez que abrir o chat
   useEffect(() => {
     if (isOpen && !localStorage.getItem('voice-notification-shown')) {
@@ -83,6 +93,13 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
 
   // Controlar o scroll do body quando o chat abrir/fechar
   useModalScroll(isOpen);
+
+  // Parar a leitura quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [stop]);
 
   // Efeito de entrada animada
   useEffect(() => {
@@ -123,35 +140,48 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
 
   // Processar resultados da busca/LLM
   useEffect(() => {
-    if (results && messages.length > 0) {
+    if (results) {
+      setMessages(prev => {
+        if (prev.length === 0) return prev;
+        
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage.role === 'user') {
+          // Adicionar resposta do assistente
+          const assistantMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: results.type === 'llm' ? results.message || '' : 
+                     results.items && results.items.length > 0 
+                       ? `Encontrei ${results.items.length} resultado(s) para "${lastMessage.content}":`
+                       : `Nenhum resultado encontrado para "${lastMessage.content}".`,
+            timestamp: new Date(),
+            type: results.type,
+            items: results.items,
+            recommendedDishes: results.recommendedDishes,
+            model: results.model,
+          };
+
+          return [...prev, assistantMessage];
+        }
+        return prev;
+      });
+    }
+  }, [results]);
+
+  // Efeito separado para leitura automática
+  useEffect(() => {
+    if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'user') {
-        // Adicionar resposta do assistente
-        const assistantMessage: ChatMessage = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: results.type === 'llm' ? results.message || '' : 
-                   results.items && results.items.length > 0 
-                     ? `Encontrei ${results.items.length} resultado(s) para "${lastMessage.content}":`
-                     : `Nenhum resultado encontrado para "${lastMessage.content}".`,
-          timestamp: new Date(),
-          type: results.type,
-          items: results.items,
-          recommendedDishes: results.recommendedDishes,
-          model: results.model,
-        };
-
-        setMessages(prev => [...prev, assistantMessage]);
-
+      if (lastMessage.role === 'assistant' && lastMessage.content) {
         // Ler automaticamente a resposta se a voz estiver ativada
-        if (isSpeechEnabled && assistantMessage.content && !isSpeaking) {
+        if (isSpeechEnabled && lastMessage.content && !isSpeaking) {
           setTimeout(() => {
-            speak(assistantMessage.content, false);
+            speak(lastMessage.content, false);
           }, 500);
         }
       }
     }
-  }, [results, isSpeechEnabled, speak, isSpeaking, messages]);
+  }, [messages, isSpeechEnabled, speak, isSpeaking]);
 
   // Processar erros
   useEffect(() => {
@@ -218,6 +248,9 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
 
   const handleClose = () => {
     if (isAnimating) return;
+    
+    // Parar a leitura de voz imediatamente quando fechar o chatbot
+    stop();
     
     setIsAnimating(true);
     
@@ -336,7 +369,7 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                Busca & IA {restaurant.name}
+                {restaurant.name}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {isLoading ? 'Processando...' : 'Online'}
@@ -352,7 +385,7 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
             {/* Switch de ativar/desativar leitura */}
             <button
               onClick={toggleSpeech}
-              className={`relative inline-flex h-4 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 ${
+              className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 ${
                 isSpeechEnabled ? 'bg-cyan-500' : 'bg-gray-300 dark:bg-gray-600'
               }`}
               title={isSpeechEnabled ? 'Desativar leitura de voz' : 'Ativar leitura de voz'}

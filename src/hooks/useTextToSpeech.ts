@@ -7,14 +7,23 @@ interface UseTextToSpeechReturn {
   speak: (text: string, isManual?: boolean) => void;
   stop: () => void;
   clearReadHistory: () => void;
+  resetStopFlag: () => void;
 }
 
 export function useTextToSpeech(): UseTextToSpeechReturn {
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(() => {
+    // Tentar carregar o estado do localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('speech-enabled');
+      return saved === 'true';
+    }
+    return false;
+  });
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [readMessages, setReadMessages] = useState<Set<string>>(new Set());
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const shouldStopRef = useRef(false);
 
   // Verificar se o navegador suporta speech synthesis
   const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
@@ -61,16 +70,32 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
       console.warn('Speech synthesis não é suportado neste navegador');
       return;
     }
-    setIsEnabled(prev => !prev);
+    setIsEnabled(prev => {
+      const newValue = !prev;
+      // Salvar no localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('speech-enabled', newValue.toString());
+      }
+
+      return newValue;
+    });
   }, [isSupported]);
 
   const stop = useCallback(() => {
     if (!isSupported) return;
 
+    // Marcar que deve parar
+    shouldStopRef.current = true;
+
+    // Cancelar todas as falas em andamento
+    window.speechSynthesis.cancel();
+    
+    // Limpar referência
     if (speechRef.current) {
-      window.speechSynthesis.cancel();
       speechRef.current = null;
     }
+    
+    // Forçar parada do estado
     setIsSpeaking(false);
   }, [isSupported]);
 
@@ -78,15 +103,27 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     if (!isSupported || !text.trim()) return;
     
     // Se não está habilitado e não é manual, não ler
-    if (!isEnabled && !isManual) return;
+    if (!isEnabled && !isManual) {
+      return;
+    }
 
     // Para leitura automática, verificar se já foi lida
     if (!isManual && readMessages.has(text)) {
       return; // Já foi lida automaticamente, não repetir
     }
 
-    // Parar qualquer fala em andamento
-    stop();
+    // Se já está falando, não iniciar nova fala
+    if (isSpeaking) {
+      return;
+    }
+
+    // Se foi solicitado para parar, não iniciar nova fala
+    if (shouldStopRef.current) {
+      return;
+    }
+
+    // Cancelar qualquer fala em andamento sem usar a função stop()
+    window.speechSynthesis.cancel();
 
     // Criar nova utterance
     const utterance = new SpeechSynthesisUtterance(text);
@@ -104,6 +141,11 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
 
     // Event listeners
     utterance.onstart = () => {
+      // Se foi solicitado para parar, cancelar imediatamente
+      if (shouldStopRef.current) {
+        window.speechSynthesis.cancel();
+        return;
+      }
       setIsSpeaking(true);
     };
 
@@ -118,9 +160,16 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     };
 
     utterance.onerror = (event) => {
-      console.error('Erro na síntese de fala:', event);
       setIsSpeaking(false);
       speechRef.current = null;
+      
+      // Se foi interrompido, não mostrar erro nem log
+      if (event.error === 'interrupted') {
+        return;
+      }
+      
+      // Só mostrar erro se não for interrupção
+      console.error('Erro na síntese de fala:', event);
     };
 
     // Armazenar referência e iniciar fala
@@ -132,6 +181,11 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     setReadMessages(new Set());
   }, []);
 
+  // Resetar a flag de parada quando necessário
+  const resetStopFlag = useCallback(() => {
+    shouldStopRef.current = false;
+  }, []);
+
   return {
     isEnabled,
     isSpeaking,
@@ -139,5 +193,6 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     speak,
     stop,
     clearReadHistory,
+    resetStopFlag,
   };
 }
