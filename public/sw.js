@@ -51,7 +51,16 @@ self.addEventListener('install', (event) => {
         console.log('Opened cache');
         const urlsToCache = getUrlsToCache();
         console.log('Caching URLs:', urlsToCache);
-        return cache.addAll(urlsToCache);
+        
+        // Cache URLs individualmente para evitar falhas
+        return Promise.allSettled(
+          urlsToCache.map(url => 
+            cache.add(url).catch(error => {
+              console.log(`Failed to cache ${url}:`, error);
+              return null;
+            })
+          )
+        );
       })
   );
 });

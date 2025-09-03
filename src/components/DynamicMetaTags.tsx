@@ -21,69 +21,23 @@ export default function DynamicMetaTags() {
   }, []);
 
   const updateManifestLink = useCallback((route: string, name: string) => {
-    // Criar manifest dinâmico
-    const dynamicManifest = {
-      name: `${name}`,
-      short_name: name,
-      description: `Cardápio digital de ${name}`,
-      start_url: route,
-      display: 'standalone',
-      background_color: '#ffffff',
-      theme_color: '#000000',
-      orientation: 'portrait-primary',
-      scope: '/',
-      lang: 'pt-BR',
-      categories: ['food', 'lifestyle', 'utilities'],
-      prefer_related_applications: false,
-      icons: [
-        {
-          src: '/favicon-16x16.png',
-          sizes: '16x16',
-          type: 'image/png',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/favicon-32x32.png',
-          sizes: '32x32',
-          type: 'image/png',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/apple-touch-icon.png',
-          sizes: '180x180',
-          type: 'image/png',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/favicon.ico',
-          sizes: '48x48',
-          type: 'image/x-icon'
-        }
-      ]
-    };
-
-    // Criar blob e atualizar link
-    const manifestBlob = new Blob([JSON.stringify(dynamicManifest, null, 2)], {
-      type: 'application/json'
-    });
-    
-    const manifestUrl = URL.createObjectURL(manifestBlob);
+    // Usar a API route em vez de blob para evitar URLs inválidas
+    const manifestUrl = `/api/manifest?start_url=${encodeURIComponent(route)}&name=${encodeURIComponent(name + ' - Cardápio')}&short_name=${encodeURIComponent(name)}`;
     
     let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
     
     if (manifestLink) {
-      // Remover URL anterior se existir
+      // Remover URL anterior se existir (blob)
       if (manifestLink.dataset.blobUrl) {
         URL.revokeObjectURL(manifestLink.dataset.blobUrl);
+        delete manifestLink.dataset.blobUrl;
       }
       
       manifestLink.href = manifestUrl;
-      manifestLink.dataset.blobUrl = manifestUrl;
     } else {
       manifestLink = document.createElement('link');
       manifestLink.rel = 'manifest';
       manifestLink.href = manifestUrl;
-      manifestLink.dataset.blobUrl = manifestUrl;
       document.head.appendChild(manifestLink);
     }
 

@@ -35,6 +35,7 @@ export function useServiceWorker() {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallPrompt(true);
+      console.log('beforeinstallprompt event captured');
     };
 
     // Capturar evento de app instalado
@@ -55,20 +56,27 @@ export function useServiceWorker() {
 
   const installApp = async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt for route:', currentRoute);
-        if (isRestaurantPage) {
-          console.log('Installing restaurant app:', restaurantName);
+      try {
+        console.log('Showing install prompt...');
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('User accepted the install prompt for route:', currentRoute);
+          if (isRestaurantPage) {
+            console.log('Installing restaurant app:', restaurantName);
+          }
+        } else {
+          console.log('User dismissed the install prompt');
         }
-      } else {
-        console.log('User dismissed the install prompt');
+      } catch (error) {
+        console.error('Error showing install prompt:', error);
+      } finally {
+        setDeferredPrompt(null);
+        setShowInstallPrompt(false);
       }
-      
-      setDeferredPrompt(null);
-      setShowInstallPrompt(false);
+    } else {
+      console.log('No deferred prompt available');
     }
   };
 
