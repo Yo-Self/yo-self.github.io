@@ -1,6 +1,7 @@
 import React from "react";
 import { Dish, MenuItem } from "./data";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { CartUtils } from "../types/cart";
 
 interface AnimatedChatDishCardsProps {
   dishes: (Dish | MenuItem)[];
@@ -44,6 +45,9 @@ function AnimatedChatDishCard({
     triggerOnce: true
   });
 
+  // Verificar se tem complementos obrigatórios com preço > 0
+  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(dish);
+
   return (
     <div 
       ref={elementRef}
@@ -71,9 +75,14 @@ function AnimatedChatDishCard({
               <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
                 {dish.name}
               </h4>
-              <span className="text-sm font-bold text-primary dark:text-cyan-500 ml-2">
-                R$ {dish.price}
-              </span>
+              <div className="text-right ml-2">
+                {hasRequiredComplementsWithPrice && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400">a partir</div>
+                )}
+                <div className="text-sm font-bold text-primary dark:text-cyan-500">
+                  R$ {dish.price}
+                </div>
+              </div>
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
               {dish.description}

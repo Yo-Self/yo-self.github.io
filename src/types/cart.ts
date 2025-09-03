@@ -1,4 +1,5 @@
 import { MenuItem } from './restaurant';
+import { Dish } from '../components/data';
 
 /**
  * Representa um item individual no carrinho de compras
@@ -191,5 +192,27 @@ export class CartUtils {
    */
   static formatPrice(price: number): string {
     return price.toFixed(2).replace('.', ',');
+  }
+
+  /**
+   * Verifica se um prato tem complementos obrigatórios com preço maior que zero
+   */
+  static hasRequiredComplementsWithPrice(dish: MenuItem | Dish): boolean {
+    if (!dish.complement_groups || dish.complement_groups.length === 0) {
+      return false;
+    }
+
+    return dish.complement_groups.some(group => {
+      // Verifica se o grupo é obrigatório
+      if (!group.required) {
+        return false;
+      }
+
+      // Verifica se há pelo menos um complemento com preço maior que 0
+      return group.complements.some(complement => {
+        const price = parseFloat(complement.price.replace(',', '.'));
+        return price > 0;
+      });
+    });
   }
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Dish } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 import { useCardVisibility } from "../hooks/useCardVisibility";
+import { CartUtils } from "../types/cart";
 
 interface CardJornalProps {
   dish: Dish;
@@ -14,6 +15,9 @@ interface CardJornalProps {
 
 export default function CardJornal({ dish, onClick, size = "small", fallbackImage, isPinned = false, onPinToggle }: CardJornalProps) {
   const { cardRef, isVisible } = useCardVisibility();
+
+  // Verificar se tem complementos obrigatórios com preço > 0
+  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(dish);
 
   // Só começa a verificar a visibilidade após o primeiro render
   // Isso evita que o card desapareça imediatamente
@@ -100,9 +104,14 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
             </svg>
           </div>
           {/* Preço no canto inferior direito */}
-          <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-            R${dish.price}
-          </span>
+          <div className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+            <div className="text-right">
+              {hasRequiredComplementsWithPrice && (
+                <div className="text-xs opacity-80">a partir</div>
+              )}
+              <div>R${dish.price}</div>
+            </div>
+          </div>
           {/* Nome do prato no canto inferior esquerdo */}
           <div className="absolute bottom-2 left-2 right-16">
             <h3 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight line-clamp-3 overflow-hidden">

@@ -57,7 +57,9 @@ export default function WhatsAppButton({ dish, selectedComplements, restaurantId
             const complement = group?.complements.find(c => c.name === complementName);
             
             if (complement) {
-              message += `• ${complementName} - R$ ${complement.price}\n`;
+              // Só exibir o preço se for maior que 0
+              const priceText = complement.price !== '0,00' ? ` - R$ ${complement.price}` : '';
+              message += `• ${complementName}${priceText}\n`;
               totalPrice += parseFloat(complement.price.replace(',', '.'));
             }
           });
