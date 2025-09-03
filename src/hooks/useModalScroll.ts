@@ -32,8 +32,16 @@ export function useModalScroll(isOpen: boolean) {
       document.body.style.top = '';
       document.body.style.left = '';
       
-      // Restaurar posição do scroll
-      window.scrollTo(scrollX, scrollY);
+      // Restaurar posição do scroll sem animação visível
+      // Usar requestAnimationFrame para garantir que a restauração aconteça
+      // após a remoção das classes CSS
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          left: scrollX,
+          top: scrollY,
+          behavior: 'instant' // Evita animação de scroll
+        });
+      });
     };
   }, [isOpen]);
 }
