@@ -6,7 +6,10 @@ export function useDynamicManifest() {
   const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
 
   const updateManifest = useCallback((manifestData: any) => {
-    if (disableSw) return;
+    if (disableSw) {
+      console.log('updateManifest: Service Worker disabled, skipping manifest update');
+      return;
+    }
     try {
       console.log('updateManifest: Updating manifest with data:', manifestData);
       
@@ -15,6 +18,7 @@ export function useDynamicManifest() {
         type: 'application/json'
       });
       const manifestUrl = URL.createObjectURL(manifestBlob);
+      console.log('updateManifest: Created blob URL:', manifestUrl);
       
       // Encontrar e atualizar o link do manifest
       let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
@@ -41,10 +45,10 @@ export function useDynamicManifest() {
         manifestLink.href = manifestUrl;
         (manifestLink as any).dataset.blobUrl = manifestUrl;
         document.head.appendChild(manifestLink);
-        console.log('updateManifest: Added new manifest link to head');
+
       }
 
-      console.log('updateManifest: Manifest successfully updated for:', manifestData.start_url);
+
     } catch (error) {
       console.error('updateManifest: Error updating manifest:', error);
     }
@@ -52,6 +56,7 @@ export function useDynamicManifest() {
 
   const updateManifestForRestaurant = useCallback((route: string, name: string) => {
     if (disableSw) return;
+    
     // Criar um novo manifest dinâmico
     const dynamicManifest = {
       name: `${name}`,
@@ -99,6 +104,7 @@ export function useDynamicManifest() {
 
   const resetManifest = useCallback(() => {
     if (disableSw) return;
+    
     // Reset para o manifest padrão
     const defaultManifest = {
       name: 'Restaurant App',
@@ -140,6 +146,7 @@ export function useDynamicManifest() {
       ]
     };
 
+    console.log('resetManifest: Created default manifest:', defaultManifest);
     updateManifest(defaultManifest);
   }, [disableSw, updateManifest]);
 
@@ -147,16 +154,11 @@ export function useDynamicManifest() {
 
   useEffect(() => {
     if (disableSw) return;
-    console.log('useDynamicManifest: Route changed to:', currentRoute);
-    console.log('useDynamicManifest: isRestaurantPage:', isRestaurantPage);
-    console.log('useDynamicManifest: restaurantName:', restaurantName);
     
     // Só modificar o manifest se estivermos em uma página de restaurante
     if (isRestaurantPage && restaurantName) {
-      console.log('useDynamicManifest: Updating manifest for restaurant:', restaurantName);
       updateManifestForRestaurant(currentRoute, restaurantName);
     } else {
-      console.log('useDynamicManifest: Resetting to default manifest');
       resetManifest();
     }
   }, [currentRoute, isRestaurantPage, restaurantName, disableSw, resetManifest, updateManifestForRestaurant]);

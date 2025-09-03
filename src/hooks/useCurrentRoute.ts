@@ -16,7 +16,16 @@ export function useCurrentRoute() {
   const getRestaurantName = () => {
     if (isRestaurantPage) {
       const slug = currentRoute.split('/')[2];
-      return slug ? slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '';
+      if (!slug) return '';
+      
+      // Decodificar URL se necessário
+      const decodedSlug = decodeURIComponent(slug);
+      
+      // Converter slug para nome legível
+      return decodedSlug
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase())
+        .trim();
     }
     return '';
   };
