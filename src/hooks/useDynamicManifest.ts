@@ -10,8 +10,11 @@ export function useDynamicManifest() {
     try {
       console.log('updateManifest: Updating manifest with data:', manifestData);
       
-      // Usar a API route em vez de blob para evitar URLs inválidas
-      const manifestUrl = '/api/manifest';
+      // Criar blob URL para o manifest dinâmico
+      const manifestBlob = new Blob([JSON.stringify(manifestData, null, 2)], {
+        type: 'application/json'
+      });
+      const manifestUrl = URL.createObjectURL(manifestBlob);
       
       // Encontrar e atualizar o link do manifest
       let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
@@ -28,6 +31,7 @@ export function useDynamicManifest() {
         
         // Atualizar com nova URL
         manifestLink.href = manifestUrl;
+        (manifestLink as any).dataset.blobUrl = manifestUrl;
         console.log('updateManifest: Updated manifest link to:', manifestUrl);
       } else {
         console.log('updateManifest: Creating new manifest link');
@@ -35,6 +39,7 @@ export function useDynamicManifest() {
         manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
         manifestLink.href = manifestUrl;
+        (manifestLink as any).dataset.blobUrl = manifestUrl;
         document.head.appendChild(manifestLink);
         console.log('updateManifest: Added new manifest link to head');
       }
