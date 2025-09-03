@@ -6,12 +6,13 @@ import { useStandaloneMode } from '@/hooks/useStandaloneMode';
 import { useCurrentRoute } from '@/hooks/useCurrentRoute';
 
 export default function InstallPrompt() {
-  const { showInstallPrompt, installApp, isInstalled, currentRoute } = useServiceWorker();
+  const { showInstallPrompt, installApp, isInstalled, currentRoute, isSafari } = useServiceWorker();
   const { isStandalone } = useStandaloneMode();
   const { currentRoute: route, isRestaurantPage, restaurantName, pageTitle } = useCurrentRoute();
   const [isVisible, setIsVisible] = useState(true);
 
-  if (isInstalled || isStandalone || !showInstallPrompt || !isVisible) {
+  // Não mostrar no Safari (usa componente específico)
+  if (isInstalled || isStandalone || !showInstallPrompt || !isVisible || isSafari) {
     return null;
   }
 

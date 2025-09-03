@@ -5,6 +5,7 @@ export function useServiceWorker() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
 
   const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
@@ -13,6 +14,12 @@ export function useServiceWorker() {
     if (disableSw) {
       return;
     }
+
+    // Detectar Safari
+    const userAgent = navigator.userAgent;
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(userAgent);
+    setIsSafari(isSafariBrowser);
+
     // Registrar service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
@@ -30,7 +37,7 @@ export function useServiceWorker() {
       setIsInstalled(true);
     }
 
-    // Capturar evento de instalação
+    // Capturar evento de instalação (não funciona no Safari)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -85,5 +92,6 @@ export function useServiceWorker() {
     showInstallPrompt,
     installApp,
     currentRoute,
+    isSafari,
   };
 }
