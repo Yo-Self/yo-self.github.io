@@ -130,7 +130,7 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
 
   // Mostrar notificação de voz na primeira vez que abrir o chat
   useEffect(() => {
-    if (isOpen && !localStorage.getItem('voice-notification-shown')) {
+    if (isOpen && typeof window !== 'undefined' && !localStorage.getItem('voice-notification-shown')) {
       setTimeout(() => {
         setShowVoiceNotification(true);
         localStorage.setItem('voice-notification-shown', 'true');

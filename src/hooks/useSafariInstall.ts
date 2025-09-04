@@ -24,10 +24,10 @@ export function useSafariInstall() {
     const isWebAppMode = isStandalone || isIOSStandalone;
     
     // Verificar se já mostrou o prompt antes (usando localStorage)
-    const hasShownBefore = localStorage.getItem('safari-install-prompt-shown') === 'true';
+    const hasShownBefore = typeof window !== 'undefined' ? localStorage.getItem('safari-install-prompt-shown') === 'true' : false;
     
     // Verificar se o tutorial dos destaques foi concluído
-    const journalTutorialDone = localStorage.getItem('journalTutorialDone') === '1';
+    const journalTutorialDone = typeof window !== 'undefined' ? localStorage.getItem('journalTutorialDone') === '1' : false;
     
     // Debug: verificar detecção
     console.log('useSafariInstall - Debug:', {
@@ -59,8 +59,8 @@ export function useSafariInstall() {
   // Adicionar listener para mudanças no localStorage
   useEffect(() => {
     const handleStorageChange = () => {
-      const journalTutorialDone = localStorage.getItem('journalTutorialDone') === '1';
-      const hasShownBefore = localStorage.getItem('safari-install-prompt-shown') === 'true';
+      const journalTutorialDone = typeof window !== 'undefined' ? localStorage.getItem('journalTutorialDone') === '1' : false;
+      const hasShownBefore = typeof window !== 'undefined' ? localStorage.getItem('safari-install-prompt-shown') === 'true' : false;
       
       console.log('useSafariInstall - Storage change detected:', {
         journalTutorialDone,
@@ -92,8 +92,8 @@ export function useSafariInstall() {
     
     // Também verificar periodicamente (fallback para mudanças no mesmo tab)
     const interval = setInterval(() => {
-      const journalTutorialDone = localStorage.getItem('journalTutorialDone') === '1';
-      const hasShownBefore = localStorage.getItem('safari-install-prompt-shown') === 'true';
+      const journalTutorialDone = typeof window !== 'undefined' ? localStorage.getItem('journalTutorialDone') === '1' : false;
+      const hasShownBefore = typeof window !== 'undefined' ? localStorage.getItem('safari-install-prompt-shown') === 'true' : false;
       
       if (journalTutorialDone && !hasShownBefore && !showSafariInstallPrompt) {
         const userAgent = navigator.userAgent;
@@ -118,13 +118,17 @@ export function useSafariInstall() {
 
   const handleInstallClick = () => {
     // Marcar que o prompt foi mostrado
-    localStorage.setItem('safari-install-prompt-shown', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('safari-install-prompt-shown', 'true');
+    }
     setHasShownPrompt(true);
     setShowSafariInstallPrompt(false);
   };
 
   const dismissPrompt = () => {
-    localStorage.setItem('safari-install-prompt-shown', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('safari-install-prompt-shown', 'true');
+    }
     setHasShownPrompt(true);
     setShowSafariInstallPrompt(false);
   };

@@ -72,7 +72,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         }, 300);
         const pinTimer = setTimeout(() => {
           setShowPinTutorial(false);
-          localStorage.setItem('journalSwipeTutorialDone', '1');
+          if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined') {
+        localStorage.setItem('journalSwipeTutorialDone', '1');
+      }
+        }
+          }
         }, 6000);
         tutorialTimersRef.current = [pinTimer];
       }, 6000);
@@ -99,12 +105,18 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       }, 300);
       const pinTimer = setTimeout(() => {
         setShowPinTutorial(false);
+        if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined') {
         localStorage.setItem('journalSwipeTutorialDone', '1');
+      }
+        }
       }, 6000);
       tutorialTimersRef.current = [pinTimer];
     } else if (showPinTutorial) {
       setShowPinTutorial(false);
-      localStorage.setItem('journalSwipeTutorialDone', '1');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('journalSwipeTutorialDone', '1');
+      }
     }
   }, [showSwipeTutorial, showCategoriesTutorial, showPinTutorial, clearTutorialTimers]);
 
@@ -115,7 +127,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   // Tutorial de primeira acesso para swipe
   useEffect(() => {
     if (open && typeof window !== 'undefined') {
-      const hasSeenTutorial = localStorage.getItem('journalSwipeTutorialDone');
+      const hasSeenTutorial = typeof window !== 'undefined' ? localStorage.getItem('journalSwipeTutorialDone') : null;
       if (!hasSeenTutorial) {
         setShowSwipeTutorial(true);
         const timer = setTimeout(() => {
@@ -144,7 +156,13 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             }, 300);
             const pinTimer = setTimeout(() => {
               setShowPinTutorial(false);
-              localStorage.setItem('journalSwipeTutorialDone', '1');
+              if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined') {
+        localStorage.setItem('journalSwipeTutorialDone', '1');
+      }
+        }
+          }
             }, 6000);
             tutorialTimersRef.current = [pinTimer];
           }, 6000);
