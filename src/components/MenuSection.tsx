@@ -279,6 +279,7 @@ export default function MenuSection({
         dish={selectedDish} 
         restaurantId={restaurantId} 
         restaurant={restaurant} 
+        fallbackImage={restaurant?.image}
         onClose={() => setModalOpen(false)} 
       />
     </section>

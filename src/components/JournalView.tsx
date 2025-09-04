@@ -1146,7 +1146,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       </div>
       {/* Modal de detalhes do prato - renderizado fora do JournalView */}
       {modalOpen && selectedDish && (
-        <DishModal open={modalOpen} dish={selectedDish} restaurantId={restaurant.id} restaurant={restaurant} onClose={() => setModalOpen(false)} />
+        <DishModal open={modalOpen} dish={selectedDish} restaurantId={restaurant.id} restaurant={restaurant} fallbackImage={restaurant.image} onClose={() => setModalOpen(false)} />
       )}
       
       {/* Tutorial de Swipe */}

@@ -181,6 +181,7 @@ export default function Carousel({ restaurant, showMostOrderedTitle = false, ...
           dish={selectedDish}
           restaurantId={restaurant.id}
           restaurant={restaurant}
+          fallbackImage={restaurant.image}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
         />

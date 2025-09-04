@@ -17,10 +17,11 @@ type DishModalProps = {
   dish: Dish | MenuItem | null;
   restaurantId?: string;
   restaurant?: any; // Para acessar configurações do restaurante
+  fallbackImage?: string; // Logo do restaurante para usar como fallback
   onClose: () => void;
 };
 
-export default function DishModal({ open, dish, restaurantId = "default", restaurant, onClose }: DishModalProps) {
+export default function DishModal({ open, dish, restaurantId = "default", restaurant, fallbackImage, onClose }: DishModalProps) {
   const [selectedComplements, setSelectedComplements] = useState<Map<string, Set<string>>>(new Map());
   const [isClosing, setIsClosing] = useState(false);
   const [showAddedFeedback, setShowAddedFeedback] = useState(false);
@@ -236,7 +237,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
             src={dish.image}
             alt={dish.name}
             className="w-full h-48 object-cover"
-            fallbackSrc="/window.svg"
+            fallbackSrc={fallbackImage || restaurant?.image || "/window.svg"}
           >
             <button
               className="modal-close-button absolute top-3 right-3 w-12 h-12 flex items-center justify-center p-0 m-0 focus:outline-none z-10 transition-all duration-200 hover:scale-110"

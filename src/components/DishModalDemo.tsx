@@ -80,6 +80,7 @@ export default function DishModalDemo() {
         dish={demoDish}
         restaurantId="demo"
         restaurant={{ whatsapp_enabled: true }}
+        fallbackImage="/window.svg"
         onClose={handleClose}
       />
     </div>
