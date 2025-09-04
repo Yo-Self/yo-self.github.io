@@ -121,10 +121,15 @@ const isSafari = () => {
 
 // Função para compartilhar o cardápio
 const shareMenu = async (restaurant: Restaurant) => {
+  // Remover hash da URL antes de compartilhar (o hash #rest= é usado apenas internamente pelo webapp)
+  const cleanUrl = typeof window !== 'undefined' 
+    ? window.location.href.split('#')[0] 
+    : '';
+    
   const shareData = {
     title: `Cardápio - ${restaurant.name}`,
     text: `Confira o cardápio do ${restaurant.name}!`,
-    url: typeof window !== 'undefined' ? window.location.href : '',
+    url: cleanUrl,
   };
 
 
