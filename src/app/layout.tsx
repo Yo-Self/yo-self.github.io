@@ -63,9 +63,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta property="og:image" content="/og-image.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="/og-image.png" />
+        {/* Meta tags dinâmicas serão definidas pelo DynamicMetaTags */}
         
         {/* Web App Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
