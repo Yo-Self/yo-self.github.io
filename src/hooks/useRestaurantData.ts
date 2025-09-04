@@ -38,8 +38,12 @@ export function useRestaurantData(restaurantId?: string) {
 
         let data = null;
         
+        if (response.ok) {
+          data = await response.json();
+        }
+        
         // Se não encontrar por slug, tentar por ID
-        if (!response.ok || (await response.json()).length === 0) {
+        if (!response.ok || !data || data.length === 0) {
           response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}&select=*`, {
             headers: {
               'apikey': supabaseKey,
@@ -47,13 +51,15 @@ export function useRestaurantData(restaurantId?: string) {
               'Content-Type': 'application/json',
             },
           });
+          
+          if (response.ok) {
+            data = await response.json();
+          }
         }
 
         if (!response.ok) {
           throw new Error('Erro ao buscar dados do restaurante');
         }
-
-        data = await response.json();
         
         if (data && data.length > 0) {
           setRestaurant(data[0]);
