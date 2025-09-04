@@ -89,7 +89,7 @@ export default function CartWhatsAppButton({
               const group = item.dish.complement_groups?.find(g => g.title === groupTitle);
               const complement = group?.complements.find(c => c.name === complementName);
               const price = complement?.price || '0,00';
-              message += `• ${complementName} - R$ ${price}\n`;
+              message += `• ${complementName} - +R$ ${price}\n`;
             });
           }
         });

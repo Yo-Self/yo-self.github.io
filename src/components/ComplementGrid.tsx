@@ -95,7 +95,7 @@ export default function ComplementGrid({
                   {/* Preço no canto inferior direito - só exibir quando for maior que 0 */}
                   {complement.price !== '0,00' && (
                     <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-                      R${complement.price}
+                      +R${complement.price}
                     </span>
                   )}
                   

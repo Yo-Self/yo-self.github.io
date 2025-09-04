@@ -354,7 +354,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
                             return (
                               <div key={complementName} className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-between">
                                 <span>• {complementName}</span>
-                                <span className="font-medium text-primary">R$ {complement?.price}</span>
+                                <span className="font-medium text-primary">+R$ {complement?.price}</span>
                               </div>
                             );
                           })}
