@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { MenuItem } from '../types/restaurant';
 import { 
   CartItem, 
@@ -21,29 +22,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Carrega o carrinho do localStorage na inicialização
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) {
-        const parsedCart: SerializableCart = JSON.parse(savedCart);
-        
-        // Verificar se é uma versão compatível e não muito antiga (7 dias)
-        const isRecentCart = Date.now() - parsedCart.timestamp < 7 * 24 * 60 * 60 * 1000;
-        
-        if (parsedCart.items && isRecentCart) {
-          const cartItems = parsedCart.items.map(CartUtils.serializableToItem);
-          setItems(cartItems);
-        } else {
-          // Limpar carrinho antigo ou incompatível
+    Sentry.startSpan(
+      {
+        op: 'cart.load',
+        name: 'Load cart from localStorage',
+      },
+      (span) => {
+        try {
+          const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+          if (savedCart) {
+            const parsedCart: SerializableCart = JSON.parse(savedCart);
+            
+            // Verificar se é uma versão compatível e não muito antiga (7 dias)
+            const isRecentCart = Date.now() - parsedCart.timestamp < 7 * 24 * 60 * 60 * 1000;
+            
+            if (parsedCart.items && isRecentCart) {
+              const cartItems = parsedCart.items.map(CartUtils.serializableToItem);
+              setItems(cartItems);
+              span.setAttribute('items_count', cartItems.length);
+              span.setAttribute('cart_age_days', Math.floor((Date.now() - parsedCart.timestamp) / (24 * 60 * 60 * 1000)));
+            } else {
+              // Limpar carrinho antigo ou incompatível
+              localStorage.removeItem(CART_STORAGE_KEY);
+              span.setAttribute('cart_cleared', 'incompatible_or_old');
+            }
+          } else {
+            span.setAttribute('cart_found', false);
+          }
+          span.setStatus('ok');
+        } catch (error) {
+          console.warn('Erro ao carregar carrinho do localStorage:', error);
+          Sentry.captureException(error, {
+            tags: { component: 'CartProvider', action: 'load_cart' },
+            extra: { storageKey: CART_STORAGE_KEY }
+          });
+          // Em caso de erro, limpar localStorage
           localStorage.removeItem(CART_STORAGE_KEY);
+          span.setStatus('internal_error');
+          span.recordException(error as Error);
+        } finally {
+          setIsInitialized(true);
         }
       }
-    } catch (error) {
-      console.warn('Erro ao carregar carrinho do localStorage:', error);
-      // Em caso de erro, limpar localStorage
-      localStorage.removeItem(CART_STORAGE_KEY);
-    } finally {
-      setIsInitialized(true);
-    }
+    );
   }, []);
 
   // Salva o carrinho no localStorage sempre que mudar
@@ -91,16 +112,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
   const addItem = useCallback((dish: MenuItem, selectedComplements: Map<string, Set<string>>) => {
-    const unitPrice = CartUtils.calculateUnitPrice(dish, selectedComplements);
-    const itemId = CartUtils.generateItemId(dish, selectedComplements);
+    return Sentry.startSpan(
+      {
+        op: 'cart.add_item',
+        name: `Add item: ${dish.name}`,
+        attributes: {
+          dish_id: dish.id,
+          dish_name: dish.name,
+          dish_price: dish.price,
+          complements_count: selectedComplements.size,
+        }
+      },
+      (span) => {
+        try {
+          const unitPrice = CartUtils.calculateUnitPrice(dish, selectedComplements);
+          const itemId = CartUtils.generateItemId(dish, selectedComplements);
 
-    setItems(prevItems => {
-      // Verificar se já existe um item idêntico
-      const existingItemIndex = prevItems.findIndex(item => 
-        CartUtils.areItemsIdentical(item.dish, item.selectedComplements, dish, selectedComplements)
-      );
+          setItems(prevItems => {
+            // Verificar se já existe um item idêntico
+            const existingItemIndex = prevItems.findIndex(item => 
+              CartUtils.areItemsIdentical(item.dish, item.selectedComplements, dish, selectedComplements)
+            );
 
-      if (existingItemIndex >= 0) {
+            if (existingItemIndex >= 0) {
         // Item já existe - aumentar quantidade
         const updatedItems = [...prevItems];
         const existingItem = updatedItems[existingItemIndex];
@@ -124,16 +158,56 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           totalPrice: unitPrice,
         };
         
-        return [...prevItems, newItem];
-      }
-    });
+            return [...prevItems, newItem];
+          }
+        });
 
-    // Feedback visual opcional - pode ser usado para mostrar animação
-    console.log(`Item adicionado ao carrinho: ${dish.name}`);
+        // Feedback visual opcional - pode ser usado para mostrar animação
+        console.log(`Item adicionado ao carrinho: ${dish.name}`);
+        span.setStatus('ok');
+        span.setAttribute('action', 'item_added');
+        } catch (error) {
+          Sentry.captureException(error, {
+            tags: { component: 'CartProvider', action: 'add_item' },
+            extra: { dishId: dish.id, dishName: dish.name }
+          });
+          span.setStatus('internal_error');
+          span.recordException(error as Error);
+          throw error;
+        }
+      }
+    );
   }, []);
 
   const removeItem = useCallback((itemId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    return Sentry.startSpan(
+      {
+        op: 'cart.remove_item',
+        name: 'Remove item from cart',
+        attributes: { item_id: itemId }
+      },
+      (span) => {
+        try {
+          setItems(prevItems => {
+            const itemToRemove = prevItems.find(item => item.id === itemId);
+            if (itemToRemove) {
+              span.setAttribute('item_name', itemToRemove.dish.name);
+              span.setAttribute('item_quantity', itemToRemove.quantity);
+            }
+            return prevItems.filter(item => item.id !== itemId);
+          });
+          span.setStatus('ok');
+        } catch (error) {
+          Sentry.captureException(error, {
+            tags: { component: 'CartProvider', action: 'remove_item' },
+            extra: { itemId }
+          });
+          span.setStatus('internal_error');
+          span.recordException(error as Error);
+          throw error;
+        }
+      }
+    );
   }, []);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
@@ -157,9 +231,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [removeItem]);
 
   const clearCart = useCallback(() => {
-    setItems([]);
-    setIsCartOpen(false);
-  }, []);
+    return Sentry.startSpan(
+      {
+        op: 'cart.clear',
+        name: 'Clear cart',
+      },
+      (span) => {
+        try {
+          const itemsCount = items.length;
+          const totalValue = totalPrice;
+          
+          setItems([]);
+          setIsCartOpen(false);
+          
+          span.setAttribute('items_cleared', itemsCount);
+          span.setAttribute('total_value_cleared', totalValue);
+          span.setStatus('ok');
+        } catch (error) {
+          Sentry.captureException(error, {
+            tags: { component: 'CartProvider', action: 'clear_cart' }
+          });
+          span.setStatus('internal_error');
+          span.recordException(error as Error);
+          throw error;
+        }
+      }
+    );
+  }, [items.length, totalPrice]);
 
   const openCart = useCallback(() => {
     setIsCartOpen(true);

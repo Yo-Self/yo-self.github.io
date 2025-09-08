@@ -16,6 +16,8 @@ import DynamicMetaTags from "@/components/DynamicMetaTags";
 import StartupRedirect from "@/components/StartupRedirect";
 import A2HSUrlTagger from "@/components/A2HSUrlTagger";
 import DynamicManifestUpdater from "@/components/DynamicManifestUpdater";
+import { SentryErrorBoundary } from "@/components/SentryErrorBoundary";
+import * as Sentry from '@sentry/nextjs';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +29,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://yo-self.github.io"),
   title: "Restaurant Menu",
   description: "Digital menu for restaurants",
@@ -49,6 +51,9 @@ export const metadata = {
     description: "Digital menu for restaurants",
     images: ["/og-image.png"],
   },
+  other: {
+    ...Sentry.getTraceData()
+  }
 };
 
 export default function RootLayout({
@@ -78,21 +83,23 @@ export default function RootLayout({
         <meta name="apple-touch-fullscreen" content="yes" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white webapp-container`}>
-        <AccessibilityProvider>
-          <CartProvider>
-            <ThemeScript />
-            <Navigation />
-            {children}
-            {/* Componentes globais do carrinho */}
-            <CartModal />
-            <InstallPrompt />
-            <SafariInstallPrompt />
-            <DynamicMetaTags />
-            <StartupRedirect />
-            <A2HSUrlTagger />
-            <DynamicManifestUpdater />
-          </CartProvider>
-        </AccessibilityProvider>
+        <SentryErrorBoundary>
+          <AccessibilityProvider>
+            <CartProvider>
+              <ThemeScript />
+              <Navigation />
+              {children}
+              {/* Componentes globais do carrinho */}
+              <CartModal />
+              <InstallPrompt />
+              <SafariInstallPrompt />
+              <DynamicMetaTags />
+              <StartupRedirect />
+              <A2HSUrlTagger />
+              <DynamicManifestUpdater />
+            </CartProvider>
+          </AccessibilityProvider>
+        </SentryErrorBoundary>
         <Analytics />
       </body>
     </html>

@@ -15,6 +15,7 @@
     "@google/generative-ai": "^0.24.1",
     "@openreplay/tracker": "^16.4.7",
     "@playwright/test": "^1.40.0",
+    "@sentry/nextjs": "^10.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
     "dotenv": "^17.2.1",
