@@ -99,50 +99,47 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
-          dish_id: string
           id: string
           max_selections: number
-          position: number | null
           required: boolean
+          restaurant_id: string
           title: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           description?: string | null
-          dish_id: string
           id?: string
           max_selections?: number
-          position?: number | null
           required?: boolean
+          restaurant_id: string
           title: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           description?: string | null
-          dish_id?: string
           id?: string
           max_selections?: number
-          position?: number | null
           required?: boolean
+          restaurant_id?: string
           title?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "fk_complement_groups_dish"
-            columns: ["dish_id"]
-            isOneToOne: false
-            referencedRelation: "dishes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_complement_groups_dish"
-            columns: ["dish_id"]
+            foreignKeyName: "complement_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "public_menu_view"
-            referencedColumns: ["dish_id"]
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "complement_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -154,6 +151,7 @@ export type Database = {
           id: string
           image_url: string | null
           ingredients: string | null
+          is_active: boolean
           name: string
           position: number | null
           price: number
@@ -166,6 +164,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           ingredients?: string | null
+          is_active?: boolean
           name: string
           position?: number | null
           price?: number
@@ -178,6 +177,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           ingredients?: string | null
+          is_active?: boolean
           name?: string
           position?: number | null
           price?: number
@@ -242,6 +242,52 @@ export type Database = {
           },
           {
             foreignKeyName: "dish_categories_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "public_menu_view"
+            referencedColumns: ["dish_id"]
+          },
+        ]
+      }
+      dish_complement_groups: {
+        Row: {
+          complement_group_id: string
+          created_at: string | null
+          dish_id: string
+          id: string
+          position: number | null
+        }
+        Insert: {
+          complement_group_id: string
+          created_at?: string | null
+          dish_id: string
+          id?: string
+          position?: number | null
+        }
+        Update: {
+          complement_group_id?: string
+          created_at?: string | null
+          dish_id?: string
+          id?: string
+          position?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_complement_groups_complement_group_id_fkey"
+            columns: ["complement_group_id"]
+            isOneToOne: false
+            referencedRelation: "complement_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dish_complement_groups_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dish_complement_groups_dish_id_fkey"
             columns: ["dish_id"]
             isOneToOne: false
             referencedRelation: "public_menu_view"
@@ -332,6 +378,97 @@ export type Database = {
           },
         ]
       }
+      import_logs: {
+        Row: {
+          categories_count: number | null
+          complements_count: number | null
+          completed_at: string | null
+          created_at: string
+          dishes_count: number | null
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          items_processed: number | null
+          items_total: number | null
+          metadata: Json | null
+          restaurant_id: string | null
+          retry_count: number | null
+          scraped_data: Json | null
+          source: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["import_status"]
+          updated_at: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          categories_count?: number | null
+          complements_count?: number | null
+          completed_at?: string | null
+          created_at?: string
+          dishes_count?: number | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          items_processed?: number | null
+          items_total?: number | null
+          metadata?: Json | null
+          restaurant_id?: string | null
+          retry_count?: number | null
+          scraped_data?: Json | null
+          source?: string
+          started_at?: string | null
+          status: Database["public"]["Enums"]["import_status"]
+          updated_at?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          categories_count?: number | null
+          complements_count?: number | null
+          completed_at?: string | null
+          created_at?: string
+          dishes_count?: number | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          items_processed?: number | null
+          items_total?: number | null
+          metadata?: Json | null
+          restaurant_id?: string | null
+          retry_count?: number | null
+          scraped_data?: Json | null
+          source?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["import_status"]
+          updated_at?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "public_menu_view"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "import_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menus: {
         Row: {
           created_at: string
@@ -400,7 +537,6 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          created_at?: string
           email?: string
           full_name?: string | null
           id?: string
@@ -412,6 +548,8 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          background_light: string | null
+          background_night: string | null
           created_at: string | null
           cuisine_type: string
           description: string | null
@@ -428,6 +566,8 @@ export type Database = {
           whatsapp_phone: string | null
         }
         Insert: {
+          background_light?: string | null
+          background_night?: string | null
           created_at?: string | null
           cuisine_type: string
           description?: string | null
@@ -444,6 +584,8 @@ export type Database = {
           whatsapp_phone?: string | null
         }
         Update: {
+          background_light?: string | null
+          background_night?: string | null
           created_at?: string | null
           cuisine_type?: string
           description?: string | null
@@ -570,6 +712,10 @@ export type Database = {
         Args: { p_restaurant_slug: string }
         Returns: Json
       }
+      get_restaurant_by_slug: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
       http: {
         Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
@@ -653,7 +799,16 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      import_status:
+        | "scraping"
+        | "processing"
+        | "preview_ready"
+        | "importing"
+        | "import_success"
+        | "import_failed"
+        | "scraping_failed"
+        | "processing_failed"
+        | "cancelled"
     }
     CompositeTypes: {
       http_header: {
@@ -796,6 +951,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      import_status: [
+        "scraping",
+        "processing",
+        "preview_ready",
+        "importing",
+        "import_success",
+        "import_failed",
+        "scraping_failed",
+        "processing_failed",
+        "cancelled",
+      ],
+    },
   },
 } as const

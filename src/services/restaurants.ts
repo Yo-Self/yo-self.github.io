@@ -109,6 +109,7 @@ export type DbComplement = {
   image_url: string | null;
   ingredients: string | null;
   position: number | null;
+  is_active: boolean;
 };
 
 // Verificar se as variáveis de ambiente estão definidas
@@ -245,7 +246,7 @@ async function fetchComplementsByGroupIds(groupIds: string[]): Promise<DbComplem
   if (groupIds.length === 0) return [];
   // Usar cache padrão para geração estática
   const inList = groupIds.map(id => encodeURIComponent(id)).join(',');
-  const rows = await sbFetch<DbComplement[]>(`complements?select=*&group_id=in.(${inList})&order=position.asc`);
+  const rows = await sbFetch<DbComplement[]>(`complements?select=*&group_id=in.(${inList})&is_active=eq.true&order=position.asc`);
   return rows ?? [];
 }
 
