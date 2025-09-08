@@ -67,70 +67,10 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
-  // Interceptar requisições para o manifest
+  // Interceptar requisições para o manifest - DESABILITADO TEMPORARIAMENTE
   if (event.request.url.includes('manifest.json')) {
-    console.log('SW: Intercepting manifest request');
-    
-    // Verificar se estamos em uma página de restaurante
-    const currentUrl = new URL(event.request.url);
-    const referrer = event.request.referrer || '';
-    
-    // Se a referência for uma página de restaurante, retornar manifest personalizado
-    if (referrer.includes('/restaurant/')) {
-      const restaurantSlug = referrer.split('/restaurant/')[1]?.split('/')[0];
-      if (restaurantSlug) {
-        const restaurantName = restaurantSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        
-        const dynamicManifest = {
-          name: `${restaurantName}`,
-          short_name: restaurantName,
-          description: `Cardápio digital de ${restaurantName}`,
-          start_url: `/restaurant/${restaurantSlug}`,
-          display: 'standalone',
-          background_color: '#ffffff',
-          theme_color: '#000000',
-          orientation: 'portrait-primary',
-          scope: '/',
-          lang: 'pt-BR',
-          categories: ['food', 'lifestyle', 'utilities'],
-          prefer_related_applications: false,
-          icons: [
-            {
-              src: '/favicon-16x16.png',
-              sizes: '16x16',
-              type: 'image/png',
-              purpose: 'any maskable'
-            },
-            {
-              src: '/favicon-32x32.png',
-              sizes: '32x32',
-              type: 'image/png',
-              purpose: 'any maskable'
-            },
-            {
-              src: '/apple-touch-icon.png',
-              sizes: '180x180',
-              type: 'image/png',
-              purpose: 'any maskable'
-            },
-            {
-              src: '/favicon.ico',
-              sizes: '48x48',
-              type: 'image/x-icon'
-            }
-          ]
-        };
-        
-        console.log('SW: Returning dynamic manifest for:', restaurantName);
-        event.respondWith(new Response(JSON.stringify(dynamicManifest), {
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        }));
-        return;
-      }
-    }
+    console.log('SW: Manifest request intercepted but not handled - letting it pass through');
+    // Não interceptar, deixar passar para o manifest dinâmico do cliente
   }
   
   // Para outras requisições, usar cache normal
