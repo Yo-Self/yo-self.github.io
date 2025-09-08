@@ -327,6 +327,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
                         complementGroup={group}
                         selectedComplements={selectedComplements.get(group.title) || new Set()}
                         onComplementToggle={(complementName) => handleComplementToggle(group.title, complementName)}
+                        restaurantLogo={restaurant?.image}
                       />
                     </div>
                   ))}

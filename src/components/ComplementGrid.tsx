@@ -6,12 +6,14 @@ interface ComplementGridProps {
   complementGroup: ComplementGroup;
   selectedComplements: Set<string>;
   onComplementToggle: (complementName: string) => void;
+  restaurantLogo?: string; // Logo do restaurante para usar como fallback
 }
 
 export default function ComplementGrid({ 
   complementGroup, 
   selectedComplements, 
-  onComplementToggle 
+  onComplementToggle,
+  restaurantLogo 
 }: ComplementGridProps) {
   return (
     <div className="mb-6">
@@ -77,7 +79,7 @@ export default function ComplementGrid({
                   alt={complement.name}
                   clickable={false}
                   className="w-full h-full object-cover rounded-t-lg"
-                  fallbackSrc="/window.svg"
+                  fallbackSrc={restaurantLogo || "/window.svg"}
                 >
                   {/* Checkbox de seleção */}
                   <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center z-10 transition-all duration-200 ${
