@@ -122,12 +122,13 @@ self.addEventListener('fetch', (event) => {
         };
         
         console.log('SW: Returning dynamic manifest for:', restaurantName);
-        return new Response(JSON.stringify(dynamicManifest), {
+        event.respondWith(new Response(JSON.stringify(dynamicManifest), {
           headers: {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-cache'
           }
-        });
+        }));
+        return;
       }
     }
   }
