@@ -374,7 +374,9 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const handleSortChange = (sort: SortOption) => {
     setCurrentSort(sort);
   };
-  const selectedRestaurant = restaurants.find(r => r.id === selectedRestaurantId) ?? initialRestaurant;
+  // For the current restaurant, always use initialRestaurant since it has the full menu data
+  // The restaurants array from useRestaurantList only has basic info without menu items
+  const selectedRestaurant = initialRestaurant;
   
 
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
