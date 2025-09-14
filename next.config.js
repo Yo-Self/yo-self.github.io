@@ -7,23 +7,41 @@ const nextConfig = {
   // Para repositório yo-self.github.io, não precisamos de basePath
   // basePath: process.env.NODE_ENV === 'production' ? '/restaurant' : '',
   
-  // Rewrites para PostHog
-  async rewrites() {
-    return [
-      {
-        source: '/ingest/static/:path*',
-        destination: 'https://us-assets.i.posthog.com/static/:path*',
-      },
-      {
-        source: '/ingest/:path*',
-        destination: 'https://us.i.posthog.com/:path*',
-      },
-    ];
-  },
-  // Necessário para suportar requisições de API com barra no final do PostHog
-  skipTrailingSlashRedirect: true,
+  // Note: Rewrites don't work with static export, so we use direct PostHog endpoints in PostHogProvider
+  // API routes are excluded from static export automatically by Next.js
   
-  // Desabilitar otimização CSS durante testes para evitar erros de compilação
+  // Configure webpack to handle the API route exclusion during static export
+  webpack: (config, { isServer, webpack, dev }) => {
+    // Default webpack config for all environments
+    const baseConfig = {
+      // Fix for Node.js built-in modules
+      resolve: {
+        ...config.resolve,
+        fallback: {
+          ...config.resolve.fallback,
+          fs: false,
+          net: false,
+          tls: false,
+          crypto: false,
+        },
+      },
+    };
+
+    if (isServer && !dev) {
+      // Define self in Node.js environment to prevent "self is not defined" errors
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'global',
+        })
+      );
+    }
+
+    Object.assign(config, baseConfig);
+    
+    return config;
+  },
+  
+  // Test environment specific config
   ...(process.env.NODE_ENV === 'test' && {
     experimental: {
       optimizeCss: false,
@@ -35,7 +53,7 @@ const nextConfig = {
           fs: false,
         };
         
-        // Define self in Node.js environment to prevenir erros de "self is not defined"
+        // Define self in Node.js environment to prevent "self is not defined" errors
         config.plugins.push(
           new webpack.DefinePlugin({
             self: 'global',
@@ -43,42 +61,10 @@ const nextConfig = {
         );
       }
       
-      // Desabilitar plugins CSS problemáticos durante testes
+      // Disable problematic CSS plugins during tests
       config.plugins = config.plugins.filter(plugin => 
         plugin.constructor.name !== 'CssMinimizerPlugin'
       );
-      
-      return config;
-    },
-  }),
-  
-  // Configuração padrão para produção e desenvolvimento
-  ...(process.env.NODE_ENV !== 'test' && {
-    webpack: (config, { isServer, webpack }) => {
-      // Fix for Node.js built-in modules
-      if (!isServer) {
-        config.resolve.fallback = {
-          ...config.resolve.fallback,
-          fs: false,
-          net: false,
-          tls: false,
-          crypto: false,
-        };
-      }
-      
-      if (isServer) {
-        config.resolve.fallback = {
-          ...config.resolve.fallback,
-          fs: false,
-        };
-        
-        // Define self in Node.js environment para prevenir erros de "self is not defined"
-        config.plugins.push(
-          new webpack.DefinePlugin({
-            self: 'global',
-          })
-        );
-      }
       
       return config;
     },
