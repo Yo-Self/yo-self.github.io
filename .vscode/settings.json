@@ -2,13 +2,9 @@
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
   },
-  "css.customData": [
-    ".vscode/css_custom_data.json"
-  ],
+  "css.customData": [".vscode/css_custom_data.json"],
   "css.validate": false,
-  "deno.enablePaths": [
-    "supabase/functions"
-  ],
+  "deno.enablePaths": ["supabase/functions"],
   "deno.lint": true,
   "deno.unstable": [
     "bare-node-builtins",
@@ -29,5 +25,11 @@
     "*.css": "tailwindcss"
   },
   "less.validate": false,
-  "scss.validate": false
+  "scss.validate": false,
+  "mcpServers": {
+    "/": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
 }
