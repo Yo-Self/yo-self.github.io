@@ -24,7 +24,7 @@
     "posthog-js": "^1.266.0",
     "posthog-node": "^5.8.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19.1.1",
     "react-transition-group": "^4.4.5",
     "tone": "^15.1.22"
   },
@@ -33,7 +33,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react-dom": "^19",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.5",
     "eslint-plugin-next": "^0.0.0",
