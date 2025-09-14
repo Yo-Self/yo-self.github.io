@@ -15,6 +15,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         capture_exceptions: true, // This enables capturing exceptions using Error Tracking
         debug: process.env.NODE_ENV === "development",
       })
+    } else {
+      console.warn("PostHog key not provided, analytics disabled")
     }
   }, [])
 
