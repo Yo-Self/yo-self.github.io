@@ -15,6 +15,7 @@ import ThemeScript from "@/components/ThemeScript";
 import CartModal from "@/components/CartModal";
 import InstallPrompt from "@/components/InstallPrompt";
 import SafariInstallPrompt from "@/components/SafariInstallPrompt";
+import UpdatePrompt from "@/components/UpdatePrompt";
 import DynamicMetaTags from "@/components/DynamicMetaTags";
 import StartupRedirect from "@/components/StartupRedirect";
 import A2HSUrlTagger from "@/components/A2HSUrlTagger";
@@ -119,6 +120,7 @@ export default function RootLayout({
               <CartModal />
               <InstallPrompt />
               <SafariInstallPrompt />
+              <UpdatePrompt />
               <DynamicMetaTags />
               <StartupRedirect />
               <A2HSUrlTagger />

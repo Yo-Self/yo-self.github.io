@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useCurrentRoute } from './useCurrentRoute';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
@@ -6,6 +8,7 @@ export function useServiceWorker() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
 
@@ -27,6 +30,28 @@ export function useServiceWorker() {
         .register('/sw.js')
         .then((registration) => {
           console.log('SW registered: ', registration);
+          
+          // Listen for service worker updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New service worker is available
+                  console.log('New service worker available');
+                  setShowUpdatePrompt(true);
+                }
+              });
+            }
+          });
+          
+          // Listen for messages from service worker
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'CACHE_CLEARED') {
+              // Service worker cleared cache, reload the page
+              window.location.reload();
+            }
+          });
         })
         .catch((registrationError) => {
           console.log('SW registration failed: ', registrationError);
@@ -92,10 +117,29 @@ export function useServiceWorker() {
     }
   };
 
+  const updateApp = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        if (registration && registration.waiting) {
+          // Tell the waiting service worker to skip waiting
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          setShowUpdatePrompt(false);
+        }
+      });
+    }
+  };
+
+  const dismissUpdate = () => {
+    setShowUpdatePrompt(false);
+  };
+
   return {
     isInstalled,
     showInstallPrompt,
+    showUpdatePrompt,
     installApp,
+    updateApp,
+    dismissUpdate,
     currentRoute,
     isSafari,
   };

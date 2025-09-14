@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:test": "next dev -p 3000",
+    "prebuild": "node scripts/update-sw-cache.js",
     "build": "next build && touch out/.nojekyll",
     "start": "next start",
     "lint": "next lint",
