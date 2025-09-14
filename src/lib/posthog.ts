@@ -1,21 +1,16 @@
-import posthogJs from 'posthog-js'
-import type { PostHog } from 'posthog-js'
+import { PostHog } from 'posthog-node'
 
-const isProduction = process.env.NODE_ENV === 'production'
-const areEnvValid = process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST
-
-let posthog: PostHog | null = null
-
-if (isProduction && areEnvValid) {
-  posthog = posthogJs.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
-    // Enable debug mode in development
-    loaded: (posthog) => {
-      if (process.env.NODE_ENV === 'development') posthog.debug()
-    },
-    // Disable capturing by default in development
-    capture_pageview: process.env.NODE_ENV === 'production',
+// NOTE: This is a Node.js client, so you can use it for sending events from the server side to PostHog.
+export default function PostHogClient() {
+  // Only create client if PostHog key is available
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return null
+  }
+  
+  const posthogClient = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+    host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+    flushAt: 1,
+    flushInterval: 0,
   })
+  return posthogClient
 }
-
-export { posthog }
