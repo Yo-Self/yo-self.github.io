@@ -8,6 +8,8 @@ import { PostHogProvider } from "@/components/PostHogProvider";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
 import { CartProvider } from "@/context/CartContext";
 import Analytics from "@/components/Analytics";
+import PageViewTracker from "@/components/PageViewTracker";
+import SessionTracker from "@/components/SessionTracker";
 import Navigation from "@/components/Navigation";
 import ThemeScript from "@/components/ThemeScript";
 import CartModal from "@/components/CartModal";
@@ -109,6 +111,8 @@ export default function RootLayout({
           <AccessibilityProvider>
             <CartProvider>
               <ThemeScript />
+              <PageViewTracker />
+              <SessionTracker />
               <Navigation />
               {children}
               {/* Componentes globais do carrinho */}

@@ -4,6 +4,7 @@ import React from 'react';
 import { useCart } from '../hooks/useCart';
 import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { CartUtils } from '../types/cart';
+import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
 interface CartWhatsAppButtonProps {
   restaurantId?: string;
@@ -127,6 +128,12 @@ export default function CartWhatsAppButton({
     
     const message = generateCartWhatsAppMessage();
     const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
+    
+    // Track analytics for checkout
+    const currentRestaurantId = getCurrentRestaurantId();
+    if (currentRestaurantId) {
+      Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
+    }
     
     // Abrir WhatsApp em nova aba
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');

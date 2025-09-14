@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useCurrentRoute } from './useCurrentRoute';
+import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
 export function useServiceWorker() {
   const [isInstalled, setIsInstalled] = useState(false);
@@ -35,6 +36,7 @@ export function useServiceWorker() {
     // Verificar se já está instalado
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
+      Analytics.trackPWALaunched(getCurrentRestaurantId() || 'unknown');
     }
 
     // Capturar evento de instalação (não funciona no Safari)
@@ -42,6 +44,7 @@ export function useServiceWorker() {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallPrompt(true);
+      Analytics.trackAppInstallPromptShown(getCurrentRestaurantId() || 'unknown');
       console.log('beforeinstallprompt event captured');
     };
 
@@ -70,11 +73,13 @@ export function useServiceWorker() {
         
         if (outcome === 'accepted') {
           console.log('User accepted the install prompt for route:', currentRoute);
+          Analytics.trackAppInstallPromptClicked('install', getCurrentRestaurantId() || 'unknown');
           if (isRestaurantPage) {
             console.log('Installing restaurant app:', restaurantName);
           }
         } else {
           console.log('User dismissed the install prompt');
+          Analytics.trackAppInstallPromptClicked('dismiss', getCurrentRestaurantId() || 'unknown');
         }
       } catch (error) {
         console.error('Error showing install prompt:', error);
