@@ -9,6 +9,7 @@ import ChatDishCards from './ChatDishCards';
 import VoiceNotification from './VoiceNotification';
 import DishModal from './DishModal';
 import DishCard from './DishCard';
+import Analytics from '../lib/analytics';
 
 interface IntegratedChatBotProps {
   restaurant: Restaurant;
@@ -47,6 +48,7 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
   const [inputMessage, setInputMessage] = useState('');
   const [selectedDish, setSelectedDish] = useState<Dish | MenuItem | null>(null);
   const [showDishModal, setShowDishModal] = useState(false);
+  const [chatOpenTime, setChatOpenTime] = useState<number | null>(null);
 
   const [showVoiceNotification, setShowVoiceNotification] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -55,6 +57,19 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+
+  // Track chatbot session
+  useEffect(() => {
+    if (isOpen) {
+      const openTime = Date.now();
+      setChatOpenTime(openTime);
+      Analytics.trackChatbotOpened(restaurant.id, 'integrated');
+    } else if (chatOpenTime) {
+      const sessionLength = Math.round((Date.now() - chatOpenTime) / 1000);
+      Analytics.trackChatbotClosed(restaurant.id, sessionLength, messages.length);
+      setChatOpenTime(null);
+    }
+  }, [isOpen, restaurant.id, messages.length, chatOpenTime]);
 
   // Auto-scroll para a última mensagem
   const scrollToBottom = () => {

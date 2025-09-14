@@ -7,6 +7,7 @@ import { useModalScroll } from '../hooks/useModalScroll';
 import { Restaurant, Dish } from './data';
 import ChatDishCards from './ChatDishCards';
 import VoiceNotification from './VoiceNotification';
+import Analytics from '../lib/analytics';
 
 interface ChatBotProps {
   restaurant: Restaurant;
@@ -27,12 +28,26 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [showDishModal, setShowDishModal] = useState(false);
+  const [chatOpenTime, setChatOpenTime] = useState<number | null>(null);
 
   const [showVoiceNotification, setShowVoiceNotification] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [userScrolling, setUserScrolling] = useState(false);
+
+  // Track chatbot session
+  useEffect(() => {
+    if (isOpen) {
+      const openTime = Date.now();
+      setChatOpenTime(openTime);
+      Analytics.trackChatbotOpened(restaurant.id, 'standard');
+    } else if (chatOpenTime) {
+      const sessionLength = Math.round((Date.now() - chatOpenTime) / 1000);
+      Analytics.trackChatbotClosed(restaurant.id, sessionLength, messages.length);
+      setChatOpenTime(null);
+    }
+  }, [isOpen, restaurant.id, messages.length, chatOpenTime]);
 
   // Auto-scroll para a última mensagem
   const scrollToBottom = useCallback(() => {
@@ -143,16 +158,30 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
 
   // Ler automaticamente novas mensagens do assistente
   useEffect(() => {
-    if (isSpeechEnabled && messages.length > 0) {
+    if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'model' && !isSpeaking) {
-        // Aguardar um pouco para a mensagem aparecer na tela
-        setTimeout(() => {
-          speak(lastMessage.content, false); // false = leitura automática
-        }, 500);
+      if (lastMessage.role === 'model') {
+        // Track assistant message
+        const hasRecommendations = lastMessage.recommendedDishes && lastMessage.recommendedDishes.length > 0;
+        Analytics.trackChatMessage(restaurant.id, 'assistant', Boolean(hasRecommendations));
+        
+        // Track dish recommendations
+        if (hasRecommendations && lastMessage.recommendedDishes) {
+          lastMessage.recommendedDishes.forEach(dish => {
+            Analytics.trackChatDishRecommendation(dish.name, restaurant.id, 'llm');
+          });
+        }
+        
+        // Voice reading
+        if (isSpeechEnabled && !isSpeaking) {
+          // Aguardar um pouco para a mensagem aparecer na tela
+          setTimeout(() => {
+            speak(lastMessage.content, false); // false = leitura automática
+          }, 500);
+        }
       }
     }
-  }, [messages, isSpeechEnabled, speak, isSpeaking]);
+  }, [messages, isSpeechEnabled, speak, isSpeaking, restaurant.id]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,6 +189,10 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
 
     const message = inputMessage.trim();
     setInputMessage('');
+    
+    // Track user message
+    Analytics.trackChatMessage(restaurant.id, 'user', false);
+    
     await sendMessage(message, restaurant);
   };
 
@@ -171,9 +204,24 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
   };
 
   const handleDishClick = useCallback((dish: Dish) => {
+    // Track dish card click
+    Analytics.trackChatDishCardClicked(dish.name, restaurant.id, 0);
+    Analytics.trackDishViewed(dish, restaurant.id, 'chatbot');
+    
     setSelectedDish(dish);
     setShowDishModal(true);
-  }, []);
+  }, [restaurant.id]);
+
+  const handleVoiceToggle = useCallback(() => {
+    const newState = !isSpeechEnabled;
+    Analytics.trackChatVoiceToggle(newState, restaurant.id);
+    toggleSpeech();
+  }, [isSpeechEnabled, restaurant.id, toggleSpeech]);
+
+  const handleVoiceMessage = useCallback((content: string) => {
+    Analytics.trackChatVoiceMessage(content.length, restaurant.id);
+    speak(content, true);
+  }, [restaurant.id, speak]);
 
   const handleCloseDishModal = () => {
     setShowDishModal(false);
@@ -307,7 +355,7 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
             
             {/* Botão de ativar/desativar leitura */}
             <button
-              onClick={toggleSpeech}
+              onClick={handleVoiceToggle}
               className={`p-2 transition-colors ${
                 isSpeechEnabled 
                   ? 'text-green-500 hover:text-green-600' 
@@ -411,7 +459,7 @@ export default function ChatBot({ restaurant, isOpen, onClose }: ChatBotProps) {
                       )}
                       {message.role === 'model' && (
                         <button
-                          onClick={() => speak(message.content, true)} // true = leitura manual
+                          onClick={() => handleVoiceMessage(message.content)} // true = leitura manual
                           disabled={isSpeaking}
                           className="text-xs text-cyan-500 hover:text-cyan-600 disabled:text-gray-400"
                           title="Ler mensagem"

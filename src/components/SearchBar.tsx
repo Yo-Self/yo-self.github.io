@@ -7,6 +7,7 @@ import { Restaurant, Dish, MenuItem } from "./data";
 import DishModal from "./DishModal";
 import DishCard from "./DishCard";
 import JournalView from "./JournalView";
+import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 // Dynamically import WaiterCallButton to avoid SSR issues with Web Audio API
 const WaiterCallButton = dynamic(() => import("./WaiterCallButton"), {
   ssr: false,
@@ -41,6 +42,16 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
 
   // Fecha o campo ao clicar fora do bottom sheet (não só fora do input)
   const sheetRef = useRef<HTMLDivElement>(null);
+  
+  // Track search analytics
+  const handleSearchChange = (value: string) => {
+    Analytics.trackMenuSearch({
+      query: value,
+      restaurantId: getCurrentRestaurantId() || 'unknown'
+    });
+    onSearchTermChange(value);
+  };
+
   useEffect(() => {
     if (!showSheet) return;
     function handleClick(e: MouseEvent) {
@@ -165,11 +176,15 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
               placeholder={t("search")}
               className="block w-full h-14 px-5 rounded-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 outline-none text-lg"
               value={searchTerm}
-              onChange={e => onSearchTermChange(e.target.value)}
+              onChange={e => handleSearchChange(e.target.value)}
             />
             <button
               aria-label={t("close")}
-              onClick={() => { setShowSheet(false); onSearchTermChange(""); }}
+              onClick={() => { 
+                setShowSheet(false); 
+                Analytics.trackMenuSearchCleared({ restaurantId: getCurrentRestaurantId() || 'unknown' });
+                onSearchTermChange(""); 
+              }}
               className="ml-2 flex items-center justify-center w-12 h-12 rounded-full bg-transparent text-gray-600 dark:text-gray-300 text-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
               type="button"
               style={{ background: 'none', boxShadow: 'none', border: 'none' }}
@@ -187,7 +202,10 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
                 <button
                   key="all"
                   className={`px-4 py-2 rounded-lg text-sm font-medium ring-0 ${propSelectedCategory === 'all' ? 'bg-primary text-white dark:bg-cyan-700 ring-cyan-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ring-transparent'}`}
-                  onClick={() => onSearchTermChange('')}
+                  onClick={() => {
+                    Analytics.trackMenuSearchCleared({ restaurantId: getCurrentRestaurantId() || 'unknown' });
+                    onSearchTermChange('');
+                  }}
                 >
                   Todos
                 </button>
@@ -195,7 +213,13 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
                   <button
                     key={cat}
                     className={`px-4 py-2 rounded-lg text-sm font-medium ring-0 ${propSelectedCategory === cat ? 'bg-primary text-white dark:bg-cyan-700 ring-cyan-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 ring-transparent'}`}
-                    onClick={() => onSearchTermChange(cat)}
+                    onClick={() => {
+                      Analytics.trackCategorySelected({
+                        category: cat,
+                        restaurantId: getCurrentRestaurantId() || 'unknown'
+                      });
+                      onSearchTermChange(cat);
+                    }}
                   >
                     {cat}
                   </button>

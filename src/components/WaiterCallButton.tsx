@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useWaiterCalls } from '@/hooks/useWaiterCalls';
 import { useModalScroll } from '../hooks/useModalScroll';
+import Analytics from '../lib/analytics';
 
 interface WaiterCallButtonProps {
   restaurantId: string;
@@ -52,21 +53,24 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
     try {
       const result = await createCall(restaurantId, tableNum, notes.trim() || undefined);
       
-              if (result) {
-          // Tocar o som quando a chamada for enviada com sucesso
-          await playBellSound();
-          alert('Chamada de garçom enviada com sucesso!');
-          setIsClosing(true);
-          // Aguardar a animação terminar antes de fechar
-          setTimeout(() => {
-            setShowModal(false);
-            setIsClosing(false);
-            setTableNumber('');
-            setNotes('');
-          }, 250);
-        } else {
-          alert('Erro ao enviar chamada de garçom. Tente novamente.');
-        }
+      if (result) {
+        // Track waiter call analytics
+        Analytics.trackWaiterCalled(tableNum, Boolean(notes.trim()), restaurantId);
+        
+        // Tocar o som quando a chamada for enviada com sucesso
+        await playBellSound();
+        alert('Chamada de garçom enviada com sucesso!');
+        setIsClosing(true);
+        // Aguardar a animação terminar antes de fechar
+        setTimeout(() => {
+          setShowModal(false);
+          setIsClosing(false);
+          setTableNumber('');
+          setNotes('');
+        }, 250);
+      } else {
+        alert('Erro ao enviar chamada de garçom. Tente novamente.');
+      }
     } catch (err) {
       console.error('Error creating waiter call:', err);
     } finally {

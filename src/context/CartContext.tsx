@@ -8,6 +8,7 @@ import {
   SerializableCart,
   CartUtils
 } from '../types/cart';
+import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -112,6 +113,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           totalPrice: unitPrice * newQuantity,
         };
         
+        // Track analytics for quantity increase
+        const restaurantId = getCurrentRestaurantId();
+        if (restaurantId) {
+          Analytics.trackCartQuantityChanged(existingItem, existingItem.quantity, newQuantity, restaurantId);
+        }
+        
         return updatedItems;
       } else {
         // Novo item - adicionar ao carrinho
@@ -124,6 +131,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           totalPrice: unitPrice,
         };
         
+        // Track analytics for new item
+        const restaurantId = getCurrentRestaurantId();
+        if (restaurantId) {
+          Analytics.trackCartItemAdded(dish, selectedComplements, 1, restaurantId);
+        }
+        
         return [...prevItems, newItem];
       }
     });
@@ -133,7 +146,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeItem = useCallback((itemId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    setItems(prevItems => {
+      const itemToRemove = prevItems.find(item => item.id === itemId);
+      if (itemToRemove) {
+        // Track analytics for item removal
+        const restaurantId = getCurrentRestaurantId();
+        if (restaurantId) {
+          Analytics.trackCartItemRemoved(itemToRemove, restaurantId);
+        }
+      }
+      return prevItems.filter(item => item.id !== itemId);
+    });
   }, []);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
@@ -145,6 +168,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(prevItems => 
       prevItems.map(item => {
         if (item.id === itemId) {
+          const oldQuantity = item.quantity;
+          const newQuantity = quantity;
+          
+          // Track analytics for quantity change
+          const restaurantId = getCurrentRestaurantId();
+          if (restaurantId && oldQuantity !== newQuantity) {
+            Analytics.trackCartQuantityChanged(item, oldQuantity, newQuantity, restaurantId);
+          }
+          
           return {
             ...item,
             quantity,
@@ -157,13 +189,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [removeItem]);
 
   const clearCart = useCallback(() => {
+    // Track analytics before clearing
+    const restaurantId = getCurrentRestaurantId();
+    if (restaurantId && items.length > 0) {
+      Analytics.trackCartCleared(items.length, totalPrice, restaurantId);
+    }
+    
     setItems([]);
     setIsCartOpen(false);
-  }, []);
+  }, [items.length, totalPrice]);
 
   const openCart = useCallback(() => {
+    // Track analytics when cart is opened
+    const restaurantId = getCurrentRestaurantId();
+    if (restaurantId) {
+      Analytics.trackCartOpened(totalItems, totalPrice, restaurantId);
+    }
+    
     setIsCartOpen(true);
-  }, []);
+  }, [totalItems, totalPrice]);
 
   const closeCart = useCallback(() => {
     setIsCartOpen(false);

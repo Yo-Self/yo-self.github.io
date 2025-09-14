@@ -10,6 +10,7 @@ import { useModalScroll } from '../hooks/useModalScroll';
 import { useCart, useCartAdvanced } from '../hooks/useCart';
 import { CartUtils } from '../types/cart';
 import CartIcon from './CartIcon';
+import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 import "./dishModal.css";
 
 type DishModalProps = {
@@ -103,6 +104,26 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
       setIsClosing(false);
     }
   }, [dish]);
+
+  // Track modal analytics
+  useEffect(() => {
+    if (open && dish) {
+      const restaurantId = getCurrentRestaurantId();
+      if (restaurantId) {
+        Analytics.trackDishModalOpened(dish, restaurantId, 'menu');
+        Analytics.trackDishViewed(dish, restaurantId, 'modal');
+        
+        // Track modal close when it actually closes
+        const modalOpenTime = Date.now();
+        return () => {
+          if (!open) {
+            const timeSpent = Math.round((Date.now() - modalOpenTime) / 1000);
+            Analytics.trackDishModalClosed(dish, restaurantId, timeSpent);
+          }
+        };
+      }
+    }
+  }, [open, dish]);
 
 
 

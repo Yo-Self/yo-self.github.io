@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MenuItem } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
+import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
 interface CategoryGridProps {
   categories: string[];
@@ -14,12 +15,19 @@ export default function CategoryGrid({ categories, menuItems, onSelectCategory, 
   const filteredCategories = categories.filter(category => 
     menuItems.some(item => item.categories && item.categories.includes(category))
   );
-  const allCard = (
+
+  const handleCategorySelect = (category: string) => {
+    Analytics.trackCategorySelected({
+      category,
+      restaurantId: getCurrentRestaurantId() || 'unknown'
+    });
+    onSelectCategory(category);
+  };  const allCard = (
     <CategoryCard
       key="all"
       category="Todos"
       images={[fallbackImage]}
-      onClick={() => onSelectCategory('all')}
+      onClick={() => handleCategorySelect('all')}
       fallbackImage={fallbackImage}
     />
   );
@@ -36,7 +44,7 @@ export default function CategoryGrid({ categories, menuItems, onSelectCategory, 
             key={category}
             category={category}
             images={imagesToUse}
-            onClick={() => onSelectCategory(category)}
+            onClick={() => handleCategorySelect(category)}
             fallbackImage={fallbackImage}
           />
         );

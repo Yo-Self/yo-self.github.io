@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { posthog } from '@/lib/posthog'
+import posthog from 'posthog-js'
 
 export function usePostHog() {
   const [isReady, setIsReady] = useState(false)

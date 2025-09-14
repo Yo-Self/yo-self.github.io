@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAccessibility } from "./AccessibilityContext";
 import { useModalScroll } from '../hooks/useModalScroll';
+import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
 export default function AccessibilityButton() {
   const { fontSize, increaseFontSize, decreaseFontSize, resetFontSize, theme, setTheme } = useAccessibility();
@@ -50,21 +51,25 @@ export default function AccessibilityButton() {
 
   const handleDecreaseFont = () => {
     decreaseFontSize();
+    Analytics.trackAccessibilityToggle('font_size_decrease', true, getCurrentRestaurantId() || 'unknown');
     // Não fecha o menu automaticamente para melhor UX
   };
 
   const handleIncreaseFont = () => {
     increaseFontSize();
+    Analytics.trackAccessibilityToggle('font_size_increase', true, getCurrentRestaurantId() || 'unknown');
     // Não fecha o menu automaticamente para melhor UX
   };
 
   const handleResetFont = () => {
     resetFontSize();
+    Analytics.trackAccessibilityToggle('font_size_reset', true, getCurrentRestaurantId() || 'unknown');
     // Não fecha o menu automaticamente para melhor UX
   };
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
+    Analytics.trackAccessibilityToggle(`theme_${newTheme}`, true, getCurrentRestaurantId() || 'unknown');
     // Não fecha o menu automaticamente para melhor UX
   };
 
