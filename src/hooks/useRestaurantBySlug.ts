@@ -249,7 +249,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
                   .map(comp => ({
                     name: comp.name,
                     description: comp.description || '',
-                    price: comp.price ? (comp.price / 100).toFixed(2).replace('.', ',') : '0,00',
+                    price: comp.price ? comp.price.toFixed(2).replace('.', ',') : '0,00',
                     image: comp.image_url || '',
                     ingredients: comp.ingredients || '',
                     allergens: comp.allergens || '',
@@ -269,7 +269,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
             return {
               name: dish.name,
               description: dish.description || '',
-              price: dish.price ? (dish.price / 100).toFixed(2).replace('.', ',') : '0,00',
+              price: dish.price ? dish.price.toFixed(2).replace('.', ',') : '0,00',
               image: dish.image_url || '',
               tags: dish.tags || [],
               ingredients: dish.ingredients || '',
@@ -300,7 +300,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
                 .map(comp => ({
                   name: comp.name,
                   description: comp.description || '',
-                  price: comp.price ? (comp.price / 100).toFixed(2).replace('.', ',') : '0,00',
+                  price: comp.price ? comp.price.toFixed(2).replace('.', ',') : '0,00',
                   image: comp.image_url || '',
                   ingredients: comp.ingredients || '',
                   allergens: comp.allergens || '',
@@ -320,7 +320,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
           return {
             name: dish.name,
             description: dish.description || '',
-            price: dish.price ? (dish.price / 100).toFixed(2).replace('.', ',') : '0,00',
+            price: dish.price ? dish.price.toFixed(2).replace('.', ',') : '0,00',
             image: dish.image_url || '',
             tags: dish.tags || [],
             ingredients: dish.ingredients || '',
