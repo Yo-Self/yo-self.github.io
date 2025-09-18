@@ -15,76 +15,32 @@ export function useServiceWorker() {
   const disableSw = process.env.NEXT_PUBLIC_DISABLE_SW === 'true';
 
   useEffect(() => {
-    if (disableSw) {
-      return;
-    }
-
-    // Detectar cache corrompido na inicialização
-    const detectCorruptedCache = () => {
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'DETECT_CORRUPTED_CACHE'
+    // TEMPORÁRIO: Desabilitar service worker completamente para resolver erros
+    console.log('Service worker temporarily disabled to fix cache and redirect errors');
+    
+    // Limpar todos os service workers existentes
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+          console.log('Unregistering service worker:', registration.scope);
+          registration.unregister();
         });
-      }
-    };
+      });
+    }
 
     // Detectar Safari
     const userAgent = navigator.userAgent;
     const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(userAgent);
     setIsSafari(isSafariBrowser);
 
-    // Safari tem problemas com service workers e manifests dinâmicos
-    // Desabilitar service worker no Safari para evitar erros de redirecionamento
-    if (isSafariBrowser) {
-      console.log('Safari detected, unregistering existing service workers to avoid redirect errors');
-      
-      // Desregistrar service workers existentes no Safari
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          registrations.forEach(registration => {
-            console.log('Unregistering service worker for Safari compatibility');
-            registration.unregister();
-          });
+    // Limpar todos os caches
+    if ('caches' in window) {
+      caches.keys().then(cacheNames => {
+        cacheNames.forEach(cacheName => {
+          console.log('Deleting cache:', cacheName);
+          caches.delete(cacheName);
         });
-      }
-      return;
-    }
-
-    // Detectar cache corrompido após um pequeno delay
-    setTimeout(detectCorruptedCache, 1000);
-
-    // Registrar service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((registration) => {
-          console.log('SW registered: ', registration);
-          
-          // Listen for service worker updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New service worker is available
-                  console.log('New service worker available');
-                  setShowUpdatePrompt(true);
-                }
-              });
-            }
-          });
-          
-          // Listen for messages from service worker
-          navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'CACHE_CLEARED') {
-              // Service worker cleared cache, reload the page
-              window.location.reload();
-            }
-          });
-        })
-        .catch((registrationError) => {
-          console.log('SW registration failed: ', registrationError);
-        });
+      });
     }
 
     // Verificar se já está instalado

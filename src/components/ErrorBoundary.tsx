@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import CacheCleaner from './CacheCleaner';
 
 interface Props {
   children: ReactNode;
@@ -11,17 +12,18 @@ interface State {
   hasError: boolean;
   error?: Error;
   errorInfo?: ErrorInfo;
+  showCacheCleaner: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, showCacheCleaner: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
     // Update state so the next render will show the fallback UI
-    return { hasError: true, error };
+    return { hasError: true, error, showCacheCleaner: false };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -33,21 +35,21 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     });
 
-    // Try to clear corrupted cache
-    this.clearCorruptedCache();
-  }
+    // Detectar se é erro relacionado a cache ou service worker
+    const isCacheRelatedError = 
+      error.message.includes('service worker') ||
+      error.message.includes('cache') ||
+      error.message.includes('chunk') ||
+      error.message.includes('webpack') ||
+      error.message.includes('Failed to fetch') ||
+      error.stack?.includes('sw.js') ||
+      error.stack?.includes('cache');
 
-  private clearCorruptedCache = () => {
-    try {
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'DETECT_CORRUPTED_CACHE'
-        });
-      }
-    } catch (error) {
-      console.log('Failed to clear corrupted cache:', error);
+    if (isCacheRelatedError) {
+      console.log('Cache-related error detected, showing cache cleaner');
+      this.setState({ showCacheCleaner: true });
     }
-  };
+  }
 
   private handleRetry = () => {
     // Clear all caches and reload
@@ -63,6 +65,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      // Mostrar CacheCleaner se for erro relacionado a cache
+      if (this.state.showCacheCleaner) {
+        return <CacheCleaner />;
+      }
+
       // Custom fallback UI
       if (this.props.fallback) {
         return this.props.fallback;
@@ -77,7 +84,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Ops! Algo deu errado
             </h1>
             <p className="text-gray-600 mb-6">
-              Parece que houve um problema com o cache do aplicativo. 
+              Parece que houve um problema com o aplicativo. 
               Vamos tentar corrigir isso para você.
             </p>
             
