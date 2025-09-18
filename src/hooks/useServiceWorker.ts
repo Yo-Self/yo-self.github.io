@@ -33,6 +33,23 @@ export function useServiceWorker() {
     const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(userAgent);
     setIsSafari(isSafariBrowser);
 
+    // Safari tem problemas com service workers e manifests dinâmicos
+    // Desabilitar service worker no Safari para evitar erros de redirecionamento
+    if (isSafariBrowser) {
+      console.log('Safari detected, unregistering existing service workers to avoid redirect errors');
+      
+      // Desregistrar service workers existentes no Safari
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => {
+            console.log('Unregistering service worker for Safari compatibility');
+            registration.unregister();
+          });
+        });
+      }
+      return;
+    }
+
     // Detectar cache corrompido após um pequeno delay
     setTimeout(detectCorruptedCache, 1000);
 

@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Restaurant App',
     short_name: 'Restaurant',
     description: 'Aplicativo de restaurante com cardápio digital e pedidos',
-    start_url: '/?utm_source=web_app_manifest',
+    start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#000000',
