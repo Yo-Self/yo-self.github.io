@@ -8,6 +8,7 @@ import { CartItem, CartUtils } from '../types/cart';
 import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
 import CartIcon from './CartIcon';
+import CustomerDataForm from './CustomerDataForm';
 
 interface CartModalProps {
   restaurantId?: string;
@@ -175,10 +176,16 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     onRemove={() => removeItem(item.id)}
                   />
                 ))}
+                
+                {/* Dados do cliente - agora dentro da área de scroll */}
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <CustomerDataForm />
+                </div>
               </div>
 
               {/* Footer com totais e ações */}
               <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800">
+
                 {/* Resumo do pedido */}
                 <div className="mb-4">
                   <div className="flex justify-between items-center text-lg font-semibold text-gray-800 dark:text-gray-200">

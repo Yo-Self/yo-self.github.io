@@ -94,7 +94,11 @@ export class CartUtils {
    * Converte formato serializável para Map<string, Set<string>>
    */
   static serializableToMap(serializable: [string, string[]][]): Map<string, Set<string>> {
-    return new Map(serializable.map(([key, value]) => [key, new Set(value)]));
+    // Verificação de segurança para evitar erros
+    if (!serializable || !Array.isArray(serializable)) {
+      return new Map();
+    }
+    return new Map(serializable.map(([key, value]) => [key, new Set(value || [])]));
   }
 
   /**
@@ -118,7 +122,7 @@ export class CartUtils {
     return {
       id: serializable.id,
       dish: serializable.dish,
-      selectedComplements: this.serializableToMap(serializable.selectedComplements),
+      selectedComplements: this.serializableToMap(serializable.selectedComplements || []),
       quantity: serializable.quantity,
       unitPrice: serializable.unitPrice,
       totalPrice: serializable.totalPrice,

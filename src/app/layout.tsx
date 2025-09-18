@@ -7,6 +7,7 @@ import "./webapp.css";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
 import { CartProvider } from "@/context/CartContext";
+import { CustomerDataProvider } from "@/contexts/CustomerDataContext";
 import Analytics from "@/components/Analytics";
 import PageViewTracker from "@/components/PageViewTracker";
 import SessionTracker from "@/components/SessionTracker";
@@ -105,6 +106,25 @@ export default function RootLayout({
           content="yes"
         />
       </head>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white webapp-container`}>
+        <AccessibilityProvider>
+          <CartProvider>
+            <CustomerDataProvider>
+              <ThemeScript />
+              <Navigation />
+              {children}
+              {/* Componentes globais do carrinho */}
+              <CartModal />
+              <InstallPrompt />
+              <SafariInstallPrompt />
+              <DynamicMetaTags />
+              <StartupRedirect />
+              <A2HSUrlTagger />
+              <DynamicManifestUpdater />
+            </CustomerDataProvider>
+          </CartProvider>
+        </AccessibilityProvider>
+        <Analytics />
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white webapp-container`}
       >

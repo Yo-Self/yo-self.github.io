@@ -3,6 +3,7 @@
 import React from 'react';
 import { useCart } from '../hooks/useCart';
 import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
+import { useCustomerData } from '../hooks/useCustomerData';
 import { CartUtils } from '../types/cart';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
@@ -21,6 +22,7 @@ export default function CartWhatsAppButton({
 }: CartWhatsAppButtonProps) {
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty } = useCart();
   const { config, isLoading } = useWhatsAppConfig(restaurantId);
+  const { customerData, isCustomerDataComplete } = useCustomerData();
 
   // Não renderizar se carrinho estiver vazio
   if (isEmpty) {
@@ -62,6 +64,29 @@ export default function CartWhatsAppButton({
 
   const generateCartWhatsAppMessage = () => {
     let message = `🛒 *PEDIDO COMPLETO*\n\n`;
+    
+    // DEBUG: Verificar dados do cliente
+    // Debug logs removidos para produção
+    
+    // Dados do cliente
+    const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim();
+    
+    if (hasCustomerData) {
+      message += `👤 *DADOS DO CLIENTE:*\n`;
+      if (customerData.name?.trim()) {
+        message += `• *Nome:* ${customerData.name}\n`;
+      }
+      if (customerData.address?.trim()) {
+        message += `• *Endereço:* ${customerData.address}\n`;
+      }
+      if (customerData.number?.trim()) {
+        message += `• *Número:* ${customerData.number}\n`;
+      }
+      if (customerData.complement?.trim()) {
+        message += `• *Complemento:* ${customerData.complement}\n`;
+      }
+      message += `\n`;
+    }
     
     message += `📋 *Itens do Pedido:*\n\n`;
 
@@ -142,13 +167,6 @@ export default function CartWhatsAppButton({
     if (onSent) {
       onSent();
     }
-
-    // Log para analytics (opcional)
-    console.log('Pedido enviado via WhatsApp:', {
-      totalItems,
-      totalPrice,
-      timestamp: new Date().toISOString()
-    });
   };
 
   const getItemEmoji = (index: number): string => {
@@ -159,13 +177,14 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleWhatsAppClick}
-      disabled={isLoading || isEmpty}
+      disabled={isLoading || isEmpty || !isCustomerDataComplete}
       className={`
         w-full flex items-center justify-center gap-3 
         px-6 py-4 
-        bg-gradient-to-r from-green-500 to-green-600 
-        hover:from-green-600 hover:to-green-700
-        disabled:from-gray-400 disabled:to-gray-500
+        ${isCustomerDataComplete 
+          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
+          : 'bg-gradient-to-r from-gray-400 to-gray-500'
+        }
         text-white font-semibold 
         rounded-xl shadow-lg hover:shadow-xl
         transition-all duration-200 
@@ -189,10 +208,15 @@ export default function CartWhatsAppButton({
       {/* Texto do botão */}
       <div className="flex flex-col items-start min-w-0">
         <span className="text-lg font-bold">
-          {isLoading ? 'Carregando...' : 'Enviar Pedido'}
+          {isLoading ? 'Carregando...' : 
+           !isCustomerDataComplete ? 'Preencha nome e número' : 
+           'Enviar Pedido'}
         </span>
         <span className="text-sm opacity-90 truncate">
-          {totalItems} {totalItems === 1 ? 'item' : 'itens'} • R$ {formattedTotalPrice}
+          {isCustomerDataComplete 
+            ? `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`
+            : 'Preencha nome e número para continuar'
+          }
         </span>
       </div>
 
@@ -282,11 +306,38 @@ export function CartWhatsAppButtonCompact({
 export function useCartWhatsAppMessage(restaurantId: string = "default") {
   const { items, formattedTotalPrice } = useCart();
   const { config } = useWhatsAppConfig(restaurantId);
+  const { customerData } = useCustomerData();
 
   const generateMessage = React.useCallback(() => {
     if (items.length === 0) return '';
 
-    let message = `🛒 *PEDIDO COMPLETO*\n\n📋 *Itens do Pedido:*\n\n`;
+    let message = `🛒 *PEDIDO COMPLETO*\n\n`;
+    
+    // Dados do cliente (com safe check)
+    const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim();
+    
+    if (hasCustomerData) {
+      message += `👤 *DADOS DO CLIENTE:*\n`;
+      if (customerData.name?.trim()) {
+        message += `• *Nome:* ${customerData.name}\n`;
+      }
+      if (customerData.address?.trim()) {
+        message += `• *Endereço:* ${customerData.address}`;
+        if (customerData.number?.trim()) {
+          message += `, ${customerData.number}`;
+        }
+        if (customerData.complement?.trim()) {
+          message += ` - ${customerData.complement}`;
+        }
+        message += `\n`;
+      }
+      if (customerData.number?.trim() && !customerData.address?.trim()) {
+        message += `• *Número:* ${customerData.number}\n`;
+      }
+      message += `\n`;
+    }
+    
+    message += `📋 *Itens do Pedido:*\n\n`;
 
     items.forEach((item, index) => {
       const emoji = index < 9 ? `${index + 1}️⃣` : `${index + 1}.`;
@@ -310,7 +361,7 @@ export function useCartWhatsAppMessage(restaurantId: string = "default") {
     message += config.customMessage || 'Olá! Gostaria de fazer este pedido completo.';
 
     return message;
-  }, [items, formattedTotalPrice, config.customMessage]);
+  }, [items, formattedTotalPrice, config.customMessage, customerData]);
 
   return { generateMessage };
 }
