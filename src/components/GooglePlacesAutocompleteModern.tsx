@@ -237,7 +237,7 @@ export default function GooglePlacesAutocompleteModern({
           if (event.key === 'Enter' || event.key === 'Tab') {
             console.log('Keydown event:', event.key, event.target.value);
             setTimeout(() => {
-              const currentValue = autocompleteElement.getAttribute('value') || autocompleteElement.value;
+              const currentValue = autocompleteElement.getAttribute('value') || (autocompleteElement as HTMLInputElement).value;
               if (currentValue) {
                 console.log('Valor após Enter/Tab:', currentValue);
                 onChange(currentValue);
