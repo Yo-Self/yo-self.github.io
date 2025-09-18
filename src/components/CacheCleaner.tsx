@@ -48,12 +48,14 @@ export default function CacheCleaner() {
         try {
           const databases = await indexedDB.databases();
           for (const db of databases) {
-            console.log('🗑️ Deletando IndexedDB:', db.name);
-            await new Promise((resolve, reject) => {
-              const deleteReq = indexedDB.deleteDatabase(db.name);
-              deleteReq.onsuccess = () => resolve(true);
-              deleteReq.onerror = () => reject(deleteReq.error);
-            });
+            if (db.name) {
+              console.log('🗑️ Deletando IndexedDB:', db.name);
+              await new Promise((resolve, reject) => {
+                const deleteReq = indexedDB.deleteDatabase(db.name!);
+                deleteReq.onsuccess = () => resolve(true);
+                deleteReq.onerror = () => reject(deleteReq.error);
+              });
+            }
           }
         } catch (e) {
           console.log('❌ Erro ao limpar IndexedDB:', e);
