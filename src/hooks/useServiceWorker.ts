@@ -19,10 +19,22 @@ export function useServiceWorker() {
       return;
     }
 
+    // Detectar cache corrompido na inicialização
+    const detectCorruptedCache = () => {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'DETECT_CORRUPTED_CACHE'
+        });
+      }
+    };
+
     // Detectar Safari
     const userAgent = navigator.userAgent;
     const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(userAgent);
     setIsSafari(isSafariBrowser);
+
+    // Detectar cache corrompido após um pequeno delay
+    setTimeout(detectCorruptedCache, 1000);
 
     // Registrar service worker
     if ('serviceWorker' in navigator) {

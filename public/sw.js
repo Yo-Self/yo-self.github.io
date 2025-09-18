@@ -1,5 +1,5 @@
 // Cache version - increment this when you want to force cache refresh
-const CACHE_VERSION = 1757886797176; // Increment this for each deployment
+const CACHE_VERSION = 1758201481917; // Increment this for each deployment
 const CACHE_NAME = `restaurant-app-v${CACHE_VERSION}`;
 
 // URLs that should never be cached (Next.js internal files)
@@ -13,11 +13,26 @@ const NEVER_CACHE_PATTERNS = [
   /_next\/static\/.*\.js$/,
   /\.hot-update\.js$/,
   /_next\/static\/media\/.*$/,
+  /_next\/webpack-runtime\.js$/,
+  /_next\/static\/chunks\/polyfills-.*\.js$/,
+  /_next\/static\/chunks\/app\/.*\.js$/,
 ];
 
 // Check if a URL should never be cached
 function shouldNeverCache(url) {
   return NEVER_CACHE_PATTERNS.some(pattern => pattern.test(url));
+}
+
+// Check if a cached response is stale (older than 1 hour)
+function isStaleResponse(response) {
+  const cacheDate = response.headers.get('sw-cache-date');
+  if (!cacheDate) return true;
+  
+  const cacheTime = new Date(cacheDate).getTime();
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+  
+  return (now - cacheTime) > oneHour;
 }
 
 // Função para obter URLs para cache baseado na URL atual
@@ -161,27 +176,50 @@ self.addEventListener('fetch', (event) => {
     }
   }
   
-  // Para outras requisições, usar cache normal
+  // Para outras requisições, usar cache normal com verificação de stale
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        if (response) {
+        // Se temos uma resposta em cache, verificar se não está stale
+        if (response && !isStaleResponse(response)) {
           console.log('SW: Serving from cache:', event.request.url);
           return response;
         }
         
-        console.log('SW: Fetching from network:', event.request.url);
+        // Se a resposta está stale ou não existe, buscar da rede
+        console.log('SW: Fetching from network (stale or missing):', event.request.url);
         
-        // Se não estiver em cache e for uma navegação, cachear a página
-        if (event.request.mode === 'navigate') {
-          return cacheCurrentPage(event.request);
-        }
-        
-        // Para outros recursos, buscar da rede sem tentar cachear chunks
-        return fetch(event.request).catch(() => {
-          // If network fails for non-navigation requests, just fail
-          throw new Error('Network request failed');
-        });
+        return fetch(event.request)
+          .then((networkResponse) => {
+            // Se a resposta da rede foi bem-sucedida, cachear com timestamp
+            if (networkResponse.ok) {
+              const responseToCache = networkResponse.clone();
+              responseToCache.headers.set('sw-cache-date', new Date().toISOString());
+              
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+            
+            return networkResponse;
+          })
+          .catch((error) => {
+            console.log('SW: Network failed, trying stale cache:', event.request.url);
+            
+            // Se a rede falhou, tentar usar cache stale como fallback
+            if (response) {
+              console.log('SW: Using stale cache as fallback:', event.request.url);
+              return response;
+            }
+            
+            // Se não há cache nem rede, mostrar página offline para navegação
+            if (event.request.mode === 'navigate') {
+              return caches.match('/offline');
+            }
+            
+            // Para outros recursos, falhar
+            throw new Error('Network request failed and no cache available');
+          });
       })
       .catch(() => {
         // If both cache and network fail, show offline page for navigation
@@ -211,6 +249,8 @@ self.addEventListener('activate', (event) => {
           })
         );
       }),
+      // Detect and clear corrupted cache
+      detectAndClearCorruptedCache(),
       // Take control of all clients immediately
       self.clients.claim()
     ]).then(() => {
@@ -218,6 +258,30 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
+
+// Function to detect and clear corrupted cache
+async function detectAndClearCorruptedCache() {
+  try {
+    const cacheNames = await caches.keys();
+    const currentTime = Date.now();
+    const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
+    
+    for (const cacheName of cacheNames) {
+      if (cacheName.startsWith('restaurant-app-v')) {
+        const cacheVersion = parseInt(cacheName.split('v')[1]);
+        const cacheAge = currentTime - cacheVersion;
+        
+        // If cache is older than 24 hours, it might be corrupted
+        if (cacheAge > maxCacheAge) {
+          console.log('SW: Detected old cache, clearing:', cacheName);
+          await caches.delete(cacheName);
+        }
+      }
+    }
+  } catch (error) {
+    console.log('SW: Error detecting corrupted cache:', error);
+  }
+}
 
 // Listen for message from client to force cache refresh
 self.addEventListener('message', (event) => {
@@ -239,5 +303,9 @@ self.addEventListener('message', (event) => {
         });
       });
     });
+  }
+  
+  if (event.data && event.data.type === 'DETECT_CORRUPTED_CACHE') {
+    detectAndClearCorruptedCache();
   }
 });
