@@ -61,7 +61,7 @@ export function useOfflineState() {
     };
 
     // Escutar mensagens do service worker
-    const handleServiceWorkerMessage = (event) => {
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'SAVE_OFFLINE_STATE') {
         const offlineData = event.data.data;
         setOfflineState(offlineData);
