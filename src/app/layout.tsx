@@ -22,6 +22,9 @@ import StartupRedirect from "@/components/StartupRedirect";
 import A2HSUrlTagger from "@/components/A2HSUrlTagger";
 import DynamicManifestUpdater from "@/components/DynamicManifestUpdater";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
+import { useLegacyAppDetection } from "@/hooks/useLegacyAppDetection";
+import LegacyAppWrapper from "@/components/LegacyAppWrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -108,31 +111,33 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white webapp-container`}>
-        <ErrorBoundary>
-          <PostHogProvider>
-            <AccessibilityProvider>
-              <CartProvider>
-                <CustomerDataProvider>
-                  <ThemeScript />
-                  <PageViewTracker />
-                  <SessionTracker />
-                  <Navigation />
-                  {children}
-                  {/* Componentes globais do carrinho */}
-                  <CartModal />
-                  <InstallPrompt />
-                  <SafariInstallPrompt />
-                  <UpdatePrompt />
-                  <DynamicMetaTags />
-                  <StartupRedirect />
-                  <A2HSUrlTagger />
-                  <DynamicManifestUpdater />
-                </CustomerDataProvider>
-              </CartProvider>
-            </AccessibilityProvider>
-            <Analytics />
-          </PostHogProvider>
-        </ErrorBoundary>
+        <LegacyAppWrapper>
+          <ErrorBoundary>
+            <PostHogProvider>
+              <AccessibilityProvider>
+                <CartProvider>
+                  <CustomerDataProvider>
+                    <ThemeScript />
+                    <PageViewTracker />
+                    <SessionTracker />
+                    <Navigation />
+                    {children}
+                    {/* Componentes globais do carrinho */}
+                    <CartModal />
+                    <InstallPrompt />
+                    <SafariInstallPrompt />
+                    <UpdatePrompt />
+                    <DynamicMetaTags />
+                    <StartupRedirect />
+                    <A2HSUrlTagger />
+                    <DynamicManifestUpdater />
+                  </CustomerDataProvider>
+                </CartProvider>
+              </AccessibilityProvider>
+              <Analytics />
+            </PostHogProvider>
+          </ErrorBoundary>
+        </LegacyAppWrapper>
       </body>
     </html>
   );
