@@ -107,44 +107,25 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white webapp-container`}>
-        <AccessibilityProvider>
-          <CartProvider>
-            <CustomerDataProvider>
-              <ThemeScript />
-              <Navigation />
-              {children}
-              {/* Componentes globais do carrinho */}
-              <CartModal />
-              <InstallPrompt />
-              <SafariInstallPrompt />
-              <DynamicMetaTags />
-              <StartupRedirect />
-              <A2HSUrlTagger />
-              <DynamicManifestUpdater />
-            </CustomerDataProvider>
-          </CartProvider>
-        </AccessibilityProvider>
-        <Analytics />
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-black text-gray-900 dark:text-white webapp-container`}
-      >
         <PostHogProvider>
           <AccessibilityProvider>
             <CartProvider>
-              <ThemeScript />
-              <PageViewTracker />
-              <SessionTracker />
-              <Navigation />
-              {children}
-              {/* Componentes globais do carrinho */}
-              <CartModal />
-              <InstallPrompt />
-              <SafariInstallPrompt />
-              <UpdatePrompt />
-              <DynamicMetaTags />
-              <StartupRedirect />
-              <A2HSUrlTagger />
-              <DynamicManifestUpdater />
+              <CustomerDataProvider>
+                <ThemeScript />
+                <PageViewTracker />
+                <SessionTracker />
+                <Navigation />
+                {children}
+                {/* Componentes globais do carrinho */}
+                <CartModal />
+                <InstallPrompt />
+                <SafariInstallPrompt />
+                <UpdatePrompt />
+                <DynamicMetaTags />
+                <StartupRedirect />
+                <A2HSUrlTagger />
+                <DynamicManifestUpdater />
+              </CustomerDataProvider>
             </CartProvider>
           </AccessibilityProvider>
           <Analytics />
