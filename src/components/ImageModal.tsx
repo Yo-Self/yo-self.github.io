@@ -22,12 +22,18 @@ export default function ImageModal({ isOpen, imageSrc, imageAlt, onClose }: Imag
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
+      // Verificar se document.body existe antes de manipular
+      if (document.body) {
+        document.body.style.overflow = 'hidden';
+      }
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      // Verificar se document.body existe antes de manipular
+      if (document.body) {
+        document.body.style.overflow = 'unset';
+      }
     };
   }, [isOpen, onClose]);
 
@@ -84,5 +90,10 @@ export default function ImageModal({ isOpen, imageSrc, imageAlt, onClose }: Imag
   );
 
   // Renderizar no body para ficar acima de tudo
-  return createPortal(modalContent, document.body);
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modalContent, document.body);
+  }
+  
+  // Fallback se document.body não estiver disponível
+  return null;
 }

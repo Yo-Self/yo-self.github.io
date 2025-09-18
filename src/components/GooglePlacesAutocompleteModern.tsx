@@ -25,264 +25,293 @@ export default function GooglePlacesAutocompleteModern({
   disabled = false
 }: GooglePlacesAutocompleteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const autocompleteRef = useRef<any>(null);
+  const autocompleteElementRef = useRef<any>(null);
   const isInitializedRef = useRef(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [apiStatus, setApiStatus] = useState<string>('');
 
-  // Função para adicionar estilos do Google Places
-  const addGooglePlacesStyles = useCallback(() => {
-    const existingStyle = document.getElementById('google-places-custom-styles');
+  // Função para adicionar estilos personalizados
+  const addCustomStyles = useCallback(() => {
+    const existingStyle = document.getElementById('google-places-modern-styles');
     if (!existingStyle) {
       const style = document.createElement('style');
-      style.id = 'google-places-custom-styles';
+      style.id = 'google-places-modern-styles';
       style.textContent = `
-        .pac-container {
-          z-index: 99999 !important;
-          border-radius: 8px !important;
-          box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-          border: 1px solid #e5e7eb !important;
-          background: white !important;
+        /* Estilos para o PlaceAutocompleteElement */
+        gmp-place-autocomplete {
+          display: block !important;
+          width: 100% !important;
+          --gmpx-color-surface: white !important;
+          --gmpx-color-outline: #e5e7eb !important;
+          --gmpx-color-outline-variant: #d1d5db !important;
+          --gmpx-color-primary: #3b82f6 !important;
+          --gmpx-color-on-surface: #111827 !important;
+          --gmpx-color-on-surface-variant: #6b7280 !important;
+          --gmpx-font-family-headings: inherit !important;
+          --gmpx-font-family-body: inherit !important;
+          --gmpx-font-size-base: 14px !important;
+          --gmpx-font-weight-normal: 400 !important;
+          --gmpx-font-weight-medium: 500 !important;
+          --gmpx-font-weight-bold: 600 !important;
+          --gmpx-radius-s: 6px !important;
+          --gmpx-radius-m: 8px !important;
+          --gmpx-radius-l: 12px !important;
+          --gmpx-spacing-xs: 4px !important;
+          --gmpx-spacing-s: 8px !important;
+          --gmpx-spacing-m: 12px !important;
+          --gmpx-spacing-l: 16px !important;
+          --gmpx-spacing-xl: 20px !important;
+          --gmpx-spacing-2xl: 24px !important;
+          --gmpx-spacing-3xl: 32px !important;
+          --gmpx-spacing-4xl: 40px !important;
+          --gmpx-spacing-5xl: 48px !important;
+          --gmpx-spacing-6xl: 64px !important;
+          --gmpx-spacing-7xl: 80px !important;
+          --gmpx-spacing-8xl: 96px !important;
+          --gmpx-spacing-9xl: 128px !important;
+          --gmpx-spacing-10xl: 160px !important;
+          --gmpx-spacing-11xl: 192px !important;
+          --gmpx-spacing-12xl: 224px !important;
+          --gmpx-spacing-13xl: 256px !important;
+          --gmpx-spacing-14xl: 288px !important;
+          --gmpx-spacing-15xl: 320px !important;
+          --gmpx-spacing-16xl: 352px !important;
+          --gmpx-spacing-17xl: 384px !important;
+          --gmpx-spacing-18xl: 416px !important;
+          --gmpx-spacing-19xl: 448px !important;
+          --gmpx-spacing-20xl: 480px !important;
+          --gmpx-spacing-21xl: 512px !important;
+          --gmpx-spacing-22xl: 544px !important;
+          --gmpx-spacing-23xl: 576px !important;
+          --gmpx-spacing-24xl: 608px !important;
+          --gmpx-spacing-25xl: 640px !important;
+          --gmpx-spacing-26xl: 672px !important;
+          --gmpx-spacing-27xl: 704px !important;
+          --gmpx-spacing-28xl: 736px !important;
+          --gmpx-spacing-29xl: 768px !important;
+          --gmpx-spacing-30xl: 800px !important;
+          --gmpx-spacing-31xl: 832px !important;
+          --gmpx-spacing-32xl: 864px !important;
+          --gmpx-spacing-33xl: 896px !important;
+          --gmpx-spacing-34xl: 928px !important;
+          --gmpx-spacing-35xl: 960px !important;
+          --gmpx-spacing-36xl: 992px !important;
+          --gmpx-spacing-37xl: 1024px !important;
+          --gmpx-spacing-38xl: 1056px !important;
+          --gmpx-spacing-39xl: 1088px !important;
+          --gmpx-spacing-40xl: 1120px !important;
+          --gmpx-spacing-41xl: 1152px !important;
+          --gmpx-spacing-42xl: 1184px !important;
+          --gmpx-spacing-43xl: 1216px !important;
+          --gmpx-spacing-44xl: 1248px !important;
+          --gmpx-spacing-45xl: 1280px !important;
+          --gmpx-spacing-46xl: 1312px !important;
+          --gmpx-spacing-47xl: 1344px !important;
+          --gmpx-spacing-48xl: 1376px !important;
+          --gmpx-spacing-49xl: 1408px !important;
+          --gmpx-spacing-50xl: 1440px !important;
+        }
+        
+        /* Garantir que o elemento fique dentro do container */
+        .google-places-container {
+          position: relative !important;
+          width: 100% !important;
+        }
+        
+        /* Estilos para elementos de atribuição dentro do componente */
+        gmp-place-autocomplete gmp-place-attribution {
+          display: block !important;
+          position: relative !important;
           margin-top: 4px !important;
-          font-family: inherit !important;
-          max-height: 300px !important;
-          overflow-y: auto !important;
-        }
-        .pac-item {
-          padding: 12px 16px !important;
-          border-bottom: 1px solid #f3f4f6 !important;
-          cursor: pointer !important;
-          font-size: 14px !important;
-          line-height: 1.5 !important;
-          transition: background-color 0.15s ease !important;
-        }
-        .pac-item:hover {
-          background-color: #f8fafc !important;
-        }
-        .pac-item:last-child {
-          border-bottom: none !important;
-        }
-        .pac-item-selected {
-          background-color: #eff6ff !important;
-        }
-        .pac-matched {
-          font-weight: 600 !important;
-          color: #1f2937 !important;
-        }
-        .pac-item-query {
+          padding: 4px 8px !important;
+          background: #f9fafb !important;
+          border-top: 1px solid #e5e7eb !important;
+          font-size: 10px !important;
           color: #6b7280 !important;
-          font-size: 13px !important;
+          text-align: center !important;
+        }
+        
+        /* Esconder elementos de atribuição que aparecem fora do componente */
+        div:not(.google-places-container) gmp-place-attribution,
+        div:not(.google-places-container) *[class*="attribution"],
+        div:not(.google-places-container) *[class*="powered"] {
+          display: none !important;
         }
       `;
       document.head.appendChild(style);
-      console.log('✅ Estilos do Google Places adicionados');
     }
   }, []);
 
-  // Função para criar input simples (fallback)
-  const createFallbackInput = useCallback(() => {
-    console.log('🔄 Criando input fallback...');
-    
-    if (!containerRef.current) {
-      console.log('❌ Container não disponível');
-      return;
-    }
-
-    containerRef.current.innerHTML = '';
-    
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = placeholder;
-    input.value = value || '';
-    input.disabled = disabled;
-    input.className = `
-      w-full px-4 py-3 
-      border border-gray-300 dark:border-gray-600 
-      rounded-lg 
-      bg-white dark:bg-gray-800 
-      text-gray-900 dark:text-gray-100 
-      placeholder-gray-500 dark:placeholder-gray-400
-      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-      transition-colors duration-200
-    `.replace(/\s+/g, ' ').trim();
-
-    input.addEventListener('input', (e) => {
-      const target = e.target as HTMLInputElement;
-      console.log('⌨️ Input fallback:', target.value);
-      onChange(target.value);
-    });
-
-    containerRef.current.appendChild(input);
-    inputRef.current = input;
-    
-    setIsLoaded(false);
-    setIsLoading(false);
-    setError('Usando input simples');
-    setApiStatus('Digite manualmente');
-    console.log('✅ Input fallback criado');
-  }, [placeholder, value, disabled, onChange]);
-
-  // Função principal de inicialização do Google Places
-  const initializeGooglePlaces = useCallback(() => {
-    console.log('🔄 Inicializando Google Places...');
-    
-    if (!containerRef.current) {
-      console.log('❌ Container não disponível');
-      createFallbackInput();
-      return;
-    }
-
-    if (!window.google?.maps?.places?.Autocomplete) {
-      console.log('❌ Google Places API não disponível');
-      createFallbackInput();
-      return;
-    }
-
-    try {
-      // Limpar container
-      containerRef.current.innerHTML = '';
-      
-      // Adicionar estilos
-      addGooglePlacesStyles();
-
-      // Criar input
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = placeholder;
-      input.value = value || '';
-      input.disabled = disabled;
-      input.className = `
-        w-full px-4 py-3 
-        border border-gray-300 dark:border-gray-600 
-        rounded-lg 
-        bg-white dark:bg-gray-800 
-        text-gray-900 dark:text-gray-100 
-        placeholder-gray-500 dark:placeholder-gray-400
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-        transition-colors duration-200
-      `.replace(/\s+/g, ' ').trim();
-
-      containerRef.current.appendChild(input);
-      inputRef.current = input;
-
-      console.log('✅ Input criado e adicionado ao DOM');
-
-      // Inicializar Google Places Autocomplete
-      const autocomplete = new window.google.maps.places.Autocomplete(input, {
-        componentRestrictions: { country: 'br' },
-        types: ['address'],
-        fields: ['formatted_address', 'name', 'place_id']
-      });
-
-      autocompleteRef.current = autocomplete;
-      console.log('✅ Google Places Autocomplete inicializado');
-
-      // Event listener para seleção de lugar
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        console.log('🎯 Place selecionado:', place);
-
-        if (place?.formatted_address) {
-          const address = place.formatted_address;
-          console.log('✅ Endereço válido:', address);
-          
-          input.value = address;
-          onChange(address);
-          setApiStatus('Endereço selecionado ✓');
-          
-        } else if (place?.name) {
-          console.log('⚠️ Usando name como fallback:', place.name);
-          const address = place.name;
-          input.value = address;
-          onChange(address);
-          setApiStatus('Endereço selecionado ✓');
-          
-        } else {
-          console.log('❌ Place inválido');
-          setApiStatus('Seleção inválida');
-        }
-      });
-
-      // Event listener para digitação manual
-      input.addEventListener('input', (e) => {
-        const target = e.target as HTMLInputElement;
-        const inputValue = target.value;
-        console.log('⌨️ Digitando:', inputValue);
-        
-        onChange(inputValue);
-        
-        if (inputValue.trim() === '') {
-          setApiStatus('Digite para ver sugestões');
-        } else if (inputValue.length >= 3) {
-          setApiStatus('Buscando sugestões...');
-        }
-      });
-
-      // Eventos visuais
-      input.addEventListener('focus', () => {
-        console.log('👁️ Input focado');
-        setApiStatus('Digite para ver sugestões');
-      });
-
-      input.addEventListener('blur', () => {
-        console.log('👋 Input desfocado, valor:', input.value);
-      });
-
-      // Configurar geolocalização para melhorar sugestões
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const geolocation = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-            const circle = new window.google.maps.Circle({
-              center: geolocation,
-              radius: position.coords.accuracy
-            });
-            autocomplete.setBounds(circle.getBounds());
-            console.log('📍 Localização configurada para melhorar sugestões');
-          },
-          (error) => {
-            console.log('📍 Geolocalização não disponível:', error.message);
-          }
-        );
-      }
-
-      setIsLoaded(true);
-      setIsLoading(false);
-      setError(null);
-      setApiStatus('Pronto - Digite para ver sugestões');
-      console.log('✅ Google Places totalmente inicializado');
-
-    } catch (err) {
-      console.error('❌ Erro ao inicializar Google Places:', err);
-      setError('Erro ao carregar autocompletar');
-      setApiStatus('Usando input simples');
-      createFallbackInput();
-    }
-  }, [placeholder, value, disabled, onChange, addGooglePlacesStyles, createFallbackInput]);
-
   useEffect(() => {
-    // Prevenir execução dupla
+    // Prevenir execução dupla em StrictMode
     if (isInitializedRef.current) {
-      console.log('🚫 Já inicializado');
       return;
     }
 
     let mounted = true;
-    console.log('🔄 Iniciando carregamento do Google Places...');
+
+    const initAutocomplete = () => {
+      if (!containerRef.current || !window.google?.maps?.places?.PlaceAutocompleteElement) {
+        return;
+      }
+
+      try {
+        // Adicionar estilos
+        addCustomStyles();
+
+        // Limpar elemento anterior se existir
+        if (autocompleteElementRef.current) {
+          containerRef.current.innerHTML = '';
+          autocompleteElementRef.current = null;
+        }
+
+        // Criar o elemento PlaceAutocompleteElement
+        const autocompleteElement = document.createElement('gmp-place-autocomplete');
+        
+        // Configurar o elemento
+        autocompleteElement.setAttribute('placeholder', placeholder);
+        if (disabled) {
+          autocompleteElement.setAttribute('disabled', 'true');
+        } else {
+          autocompleteElement.removeAttribute('disabled');
+        }
+        
+        // Adicionar ao container
+        containerRef.current.appendChild(autocompleteElement);
+        autocompleteElementRef.current = autocompleteElement;
+
+        // Event listener para mudanças
+        autocompleteElement.addEventListener('gmp-placeselect', (event: any) => {
+          console.log('gmp-placeselect event:', event);
+          const place = event.detail?.place;
+          if (place?.formattedAddress) {
+            console.log('Endereço selecionado:', place.formattedAddress);
+            onChange(place.formattedAddress);
+          } else if (place?.displayName) {
+            console.log('Endereço selecionado (displayName):', place.displayName);
+            onChange(place.displayName);
+          }
+        });
+
+        // Event listener para mudanças no input
+        autocompleteElement.addEventListener('input', (event: any) => {
+          console.log('Input event:', event);
+          const value = event.target?.value || event.detail?.value;
+          if (value !== undefined) {
+            console.log('Input mudou:', value);
+            onChange(value);
+          }
+        });
+
+        // Event listener adicional para detectar seleção de sugestões
+        autocompleteElement.addEventListener('change', (event: any) => {
+          console.log('Change event:', event);
+          const value = event.target?.value || event.detail?.value;
+          if (value && value.trim() !== '') {
+            console.log('Change event value:', value);
+            onChange(value);
+          }
+        });
+
+        // Event listener para quando uma sugestão é clicada/selecionada
+        autocompleteElement.addEventListener('gmp-placechange', (event: any) => {
+          console.log('gmp-placechange event:', event);
+          const place = event.detail?.place;
+          if (place?.formattedAddress) {
+            console.log('Place change formattedAddress:', place.formattedAddress);
+            onChange(place.formattedAddress);
+          } else if (place?.displayName) {
+            console.log('Place change displayName:', place.displayName);
+            onChange(place.displayName);
+          }
+        });
+
+        // Event listener para detectar quando uma sugestão é clicada
+        autocompleteElement.addEventListener('click', (event: any) => {
+          console.log('Click event:', event);
+        });
+
+        // Event listener para detectar quando uma sugestão é selecionada via teclado
+        autocompleteElement.addEventListener('keydown', (event: any) => {
+          if (event.key === 'Enter' || event.key === 'Tab') {
+            console.log('Keydown event:', event.key, event.target.value);
+            setTimeout(() => {
+              const currentValue = autocompleteElement.getAttribute('value') || autocompleteElement.value;
+              if (currentValue) {
+                console.log('Valor após Enter/Tab:', currentValue);
+                onChange(currentValue);
+              }
+            }, 100);
+          }
+        });
+
+        // Definir valor inicial
+        if (value) {
+          autocompleteElement.setAttribute('value', value);
+        }
+
+        // MutationObserver para detectar mudanças no valor do input interno
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+              const newValue = autocompleteElement.getAttribute('value');
+              if (newValue && newValue !== value) {
+                console.log('Valor detectado via MutationObserver:', newValue);
+                onChange(newValue);
+              }
+            }
+            
+            // Detectar mudanças em elementos filhos (input interno)
+            if (mutation.type === 'childList') {
+              mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  const element = node as Element;
+                  if (element.tagName === 'INPUT' || element.querySelector('input')) {
+                    const input = element.tagName === 'INPUT' ? element : element.querySelector('input');
+                    if (input) {
+                      input.addEventListener('input', (e: any) => {
+                        console.log('Input interno detectado:', e.target.value);
+                        onChange(e.target.value);
+                      });
+                      input.addEventListener('change', (e: any) => {
+                        console.log('Change interno detectado:', e.target.value);
+                        onChange(e.target.value);
+                      });
+                    }
+                  }
+                }
+              });
+            }
+          });
+        });
+
+        observer.observe(autocompleteElement, {
+          attributes: true,
+          childList: true,
+          subtree: true,
+          attributeFilter: ['value']
+        });
+
+        // Salvar observer para cleanup
+        (autocompleteElement as any).observer = observer;
+
+        setIsLoaded(true);
+        setIsLoading(false);
+        setError(null);
+
+      } catch (err) {
+        console.error('Erro ao inicializar PlaceAutocompleteElement:', err);
+        setError('Erro ao inicializar autocompletar');
+      }
+    };
 
     const loadGooglePlaces = () => {
       // Verificar se a API já está carregada
-      if (window.google?.maps?.places?.Autocomplete) {
-        console.log('📡 Google Places API já disponível');
+      if (window.google?.maps?.places?.PlaceAutocompleteElement) {
         isInitializedRef.current = true;
         setTimeout(() => {
-          if (mounted) initializeGooglePlaces();
+          if (mounted) initAutocomplete();
         }, 100);
         return;
       }
@@ -290,49 +319,43 @@ export default function GooglePlacesAutocompleteModern({
       // Verificar se script já existe
       const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
       if (existingScript) {
-        console.log('📡 Script do Google Maps existe - aguardando...');
         setIsLoading(true);
-        setApiStatus('Carregando API...');
         
         const checkAPI = setInterval(() => {
-          if (window.google?.maps?.places?.Autocomplete) {
+          if (window.google?.maps?.places?.PlaceAutocompleteElement) {
             clearInterval(checkAPI);
-            console.log('📡 API carregada com sucesso');
             if (mounted) {
               isInitializedRef.current = true;
               setIsLoading(false);
               setTimeout(() => {
-                if (mounted) initializeGooglePlaces();
+                if (mounted) initAutocomplete();
               }, 100);
             }
           }
         }, 500);
-        return;
+        
+        // Cleanup do interval se unmount
+        return () => clearInterval(checkAPI);
       }
 
       // Verificar API key
       if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-        console.error('❌ API key não configurada');
         setError('API key não configurada');
-        setApiStatus('API key não encontrada');
         isInitializedRef.current = true;
-        createFallbackInput();
         return;
       }
 
-      console.log('📡 Carregando script do Google Maps...');
       setIsLoading(true);
-      setApiStatus('Carregando API...');
       
-      const callbackName = `initGooglePlaces_${Date.now()}`;
+      // Criar callback único para esta instância
+      const callbackName = `initGooglePlacesModern_${Date.now()}`;
       
       (window as any)[callbackName] = () => {
-        console.log('✅ Google Maps API carregada via callback');
         if (mounted) {
           isInitializedRef.current = true;
           setIsLoading(false);
           setTimeout(() => {
-            if (mounted) initializeGooglePlaces();
+            if (mounted) initAutocomplete();
           }, 100);
         }
         delete (window as any)[callbackName];
@@ -344,12 +367,10 @@ export default function GooglePlacesAutocompleteModern({
       script.defer = true;
       
       script.onerror = () => {
-        console.error('❌ Erro ao carregar script');
         if (mounted) {
           setError('Erro ao carregar API');
           setIsLoading(false);
           isInitializedRef.current = true;
-          createFallbackInput();
         }
         delete (window as any)[callbackName];
       };
@@ -361,38 +382,73 @@ export default function GooglePlacesAutocompleteModern({
 
     // Timeout de segurança
     const safetyTimeout = setTimeout(() => {
-      if (!inputRef.current && containerRef.current && mounted) {
-        console.log('⏰ Timeout de segurança - criando fallback');
-        createFallbackInput();
+      if (!containerRef.current && mounted) {
+        setError('Timeout ao inicializar');
       }
     }, 10000);
 
     return () => {
       mounted = false;
       clearTimeout(safetyTimeout);
-      if (autocompleteRef.current && window.google?.maps?.event) {
+      if (autocompleteElementRef.current) {
         try {
-          window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+          // Limpar event listeners se necessário
+          autocompleteElementRef.current.removeEventListener('gmp-placeselect', () => {});
+          autocompleteElementRef.current.removeEventListener('input', () => {});
+          autocompleteElementRef.current.removeEventListener('change', () => {});
+          autocompleteElementRef.current.removeEventListener('gmp-placechange', () => {});
+          autocompleteElementRef.current.removeEventListener('click', () => {});
+          autocompleteElementRef.current.removeEventListener('keydown', () => {});
+          
+          // Limpar observer se existir
+          if ((autocompleteElementRef.current as any).observer) {
+            (autocompleteElementRef.current as any).observer.disconnect();
+          }
         } catch (e) {
-          console.log('Erro ao limpar listeners:', e);
+          // Ignorar erro ao limpar listeners
         }
       }
     };
-  }, [initializeGooglePlaces, createFallbackInput]);
+  }, []);
 
   // Sincronizar valor
   useEffect(() => {
-    if (inputRef.current && inputRef.current.value !== value) {
-      console.log('🔄 Sincronizando valor:', value);
-      inputRef.current.value = value || '';
+    if (autocompleteElementRef.current && value !== undefined) {
+      autocompleteElementRef.current.setAttribute('value', value);
     }
   }, [value]);
 
+  // Verificar mudanças no valor periodicamente
+  useEffect(() => {
+    if (!autocompleteElementRef.current) return;
+
+    const checkValue = () => {
+      if (autocompleteElementRef.current) {
+        // Tentar diferentes formas de obter o valor
+        const currentValue = autocompleteElementRef.current.getAttribute('value') || 
+                           autocompleteElementRef.current.value || 
+                           (autocompleteElementRef.current as any).input?.value || '';
+        
+        if (currentValue && currentValue.trim() !== '' && currentValue !== value) {
+          console.log('Valor detectado via polling:', currentValue);
+          onChange(currentValue);
+        }
+      }
+    };
+
+    const interval = setInterval(checkValue, 500);
+    
+    return () => clearInterval(interval);
+  }, [value, onChange]);
+
   return (
-    <div className="relative">
+    <div className={`google-places-container ${className}`}>
       <div 
         ref={containerRef}
-        className={`${className} ${disabled || isLoading ? 'opacity-50 pointer-events-none' : ''}`}
+        className={`
+          w-full
+          ${disabled || isLoading ? 'opacity-50 pointer-events-none' : ''}
+        `}
       />
       
       {isLoading && (
@@ -431,12 +487,6 @@ export default function GooglePlacesAutocompleteModern({
             />
           </svg>
         </div>
-      )}
-
-      {apiStatus && (
-        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-          Status: {apiStatus}
-        </p>
       )}
 
       {error && (

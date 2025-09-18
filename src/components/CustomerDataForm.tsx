@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import GooglePlacesAutocompleteWorking from './GooglePlacesAutocompleteWorking';
-import SimpleAddressInput from './SimpleAddressInput';
+import React from 'react';
+import GooglePlacesAutocompleteRobust from './GooglePlacesAutocompleteRobust';
 import { useCustomerData } from '../hooks/useCustomerData';
 
 interface CustomerDataFormProps {
@@ -11,7 +10,6 @@ interface CustomerDataFormProps {
 
 export default function CustomerDataForm({ className = "" }: CustomerDataFormProps) {
   const { customerData, updateName, updateAddress, updateNumber, updateComplement } = useCustomerData();
-  const [useGooglePlaces, setUseGooglePlaces] = useState(true);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -78,37 +76,15 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
           Endereço Completo
         </label>
         
-        {useGooglePlaces ? (
-          <GooglePlacesAutocompleteWorking
-            value={customerData.address}
-            onChange={updateAddress}
-            placeholder="Digite seu endereço completo"
-          />
-        ) : (
-          <SimpleAddressInput
-            value={customerData.address}
-            onChange={updateAddress}
-            placeholder="Digite seu endereço completo"
-            className="w-full"
-          />
-        )}
+        <GooglePlacesAutocompleteRobust
+          value={customerData.address}
+          onChange={updateAddress}
+          placeholder="Digite seu endereço completo"
+        />
         
-        {/* Botão para alternar entre Google Places e input simples */}
-        <div className="flex items-center justify-between mt-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {useGooglePlaces 
-              ? "💡 Digite o endereço e selecione uma das sugestões que aparecerem"
-              : "📍 Digite seu endereço completo (rua, bairro, cidade)"
-            }
-          </p>
-          <button
-            type="button"
-            onClick={() => setUseGooglePlaces(!useGooglePlaces)}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-          >
-            {useGooglePlaces ? "Usar input simples" : "Usar sugestões do Google"}
-          </button>
-        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          💡 Digite o endereço e selecione uma das sugestões que aparecerem
+        </p>
       </div>
 
       {/* Campos de Número e Complemento */}

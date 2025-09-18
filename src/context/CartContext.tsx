@@ -30,9 +30,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // Verificar se é uma versão compatível e não muito antiga (7 dias)
         const isRecentCart = Date.now() - parsedCart.timestamp < 7 * 24 * 60 * 60 * 1000;
         
-        if (parsedCart.items && isRecentCart) {
-          const cartItems = parsedCart.items.map(CartUtils.serializableToItem);
-          setItems(cartItems);
+        if (parsedCart.items && Array.isArray(parsedCart.items) && isRecentCart) {
+          const cartItems = parsedCart.items
+            .map(item => {
+              try {
+                // Verificar se o item tem a estrutura básica necessária
+                if (!item || typeof item !== 'object') {
+                  throw new Error('Item inválido: não é um objeto');
+                }
+                
+                if (!item.dish || typeof item.dish !== 'object') {
+                  throw new Error('Item inválido: dish não é um objeto válido');
+                }
+                
+                return CartUtils.serializableToItem(item);
+              } catch (itemError) {
+                console.warn('Erro ao converter item do carrinho:', item, itemError);
+                return null;
+              }
+            })
+            .filter(item => item !== null) as CartItem[];
+          
+          // Só definir os itens se pelo menos um item foi convertido com sucesso
+          if (cartItems.length > 0) {
+            setItems(cartItems);
+          } else {
+            // Se nenhum item foi convertido com sucesso, limpar o localStorage
+            localStorage.removeItem(CART_STORAGE_KEY);
+          }
         } else {
           // Limpar carrinho antigo ou incompatível
           localStorage.removeItem(CART_STORAGE_KEY);
@@ -41,7 +66,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.warn('Erro ao carregar carrinho do localStorage:', error);
       // Em caso de erro, limpar localStorage
-      localStorage.removeItem(CART_STORAGE_KEY);
+      try {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      } catch (clearError) {
+        console.warn('Erro ao limpar localStorage:', clearError);
+      }
     } finally {
       setIsInitialized(true);
     }

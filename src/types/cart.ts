@@ -119,13 +119,22 @@ export class CartUtils {
    * Converte formato serializável para CartItem
    */
   static serializableToItem(serializable: SerializableCartItem): CartItem {
+    // Verificação de segurança para evitar erros
+    if (!serializable) {
+      throw new Error('SerializableCartItem é undefined ou null');
+    }
+    
+    if (!serializable.dish) {
+      throw new Error('Dish é undefined ou null no SerializableCartItem');
+    }
+    
     return {
-      id: serializable.id,
+      id: serializable.id || '',
       dish: serializable.dish,
       selectedComplements: this.serializableToMap(serializable.selectedComplements || []),
-      quantity: serializable.quantity,
-      unitPrice: serializable.unitPrice,
-      totalPrice: serializable.totalPrice,
+      quantity: serializable.quantity || 1,
+      unitPrice: serializable.unitPrice || 0,
+      totalPrice: serializable.totalPrice || 0,
     };
   }
 

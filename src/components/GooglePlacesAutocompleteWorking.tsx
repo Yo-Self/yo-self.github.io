@@ -33,71 +33,153 @@ export default function GooglePlacesAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Função para remover elementos problemáticos do Google Places
-  const removeGoogleAttributionElements = useCallback(() => {
-    // Função para remover elementos específicos
-    const removeElements = () => {
-      // Remover elementos de atribuição do Google
-      const attributionSelectors = [
-        'div[style*="position: fixed"][style*="z-index: 2147483647"]',
-        'div[style*="position: fixed"][style*="z-index: 1000000"]',
-        'div[style*="position: fixed"][style*="z-index: 1000001"]',
-        'div[style*="position: fixed"][style*="z-index: 1000002"]',
-        'div[style*="position: fixed"][style*="bottom: 0"]',
-        'div[style*="position: fixed"][style*="right: 0"]',
-        'a[href*="google.com/maps"]',
-        'a[href*="maps.google.com"]',
-        '.gm-style-cc',
-        '.gmnoprint'
-      ];
-
-      attributionSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(element => {
-          if (element instanceof HTMLElement) {
-            element.style.display = 'none';
-            element.style.visibility = 'hidden';
-            element.style.opacity = '0';
-            element.style.height = '0';
-            element.style.width = '0';
-            element.style.overflow = 'hidden';
-          }
-        });
-      });
-
-      // Remover elementos que podem aparecer após o pac-container
-      const pacContainer = document.querySelector('.pac-container');
-      if (pacContainer) {
-        const siblings = pacContainer.parentElement?.children;
-        if (siblings) {
-          Array.from(siblings).forEach(sibling => {
-            if (sibling !== pacContainer && sibling instanceof HTMLElement) {
-              const style = sibling.style;
-              if (style.position === 'fixed' || 
-                  sibling.textContent?.includes('Google') ||
-                  sibling.textContent?.includes('powered by')) {
-                sibling.style.display = 'none';
-                sibling.style.visibility = 'hidden';
-                sibling.style.opacity = '0';
+  // Função para conter elementos "powered by Google" dentro da caixa de entrada
+  const containGoogleAttribution = useCallback(() => {
+    // Função para mover elementos "powered by Google" para dentro do pac-container
+    const containAttributionElements = () => {
+      try {
+        // Encontrar o pac-container
+        const pacContainer = document.querySelector('.pac-container');
+        
+        if (pacContainer) {
+          // Encontrar elementos "powered by Google" que estão fora do pac-container
+          const allElements = document.querySelectorAll('*');
+          allElements.forEach(element => {
+            if (element instanceof HTMLElement) {
+              const text = element.textContent || element.innerText || '';
+              
+              // Se contém "powered by Google" e não está dentro do pac-container
+              if (text.includes('powered by Google') && 
+                  text.length < 100 && 
+                  !pacContainer.contains(element)) {
+                
+                // Mover o elemento para dentro do pac-container
+                try {
+                  pacContainer.appendChild(element);
+                  
+                  // Aplicar estilo discreto
+                  element.style.display = 'block';
+                  element.style.visibility = 'visible';
+                  element.style.opacity = '0.6';
+                  element.style.fontSize = '10px';
+                  element.style.color = '#6b7280';
+                  element.style.textAlign = 'center';
+                  element.style.padding = '4px 8px';
+                  element.style.borderTop = '1px solid #e5e7eb';
+                  element.style.background = '#f9fafb';
+                  element.style.margin = '0';
+                  element.style.position = 'relative';
+                  element.style.left = 'auto';
+                  element.style.top = 'auto';
+                  element.style.height = 'auto';
+                  element.style.width = 'auto';
+                  element.style.overflow = 'visible';
+                  element.style.pointerEvents = 'auto';
+                  element.style.userSelect = 'auto';
+                  element.style.zIndex = 'auto';
+                } catch (e) {
+                  // Se não conseguir mover, pelo menos esconder
+                  element.style.display = 'none';
+                  element.style.visibility = 'hidden';
+                  element.style.opacity = '0';
+                }
+              }
+            }
+          });
+        } else {
+          // Se não há pac-container, esconder elementos soltos
+          const allElements = document.querySelectorAll('*');
+          allElements.forEach(element => {
+            if (element instanceof HTMLElement) {
+              const text = element.textContent || element.innerText || '';
+              if (text.includes('powered by Google') && text.length < 100) {
+                element.style.display = 'none';
+                element.style.visibility = 'hidden';
+                element.style.opacity = '0';
               }
             }
           });
         }
+      } catch (e) {
+        // Ignorar erros
       }
     };
 
     // Executar imediatamente
-    removeElements();
+    containAttributionElements();
 
-    // Executar periodicamente para capturar elementos que aparecem depois
-    const interval = setInterval(removeElements, 100);
+    // MutationObserver para detectar novos elementos
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            const text = node.textContent || node.innerText || '';
+            
+            // Se contém "powered by Google" e não está dentro do pac-container
+            if (text.includes('powered by Google') && text.length < 100) {
+              const pacContainer = document.querySelector('.pac-container');
+              
+              if (pacContainer && !pacContainer.contains(node)) {
+                // Mover para dentro do pac-container
+                try {
+                  pacContainer.appendChild(node);
+                  
+                  // Aplicar estilo discreto
+                  node.style.display = 'block';
+                  node.style.visibility = 'visible';
+                  node.style.opacity = '0.6';
+                  node.style.fontSize = '10px';
+                  node.style.color = '#6b7280';
+                  node.style.textAlign = 'center';
+                  node.style.padding = '4px 8px';
+                  node.style.borderTop = '1px solid #e5e7eb';
+                  node.style.background = '#f9fafb';
+                  node.style.margin = '0';
+                  node.style.position = 'relative';
+                  node.style.left = 'auto';
+                  node.style.top = 'auto';
+                  node.style.height = 'auto';
+                  node.style.width = 'auto';
+                  node.style.overflow = 'visible';
+                  node.style.pointerEvents = 'auto';
+                  node.style.userSelect = 'auto';
+                  node.style.zIndex = 'auto';
+                } catch (e) {
+                  // Se não conseguir mover, esconder
+                  node.style.display = 'none';
+                  node.style.visibility = 'hidden';
+                  node.style.opacity = '0';
+                }
+              }
+            }
+          }
+        });
+      });
+    });
 
-    // Limpar após 10 segundos
+    // Observar mudanças no documento
+    try {
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    } catch (e) {
+      // Ignorar erro de observação
+    }
+
+    // Executar periodicamente
+    const interval = setInterval(containAttributionElements, 500);
+
+    // Limpar após 20 segundos
     setTimeout(() => {
       clearInterval(interval);
-    }, 10000);
+      observer.disconnect();
+    }, 20000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      observer.disconnect();
+    };
   }, []);
 
   // Função para adicionar estilos do Google Places
@@ -123,45 +205,80 @@ export default function GooglePlacesAutocomplete({
           overflow-y: auto !important;
           width: auto !important;
           min-width: 200px !important;
+          /* Garantir que o container fique dentro da área do input */
+          max-width: 100% !important;
+          left: 0 !important;
+          right: 0 !important;
         }
-        /* Esconder elementos de atribuição do Google que podem estar cobrindo a tela */
-        .gm-style-cc,
-        .gmnoprint,
-        .gm-style-iw + div,
-        div[style*="position: fixed"][style*="z-index: 1000"],
-        div[style*="position: fixed"][style*="z-index: 1001"],
-        /* Esconder elementos de atribuição específicos do Google Places */
-        a[href*="google.com/maps"],
-        a[href*="maps.google.com"],
-        div[style*="position: fixed"][style*="bottom: 0"],
-        div[style*="position: fixed"][style*="right: 0"],
-        /* Esconder elementos que podem estar duplicando o "powered by Google" */
-        .pac-container + div,
-        .pac-container ~ div[style*="position: fixed"],
-        /* Esconder TODOS os elementos de atribuição do Google que podem aparecer */
-        div[style*="position: fixed"][style*="z-index: 2147483647"],
-        div[style*="position: fixed"][style*="z-index: 1000000"],
-        div[style*="position: fixed"][style*="z-index: 1000001"],
-        div[style*="position: fixed"][style*="z-index: 1000002"],
-        /* Esconder elementos específicos que podem conter "powered by Google" */
-        div[style*="position: fixed"] a[href*="google.com"],
-        div[style*="position: fixed"] a[href*="maps.google.com"],
-        /* Esconder elementos que podem aparecer após seleção */
-        .pac-container:after,
-        .pac-container:before,
-        /* Esconder elementos de copyright/atribuição */
-        div[style*="font-size: 10px"],
-        div[style*="font-size: 11px"],
-        div[style*="font-size: 12px"][style*="position: fixed"],
-        /* Esconder elementos que podem aparecer no final da lista */
-        .pac-item:last-child + div,
-        .pac-item:last-child ~ div {
+        
+        /* CONTER o elemento "powered by Google" dentro da caixa de entrada */
+        .pac-container * {
+          /* Permitir que elementos dentro do pac-container sejam visíveis */
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          position: relative !important;
+          left: auto !important;
+          top: auto !important;
+          height: auto !important;
+          width: auto !important;
+          overflow: visible !important;
+          pointer-events: auto !important;
+          user-select: auto !important;
+          z-index: auto !important;
+        }
+        
+        /* Especificamente para elementos "powered by Google" dentro do pac-container */
+        .pac-container div:contains("powered by Google"),
+        .pac-container span:contains("powered by Google"),
+        .pac-container a:contains("powered by Google") {
+          /* Manter dentro do container, mas com estilo discreto */
+          display: block !important;
+          visibility: visible !important;
+          opacity: 0.6 !important;
+          font-size: 10px !important;
+          color: #6b7280 !important;
+          text-align: center !important;
+          padding: 4px 8px !important;
+          border-top: 1px solid #e5e7eb !important;
+          background: #f9fafb !important;
+          margin: 0 !important;
+          position: relative !important;
+          left: auto !important;
+          top: auto !important;
+          height: auto !important;
+          width: auto !important;
+          overflow: visible !important;
+          pointer-events: auto !important;
+          user-select: auto !important;
+          z-index: auto !important;
+        }
+        
+        /* Esconder TODOS os elementos "powered by Google" que estão FORA do pac-container */
+        div:not(.pac-container) *:contains("powered by Google"),
+        span:not(.pac-container) *:contains("powered by Google"),
+        a:not(.pac-container) *:contains("powered by Google"),
+        /* Elementos com z-index alto que estão fora do pac-container */
+        div[style*="position: fixed"][style*="z-index: 2147483647"]:not(.pac-container),
+        div[style*="position: fixed"][style*="z-index: 1000000"]:not(.pac-container),
+        div[style*="position: fixed"][style*="z-index: 1000001"]:not(.pac-container),
+        /* Links específicos do Google Maps fora do pac-container */
+        a[href*="google.com/maps"]:not(.pac-container),
+        a[href*="maps.google.com"]:not(.pac-container),
+        /* Classes específicas do Google Maps fora do pac-container */
+        .gm-style-cc:not(.pac-container),
+        .gmnoprint:not(.pac-container) {
           display: none !important;
           visibility: hidden !important;
           opacity: 0 !important;
           height: 0 !important;
           width: 0 !important;
           overflow: hidden !important;
+          position: absolute !important;
+          left: -9999px !important;
+          top: -9999px !important;
+          pointer-events: none !important;
+          user-select: none !important;
         }
         .pac-item {
           padding: 12px 16px !important;
@@ -224,6 +341,7 @@ export default function GooglePlacesAutocomplete({
   }, []);
 
 
+
   useEffect(() => {
     // Prevenir execução dupla em StrictMode
     if (isInitializedRef.current) {
@@ -278,7 +396,7 @@ export default function GooglePlacesAutocomplete({
             
             // Remover elementos problemáticos após seleção
             setTimeout(() => {
-              removeGoogleAttributionElements();
+              containGoogleAttribution();
             }, 500);
             
             // Resetar flag após um tempo
@@ -298,7 +416,7 @@ export default function GooglePlacesAutocomplete({
             
             // Remover elementos problemáticos após seleção
             setTimeout(() => {
-              removeGoogleAttributionElements();
+              containGoogleAttribution();
             }, 500);
             
             // Resetar flag após um tempo
@@ -409,7 +527,7 @@ export default function GooglePlacesAutocomplete({
         setError(null);
 
         // Remover elementos problemáticos do Google Places
-        removeGoogleAttributionElements();
+        containGoogleAttribution();
 
       } catch (err) {
         setError('Erro ao inicializar autocompletar');
@@ -514,6 +632,7 @@ export default function GooglePlacesAutocomplete({
           if ((autocompleteRef.current as any).cleanupInputListeners) {
             (autocompleteRef.current as any).cleanupInputListeners();
           }
+          
         } catch (e) {
           // Ignorar erro ao limpar listeners
         }

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 
-interface GooglePlacesAutocompleteRobustProps {
+interface GooglePlacesAutocompleteSimpleProps {
   value: string;
   onChange: (address: string) => void;
   placeholder?: string;
@@ -10,13 +10,13 @@ interface GooglePlacesAutocompleteRobustProps {
   disabled?: boolean;
 }
 
-export default function GooglePlacesAutocompleteRobust({
+export default function GooglePlacesAutocompleteSimple({
   value,
   onChange,
   placeholder = "Digite seu endereço completo",
   className = "",
   disabled = false
-}: GooglePlacesAutocompleteRobustProps) {
+}: GooglePlacesAutocompleteSimpleProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -26,13 +26,11 @@ export default function GooglePlacesAutocompleteRobust({
   const loadGoogleMapsScript = useCallback(() => {
     if (typeof document === 'undefined') return;
 
-    // Check if the script is already loaded and places library is available
+    // Check if the script is already loaded
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
-      if (typeof (window as any).google !== 'undefined' && 
-          (window as any).google.maps && 
-          (window as any).google.maps.places && 
-          (window as any).google.maps.places.Autocomplete) {
-        console.log('Google Maps Places já está carregado');
+      // Check if google is available
+      if (typeof (window as any).google !== 'undefined' && (window as any).google.maps) {
+        console.log('Google Maps já está carregado');
         setIsLoaded(true);
         return;
       }
@@ -46,14 +44,8 @@ export default function GooglePlacesAutocompleteRobust({
     setIsLoading(true);
     console.log('Carregando Google Maps API...');
 
-    // Remove any existing script to avoid conflicts
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-    if (existingScript) {
-      existingScript.remove();
-    }
-
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
     script.async = true;
     script.defer = true;
 
@@ -82,7 +74,7 @@ export default function GooglePlacesAutocompleteRobust({
 
       // Se não estiver disponível, aguardar e tentar novamente
       let attempts = 0;
-      const maxAttempts = 100; // 10 segundos máximo
+      const maxAttempts = 50; // 5 segundos máximo
       
       const checkInterval = setInterval(() => {
         attempts++;
@@ -222,7 +214,10 @@ export default function GooglePlacesAutocompleteRobust({
         placeholder={placeholder}
         disabled={disabled || isLoading}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          console.log('Input onChange:', e.target.value);
+          onChange(e.target.value);
+        }}
         className={`
           w-full px-4 py-3 
           border border-gray-300 dark:border-gray-600 
