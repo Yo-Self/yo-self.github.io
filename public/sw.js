@@ -149,6 +149,11 @@ self.addEventListener('fetch', (event) => {
           .catch((error) => {
             console.log('SW: Network failed, trying stale cache:', event.request.url);
             
+            // Salvar restaurante atual antes de ir offline
+            if (event.request.mode === 'navigate') {
+              saveCurrentRestaurant(event.request);
+            }
+            
             // Se a rede falhou, tentar usar cache stale como fallback
             if (response) {
               console.log('SW: Using stale cache as fallback:', event.request.url);
@@ -201,6 +206,40 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
+
+// Function to save current restaurant before going offline
+function saveCurrentRestaurant(request) {
+  try {
+    const url = new URL(request.url);
+    const restaurantMatch = url.pathname.match(/\/restaurant\/([^\/]+)/);
+    
+    if (restaurantMatch) {
+      const restaurantSlug = restaurantMatch[1];
+      const restaurantName = restaurantSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      const offlineState = {
+        isOffline: true,
+        lastRestaurantUrl: url.pathname,
+        lastRestaurantName: restaurantName,
+        timestamp: Date.now()
+      };
+      
+      // Store in IndexedDB or localStorage via postMessage
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SAVE_OFFLINE_STATE',
+            data: offlineState
+          });
+        });
+      });
+      
+      console.log('SW: Saved restaurant for offline:', restaurantName);
+    }
+  } catch (error) {
+    console.log('SW: Error saving restaurant:', error);
+  }
+}
 
 // Function to detect and clear corrupted cache
 async function detectAndClearCorruptedCache() {
