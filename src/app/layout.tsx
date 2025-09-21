@@ -8,6 +8,7 @@ import { PostHogProvider } from "@/components/PostHogProvider";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
 import { CartProvider } from "@/context/CartContext";
 import { CustomerDataProvider } from "@/contexts/CustomerDataContext";
+import { CustomerCoordinatesProvider } from "@/contexts/CustomerCoordinatesContext";
 import Analytics from "@/components/Analytics";
 import PageViewTracker from "@/components/PageViewTracker";
 import SessionTracker from "@/components/SessionTracker";
@@ -117,20 +118,22 @@ export default function RootLayout({
               <AccessibilityProvider>
                 <CartProvider>
                   <CustomerDataProvider>
-                    <ThemeScript />
-                    <PageViewTracker />
-                    <SessionTracker />
-                    <Navigation />
-                    {children}
-                    {/* Componentes globais do carrinho */}
-                    <CartModal />
-                    <InstallPrompt />
-                    <SafariInstallPrompt />
-                    <UpdatePrompt />
-                    <DynamicMetaTags />
-                    <StartupRedirect />
-                    <A2HSUrlTagger />
-                    <DynamicManifestUpdater />
+                    <CustomerCoordinatesProvider>
+                      <ThemeScript />
+                      <PageViewTracker />
+                      <SessionTracker />
+                      <Navigation />
+                      {children}
+                      {/* Componentes globais do carrinho */}
+                      <CartModal />
+                      <InstallPrompt />
+                      <SafariInstallPrompt />
+                      <UpdatePrompt />
+                      <DynamicMetaTags />
+                      <StartupRedirect />
+                      <A2HSUrlTagger />
+                      <DynamicManifestUpdater />
+                    </CustomerCoordinatesProvider>
                   </CustomerDataProvider>
                 </CartProvider>
               </AccessibilityProvider>
