@@ -4,6 +4,9 @@ import React from 'react';
 import { useCart } from '../hooks/useCart';
 import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { useCustomerData } from '../hooks/useCustomerData';
+import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
+import { useRestaurantCoordinates } from '../hooks/useRestaurantCoordinates';
+import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { CartUtils } from '../types/cart';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
@@ -23,6 +26,8 @@ export default function CartWhatsAppButton({
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty } = useCart();
   const { config, isLoading } = useWhatsAppConfig(restaurantId);
   const { customerData, isCustomerDataComplete } = useCustomerData();
+  const { customerCoordinates } = useCustomerCoordinates();
+  const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
 
   // Não renderizar se carrinho estiver vazio
   if (isEmpty) {
@@ -65,8 +70,11 @@ export default function CartWhatsAppButton({
   const generateCartWhatsAppMessage = () => {
     let message = `🛒 *PEDIDO COMPLETO*\n\n`;
     
-    // DEBUG: Verificar dados do cliente
-    // Debug logs removidos para produção
+    // Calcular distância de entrega se coordenadas estiverem disponíveis
+    const deliveryDistance = calculateDeliveryDistance(
+      restaurantCoordinates,
+      customerCoordinates.coordinates
+    );
     
     // Dados do cliente
     const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim();
@@ -77,14 +85,24 @@ export default function CartWhatsAppButton({
         message += `• *Nome:* ${customerData.name}\n`;
       }
       if (customerData.address?.trim()) {
-        message += `• *Endereço:* ${customerData.address}\n`;
+        message += `• *Endereço:* ${customerData.address}`;
+        if (customerData.number?.trim()) {
+          message += `, ${customerData.number}`;
+        }
+        if (customerData.complement?.trim()) {
+          message += ` - ${customerData.complement}`;
+        }
+        message += `\n`;
       }
-      if (customerData.number?.trim()) {
+      if (customerData.number?.trim() && !customerData.address?.trim()) {
         message += `• *Número:* ${customerData.number}\n`;
       }
-      if (customerData.complement?.trim()) {
-        message += `• *Complemento:* ${customerData.complement}\n`;
+      
+      // Adicionar distância de entrega se calculada
+      if (deliveryDistance) {
+        message += `• *Distância de Entrega:* ${deliveryDistance.formattedDistance}\n`;
       }
+      
       message += `\n`;
     }
     
@@ -307,11 +325,19 @@ export function useCartWhatsAppMessage(restaurantId: string = "default") {
   const { items, formattedTotalPrice } = useCart();
   const { config } = useWhatsAppConfig(restaurantId);
   const { customerData } = useCustomerData();
+  const { customerCoordinates } = useCustomerCoordinates();
+  const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
 
   const generateMessage = React.useCallback(() => {
     if (items.length === 0) return '';
 
     let message = `🛒 *PEDIDO COMPLETO*\n\n`;
+    
+    // Calcular distância de entrega se coordenadas estiverem disponíveis
+    const deliveryDistance = calculateDeliveryDistance(
+      restaurantCoordinates,
+      customerCoordinates.coordinates
+    );
     
     // Dados do cliente (com safe check)
     const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim();
@@ -334,6 +360,12 @@ export function useCartWhatsAppMessage(restaurantId: string = "default") {
       if (customerData.number?.trim() && !customerData.address?.trim()) {
         message += `• *Número:* ${customerData.number}\n`;
       }
+      
+      // Adicionar distância de entrega se calculada
+      if (deliveryDistance) {
+        message += `• *Distância de Entrega:* ${deliveryDistance.formattedDistance}\n`;
+      }
+      
       message += `\n`;
     }
     
@@ -361,7 +393,7 @@ export function useCartWhatsAppMessage(restaurantId: string = "default") {
     message += config.customMessage || 'Olá! Gostaria de fazer este pedido completo.';
 
     return message;
-  }, [items, formattedTotalPrice, config.customMessage, customerData]);
+  }, [items, formattedTotalPrice, config.customMessage, customerData, customerCoordinates.coordinates, restaurantCoordinates]);
 
   return { generateMessage };
 }

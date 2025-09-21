@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 interface GooglePlacesAutocompleteRobustProps {
   value: string;
   onChange: (address: string) => void;
+  onCoordinatesChange?: (coordinates: { latitude: number; longitude: number } | null) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
@@ -13,6 +14,7 @@ interface GooglePlacesAutocompleteRobustProps {
 export default function GooglePlacesAutocompleteRobust({
   value,
   onChange,
+  onCoordinatesChange,
   placeholder = "Digite seu endereço completo",
   className = "",
   disabled = false
@@ -129,7 +131,7 @@ export default function GooglePlacesAutocompleteRobust({
         const autocomplete = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
           types: ['address'],
           componentRestrictions: { country: 'br' },
-          fields: ['formatted_address', 'address_components', 'place_id']
+          fields: ['formatted_address', 'address_components', 'place_id', 'geometry']
         });
 
         autocompleteRef.current = autocomplete;
@@ -142,6 +144,19 @@ export default function GooglePlacesAutocompleteRobust({
           if (place.formatted_address) {
             console.log('Endereço selecionado:', place.formatted_address);
             onChange(place.formatted_address);
+            
+            // Capturar coordenadas se disponíveis
+            if (place.geometry && place.geometry.location) {
+              const coordinates = {
+                latitude: place.geometry.location.lat(),
+                longitude: place.geometry.location.lng()
+              };
+              console.log('Coordenadas capturadas:', coordinates);
+              onCoordinatesChange?.(coordinates);
+            } else {
+              console.log('Coordenadas não disponíveis para este endereço');
+              onCoordinatesChange?.(null);
+            }
           }
         });
 
@@ -197,7 +212,7 @@ export default function GooglePlacesAutocompleteRobust({
         autocompleteRef.current = null;
       }
     };
-  }, [isLoaded, onChange]);
+  }, [isLoaded, onChange, onCoordinatesChange]);
 
   // Sincronizar valor
   useEffect(() => {

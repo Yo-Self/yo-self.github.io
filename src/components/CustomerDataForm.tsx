@@ -3,6 +3,7 @@
 import React from 'react';
 import GooglePlacesAutocompleteRobust from './GooglePlacesAutocompleteRobust';
 import { useCustomerData } from '../hooks/useCustomerData';
+import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 
 interface CustomerDataFormProps {
   className?: string;
@@ -10,6 +11,7 @@ interface CustomerDataFormProps {
 
 export default function CustomerDataForm({ className = "" }: CustomerDataFormProps) {
   const { customerData, updateName, updateAddress, updateNumber, updateComplement } = useCustomerData();
+  const { updateCoordinates } = useCustomerCoordinates();
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -79,6 +81,13 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
         <GooglePlacesAutocompleteRobust
           value={customerData.address}
           onChange={updateAddress}
+          onCoordinatesChange={(coordinates) => {
+            if (coordinates) {
+              updateCoordinates(coordinates, customerData.address);
+            } else {
+              updateCoordinates(null, customerData.address);
+            }
+          }}
           placeholder="Digite seu endereço completo"
         />
         
