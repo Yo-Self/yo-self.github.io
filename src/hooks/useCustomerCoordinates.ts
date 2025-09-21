@@ -42,10 +42,11 @@ export function useCustomerCoordinates() {
   }, []);
 
   const updateCoordinates = useCallback((coordinates: Coordinates | null, address: string) => {
-    console.log('Atualizando coordenadas do cliente:', { coordinates, address });
+    console.log('🔄 Atualizando coordenadas do cliente:', { coordinates, address });
     const newData = { coordinates, address };
     setCustomerCoordinates(newData);
     saveToStorage(newData);
+    console.log('✅ Coordenadas atualizadas e salvas:', newData);
   }, [saveToStorage]);
 
   const clearCoordinates = useCallback(() => {

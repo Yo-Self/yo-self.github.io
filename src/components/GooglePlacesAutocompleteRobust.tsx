@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 interface GooglePlacesAutocompleteRobustProps {
   value: string;
   onChange: (address: string) => void;
-  onCoordinatesChange?: (coordinates: { latitude: number; longitude: number } | null) => void;
+  onCoordinatesChange?: (coordinates: { latitude: number; longitude: number } | null, address?: string) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
@@ -148,29 +148,30 @@ export default function GooglePlacesAutocompleteRobust({
 
       autocompleteRef.current = autocomplete;
 
-      // Event listener para quando um lugar é selecionado
-      const listener = autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        console.log('Place selecionado:', place);
-        
-        if (place.formatted_address) {
-          console.log('Endereço selecionado:', place.formatted_address);
-          onChange(place.formatted_address);
+        // Event listener para quando um lugar é selecionado
+        const listener = autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          console.log('Place selecionado:', place);
           
-          // Capturar coordenadas se disponíveis
-          if (place.geometry && place.geometry.location) {
-            const coordinates = {
-              latitude: place.geometry.location.lat(),
-              longitude: place.geometry.location.lng()
-            };
-            console.log('Coordenadas capturadas:', coordinates);
-            onCoordinatesChange?.(coordinates);
-          } else {
-            console.log('Coordenadas não disponíveis para este endereço');
-            onCoordinatesChange?.(null);
+          if (place.formatted_address) {
+            console.log('Endereço selecionado:', place.formatted_address);
+            onChange(place.formatted_address);
+            
+            // Capturar coordenadas se disponíveis
+            if (place.geometry && place.geometry.location) {
+              const coordinates = {
+                latitude: place.geometry.location.lat(),
+                longitude: place.geometry.location.lng()
+              };
+              console.log('Coordenadas capturadas:', coordinates);
+              // Passar coordenadas com o endereço correto
+              onCoordinatesChange?.(coordinates, place.formatted_address);
+            } else {
+              console.log('Coordenadas não disponíveis para este endereço');
+              onCoordinatesChange?.(null);
+            }
           }
-        }
-      });
+        });
 
       // Salvar listener para cleanup
       (autocomplete as any).listener = listener;

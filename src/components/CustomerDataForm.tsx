@@ -87,9 +87,11 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
               updateCoordinates(null, '');
             }
           }}
-          onCoordinatesChange={(coordinates) => {
-            console.log('Coordenadas recebidas no CustomerDataForm:', coordinates);
-            updateCoordinates(coordinates, customerData.address);
+          onCoordinatesChange={(coordinates, address) => {
+            console.log('Coordenadas recebidas no CustomerDataForm:', coordinates, 'Endereço:', address);
+            // Usar o endereço passado pelo Google Places (mais confiável)
+            const addressToUse = address || customerData.address || '';
+            updateCoordinates(coordinates, addressToUse);
           }}
           placeholder="Digite seu endereço completo"
         />
