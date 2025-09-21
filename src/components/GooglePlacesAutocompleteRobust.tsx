@@ -11,6 +11,10 @@ interface GooglePlacesAutocompleteRobustProps {
   disabled?: boolean;
 }
 
+// Variável global para controlar o carregamento da API
+let isGoogleMapsLoading = false;
+let googleMapsLoadPromise: Promise<void> | null = null;
+
 export default function GooglePlacesAutocompleteRobust({
   value,
   onChange,
@@ -21,198 +25,223 @@ export default function GooglePlacesAutocompleteRobust({
 }: GooglePlacesAutocompleteRobustProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
+  const isInitializedRef = useRef(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadGoogleMapsScript = useCallback(() => {
+  const loadGoogleMapsScript = useCallback(async (): Promise<void> => {
     if (typeof document === 'undefined') return;
 
-    // Check if the script is already loaded and places library is available
-    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
-      if (typeof (window as any).google !== 'undefined' && 
-          (window as any).google.maps && 
-          (window as any).google.maps.places && 
-          (window as any).google.maps.places.Autocomplete) {
-        console.log('Google Maps Places já está carregado');
-        setIsLoaded(true);
-        return;
-      }
+    // Se já está carregando, aguardar a promise existente
+    if (isGoogleMapsLoading && googleMapsLoadPromise) {
+      return googleMapsLoadPromise;
+    }
+
+    // Se já está carregado, retornar imediatamente
+    if (typeof (window as any).google !== 'undefined' && 
+        (window as any).google.maps && 
+        (window as any).google.maps.places && 
+        (window as any).google.maps.places.Autocomplete) {
+      console.log('Google Maps Places já está carregado');
+      setIsLoaded(true);
+      return Promise.resolve();
     }
 
     if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
       setError('API key não configurada');
-      return;
+      return Promise.resolve();
     }
 
+    // Verificar se script já existe
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (existingScript) {
+      // Aguardar o script existente carregar
+      return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+          if (typeof (window as any).google !== 'undefined' && 
+              (window as any).google.maps && 
+              (window as any).google.maps.places && 
+              (window as any).google.maps.places.Autocomplete) {
+            clearInterval(checkInterval);
+            console.log('Google Maps Places carregado via script existente');
+            setIsLoaded(true);
+            resolve();
+          }
+        }, 100);
+        
+        // Timeout de 10 segundos
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          setError('Timeout ao carregar Google Maps');
+          resolve();
+        }, 10000);
+      });
+    }
+
+    // Marcar como carregando e criar promise
+    isGoogleMapsLoading = true;
     setIsLoading(true);
     console.log('Carregando Google Maps API...');
 
-    // Remove any existing script to avoid conflicts
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-    if (existingScript) {
-      existingScript.remove();
-    }
+    googleMapsLoadPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
 
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      console.log('Script do Google Maps carregado');
-      
-      // Função para verificar se a biblioteca places está disponível
-      const checkPlacesLibrary = () => {
-        if (typeof (window as any).google !== 'undefined' && 
-            (window as any).google.maps && 
-            (window as any).google.maps.places && 
-            (window as any).google.maps.places.Autocomplete) {
-          console.log('Google Maps Places API disponível');
-          setIsLoaded(true);
-          setIsLoading(false);
-          setError(null);
-          return true;
-        }
-        return false;
+      script.onload = () => {
+        console.log('Script do Google Maps carregado');
+        setIsLoading(false);
+        setIsLoaded(true);
+        isGoogleMapsLoading = false;
+        resolve();
       };
 
-      // Tentar verificar imediatamente
-      if (checkPlacesLibrary()) {
-        return;
-      }
+      script.onerror = () => {
+        console.error('Erro ao carregar Google Maps');
+        setIsLoading(false);
+        setError('Erro ao carregar Google Maps');
+        isGoogleMapsLoading = false;
+        reject(new Error('Failed to load Google Maps'));
+      };
 
-      // Se não estiver disponível, aguardar e tentar novamente
-      let attempts = 0;
-      const maxAttempts = 100; // 10 segundos máximo
-      
-      const checkInterval = setInterval(() => {
-        attempts++;
-        
-        if (checkPlacesLibrary()) {
-          clearInterval(checkInterval);
-        } else if (attempts >= maxAttempts) {
-          console.error('Google Maps Places API não está disponível após carregamento');
-          setError('Erro ao carregar biblioteca Places do Google Maps');
-          setIsLoading(false);
-          clearInterval(checkInterval);
-        }
-      }, 100);
-    };
+      document.head.appendChild(script);
+    });
 
-    script.onerror = () => {
-      console.error('Erro ao carregar script do Google Maps');
-      setError('Erro ao carregar API do Google Maps.');
-      setIsLoading(false);
-    };
-
-    document.head.appendChild(script);
+    return googleMapsLoadPromise;
   }, []);
 
+  const initializeAutocomplete = useCallback(() => {
+    if (!inputRef.current || isInitializedRef.current) {
+      return;
+    }
+
+    // Verificar se google.maps.places está disponível
+    if (typeof (window as any).google === 'undefined' || 
+        !(window as any).google.maps || 
+        !(window as any).google.maps.places || 
+        !(window as any).google.maps.places.Autocomplete) {
+      console.log('Google Maps Places ainda não está disponível, aguardando...');
+      return;
+    }
+
+    try {
+      console.log('Inicializando Google Places Autocomplete...');
+      
+      // Limpar autocomplete anterior se existir
+      if (autocompleteRef.current) {
+        try {
+          (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        } catch (e) {
+          // Ignorar erro ao limpar listeners
+        }
+        autocompleteRef.current = null;
+      }
+      
+      // Criar o autocomplete
+      const autocomplete = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
+        types: ['address'],
+        componentRestrictions: { country: 'br' },
+        fields: ['formatted_address', 'address_components', 'place_id', 'geometry']
+      });
+
+      autocompleteRef.current = autocomplete;
+
+      // Event listener para quando um lugar é selecionado
+      const listener = autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        console.log('Place selecionado:', place);
+        
+        if (place.formatted_address) {
+          console.log('Endereço selecionado:', place.formatted_address);
+          onChange(place.formatted_address);
+          
+          // Capturar coordenadas se disponíveis
+          if (place.geometry && place.geometry.location) {
+            const coordinates = {
+              latitude: place.geometry.location.lat(),
+              longitude: place.geometry.location.lng()
+            };
+            console.log('Coordenadas capturadas:', coordinates);
+            onCoordinatesChange?.(coordinates);
+          } else {
+            console.log('Coordenadas não disponíveis para este endereço');
+            onCoordinatesChange?.(null);
+          }
+        }
+      });
+
+      // Salvar listener para cleanup
+      (autocomplete as any).listener = listener;
+
+      // Adicionar estilos para esconder o "powered by Google"
+      const style = document.createElement('style');
+      style.id = 'google-places-attribution-hide';
+      style.textContent = `
+        .pac-container {
+          z-index: 999999 !important;
+        }
+        .pac-container:after {
+          display: none !important;
+        }
+        .pac-container .pac-item {
+          padding: 8px 12px !important;
+          border-bottom: 1px solid #e5e7eb !important;
+          cursor: pointer !important;
+        }
+        .pac-container .pac-item:hover {
+          background-color: #f3f4f6 !important;
+        }
+        .pac-container .pac-item-selected {
+          background-color: #3b82f6 !important;
+          color: white !important;
+        }
+        .pac-container .pac-item-selected:hover {
+          background-color: #2563eb !important;
+        }
+      `;
+      document.head.appendChild(style);
+
+      isInitializedRef.current = true;
+      console.log('Google Places Autocomplete inicializado com sucesso');
+    } catch (err) {
+      console.error('Erro ao inicializar Google Places Autocomplete:', err);
+      setError('Erro ao carregar autocompletar de endereços');
+    }
+  }, [onChange, onCoordinatesChange]);
+
+  // Carregar Google Maps API
   useEffect(() => {
     loadGoogleMapsScript();
   }, [loadGoogleMapsScript]);
 
+  // Inicializar autocomplete quando API estiver carregada
   useEffect(() => {
-    if (inputRef.current && isLoaded && !autocompleteRef.current) {
-      // Verificar se google.maps.places está disponível
-      if (typeof (window as any).google === 'undefined' || 
-          !(window as any).google.maps || 
-          !(window as any).google.maps.places || 
-          !(window as any).google.maps.places.Autocomplete) {
-        console.log('Google Maps Places ainda não está disponível, aguardando...');
-        return;
-      }
-
-      try {
-        console.log('Inicializando Google Places Autocomplete...');
-        
-        // Criar o autocomplete
-        const autocomplete = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-          types: ['address'],
-          componentRestrictions: { country: 'br' },
-          fields: ['formatted_address', 'address_components', 'place_id', 'geometry']
-        });
-
-        autocompleteRef.current = autocomplete;
-
-        // Event listener para quando um lugar é selecionado
-        const listener = autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          console.log('Place selecionado:', place);
-          
-          if (place.formatted_address) {
-            console.log('Endereço selecionado:', place.formatted_address);
-            onChange(place.formatted_address);
-            
-            // Capturar coordenadas se disponíveis
-            if (place.geometry && place.geometry.location) {
-              const coordinates = {
-                latitude: place.geometry.location.lat(),
-                longitude: place.geometry.location.lng()
-              };
-              console.log('Coordenadas capturadas:', coordinates);
-              onCoordinatesChange?.(coordinates);
-            } else {
-              console.log('Coordenadas não disponíveis para este endereço');
-              onCoordinatesChange?.(null);
-            }
-          }
-        });
-
-        // Salvar listener para cleanup
-        (autocomplete as any).listener = listener;
-
-        // Adicionar estilos para esconder o "powered by Google"
-        const style = document.createElement('style');
-        style.id = 'google-places-attribution-hide';
-        style.textContent = `
-          .pac-container {
-            z-index: 999999 !important;
-          }
-          .pac-container:after {
-            display: none !important;
-          }
-          .pac-container .pac-item {
-            padding: 8px 12px !important;
-            border-bottom: 1px solid #e5e7eb !important;
-            cursor: pointer !important;
-          }
-          .pac-container .pac-item:hover {
-            background-color: #f3f4f6 !important;
-          }
-          .pac-container .pac-item-selected {
-            background-color: #3b82f6 !important;
-            color: white !important;
-          }
-          .pac-container .pac-item-selected:hover {
-            background-color: #2563eb !important;
-          }
-        `;
-        document.head.appendChild(style);
-
-        console.log('Google Places Autocomplete inicializado com sucesso');
-
-      } catch (err) {
-        console.error('Erro ao inicializar Autocomplete:', err);
-        setError('Erro ao inicializar autocompletar');
-      }
+    if (isLoaded && !isInitializedRef.current) {
+      // Aguardar um pouco para garantir que o DOM está pronto
+      const timer = setTimeout(() => {
+        initializeAutocomplete();
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
+  }, [isLoaded, initializeAutocomplete]);
 
+  // Cleanup
+  useEffect(() => {
     return () => {
       if (autocompleteRef.current) {
         try {
-          // Limpar listener
-          if ((autocompleteRef.current as any).listener) {
-            (window as any).google.maps.event.removeListener((autocompleteRef.current as any).listener);
-          }
+          (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
         } catch (e) {
           // Ignorar erro ao limpar
         }
         autocompleteRef.current = null;
       }
+      isInitializedRef.current = false;
     };
-  }, [isLoaded, onChange, onCoordinatesChange]);
+  }, []);
 
   // Sincronizar valor
   useEffect(() => {
@@ -247,13 +276,13 @@ export default function GooglePlacesAutocompleteRobust({
           placeholder-gray-500 dark:placeholder-gray-400
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           transition-colors duration-200
-          ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : ''}
           ${className}
         `}
       />
+      
       {isLoading && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
         </div>
       )}
     </div>

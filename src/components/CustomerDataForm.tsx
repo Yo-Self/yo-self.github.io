@@ -80,13 +80,16 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
         
         <GooglePlacesAutocompleteRobust
           value={customerData.address}
-          onChange={updateAddress}
-          onCoordinatesChange={(coordinates) => {
-            if (coordinates) {
-              updateCoordinates(coordinates, customerData.address);
-            } else {
-              updateCoordinates(null, customerData.address);
+          onChange={(address) => {
+            updateAddress(address);
+            // Se o endereço foi limpo, limpar também as coordenadas
+            if (!address.trim()) {
+              updateCoordinates(null, '');
             }
+          }}
+          onCoordinatesChange={(coordinates) => {
+            console.log('Coordenadas recebidas no CustomerDataForm:', coordinates);
+            updateCoordinates(coordinates, customerData.address);
           }}
           placeholder="Digite seu endereço completo"
         />

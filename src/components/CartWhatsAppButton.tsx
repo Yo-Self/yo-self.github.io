@@ -70,11 +70,17 @@ export default function CartWhatsAppButton({
   const generateCartWhatsAppMessage = () => {
     let message = `🛒 *PEDIDO COMPLETO*\n\n`;
     
+    // Debug: Log das coordenadas disponíveis
+    console.log('🔍 Debug - Coordenadas do restaurante:', restaurantCoordinates);
+    console.log('🔍 Debug - Coordenadas do cliente:', customerCoordinates);
+    
     // Calcular distância de entrega se coordenadas estiverem disponíveis
     const deliveryDistance = calculateDeliveryDistance(
       restaurantCoordinates,
       customerCoordinates.coordinates
     );
+    
+    console.log('🔍 Debug - Distância calculada:', deliveryDistance);
     
     // Dados do cliente
     const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim();

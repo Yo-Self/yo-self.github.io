@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Coordinates } from '../utils/distanceCalculator';
 
 interface CustomerCoordinates {
@@ -15,7 +15,9 @@ export function useCustomerCoordinates() {
       try {
         const stored = localStorage.getItem(CUSTOMER_COORDINATES_STORAGE_KEY);
         if (stored) {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          console.log('Coordenadas do cliente carregadas do localStorage:', parsed);
+          return parsed;
         }
       } catch (error) {
         console.warn('Erro ao carregar coordenadas do cliente:', error);
@@ -32,6 +34,7 @@ export function useCustomerCoordinates() {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(CUSTOMER_COORDINATES_STORAGE_KEY, JSON.stringify(data));
+        console.log('Coordenadas do cliente salvas no localStorage:', data);
       } catch (error) {
         console.warn('Erro ao salvar coordenadas do cliente:', error);
       }
@@ -39,16 +42,23 @@ export function useCustomerCoordinates() {
   }, []);
 
   const updateCoordinates = useCallback((coordinates: Coordinates | null, address: string) => {
+    console.log('Atualizando coordenadas do cliente:', { coordinates, address });
     const newData = { coordinates, address };
     setCustomerCoordinates(newData);
     saveToStorage(newData);
   }, [saveToStorage]);
 
   const clearCoordinates = useCallback(() => {
+    console.log('Limpando coordenadas do cliente');
     const emptyData = { coordinates: null, address: '' };
     setCustomerCoordinates(emptyData);
     saveToStorage(emptyData);
   }, [saveToStorage]);
+
+  // Debug: Log quando coordenadas mudarem
+  useEffect(() => {
+    console.log('Estado atual das coordenadas do cliente:', customerCoordinates);
+  }, [customerCoordinates]);
 
   return {
     customerCoordinates,
