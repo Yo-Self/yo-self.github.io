@@ -1,83 +1,35 @@
 # AI Coding Assistant Instructions
 
-This is a Next.js 14 digital menu application for restaurants with AI chatbot integration using Google Gemma 3 SuperTo.
+## Quick snapshot
+- Next.js 14 App Router project exported statically for GitHub Pages; see `next.config.js` for the `output: 'export'`, Webpack fallbacks, and unoptimized images requirement.
+- Runtime is largely client-side: `src/app/layout.tsx` wraps children with `PostHogProvider`, `AccessibilityProvider`, `CartProvider`, `ThemeScript`, and global modals.
+- Supabase is the menu source of truth; `src/hooks/useRestaurantBySlug.ts` stitches restaurants, categories, dishes, complement groups, and complements into the `Restaurant` interface from `src/components/data/index.ts` while formatting Brazilian price strings.
 
-## Core Architecture
+## Data + AI flow
+- Restaurant routes (`src/app/restaurant/[slug]/`) fetch on the client through `useRestaurantBySlug`; the hook chunks Supabase queries to dodge URL length limits and tolerates missing credentials by surfacing friendly errors.
+- Cart state lives in `src/context/CartContext.tsx` with 7-day localStorage persistence, deterministic IDs via `CartUtils`, and analytics hooks—reuse its helpers instead of writing directly to storage.
+- Accessibility/theme controls come from `src/components/AccessibilityContext.tsx` plus `ThemeScript.tsx`; update both whenever you add UI-level preferences so meta tags stay in sync.
+- Conversational features rely on `useWebLLM.ts`, `ChatBot.tsx`, and `useTextToSpeech.ts`; requests hit the Supabase Edge Function `ai-chat` and fall back to the local API at `src/app/api/ai/chat/route.ts` (Gemini 1.5 Flash). Deployment/fallback procedures are documented in `DEPLOY_EDGE_FUNCTION.md` and `INTEGRATED_SEARCH_LLM.md`.
 
-- **Framework**: Next.js 14 with App Router (`src/app/`)
-- **AI Integration**: Google Generative AI with fallback chain (Gemma 3 SuperTo → Gemma 3 Flash → Gemini 1.5 Flash)
-- **Database**: Supabase with Edge Functions
-- **Styling**: Tailwind CSS 4 with extensive custom animations
-- **State Management**: React Context (`CartContext`, `AccessibilityContext`)
-- **Deployment**: GitHub Pages with static export
+## UI patterns
+- Component naming conventions: animations use the `Animated*` prefix, modals end with `*Modal`, and playground components use `*Demo`; pair specialized CSS (e.g. `dishModal.css`, `journalFlip.css`) with the component.
+- Restaurant pages compose `RestaurantClientPage` with menu sections, chat, cart tray, and WhatsApp integrations—follow the same composition to inherit analytics and accessibility wiring.
+- Copy, currency, and voice output stay in pt-BR; format prices with comma decimals and respect the existing `MenuItem`/`Restaurant` schema.
 
-## Key Data Structures
+## Build + test workflow
+- Install and run locally with `npm install` and `npm run dev`.
+- `npm run build` executes `node scripts/update-sw-cache.js` (bumps `public/sw.js` cache version) before `next build` and `touch out/.nojekyll`; never bypass this script when preparing deploys.
+- Deploy static output via `npm run deploy` (publishes `out/` through `gh-pages`).
+- End-to-end tests live under `tests/` with helpers in `tests/utils`; run `npx playwright test`, `npx playwright test --ui`, or project-specific configs. Scripts `test-gemma3.js`, `test-voice.js`, and `test-waiter-call.js` validate AI, TTS, and waiter-call flows.
 
-The app centers around the `Restaurant` interface defined in `src/components/data/index.ts`:
-- `Restaurant` contains `menu_items[]`, `featured_dishes[]`, and metadata
-- `MenuItem` includes pricing (Brazilian format: "35,00"), ingredients, allergens, and optional `complement_groups`
-- Cart system uses `CartItem` with selected complements and quantity tracking
+## Platform specifics
+- The service worker (`public/sw.js`) purposefully skips caching `_next/static` assets and expires entries after ~1 hour; adjust exclusion patterns carefully and invoke `node scripts/update-sw-cache.js` whenever caching logic changes.
+- Required runtime env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `GOOGLE_AI_API_KEY`; analytics keys (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY`) are optional but gate tracking in `src/lib/analytics.ts`.
+- Static export means API routes run only in dev or during build; client fetches must handle absent Supabase credentials gracefully, mirroring the error messaging in `useWebLLM.ts`.
 
-## Component Patterns
-
-### Naming Convention
-- Animated components: `Animated*` prefix (e.g., `AnimatedDishCard.tsx`)
-- Modal components: `*Modal` suffix with accompanying CSS files
-- Demo components: `*Demo` suffix for development/testing
-
-### Animation System
-- Custom Tailwind animations defined in `tailwind.config.js` (fade-in-up, bounce-in, etc.)
-- Framer Motion for complex interactions
-- CSS files for specialized animations (`dishModal.css`, `journalFlip.css`)
-
-### Hooks Architecture
-- `useWebLLM.ts`: Manages AI chat with dish extraction from responses
-- `useTextToSpeech.ts`: Voice synthesis with Portuguese support
-- `useModalScroll.ts`: Scroll behavior management for modals
-
-## AI Chat Implementation
-
-The chatbot (`ChatBot.tsx`) integrates with:
-1. **Primary**: Supabase Edge Function at `/ai-chat` endpoint
-2. **Fallback**: Local API route at `/api/ai/chat/route.ts`
-3. **Dish Extraction**: Parses AI responses to recommend menu items visually
-
-Restaurant data is injected into AI context for accurate recommendations.
-
-## Configuration Specifics
-
-### Next.js Setup (`next.config.js`)
-- Static export for GitHub Pages deployment
-- Webpack config for Tone.js compatibility (`self: 'global'`)
-- Unoptimized images for static hosting
-
-### Environment Variables
-Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `GOOGLE_AI_API_KEY`
-Optional: PostHog and OpenReplay analytics keys
-
-## Development Workflows
-
-### Testing Scripts
-- `test-gemma3.js`: Verify AI model functionality
-- `test-voice.js`: Test text-to-speech features
-- `test-waiter-call.js`: Validate notification system
-
-### Build Process
-- `npm run build`: Generates static export with `.nojekyll` file
-- `npm run deploy`: Deploys to GitHub Pages via gh-pages
-
-## Critical Integration Points
-
-1. **Cart System**: Persistent localStorage with version control and 7-day expiry
-2. **Analytics**: PostHog and OpenReplay integration in `Analytics.tsx`
-3. **Accessibility**: Dark mode, voice features, and accessibility context
-4. **WhatsApp Integration**: Cart sharing via `CartWhatsAppButton.tsx`
-
-## File Organization Patterns
-
-- Route-specific components in `src/app/[route]/` directories
-- Shared components in `src/components/` with logical grouping
-- Type definitions centralized in `src/types/` and component co-location
-- Service layer in `src/services/` for external API calls
-
-When working with this codebase, always consider the restaurant context, maintain the Brazilian Portuguese localization, and ensure accessibility features remain functional.
+## Handy references
+- Layout & providers: `src/app/layout.tsx`
+- Restaurant data hooks: `src/hooks/useRestaurantBySlug.ts`, `src/hooks/useRestaurantList.ts`
+- Cart & analytics: `src/context/CartContext.tsx`, `src/lib/analytics.ts`
+- Voice & chat: `src/hooks/useTextToSpeech.ts`, `src/hooks/useWebLLM.ts`, `src/components/ChatBot.tsx`
+- Ops & docs: `SETUP_ENVIRONMENT.md`, `DEPLOY_EDGE_FUNCTION.md`, `SERVICE_WORKER_CACHE_FIX.md`, `tests/README.md`
