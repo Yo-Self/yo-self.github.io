@@ -10,6 +10,8 @@ import CartWhatsAppButton from './CartWhatsAppButton';
 import CartIcon from './CartIcon';
 import CustomerDataForm from './CustomerDataForm';
 
+import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
+
 interface CartModalProps {
   restaurantId?: string;
 }
@@ -27,6 +29,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     clearCart,
     isEmpty 
   } = useCart();
+  const { getCurrentPosition, permissionStatus, isGeolocationLoading, geolocationError, isSupported, isBlocked, isSafariIOS, checkPermissionStatus, position } = useGeolocationSafariIOSFinal();
 
   // Usar o restaurantId passado como prop ou detectar automaticamente
   const detectedRestaurantId = useCurrentRestaurant();
@@ -34,10 +37,22 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
   const [isClosing, setIsClosing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const [permissionUpdate, setPermissionUpdate] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Controlar scroll do body quando modal estiver aberto
   useModalScroll(isCartOpen);
+
+  useEffect(() => {
+    if (isCartOpen && permissionStatus !== 'granted') {
+      getCurrentPosition();
+      setTimeout(() => {
+        checkPermissionStatus().then(() => {
+          setPermissionUpdate(prev => prev + 1);
+        });
+      }, 5000);
+    }
+  }, [isCartOpen, permissionStatus, getCurrentPosition, checkPermissionStatus]);
 
   const handleClose = React.useCallback(() => {
     setIsClosing(true);
@@ -131,15 +146,26 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
             </div>
           </div>
           
-          <button
-            onClick={handleClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-            aria-label="Fechar comanda"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleClearCart}
+              className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+              aria-label="Limpar comanda"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+            <button
+              onClick={handleClose}
+              className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+              aria-label="Fechar comanda"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Conteúdo */}
@@ -179,7 +205,16 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                 
                 {/* Dados do cliente - agora dentro da área de scroll */}
                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <CustomerDataForm />
+                  <CustomerDataForm 
+                    permissionStatus={permissionStatus}
+                    getCurrentPosition={getCurrentPosition}
+                    isGeolocationLoading={isGeolocationLoading}
+                    geolocationError={geolocationError}
+                    isSupported={isSupported}
+                    isBlocked={isBlocked}
+                    isSafariIOS={isSafariIOS}
+                    position={position}
+                  />
                 </div>
               </div>
 
@@ -199,14 +234,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
                 {/* Botões de ação */}
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={handleClearCart}
-                    className="flex-1 px-4 py-3 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900 transition-colors font-medium"
-                  >
-                    Limpar Comanda
-                  </button>
-                  
-                  <div className="flex-2">
+                  <div className="flex-1">
                     <CartWhatsAppButton restaurantId={restaurantId} />
                   </div>
                 </div>
@@ -223,7 +251,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
             className="bg-black bg-opacity-50 absolute inset-0"
             onClick={() => setShowClearConfirmation(false)}
           />
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-sm mx-4 relative z-10 shadow-2xl">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-sm mx-4 relative z-10 shadow-2xl" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
               Limpar Comanda
             </h3>

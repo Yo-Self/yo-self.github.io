@@ -1,21 +1,64 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import GooglePlacesAutocompleteRobust from './GooglePlacesAutocompleteRobust';
+import NearbyAddresses from './NearbyAddresses';
 import { useCustomerData } from '../hooks/useCustomerData';
-import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
+import { useReverseGeocodingRobust } from '../hooks/useReverseGeocodingRobust';
+import { AddressResult } from '../hooks/useReverseGeocoding';
 
 interface CustomerDataFormProps {
   className?: string;
+  permissionStatus?: string;
+  getCurrentPosition: () => Promise<any>;
+  isGeolocationLoading: boolean;
+  geolocationError: string | null;
+  isSupported: boolean;
+  isBlocked?: boolean;
+  isSafariIOS?: boolean;
+  position: any;
 }
 
-export default function CustomerDataForm({ className = "" }: CustomerDataFormProps) {
+export default function CustomerDataForm({ 
+  className = "",
+  permissionStatus,
+  getCurrentPosition,
+  isGeolocationLoading,
+  geolocationError,
+  isSupported,
+  isBlocked,
+  isSafariIOS,
+  position
+}: CustomerDataFormProps) {
   const { customerData, updateName, updateAddress, updateNumber, updateComplement } = useCustomerData();
-  const { updateCoordinates } = useCustomerCoordinates();
+  const { addresses, isLoading: isReverseGeocodingLoading, error: reverseGeocodingError, getAddressesFromCoordinates, clearAddresses } = useReverseGeocodingRobust();
+  const [showNearbyAddresses, setShowNearbyAddresses] = useState(false);
+
+  const handleUseLocation = async () => {
+    try {
+      const newPosition = await getCurrentPosition();
+      if (newPosition) {
+        getAddressesFromCoordinates(newPosition);
+        setShowNearbyAddresses(true);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao obter localização:', error);
+    }
+  };
+
+  const handleSelectNearbyAddress = (address: AddressResult) => {
+    updateAddress(address.formatted_address);
+    setShowNearbyAddresses(false);
+    clearAddresses();
+  };
+
+  const handleCloseNearbyAddresses = () => {
+    setShowNearbyAddresses(false);
+    clearAddresses();
+  };
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Título da seção */}
       <div className="flex items-center gap-2 mb-4">
         <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
           <svg 
@@ -42,7 +85,6 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
         </div>
       </div>
 
-      {/* Campo de Nome */}
       <div>
         <label 
           htmlFor="customer-name" 
@@ -69,41 +111,109 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
         />
       </div>
 
-      {/* Campo de Endereço */}
       <div>
-        <label 
-          htmlFor="customer-address" 
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Endereço Completo
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label 
+            htmlFor="customer-address" 
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Endereço Completo
+          </label>
+        </div>
         
-        <GooglePlacesAutocompleteRobust
-          value={customerData.address}
-          onChange={(address) => {
-            updateAddress(address);
-            // Se o endereço foi limpo, limpar também as coordenadas
-            if (!address.trim()) {
-              updateCoordinates(null, '');
-            }
-          }}
-          onCoordinatesChange={(coordinates, address) => {
-            console.log('Coordenadas recebidas no CustomerDataForm:', coordinates, 'Endereço:', address);
-            // Usar o endereço passado pelo Google Places (mais confiável)
-            const addressToUse = address || customerData.address || '';
-            updateCoordinates(coordinates, addressToUse);
-          }}
-          placeholder="Digite seu endereço completo"
-        />
+        <div className="relative">
+          <GooglePlacesAutocompleteRobust
+            value={customerData.address}
+            onChange={(address) => {
+              updateAddress(address);
+            }}
+            placeholder="Digite seu endereço completo"
+          />
+          {isSupported && permissionStatus === 'granted' && (
+            <button
+              type="button"
+              onClick={handleUseLocation}
+              disabled={isGeolocationLoading}
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Usar minha localização"
+            >
+              {isGeolocationLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              ) : (
+                <svg 
+                  className="w-6 h-6" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" 
+                  />
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
+                  />
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
         
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          💡 Digite o endereço e selecione uma das sugestões que aparecerem
-        </p>
+        <div className="mt-1 space-y-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            💡 Digite o endereço ou click no icone de localização e selecione uma das sugestões que aparecerem.
+          </p>
+          {geolocationError && (
+            <div className={`text-xs ${isBlocked ? 'text-red-600 dark:text-red-400' : 'text-red-600 dark:text-red-400'}`}>
+              {isBlocked ? (
+                <div>
+                  <p className="font-medium mb-2">🚫 Permissão bloqueada pelo navegador</p>
+                  <div className="text-xs space-y-1">
+                    <p><strong>Para resolver:</strong></p>
+                    {isSafariIOS ? (
+                      <>
+                        <p>1. Vá em Configurações → Safari → Localização</p>
+                        <p>2. Mude para &quot;Perguntar&quot; ou &quot;Permitir&quot;</p>
+                        <p>3. Recarregue a página</p>
+                        <p className="text-blue-600 dark:text-blue-400 mt-2">
+                          💡 Ou acesse: Configurações → Privacidade e Segurança → Localização → Safari
+                        </p>
+                      </>
+                    ) : typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh') && navigator.userAgent.includes('Safari') ? (
+                      <>
+                        <p>1. Vá em Safari → Configurações (ou Safari → Preferências)</p>
+                        <p>2. Clique na aba &quot;Websites&quot;</p>
+                        <p>3. Encontre &quot;Localização&quot; na lista lateral</p>
+                        <p>4. Mude para &quot;Perguntar&quot; ou &quot;Permitir&quot;</p>
+                        <p>5. Recarregue a página</p>
+                        <p className="text-blue-600 dark:text-blue-400 mt-2">
+                          💡 Ou acesse: Configurações → Privacidade e Segurança → Localização → Safari
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p>1. Clique no ícone 🔒 ao lado da URL</p>
+                        <p>2. Vá em &quot;Configurações do site&quot;</p>
+                        <p>3. Encontre &quot;Localização&quot; e mude para &quot;Perguntar&quot;</p>
+                        <p>4. Recarregue a página</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p>⚠️ {geolocationError}</p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Campos de Número e Complemento */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Campo de Número */}
         <div>
           <label 
             htmlFor="customer-number" 
@@ -130,7 +240,6 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
           />
         </div>
 
-        {/* Campo de Complemento */}
         <div>
           <label 
             htmlFor="customer-complement" 
@@ -158,7 +267,6 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
         </div>
       </div>
 
-      {/* Indicador de preenchimento */}
       <div className="flex items-center gap-2 text-sm flex-wrap">
         <div className={`w-2 h-2 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
         <span className={`transition-colors ${customerData.name?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Nome</span>
@@ -173,6 +281,15 @@ export default function CustomerDataForm({ className = "" }: CustomerDataFormPro
         <span className={`transition-colors ${customerData.complement?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Complemento</span>
       </div>
 
+      {showNearbyAddresses && (
+        <NearbyAddresses
+          addresses={addresses}
+          isLoading={isReverseGeocodingLoading}
+          error={reverseGeocodingError}
+          onSelectAddress={handleSelectNearbyAddress}
+          onClose={handleCloseNearbyAddresses}
+        />
+      )}
     </div>
   );
 }

@@ -33,16 +33,14 @@ export default function GooglePlacesAutocompleteRobust({
   const loadGoogleMapsScript = useCallback(async (): Promise<void> => {
     if (typeof document === 'undefined') return;
 
-    // Se já está carregando, aguardar a promise existente
     if (isGoogleMapsLoading && googleMapsLoadPromise) {
       return googleMapsLoadPromise;
     }
 
-    // Se já está carregado, retornar imediatamente
     if (typeof (window as any).google !== 'undefined' && 
         (window as any).google.maps && 
         (window as any).google.maps.places && 
-        (window as any).google.maps.places.Autocomplete) {
+        (window as any).google.maps.places.PlaceAutocompleteElement) {
       console.log('Google Maps Places já está carregado');
       setIsLoaded(true);
       return Promise.resolve();
@@ -53,16 +51,14 @@ export default function GooglePlacesAutocompleteRobust({
       return Promise.resolve();
     }
 
-    // Verificar se script já existe
     const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
     if (existingScript) {
-      // Aguardar o script existente carregar
       return new Promise((resolve) => {
         const checkInterval = setInterval(() => {
           if (typeof (window as any).google !== 'undefined' && 
               (window as any).google.maps && 
               (window as any).google.maps.places && 
-              (window as any).google.maps.places.Autocomplete) {
+              (window as any).google.maps.places.PlaceAutocompleteElement) {
             clearInterval(checkInterval);
             console.log('Google Maps Places carregado via script existente');
             setIsLoaded(true);
@@ -70,7 +66,6 @@ export default function GooglePlacesAutocompleteRobust({
           }
         }, 100);
         
-        // Timeout de 10 segundos
         setTimeout(() => {
           clearInterval(checkInterval);
           setError('Timeout ao carregar Google Maps');
@@ -79,19 +74,16 @@ export default function GooglePlacesAutocompleteRobust({
       });
     }
 
-    // Marcar como carregando e criar promise
     isGoogleMapsLoading = true;
     setIsLoading(true);
-    console.log('Carregando Google Maps API...');
-
+    
     googleMapsLoadPromise = new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
       script.async = true;
       script.defer = true;
 
       script.onload = () => {
-        console.log('Script do Google Maps carregado');
         setIsLoading(false);
         setIsLoaded(true);
         isGoogleMapsLoading = false;
@@ -117,19 +109,15 @@ export default function GooglePlacesAutocompleteRobust({
       return;
     }
 
-    // Verificar se google.maps.places está disponível
     if (typeof (window as any).google === 'undefined' || 
         !(window as any).google.maps || 
         !(window as any).google.maps.places || 
-        !(window as any).google.maps.places.Autocomplete) {
+        !(window as any).google.maps.places.PlaceAutocompleteElement) {
       console.log('Google Maps Places ainda não está disponível, aguardando...');
       return;
     }
 
     try {
-      console.log('Inicializando Google Places Autocomplete...');
-      
-      // Limpar autocomplete anterior se existir
       if (autocompleteRef.current) {
         try {
           (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
@@ -139,44 +127,34 @@ export default function GooglePlacesAutocompleteRobust({
         autocompleteRef.current = null;
       }
       
-      // Criar o autocomplete
-      const autocomplete = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
+      const autocompleteElement = new (window as any).google.maps.places.PlaceAutocompleteElement({
+        inputElement: inputRef.current,
         componentRestrictions: { country: 'br' },
-        fields: ['formatted_address', 'address_components', 'place_id', 'geometry']
+        types: ['address'],
       });
 
-      autocompleteRef.current = autocomplete;
+      autocompleteRef.current = autocompleteElement;
 
-        // Event listener para quando um lugar é selecionado
-        const listener = autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          console.log('Place selecionado:', place);
+      const listener = autocompleteElement.addEventListener('gmp-placechange', (event: any) => {
+        const place = event.detail.place;
+        
+        if (place.formattedAddress) {
+          onChange(place.formattedAddress);
           
-          if (place.formatted_address) {
-            console.log('Endereço selecionado:', place.formatted_address);
-            onChange(place.formatted_address);
-            
-            // Capturar coordenadas se disponíveis
-            if (place.geometry && place.geometry.location) {
-              const coordinates = {
-                latitude: place.geometry.location.lat(),
-                longitude: place.geometry.location.lng()
-              };
-              console.log('Coordenadas capturadas:', coordinates);
-              // Passar coordenadas com o endereço correto
-              onCoordinatesChange?.(coordinates, place.formatted_address);
-            } else {
-              console.log('Coordenadas não disponíveis para este endereço');
-              onCoordinatesChange?.(null);
-            }
+          if (place.location) {
+            const coordinates = {
+              latitude: place.location.latitude,
+              longitude: place.location.longitude
+            };
+            onCoordinatesChange?.(coordinates, place.formattedAddress);
+          } else {
+            onCoordinatesChange?.(null);
           }
-        });
+        }
+      });
 
-      // Salvar listener para cleanup
-      (autocomplete as any).listener = listener;
+      (autocompleteElement as any).listener = listener;
 
-      // Adicionar estilos para esconder o "powered by Google"
       const style = document.createElement('style');
       style.id = 'google-places-attribution-hide';
       style.textContent = `
@@ -205,22 +183,19 @@ export default function GooglePlacesAutocompleteRobust({
       document.head.appendChild(style);
 
       isInitializedRef.current = true;
-      console.log('Google Places Autocomplete inicializado com sucesso');
+      
     } catch (err) {
       console.error('Erro ao inicializar Google Places Autocomplete:', err);
       setError('Erro ao carregar autocompletar de endereços');
     }
   }, [onChange, onCoordinatesChange]);
 
-  // Carregar Google Maps API
   useEffect(() => {
     loadGoogleMapsScript();
   }, [loadGoogleMapsScript]);
 
-  // Inicializar autocomplete quando API estiver carregada
   useEffect(() => {
     if (isLoaded && !isInitializedRef.current) {
-      // Aguardar um pouco para garantir que o DOM está pronto
       const timer = setTimeout(() => {
         initializeAutocomplete();
       }, 100);
@@ -229,7 +204,6 @@ export default function GooglePlacesAutocompleteRobust({
     }
   }, [isLoaded, initializeAutocomplete]);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       if (autocompleteRef.current) {
@@ -244,7 +218,6 @@ export default function GooglePlacesAutocompleteRobust({
     };
   }, []);
 
-  // Sincronizar valor
   useEffect(() => {
     if (inputRef.current && value !== undefined) {
       inputRef.current.value = value;
