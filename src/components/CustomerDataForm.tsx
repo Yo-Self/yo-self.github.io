@@ -17,6 +17,7 @@ interface CustomerDataFormProps {
   isBlocked?: boolean;
   isSafariIOS?: boolean;
   position: any;
+  addressActive?: boolean;
 }
 
 export default function CustomerDataForm({ 
@@ -28,7 +29,8 @@ export default function CustomerDataForm({
   isSupported,
   isBlocked,
   isSafariIOS,
-  position
+  position,
+  addressActive = true
 }: CustomerDataFormProps) {
   const { customerData, updateName, updateAddress, updateNumber, updateComplement } = useCustomerData();
   const { addresses, isLoading: isReverseGeocodingLoading, error: reverseGeocodingError, getAddressesFromCoordinates, clearAddresses } = useReverseGeocodingRobust();
@@ -111,6 +113,7 @@ export default function CustomerDataForm({
         />
       </div>
 
+      {addressActive && (
       <div>
         <div className="flex items-center justify-between mb-2">
           <label 
@@ -212,7 +215,9 @@ export default function CustomerDataForm({
           )}
         </div>
       </div>
+      )}
 
+      {addressActive && (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label 
@@ -266,19 +271,24 @@ export default function CustomerDataForm({
           />
         </div>
       </div>
+      )}
 
       <div className="flex items-center gap-2 text-sm flex-wrap">
         <div className={`w-2 h-2 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
         <span className={`transition-colors ${customerData.name?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Nome</span>
         
-        <div className={`w-2 h-2 rounded-full transition-colors ${customerData.address?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-        <span className={`transition-colors ${customerData.address?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Endereço</span>
-        
-        <div className={`w-2 h-2 rounded-full transition-colors ${customerData.number?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-        <span className={`transition-colors ${customerData.number?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Número</span>
-        
-        <div className={`w-2 h-2 rounded-full transition-colors ${customerData.complement?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-        <span className={`transition-colors ${customerData.complement?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Complemento</span>
+        {addressActive && (
+          <>
+            <div className={`w-2 h-2 rounded-full transition-colors ${customerData.address?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <span className={`transition-colors ${customerData.address?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Endereço</span>
+
+            <div className={`w-2 h-2 rounded-full transition-colors ${customerData.number?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <span className={`transition-colors ${customerData.number?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Número</span>
+
+            <div className={`w-2 h-2 rounded-full transition-colors ${customerData.complement?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <span className={`transition-colors ${customerData.complement?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Complemento</span>
+          </>
+        )}
       </div>
 
       {showNearbyAddresses && (

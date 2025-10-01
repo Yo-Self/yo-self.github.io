@@ -9,6 +9,7 @@ import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
 import CartIcon from './CartIcon';
 import CustomerDataForm from './CustomerDataForm';
+import { useRestaurantAddressActive } from '../hooks/useRestaurantAddressActive';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
 
@@ -34,6 +35,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   // Usar o restaurantId passado como prop ou detectar automaticamente
   const detectedRestaurantId = useCurrentRestaurant();
   const restaurantId = propRestaurantId || detectedRestaurantId;
+  const { addressActive } = useRestaurantAddressActive(restaurantId);
 
   const [isClosing, setIsClosing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
@@ -203,19 +205,21 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   />
                 ))}
                 
-                {/* Dados do cliente - agora dentro da área de scroll */}
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <CustomerDataForm 
-                    permissionStatus={permissionStatus}
-                    getCurrentPosition={getCurrentPosition}
-                    isGeolocationLoading={isGeolocationLoading}
-                    geolocationError={geolocationError}
-                    isSupported={isSupported}
-                    isBlocked={isBlocked}
-                    isSafariIOS={isSafariIOS}
-                    position={position}
-                  />
-                </div>
+                {addressActive && (
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <CustomerDataForm 
+                      permissionStatus={permissionStatus}
+                      getCurrentPosition={getCurrentPosition}
+                      isGeolocationLoading={isGeolocationLoading}
+                      geolocationError={geolocationError}
+                      isSupported={isSupported}
+                      isBlocked={isBlocked}
+                      isSafariIOS={isSafariIOS}
+                      position={position}
+                      addressActive={addressActive}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Footer com totais e ações */}
