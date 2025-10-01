@@ -23,7 +23,7 @@ export default function CustomerDataForm({
   className = "",
   permissionStatus,
   getCurrentPosition,
-  isGeolocationLoading,
+  isGeolocationLoading: isLoading,
   geolocationError,
   isSupported,
   isBlocked,
@@ -133,11 +133,11 @@ export default function CustomerDataForm({
             <button
               type="button"
               onClick={handleUseLocation}
-              disabled={isGeolocationLoading}
+              disabled={isLoading}
               className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Usar minha localização"
             >
-              {isGeolocationLoading ? (
+              {isLoading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
               ) : (
                 <svg 

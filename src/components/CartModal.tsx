@@ -29,7 +29,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     clearCart,
     isEmpty 
   } = useCart();
-  const { getCurrentPosition, permissionStatus, isGeolocationLoading, geolocationError, isSupported, isBlocked, isSafariIOS, checkPermissionStatus, position } = useGeolocationSafariIOSFinal();
+  const { getCurrentPosition, permissionStatus, isLoading: isGeolocationLoading, error: geolocationError, isSupported, isBlocked, isSafariIOS, checkPermissionStatus, position } = useGeolocationSafariIOSFinal();
 
   // Usar o restaurantId passado como prop ou detectar automaticamente
   const detectedRestaurantId = useCurrentRestaurant();
