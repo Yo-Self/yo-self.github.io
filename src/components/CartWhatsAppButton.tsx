@@ -6,6 +6,7 @@ import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useRestaurantCoordinates } from '../hooks/useRestaurantCoordinates';
+import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { CartUtils } from '../types/cart';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
@@ -28,6 +29,18 @@ export default function CartWhatsAppButton({
   const { customerData, isCustomerDataComplete } = useCustomerData();
   const { customerCoordinates } = useCustomerCoordinates();
   const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
+  const { tablePayment } = useRestaurantTablePayment(restaurantId);
+
+  // Verificar se os dados do cliente estão completos baseado no modo de pagamento
+  const isCustomerDataCompleteForMode = React.useMemo(() => {
+    if (tablePayment) {
+      // Para pagamento na mesa: nome e WhatsApp obrigatórios
+      return customerData.name?.trim() && customerData.whatsapp?.trim();
+    } else {
+      // Para delivery: nome e endereço obrigatórios
+      return customerData.name?.trim() && customerData.address?.trim();
+    }
+  }, [customerData, tablePayment]);
 
   // Não renderizar se carrinho estiver vazio
   if (isEmpty) {
@@ -73,24 +86,35 @@ export default function CartWhatsAppButton({
     // Debug: Log das coordenadas disponíveis
     console.log('🔍 Debug - Coordenadas do restaurante:', restaurantCoordinates);
     console.log('🔍 Debug - Coordenadas do cliente:', customerCoordinates);
+    console.log('🔍 Debug - Modo pagamento na mesa:', tablePayment);
     
-    // Calcular distância de entrega se coordenadas estiverem disponíveis
-    const deliveryDistance = calculateDeliveryDistance(
+    // Calcular distância de entrega se coordenadas estiverem disponíveis (apenas para delivery)
+    const deliveryDistance = !tablePayment ? calculateDeliveryDistance(
       restaurantCoordinates,
       customerCoordinates.coordinates
-    );
+    ) : null;
     
     console.log('🔍 Debug - Distância calculada:', deliveryDistance);
     
     // Dados do cliente
-    const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim();
+    const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim() || customerData.whatsapp?.trim();
     
     if (hasCustomerData) {
-      message += `👤 *DADOS DO CLIENTE:*\n`;
+      if (tablePayment) {
+        message += `👤 *DADOS PARA MESA:*\n`;
+      } else {
+        message += `👤 *DADOS DO CLIENTE:*\n`;
+      }
+      
       if (customerData.name?.trim()) {
         message += `• *Nome:* ${customerData.name}\n`;
       }
-      if (customerData.address?.trim()) {
+      
+      if (tablePayment && customerData.whatsapp?.trim()) {
+        message += `• *WhatsApp:* ${customerData.whatsapp}\n`;
+      }
+      
+      if (!tablePayment && customerData.address?.trim()) {
         message += `• *Endereço:* ${customerData.address}`;
         if (customerData.number?.trim()) {
           message += `, ${customerData.number}`;
@@ -100,12 +124,13 @@ export default function CartWhatsAppButton({
         }
         message += `\n`;
       }
-      if (customerData.number?.trim() && !customerData.address?.trim()) {
+      
+      if (!tablePayment && customerData.number?.trim() && !customerData.address?.trim()) {
         message += `• *Número:* ${customerData.number}\n`;
       }
       
-      // Adicionar distância de entrega se calculada
-      if (deliveryDistance) {
+      // Adicionar distância de entrega se calculada (apenas para delivery)
+      if (!tablePayment && deliveryDistance) {
         message += `• *Distância de Entrega:* ${deliveryDistance.formattedDistance}\n`;
       }
       
@@ -201,11 +226,11 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleWhatsAppClick}
-      disabled={isLoading || isEmpty || !isCustomerDataComplete}
+      disabled={isLoading || isEmpty || !isCustomerDataCompleteForMode}
       className={`
         w-full flex items-center justify-center gap-3 
         px-6 py-4 
-        ${isCustomerDataComplete 
+        ${isCustomerDataCompleteForMode 
           ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
           : 'bg-gradient-to-r from-gray-400 to-gray-500'
         }
@@ -233,13 +258,13 @@ export default function CartWhatsAppButton({
       <div className="flex flex-col items-start min-w-0">
         <span className="text-lg font-bold">
           {isLoading ? 'Carregando...' : 
-           !isCustomerDataComplete ? 'Preencha nome e número' : 
+           !isCustomerDataCompleteForMode ? (tablePayment ? 'Preencha nome e WhatsApp' : 'Preencha nome e endereço') : 
            'Enviar Pedido'}
         </span>
         <span className="text-sm opacity-90 truncate">
-          {isCustomerDataComplete 
+          {isCustomerDataCompleteForMode 
             ? `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`
-            : 'Preencha nome e número para continuar'
+            : tablePayment ? 'Preencha para continuar' : 'Preencha para continuar'
           }
         </span>
       </div>

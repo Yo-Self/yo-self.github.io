@@ -9,7 +9,9 @@ import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
 import CartIcon from './CartIcon';
 import CustomerDataForm from './CustomerDataForm';
+import TablePaymentForm from './TablePaymentForm';
 import { useRestaurantAddressActive } from '../hooks/useRestaurantAddressActive';
+import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
 
@@ -36,6 +38,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const detectedRestaurantId = useCurrentRestaurant();
   const restaurantId = propRestaurantId || detectedRestaurantId;
   const { addressActive } = useRestaurantAddressActive(restaurantId);
+  const { tablePayment } = useRestaurantTablePayment(restaurantId);
 
   const [isClosing, setIsClosing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
@@ -205,19 +208,24 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   />
                 ))}
                 
-                {addressActive && (
+                {/* Formulário baseado na configuração do restaurante */}
+                {(addressActive || tablePayment) && (
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <CustomerDataForm 
-                      permissionStatus={permissionStatus}
-                      getCurrentPosition={getCurrentPosition}
-                      isGeolocationLoading={isGeolocationLoading}
-                      geolocationError={geolocationError}
-                      isSupported={isSupported}
-                      isBlocked={isBlocked}
-                      isSafariIOS={isSafariIOS}
-                      position={position}
-                      addressActive={addressActive}
-                    />
+                    {tablePayment ? (
+                      <TablePaymentForm />
+                    ) : (
+                      <CustomerDataForm 
+                        permissionStatus={permissionStatus}
+                        getCurrentPosition={getCurrentPosition}
+                        isGeolocationLoading={isGeolocationLoading}
+                        geolocationError={geolocationError}
+                        isSupported={isSupported}
+                        isBlocked={isBlocked}
+                        isSafariIOS={isSafariIOS}
+                        position={position}
+                        addressActive={addressActive}
+                      />
+                    )}
                   </div>
                 )}
               </div>

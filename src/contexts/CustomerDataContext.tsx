@@ -7,6 +7,7 @@ export interface CustomerData {
   address: string;
   number: string;
   complement: string;
+  whatsapp: string;
 }
 
 interface CustomerDataContextType {
@@ -15,6 +16,7 @@ interface CustomerDataContextType {
   updateAddress: (address: string) => void;
   updateNumber: (number: string) => void;
   updateComplement: (complement: string) => void;
+  updateWhatsApp: (whatsapp: string) => void;
   clearCustomerData: () => void;
   isCustomerDataComplete: boolean;
 }
@@ -44,7 +46,8 @@ const loadCustomerDataFromStorage = (): CustomerData => {
           name: parsed.name || '',
           address: parsed.address || '',
           number: parsed.number || '',
-          complement: parsed.complement || ''
+          complement: parsed.complement || '',
+          whatsapp: parsed.whatsapp || ''
         };
       }
     }
@@ -57,7 +60,8 @@ const loadCustomerDataFromStorage = (): CustomerData => {
     name: '',
     address: '',
     number: '',
-    complement: ''
+    complement: '',
+    whatsapp: ''
   };
 };
 
@@ -76,7 +80,8 @@ export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
       name: '',
       address: '',
       number: '',
-      complement: ''
+      complement: '',
+      whatsapp: ''
     };
   });
 
@@ -107,12 +112,17 @@ export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
     setCustomerData(prev => ({ ...prev, complement }));
   }, []);
 
+  const updateWhatsApp = useCallback((whatsapp: string) => {
+    setCustomerData(prev => ({ ...prev, whatsapp }));
+  }, []);
+
   const clearCustomerData = useCallback(() => {
     const emptyData = {
       name: '',
       address: '',
       number: '',
-      complement: ''
+      complement: '',
+      whatsapp: ''
     };
     setCustomerData(emptyData);
     
@@ -135,6 +145,7 @@ export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
     updateAddress,
     updateNumber,
     updateComplement,
+    updateWhatsApp,
     clearCustomerData,
     isCustomerDataComplete
   };
