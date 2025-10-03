@@ -1,4 +1,4 @@
-import { getTableId, clearTableId } from '@/components/TableParamHandler';
+import { getTableId, getTableScannedAt, clearTableId } from '@/components/TableParamHandler';
 
 // Exemplo 1: Exibir número da mesa no carrinho
 export function CartTableDisplay() {
@@ -19,14 +19,16 @@ export function CartTableDisplay() {
   );
 }
 
-// Exemplo 2: Incluir mesa no pedido
+// Exemplo 2: Incluir mesa e timestamp no pedido
 export async function createOrder(items: any[]) {
   const tableId = getTableId();
+  const scannedAt = getTableScannedAt();
   
   const order = {
     items,
     tableId, // Incluído automaticamente se disponível
-    timestamp: new Date().toISOString(),
+    tableScannedAt: scannedAt, // Timestamp de quando o QR Code foi escaneado
+    orderCreatedAt: new Date().toISOString(),
     status: 'pending'
   };
   
