@@ -26,6 +26,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 import { useLegacyAppDetection } from "@/hooks/useLegacyAppDetection";
 import LegacyAppWrapper from "@/components/LegacyAppWrapper";
+import TableParamHandler from "@/components/TableParamHandler";
+import { Suspense } from "react";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -120,6 +122,9 @@ export default function RootLayout({
                   <CustomerDataProvider>
                     <CustomerCoordinatesProvider>
                       <ThemeScript />
+                      <Suspense fallback={null}>
+                        <TableParamHandler />
+                      </Suspense>
                       <PageViewTracker />
                       <SessionTracker />
                       <Navigation />

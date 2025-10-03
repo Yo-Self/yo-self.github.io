@@ -8,6 +8,7 @@ Uma aplicação moderna de cardápio digital com chatbot inteligente usando **Go
 - 🤖 **Chatbot Inteligente**: Assistente de IA com Google Gemma 3 SuperTo
 - 🔊 **Leitura de Voz**: Text-to-speech para respostas do chatbot
 - 🍽️ **Cardápio Interativo**: Navegação por categorias e busca
+- 📋 **QR Code para Mesas**: Acesso instantâneo ao cardápio via QR Code
 - 🌙 **Modo Escuro**: Suporte completo a tema escuro
 - 🔍 **Busca Avançada**: Filtros por categoria e preço
 - 📊 **Analytics**: Integração com PostHog e OpenReplay

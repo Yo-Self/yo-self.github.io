@@ -10,6 +10,7 @@
 - `RestaurantClientPage` owns view state (grid/list, tutorial overlays in `localStorage`, sorting via `SortModal`) and expects the fully populated `Restaurant`; lightweight rows from `useRestaurantList` only populate the switcher.
 - Cart state lives in `src/context/CartContext.tsx` with 7-day persistence; calculate totals with `CartUtils.calculateUnitPrice` and generate IDs with `CartUtils.generateItemId` instead of writing new cart math.
 - `CustomerDataProvider` and `CustomerCoordinatesProvider` persist to `localStorage`; call their update helpers instead of touching storage directly.
+- Table identification via QR Code: `TableParamHandler` captures `?table=XX` params, saves to `localStorage` as `table_id`, and cleans the URL. Use `getTableId()` and `clearTableId()` from `src/components/TableParamHandler.tsx` to access/clear table data.
 
 ## Conversational & service flows
 - Chatbot hooks (`src/hooks/useWebLLM.ts`) call the Supabase Edge Function `ai-chat` and fall back to `src/app/api/ai/chat/route.ts` (Gemini 1.5 Flash); they expect `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `GOOGLE_AI_API_KEY`. Preserve the PT-BR error messaging and recommendation extraction.
