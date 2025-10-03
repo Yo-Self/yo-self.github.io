@@ -1,35 +1,33 @@
 # AI Coding Assistant Instructions
 
 ## Quick snapshot
-- Next.js 14 App Router project exported statically for GitHub Pages; see `next.config.js` for the `output: 'export'`, Webpack fallbacks, and unoptimized images requirement.
-- Runtime is largely client-side: `src/app/layout.tsx` wraps children with `PostHogProvider`, `AccessibilityProvider`, `CartProvider`, `ThemeScript`, and global modals.
-- Supabase is the menu source of truth; `src/hooks/useRestaurantBySlug.ts` stitches restaurants, categories, dishes, complement groups, and complements into the `Restaurant` interface from `src/components/data/index.ts` while formatting Brazilian price strings.
+- Next.js 14 App Router statically exported for GitHub Pages; `next.config.js` sets `output: 'export'`, unoptimized images, and polyfills for Node built-ins.
+- Root layout layers `LegacyAppWrapper` → `ErrorBoundary` → analytics/accessibility/cart/customer providers plus `ThemeScript`, install prompts, and manifest updaters—reuse this stack in any new layout.
+- Supabase is the single source for menu, waiter calls, and AI endpoints; restaurant payloads are normalized into `Restaurant` from `src/components/data/index.ts`.
 
-## Data + AI flow
-- Restaurant routes (`src/app/restaurant/[slug]/`) fetch on the client through `useRestaurantBySlug`; the hook chunks Supabase queries to dodge URL length limits and tolerates missing credentials by surfacing friendly errors.
-- Cart state lives in `src/context/CartContext.tsx` with 7-day localStorage persistence, deterministic IDs via `CartUtils`, and analytics hooks—reuse its helpers instead of writing directly to storage.
-- Accessibility/theme controls come from `src/components/AccessibilityContext.tsx` plus `ThemeScript.tsx`; update both whenever you add UI-level preferences so meta tags stay in sync.
-- Conversational features rely on `useWebLLM.ts`, `ChatBot.tsx`, and `useTextToSpeech.ts`; requests hit the Supabase Edge Function `ai-chat` and fall back to the local API at `src/app/api/ai/chat/route.ts` (Gemini 1.5 Flash). Deployment/fallback procedures are documented in `DEPLOY_EDGE_FUNCTION.md` and `INTEGRATED_SEARCH_LLM.md`.
+## Architecture & data flow
+- Client restaurant routes (`src/app/restaurant/[slug]/`) fetch via `useRestaurantBySlug`, which chunks Supabase queries (`dish_categories`, complement junctions) and formats BRL prices; extend menu data inside that transformer rather than UI components.
+- `RestaurantClientPage` owns view state (grid/list, tutorial overlays in `localStorage`, sorting via `SortModal`) and expects the fully populated `Restaurant`; lightweight rows from `useRestaurantList` only populate the switcher.
+- Cart state lives in `src/context/CartContext.tsx` with 7-day persistence; calculate totals with `CartUtils.calculateUnitPrice` and generate IDs with `CartUtils.generateItemId` instead of writing new cart math.
+- `CustomerDataProvider` and `CustomerCoordinatesProvider` persist to `localStorage`; call their update helpers instead of touching storage directly.
 
-## UI patterns
-- Component naming conventions: animations use the `Animated*` prefix, modals end with `*Modal`, and playground components use `*Demo`; pair specialized CSS (e.g. `dishModal.css`, `journalFlip.css`) with the component.
-- Restaurant pages compose `RestaurantClientPage` with menu sections, chat, cart tray, and WhatsApp integrations—follow the same composition to inherit analytics and accessibility wiring.
-- Copy, currency, and voice output stay in pt-BR; format prices with comma decimals and respect the existing `MenuItem`/`Restaurant` schema.
+## Conversational & service flows
+- Chatbot hooks (`src/hooks/useWebLLM.ts`) call the Supabase Edge Function `ai-chat` and fall back to `src/app/api/ai/chat/route.ts` (Gemini 1.5 Flash); they expect `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `GOOGLE_AI_API_KEY`. Preserve the PT-BR error messaging and recommendation extraction.
+- Voice playback is handled by `useTextToSpeech`, which locks onto the Luciana voice and tracks opt-in state in `localStorage`; trigger speech through `speak()` and respect the `isEnabled` flag.
+- Waiter call UX (`WaiterCallButton`, `WaiterCallNotifications`, `useWaiterCalls`) only renders when `restaurant.waiter_call_enabled` is true and posts to `/functions/v1/waiter-calls`; keep the bell audio + analytics hooks intact for parity with production.
 
-## Build + test workflow
-- Install and run locally with `npm install` and `npm run dev`.
-- `npm run build` executes `node scripts/update-sw-cache.js` (bumps `public/sw.js` cache version) before `next build` and `touch out/.nojekyll`; never bypass this script when preparing deploys.
-- Deploy static output via `npm run deploy` (publishes `out/` through `gh-pages`).
-- End-to-end tests live under `tests/` with helpers in `tests/utils`; run `npx playwright test`, `npx playwright test --ui`, or project-specific configs. Scripts `test-gemma3.js`, `test-voice.js`, and `test-waiter-call.js` validate AI, TTS, and waiter-call flows.
+## Build & test workflow
+- Install with `npm install`; develop with `npm run dev`. `npm run build` runs `scripts/update-sw-cache.js` before `next build` and then touches `out/.nojekyll`—don’t bypass the prebuild or GitHub Pages will serve stale assets.
+- Deploy static output through `npm run deploy` (publishes `out/` via `gh-pages`). Static export means API routes are dev-only; client fetches must handle missing env vars gracefully as in `useRestaurantBySlug` and `useWebLLM`.
+- Playwright config (`playwright.config.cjs`) builds + starts the app unless `SKIP_WEBSERVER=1`; for targeted checks use scripts `test-gemma3.js`, `test-voice.js`, and `test-waiter-call.js`.
 
-## Platform specifics
-- The service worker (`public/sw.js`) purposefully skips caching `_next/static` assets and expires entries after ~1 hour; adjust exclusion patterns carefully and invoke `node scripts/update-sw-cache.js` whenever caching logic changes.
-- Required runtime env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `GOOGLE_AI_API_KEY`; analytics keys (`NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY`) are optional but gate tracking in `src/lib/analytics.ts`.
-- Static export means API routes run only in dev or during build; client fetches must handle absent Supabase credentials gracefully, mirroring the error messaging in `useWebLLM.ts`.
+## Service worker & debugging
+- `public/sw.js` skips `_next/static/**` caching and expires entries after ~1h; update cache logic through `scripts/update-sw-cache.js` and run `clear-all-caches.js` in the browser console when debugging stale data.
+- Theme/accessibility preferences are synchronized via `AccessibilityProvider` + `ThemeScript`; when adding UI-level toggles, update both so PWA status bars stay accurate.
+- Offline/legacy cleanup relies on `LegacyAppWrapper`, `ServiceWorkerCleanup`, and `useLegacyAppDetection`; reuse these helpers to avoid orphaned service workers when altering routing.
 
-## Handy references
+## References
 - Layout & providers: `src/app/layout.tsx`
-- Restaurant data hooks: `src/hooks/useRestaurantBySlug.ts`, `src/hooks/useRestaurantList.ts`
-- Cart & analytics: `src/context/CartContext.tsx`, `src/lib/analytics.ts`
-- Voice & chat: `src/hooks/useTextToSpeech.ts`, `src/hooks/useWebLLM.ts`, `src/components/ChatBot.tsx`
-- Ops & docs: `SETUP_ENVIRONMENT.md`, `DEPLOY_EDGE_FUNCTION.md`, `SERVICE_WORKER_CACHE_FIX.md`, `tests/README.md`
+- Restaurant data + cart: `src/hooks/useRestaurantBySlug.ts`, `src/app/restaurant/[slug]/RestaurantClientPage.tsx`, `src/context/CartContext.tsx`
+- AI & waiter flows: `src/hooks/useWebLLM.ts`, `src/components/ChatBot.tsx`, `src/hooks/useWaiterCalls.ts`
+- Ops docs: `SETUP_ENVIRONMENT.md`, `DEPLOY_EDGE_FUNCTION.md`, `SERVICE_WORKER_CACHE_FIX.md`, `tests/README.md`
