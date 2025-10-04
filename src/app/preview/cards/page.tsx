@@ -15,6 +15,7 @@ const mockRestaurant: Restaurant = {
   menu_categories: ["Massas", "Saladas", "Carnes", "Japonesa", "Sobremesas"],
   featured_dishes: [
     {
+      id: "pasta-carbonara",
       name: "Pasta Carbonara",
       description: "Massa fresca com molho cremoso de ovos, queijo parmesão e bacon",
       price: "45,90",
@@ -26,6 +27,7 @@ const mockRestaurant: Restaurant = {
       portion: "Serve 1 pessoa"
     },
     {
+      id: "salada-caesar",
       name: "Salada Caesar",
       description: "Alface romana, croutons, parmesão e molho caesar caseiro",
       price: "28,50",
@@ -37,6 +39,7 @@ const mockRestaurant: Restaurant = {
       portion: "Serve 1 pessoa"
     },
     {
+      id: "bife-grelhado",
       name: "Bife Grelhado",
       description: "Bife de alcatra grelhado com batatas rústicas e legumes",
       price: "65,00",
@@ -48,6 +51,7 @@ const mockRestaurant: Restaurant = {
       portion: "Serve 1 pessoa"
     },
     {
+      id: "sushi-roll",
       name: "Sushi Roll",
       description: "Rolo de sushi com salmão, abacate e cream cheese",
       price: "38,90",
@@ -59,6 +63,7 @@ const mockRestaurant: Restaurant = {
       portion: "Serve 1 pessoa"
     },
     {
+      id: "tiramisu",
       name: "Tiramisu",
       description: "Sobremesa italiana com café, mascarpone e cacau",
       price: "22,00",

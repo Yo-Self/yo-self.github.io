@@ -198,6 +198,12 @@ export default function CartWhatsAppButton({
   const handleCreateOrderAndSendWhatsApp = async () => {
     if (isLoading || isCreatingOrder || isEmpty || !isCustomerDataCompleteForMode) return;
 
+    if (!restaurant) {
+      console.error("Restaurant not found, cannot create order.");
+      alert("Erro: Restaurante não encontrado. Não é possível criar o pedido.");
+      return;
+    }
+
     setIsCreatingOrder(true);
 
     try {
@@ -215,7 +221,7 @@ export default function CartWhatsAppButton({
       const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item => ({
         dish_id: item.dish.id,
         quantity: item.quantity,
-        price_at_time_of_order: Math.round(item.dish.price.replace(',', '.') * 100),
+        price_at_time_of_order: Math.round(parseFloat(item.dish.price.replace(',', '.')) * 100),
         selected_complements: Array.from(item.selectedComplements.entries()).flatMap(([groupTitle, selections]) =>
           Array.from(selections).map(complementName => {
             const group = item.dish.complement_groups?.find(g => g.title === groupTitle);
