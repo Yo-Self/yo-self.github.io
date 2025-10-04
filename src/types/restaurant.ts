@@ -33,6 +33,9 @@ export interface Restaurant {
 }
 
 export interface MenuItem {
+  /** ID único do item do menu */
+  id: string;
+  
   /** Categorias do item no menu (múltiplas categorias suportadas) */
   categories: string[];
   
@@ -85,6 +88,9 @@ export interface ComplementGroup {
 }
 
 export interface Complement {
+  /** ID único do complemento */
+  id: string;
+  
   /** Nome do complemento */
   name: string;
   

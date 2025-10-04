@@ -4,13 +4,15 @@ export interface WhatsAppConfig {
   phoneNumber: string;
   enabled: boolean;
   customMessage?: string;
+  restaurantName?: string;
 }
 
 export function useWhatsAppConfig(restaurantId?: string) {
   const [config, setConfig] = useState<WhatsAppConfig>({
     phoneNumber: "", // Sem número padrão
     enabled: false, // Desabilitado por padrão até confirmar configuração
-    customMessage: "Olá! Gostaria de fazer este pedido."
+    customMessage: "Olá! Gostaria de fazer este pedido.",
+    restaurantName: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function useWhatsAppConfig(restaurantId?: string) {
         }
         
         // Tentar buscar por slug primeiro (mais comum), depois por ID
-        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message`, {
+        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message,name`, {
           headers: {
             'apikey': supabaseKey,
             'Authorization': `Bearer ${supabaseKey}`,
@@ -49,7 +51,7 @@ export function useWhatsAppConfig(restaurantId?: string) {
         
         // Se não encontrar por slug, tentar por ID
         if (!response.ok) {
-          response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message`, {
+          response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message,name`, {
             headers: {
               'apikey': supabaseKey,
               'Authorization': `Bearer ${supabaseKey}`,
@@ -72,14 +74,16 @@ export function useWhatsAppConfig(restaurantId?: string) {
             setConfig({
               phoneNumber: restaurant.whatsapp_phone,
               enabled: restaurant.whatsapp_enabled !== false, // Padrão true se não especificado
-              customMessage: restaurant.whatsapp_custom_message || "Olá! Gostaria de fazer este pedido."
+              customMessage: restaurant.whatsapp_custom_message || "Olá! Gostaria de fazer este pedido.",
+              restaurantName: restaurant.name,
             });
           } else {
             // WhatsApp indisponível - sem número configurado
             setConfig({
               phoneNumber: "",
               enabled: false,
-              customMessage: "Olá! Gostaria de fazer este pedido."
+              customMessage: "Olá! Gostaria de fazer este pedido.",
+              restaurantName: restaurant.name,
             });
           }
         } else {

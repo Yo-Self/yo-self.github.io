@@ -1,4 +1,5 @@
 export type Complement = {
+  id: string;
   name: string;
   description: string;
   price: string;
@@ -17,6 +18,7 @@ export type ComplementGroup = {
 };
 
 export type Dish = {
+  id: string;
   name: string;
   description: string;
   price: string;

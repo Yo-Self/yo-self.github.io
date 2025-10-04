@@ -6,9 +6,12 @@ import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useRestaurantCoordinates } from '../hooks/useRestaurantCoordinates';
+import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { CartUtils } from '../types/cart';
+import { createOrder } from '../services/orderService';
+import { Order, OrderItem } from '../types/order';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 
 interface CartWhatsAppButtonProps {
@@ -18,8 +21,8 @@ interface CartWhatsAppButtonProps {
   onSent?: () => void; // Callback quando mensagem for enviada
 }
 
-export default function CartWhatsAppButton({ 
-  restaurantId = "default", 
+export default function CartWhatsAppButton({
+  restaurantId = "default",
   className = "",
   customMessage,
   onSent
@@ -29,7 +32,9 @@ export default function CartWhatsAppButton({
   const { customerData, isCustomerDataComplete } = useCustomerData();
   const { customerCoordinates } = useCustomerCoordinates();
   const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
+  const { restaurant } = useRestaurantBySlug(restaurantId);
   const { tablePayment } = useRestaurantTablePayment(restaurantId);
+  const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
 
   // Verificar se os dados do cliente estão completos baseado no modo de pagamento
   const isCustomerDataCompleteForMode = React.useMemo(() => {
@@ -80,8 +85,8 @@ export default function CartWhatsAppButton({
     );
   }
 
-  const generateCartWhatsAppMessage = () => {
-    let message = `🛒 *PEDIDO COMPLETO*\n\n`;
+  const generateCartWhatsAppMessage = (order: Order) => {
+    let message = `🛒 *PEDIDO COMPLETO*\n\n*ID do Pedido:* ${order.id}\n\n`;
     
     // Debug: Log das coordenadas disponíveis
     console.log('🔍 Debug - Coordenadas do restaurante:', restaurantCoordinates);
@@ -179,14 +184,7 @@ export default function CartWhatsAppButton({
 
     // Informações adicionais
     message += `📱 *Pedido via Cardápio Digital*\n`;
-    message += `🕐 ${new Date().toLocaleString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })}\n\n`;
+    message += `🕐 ${new Date(order.created_at).toLocaleString('pt-BR')}\n\n`;
 
     // Mensagem personalizada
     const finalMessage = customMessage || config.customMessage || 
@@ -197,24 +195,60 @@ export default function CartWhatsAppButton({
     return encodeURIComponent(message);
   };
 
-  const handleWhatsAppClick = () => {
-    if (isLoading) return;
-    
-    const message = generateCartWhatsAppMessage();
-    const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
-    
-    // Track analytics for checkout
-    const currentRestaurantId = getCurrentRestaurantId();
-    if (currentRestaurantId) {
-      Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
-    }
-    
-    // Abrir WhatsApp em nova aba
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    
-    // Callback opcional
-    if (onSent) {
-      onSent();
+  const handleCreateOrderAndSendWhatsApp = async () => {
+    if (isLoading || isCreatingOrder || isEmpty || !isCustomerDataCompleteForMode) return;
+
+    setIsCreatingOrder(true);
+
+    try {
+      const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
+        restaurant_id: restaurant.id,
+        table_name: tablePayment ? customerData.address : undefined,
+        customer_info: {
+          name: customerData.name,
+          phone: customerData.whatsapp,
+        },
+        total_price: Math.round(totalPrice * 100),
+        status: 'pending_payment',
+      };
+
+      const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item => ({
+        dish_id: item.dish.id,
+        quantity: item.quantity,
+        price_at_time_of_order: Math.round(item.dish.price.replace(',', '.') * 100),
+        selected_complements: Array.from(item.selectedComplements.entries()).flatMap(([groupTitle, selections]) =>
+          Array.from(selections).map(complementName => {
+            const group = item.dish.complement_groups?.find(g => g.title === groupTitle);
+            const complement = group?.complements.find(c => c.name === complementName);
+            return {
+              complement_id: complement?.id || 'unknown',
+              name: complementName,
+              price: Math.round(parseFloat(complement?.price.replace(',', '.') || '0') * 100),
+            };
+          })
+        ),
+      }));
+
+      const newOrder = await createOrder(orderToCreate, itemsToCreate);
+
+      const message = generateCartWhatsAppMessage(newOrder);
+      const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
+
+      const currentRestaurantId = getCurrentRestaurantId();
+      if (currentRestaurantId) {
+        Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
+      }
+
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
+      if (onSent) {
+        onSent();
+      }
+    } catch (error) {
+      console.error("Failed to create order:", error);
+      alert("Houve um erro ao criar o seu pedido. Por favor, tente novamente.");
+    } finally {
+      setIsCreatingOrder(false);
     }
   };
 
@@ -225,8 +259,8 @@ export default function CartWhatsAppButton({
 
   return (
     <button
-      onClick={handleWhatsAppClick}
-      disabled={isLoading || isEmpty || !isCustomerDataCompleteForMode}
+      onClick={handleCreateOrderAndSendWhatsApp}
+      disabled={isLoading || isCreatingOrder || isEmpty || !isCustomerDataCompleteForMode}
       className={`
         w-full flex items-center justify-center gap-3 
         px-6 py-4 
@@ -257,9 +291,9 @@ export default function CartWhatsAppButton({
       {/* Texto do botão */}
       <div className="flex flex-col items-start min-w-0">
         <span className="text-lg font-bold">
-          {isLoading ? 'Carregando...' : 
+          {isLoading || isCreatingOrder ? 'Criando Pedido...' : 
            !isCustomerDataCompleteForMode ? (tablePayment ? 'Preencha nome e WhatsApp' : 'Preencha nome e endereço') : 
-           'Enviar Pedido'}
+           'Fazer Pedido'}
         </span>
         <span className="text-sm opacity-90 truncate">
           {isCustomerDataCompleteForMode 
@@ -294,7 +328,7 @@ export default function CartWhatsAppButton({
 /**
  * Versão compacta do botão para uso em outras partes da interface
  */
-export function CartWhatsAppButtonCompact({ 
+export function CartWhatsAppButtonCompact({
   restaurantId = "default",
   className = "",
   showItemCount = true 

@@ -247,6 +247,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
                 const groupComplements = complements
                   .filter(comp => comp.group_id === group.id)
                   .map(comp => ({
+                    id: String(comp.id),
                     name: comp.name,
                     description: comp.description || '',
                     price: comp.price ? comp.price.toFixed(2).replace('.', ',') : '0,00',
@@ -267,6 +268,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
               .filter((group): group is NonNullable<typeof group> => group !== null); // Filter out null values
 
             return {
+              id: String(dish.id),
               name: dish.name,
               description: dish.description || '',
               price: dish.price ? dish.price.toFixed(2).replace('.', ',') : '0,00',
@@ -297,9 +299,9 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
               
               const groupComplements = complements
                 .filter(comp => comp.group_id === group.id)
-                .map(comp => ({
-                  name: comp.name,
-                  description: comp.description || '',
+                                  .map(comp => ({
+                                    id: String(comp.id),
+                                    name: comp.name,                  description: comp.description || '',
                   price: comp.price ? comp.price.toFixed(2).replace('.', ',') : '0,00',
                   image: comp.image_url || '',
                   ingredients: comp.ingredients || '',
@@ -318,6 +320,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
             .filter((group): group is NonNullable<typeof group> => group !== null); // Filter out null values
 
           return {
+            id: String(dish.id),
             name: dish.name,
             description: dish.description || '',
             price: dish.price ? dish.price.toFixed(2).replace('.', ',') : '0,00',

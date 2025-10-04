@@ -292,3 +292,5 @@ A solução simplificada deve resolver o problema! 🚀
 
 
 
+
+
