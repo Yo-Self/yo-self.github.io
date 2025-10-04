@@ -3,6 +3,7 @@
 import React, { Suspense } from "react";
 import RestaurantClientPage from "./RestaurantClientPage";
 import { useRestaurantBySlug, useRestaurantList } from "@/hooks/useRestaurantBySlug";
+import SetCurrentRestaurant from "@/components/SetCurrentRestaurant";
 
 // Loading component for better UX
 function RestaurantLoading() {
@@ -66,11 +67,14 @@ export default function RestaurantClient({ slug }: { slug: string }) {
   }
 
   return (
-    <Suspense fallback={<RestaurantLoading />}>
-      <RestaurantClientPage
-        initialRestaurant={restaurant}
-        restaurants={restaurants}
-      />
-    </Suspense>
+    <>
+      <SetCurrentRestaurant />
+      <Suspense fallback={<RestaurantLoading />}>
+        <RestaurantClientPage
+          initialRestaurant={restaurant}
+          restaurants={restaurants}
+        />
+      </Suspense>
+    </>
   );
 }

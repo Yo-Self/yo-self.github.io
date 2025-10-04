@@ -2,6 +2,7 @@ import React from "react";
 import { Dish, MenuItem } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 import { CartUtils } from "../types/cart";
+import { dishToMenuItem } from "../types/restaurant";
 
 interface DishCardProps {
   dish: Dish | MenuItem;
@@ -10,8 +11,9 @@ interface DishCardProps {
 }
 
 export default function DishCard({ dish, onClick, size = "large", fallbackImage }: DishCardProps & { fallbackImage: string }) {
+  const menuItemDish = dishToMenuItem(dish);
   // Verificar se tem complementos obrigatórios com preço > 0
-  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(dish);
+  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(menuItemDish);
   
   return (
     <div

@@ -3,6 +3,7 @@ import { Dish } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 import { useCardVisibility } from "../hooks/useCardVisibility";
 import { CartUtils } from "../types/cart";
+import { dishToMenuItem } from "../types/restaurant";
 
 interface CardJornalProps {
   dish: Dish;
@@ -16,8 +17,9 @@ interface CardJornalProps {
 export default function CardJornal({ dish, onClick, size = "small", fallbackImage, isPinned = false, onPinToggle }: CardJornalProps) {
   const { cardRef, isVisible } = useCardVisibility();
 
+  const menuItemDish = dishToMenuItem(dish);
   // Verificar se tem complementos obrigatórios com preço > 0
-  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(dish);
+  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(menuItemDish);
 
   // Só começa a verificar a visibilidade após o primeiro render
   // Isso evita que o card desapareça imediatamente

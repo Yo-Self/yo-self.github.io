@@ -30,7 +30,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     updateQuantity, 
     removeItem, 
     clearCart,
-    isEmpty 
+    isEmpty,
+    incrementQuantity,
+    decrementQuantity
   } = useCart();
   const { getCurrentPosition, permissionStatus, isLoading: isGeolocationLoading, error: geolocationError, isSupported, isBlocked, isSafariIOS, checkPermissionStatus, position } = useGeolocationSafariIOSFinal();
 
@@ -79,24 +81,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isCartOpen, handleClose]);
 
-  // Controles de quantidade
-  const incrementQuantity = (itemId: string) => {
-    const item = items.find(i => i.id === itemId);
-    if (item) {
-      updateQuantity(itemId, item.quantity + 1);
-    }
-  };
-
-  const decrementQuantity = (itemId: string) => {
-    const item = items.find(i => i.id === itemId);
-    if (item) {
-      if (item.quantity <= 1) {
-        removeItem(itemId);
-      } else {
-        updateQuantity(itemId, item.quantity - 1);
-      }
-    }
-  };
+  // Controles de quantidade agora vêm do hook useCart
 
   // Confirmação para limpar carrinho
   const handleClearCart = () => {

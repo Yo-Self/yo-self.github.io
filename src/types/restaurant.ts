@@ -1,3 +1,5 @@
+import { Dish } from '../components/data';
+
 // Tipos para estrutura de dados de restaurantes
 // Baseado na estrutura do JSON do restaurante Moendo
 
@@ -271,4 +273,26 @@ export const RESTAURANT_SCHEMA_EXAMPLE = {
     }
   ]
 } as Restaurant;
+
+export function dishToMenuItem(dishItem: Dish | MenuItem): MenuItem {
+  return {
+    ...dishItem,
+    categories: dishItem.categories || (dishItem.category ? [dishItem.category] : []),
+    category: dishItem.category || (dishItem.categories && dishItem.categories.length > 0 ? dishItem.categories[0] : 'Outros'),
+    tags: dishItem.tags || [],
+    ingredients: dishItem.ingredients || '',
+    allergens: dishItem.allergens || '',
+    portion: dishItem.portion || '',
+    complement_groups: dishItem.complement_groups?.map(group => ({
+      ...group,
+      description: group.description || '',
+      required: group.required || false,
+      max_selections: group.max_selections || 1,
+      complements: group.complements.map(complement => ({
+        ...complement,
+        ingredients: complement.ingredients || ''
+      }))
+    })) || []
+  };
+}
 

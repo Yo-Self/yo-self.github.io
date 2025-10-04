@@ -3,6 +3,7 @@ import { Dish, MenuItem } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { CartUtils } from "../types/cart";
+import { dishToMenuItem } from "../types/restaurant";
 
 interface AnimatedDishCardProps {
   dish: Dish | MenuItem;
@@ -25,8 +26,9 @@ export default function AnimatedDishCard({
     triggerOnce: true
   });
 
+  const menuItemDish = dishToMenuItem(dish);
   // Verificar se tem complementos obrigatórios com preço > 0
-  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(dish);
+  const hasRequiredComplementsWithPrice = CartUtils.hasRequiredComplementsWithPrice(menuItemDish);
 
   return (
     <div

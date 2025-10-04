@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useCallback, useMemo } from 'react';
-import { useCart as useCartContext, useCartExtended } from '../context/CartContext';
+import { useCart as useCartContext } from '../context/CartContext';
 import { MenuItem } from '../types/restaurant';
 import { CartItem, CartUtils } from '../types/cart';
 
@@ -46,6 +46,26 @@ export function useCart() {
     return item?.quantity || 0;
   }, [context.items]);
 
+  // Incrementar quantidade de um item
+  const incrementQuantity = useCallback((itemId: string) => {
+    const item = context.items.find(i => i.id === itemId);
+    if (item) {
+      context.updateQuantity(itemId, item.quantity + 1);
+    }
+  }, [context.items, context.updateQuantity]);
+
+  // Decrementar quantidade de um item
+  const decrementQuantity = useCallback((itemId: string) => {
+    const item = context.items.find(i => i.id === itemId);
+    if (item) {
+      if (item.quantity <= 1) {
+        context.removeItem(itemId);
+      } else {
+        context.updateQuantity(itemId, item.quantity - 1);
+      }
+    }
+  }, [context.items, context.updateQuantity, context.removeItem]);
+
   // Estatísticas do carrinho
   const stats = useMemo(() => ({
     totalItems: context.totalItems,
@@ -76,98 +96,15 @@ export function useCart() {
     removeItem: context.removeItem,
     updateQuantity: context.updateQuantity,
     clearCart: context.clearCart,
+    setCurrentRestaurant: context.setCurrentRestaurant,
+    cartRestaurantId: context.cartRestaurantId,
 
     // Funcionalidades utilitárias
     getItem,
     isItemInCart,
     getItemQuantity,
-  };
-}
-
-/**
- * Hook estendido com funcionalidades avançadas
- */
-export function useCartAdvanced() {
-  const basicCart = useCart();
-  const extendedContext = useCartExtended();
-
-  // Funcionalidades de incremento/decremento
-  const incrementQuantity = useCallback((itemId: string) => {
-    extendedContext.incrementQuantity(itemId);
-  }, [extendedContext]);
-
-  const decrementQuantity = useCallback((itemId: string) => {
-    extendedContext.decrementQuantity(itemId);
-  }, [extendedContext]);
-
-  // Adicionar item com quantidade específica
-  const addItemWithQuantity = useCallback((
-    dish: MenuItem, 
-    selectedComplements: Map<string, Set<string>>, 
-    quantity: number = 1
-  ) => {
-    for (let i = 0; i < quantity; i++) {
-      basicCart.addItem(dish, selectedComplements);
-    }
-  }, [basicCart]);
-
-  // Obter valor total de uma categoria específica
-  const getTotalByCategory = useCallback((category: string): number => {
-    return basicCart.items
-      .filter(item => item.dish.category === category || item.dish.categories.includes(category))
-      .reduce((total, item) => total + item.totalPrice, 0);
-  }, [basicCart.items]);
-
-  // Obter items por categoria
-  const getItemsByCategory = useCallback((category: string): CartItem[] => {
-    return basicCart.items.filter(item => 
-      item.dish.category === category || item.dish.categories.includes(category)
-    );
-  }, [basicCart.items]);
-
-  // Limpar carrinho com confirmação
-  const clearCartWithConfirmation = useCallback((confirmMessage?: string): boolean => {
-    const message = confirmMessage || 'Tem certeza que deseja limpar o carrinho?';
-    if (window.confirm(message)) {
-      basicCart.clearCart();
-      return true;
-    }
-    return false;
-  }, [basicCart]);
-
-  // Análise de complementos mais populares
-  const getComplementsAnalysis = useCallback(() => {
-    const complementsCount = new Map<string, number>();
-    
-    basicCart.items.forEach(item => {
-      item.selectedComplements.forEach((complements) => {
-        complements.forEach(complement => {
-          complementsCount.set(complement, (complementsCount.get(complement) || 0) + item.quantity);
-        });
-      });
-    });
-
-    return Array.from(complementsCount.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5); // Top 5 complementos
-  }, [basicCart.items]);
-
-  return {
-    ...basicCart,
-    
-    // Funcionalidades estendidas
-    isInitialized: extendedContext.isInitialized,
     incrementQuantity,
     decrementQuantity,
-    addItemWithQuantity,
-    
-    // Análises e filtros
-    getTotalByCategory,
-    getItemsByCategory,
-    getComplementsAnalysis,
-    
-    // Utilitários
-    clearCartWithConfirmation,
   };
 }
 
@@ -176,36 +113,8 @@ export function useCartAdvanced() {
  */
 export function useCartAnimations() {
   const cart = useCart();
-
-  // Estado para animações de adição
-  const [isAdding, setIsAdding] = React.useState(false);
-  const [lastAddedItem, setLastAddedItem] = React.useState<string | null>(null);
-
-  const addItemWithAnimation = useCallback(async (
-    dish: MenuItem, 
-    selectedComplements: Map<string, Set<string>>
-  ) => {
-    setIsAdding(true);
-    cart.addItem(dish, selectedComplements);
-    setLastAddedItem(dish.name);
-    
-    // Reset animation state after delay
-    setTimeout(() => {
-      setIsAdding(false);
-      setLastAddedItem(null);
-    }, 1000);
-  }, [cart]);
-
-  return {
-    ...cart,
-    isAdding,
-    lastAddedItem,
-    addItemWithAnimation,
-  };
+  return { ...cart };
 }
 
 // Re-exportar para compatibilidade
 export { useCart as default };
-
-// Import React para useCartAnimations
-import React from 'react';

@@ -7,7 +7,7 @@ import ComplementGrid from "./ComplementGrid";
 import ImageWithLoading from "./ImageWithLoading";
 import OrderButton from "./OrderButton";
 import { useModalScroll } from '../hooks/useModalScroll';
-import { useCart, useCartAdvanced } from '../hooks/useCart';
+import { useCart } from '../hooks/useCart';
 import { CartUtils } from '../types/cart';
 import CartIcon from './CartIcon';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
@@ -27,13 +27,9 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   const [isClosing, setIsClosing] = useState(false);
   const [showAddedFeedback, setShowAddedFeedback] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [tableName, setTableName] = useState('');
   
   // Hook da comanda
-  const { addItem, isItemInCart, getItemQuantity, openCart, removeItem } = useCart();
-  const { incrementQuantity, decrementQuantity } = useCartAdvanced();
+  const { addItem, isItemInCart, getItemQuantity, openCart, removeItem, incrementQuantity, decrementQuantity } = useCart();
 
   // Função helper para converter Dish para MenuItem
   const convertToMenuItem = useCallback((dishItem: Dish | MenuItem): MenuItemType => {
@@ -437,40 +433,6 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
               </div>
             )}
             
-            {/* Campos de Informação do Cliente */}
-            <div className="mt-6 space-y-4">
-              <div>
-                <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
-                <input
-                  type="text"
-                  id="customerName"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-              <div>
-                <label htmlFor="customerPhone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Telefone</label>
-                <input
-                  type="text"
-                  id="customerPhone"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-              <div>
-                <label htmlFor="tableName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mesa</label>
-                <input
-                  type="text"
-                  id="tableName"
-                  value={tableName}
-                  onChange={(e) => setTableName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-            </div>
-
             {/* Botões de ação */}
             <div className="mt-6 flex flex-col gap-3">
               {/* Só exibir botões da comanda se o WhatsApp estiver habilitado */}
@@ -561,10 +523,6 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
                 <OrderButton 
                   dish={dish}
                   selectedComplements={selectedComplements}
-                  restaurantId={restaurantId}
-                  customerName={customerName}
-                  customerPhone={customerPhone}
-                  tableName={tableName}
                   className="modal-button"
                 />
               )}

@@ -27,6 +27,7 @@ import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 import { useLegacyAppDetection } from "@/hooks/useLegacyAppDetection";
 import LegacyAppWrapper from "@/components/LegacyAppWrapper";
 import TableParamHandler from "@/components/TableParamHandler";
+import CartRestaurantValidator from "@/components/CartRestaurantValidator";
 import { Suspense } from "react";
 
 const inter = Inter({
@@ -125,6 +126,7 @@ export default function RootLayout({
                       <Suspense fallback={null}>
                         <TableParamHandler />
                       </Suspense>
+                      <CartRestaurantValidator />
                       <PageViewTracker />
                       <SessionTracker />
                       <Navigation />

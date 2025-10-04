@@ -5,281 +5,171 @@ import { MenuItem } from '../types/restaurant';
 import { 
   CartItem, 
   CartContextType, 
-  SerializableCart,
+  SerializableCarts,
+  RestaurantCart,
   CartUtils
 } from '../types/cart';
-import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
+import Analytics from '../lib/analytics';
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const CART_STORAGE_KEY = 'digital-menu-cart';
-const CART_STORAGE_VERSION = '1.0';
+const CARTS_STORAGE_KEY = 'digital-menu-carts';
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [allCarts, setAllCarts] = useState<{[restaurantId: string]: RestaurantCart}>({});
+  const [currentRestaurantId, setCurrentRestaurantId] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Carrega o carrinho do localStorage na inicialização
   useEffect(() => {
     try {
-      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) {
-        const parsedCart: SerializableCart = JSON.parse(savedCart);
-        
-        // Verificar se é uma versão compatível e não muito antiga (7 dias)
-        const isRecentCart = Date.now() - parsedCart.timestamp < 7 * 24 * 60 * 60 * 1000;
-        
-        if (parsedCart.items && Array.isArray(parsedCart.items) && isRecentCart) {
-          const cartItems = parsedCart.items
-            .map(item => {
-              try {
-                // Verificar se o item tem a estrutura básica necessária
-                if (!item || typeof item !== 'object') {
-                  throw new Error('Item inválido: não é um objeto');
-                }
-                
-                if (!item.dish || typeof item.dish !== 'object') {
-                  throw new Error('Item inválido: dish não é um objeto válido');
-                }
-                
-                return CartUtils.serializableToItem(item);
-              } catch (itemError) {
-                console.warn('Erro ao converter item do carrinho:', item, itemError);
-                return null;
-              }
-            })
-            .filter(item => item !== null) as CartItem[];
-          
-          // Só definir os itens se pelo menos um item foi convertido com sucesso
-          if (cartItems.length > 0) {
-            setItems(cartItems);
-          } else {
-            // Se nenhum item foi convertido com sucesso, limpar o localStorage
-            localStorage.removeItem(CART_STORAGE_KEY);
-          }
-        } else {
-          // Limpar carrinho antigo ou incompatível
-          localStorage.removeItem(CART_STORAGE_KEY);
+      const savedCarts = localStorage.getItem(CARTS_STORAGE_KEY);
+      if (savedCarts) {
+        const parsedCarts: SerializableCarts = JSON.parse(savedCarts);
+        const loadedCarts: {[restaurantId: string]: RestaurantCart} = {};
+        for (const restaurantId in parsedCarts) {
+          const serializableCart = parsedCarts[restaurantId];
+          const items = serializableCart.items.map(CartUtils.serializableToItem);
+          loadedCarts[restaurantId] = {
+            items,
+            totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+            totalPrice: items.reduce((sum, item) => sum + item.totalPrice, 0),
+          };
         }
+        setAllCarts(loadedCarts);
       }
     } catch (error) {
-      console.warn('Erro ao carregar carrinho do localStorage:', error);
-      // Em caso de erro, limpar localStorage
-      try {
-        localStorage.removeItem(CART_STORAGE_KEY);
-      } catch (clearError) {
-        console.warn('Erro ao limpar localStorage:', clearError);
-      }
+      console.warn('Error loading carts from localStorage:', error);
     } finally {
       setIsInitialized(true);
     }
   }, []);
 
-  // Salva o carrinho no localStorage sempre que mudar
   useEffect(() => {
     if (!isInitialized) return;
-    
     try {
-      if (items.length === 0) {
-        localStorage.removeItem(CART_STORAGE_KEY);
-      } else {
-        // Verificar se CartUtils está disponível e tem os métodos necessários
-        if (!CartUtils || typeof CartUtils.itemToSerializable !== 'function') {
-          console.error('CartUtils não está disponível ou não tem o método itemToSerializable');
-          return;
-        }
-        
-        const serializableCart: SerializableCart = {
-          items: items.map(item => {
-            try {
-              return CartUtils.itemToSerializable(item);
-            } catch (itemError) {
-              console.error('Erro ao serializar item:', item, itemError);
-              // Retornar um item básico em caso de erro
-              return {
-                id: item.id,
-                dish: item.dish,
-                selectedComplements: [],
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                totalPrice: item.totalPrice,
-              };
-            }
-          }),
-          timestamp: Date.now(),
+      const serializableCarts: SerializableCarts = {};
+      for (const restaurantId in allCarts) {
+        const cart = allCarts[restaurantId];
+        serializableCarts[restaurantId] = {
+          items: cart.items.map(CartUtils.itemToSerializable),
         };
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(serializableCart));
       }
+      localStorage.setItem(CARTS_STORAGE_KEY, JSON.stringify(serializableCarts));
     } catch (error) {
-      console.warn('Erro ao salvar carrinho no localStorage:', error);
+      console.warn('Error saving carts to localStorage:', error);
     }
-  }, [items, isInitialized]);
+  }, [allCarts, isInitialized]);
 
-  // Calcula totais dinamicamente
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const currentCart = currentRestaurantId ? allCarts[currentRestaurantId] || { items: [], totalItems: 0, totalPrice: 0 } : { items: [], totalItems: 0, totalPrice: 0 };
+
+  const setCurrentRestaurant = useCallback((restaurantId: string) => {
+    setCurrentRestaurantId(restaurantId);
+  }, []);
+
+  const updateCart = (restaurantId: string, newCart: RestaurantCart) => {
+    const newAllCarts = { ...allCarts, [restaurantId]: newCart };
+    newAllCarts[restaurantId] = {
+      ...newCart,
+      totalItems: newCart.items.reduce((sum, item) => sum + item.quantity, 0),
+      totalPrice: newCart.items.reduce((sum, item) => sum + item.totalPrice, 0),
+    };
+    setAllCarts(newAllCarts);
+  };
 
   const addItem = useCallback((dish: MenuItem, selectedComplements: Map<string, Set<string>>) => {
+    if (!currentRestaurantId) return;
+
     const unitPrice = CartUtils.calculateUnitPrice(dish, selectedComplements);
     const itemId = CartUtils.generateItemId(dish, selectedComplements);
+    
+    const cart = allCarts[currentRestaurantId] || { items: [], totalItems: 0, totalPrice: 0 };
+    const newItems = [...cart.items];
+    const existingItemIndex = newItems.findIndex(item => item.id === itemId);
 
-    setItems(prevItems => {
-      // Verificar se já existe um item idêntico
-      const existingItemIndex = prevItems.findIndex(item => 
-        CartUtils.areItemsIdentical(item.dish, item.selectedComplements, dish, selectedComplements)
-      );
-
-      if (existingItemIndex >= 0) {
-        // Item já existe - aumentar quantidade
-        const updatedItems = [...prevItems];
-        const existingItem = updatedItems[existingItemIndex];
-        const newQuantity = existingItem.quantity + 1;
-        
-        updatedItems[existingItemIndex] = {
-          ...existingItem,
-          quantity: newQuantity,
-          totalPrice: unitPrice * newQuantity,
-        };
-        
-        // Track analytics for quantity increase
-        const restaurantId = getCurrentRestaurantId();
-        if (restaurantId) {
-          Analytics.trackCartQuantityChanged(existingItem, existingItem.quantity, newQuantity, restaurantId);
-        }
-        
-        return updatedItems;
-      } else {
-        // Novo item - adicionar ao carrinho
-        const newItem: CartItem = {
-          id: itemId,
-          dish,
-          selectedComplements: new Map(selectedComplements),
-          quantity: 1,
-          unitPrice,
-          totalPrice: unitPrice,
-        };
-        
-        // Track analytics for new item
-        const restaurantId = getCurrentRestaurantId();
-        if (restaurantId) {
-          Analytics.trackCartItemAdded(dish, selectedComplements, 1, restaurantId);
-        }
-        
-        return [...prevItems, newItem];
-      }
-    });
-
-    // Feedback visual opcional - pode ser usado para mostrar animação
-    console.log(`Item adicionado ao carrinho: ${dish.name}`);
-  }, []);
+    if (existingItemIndex >= 0) {
+      const existingItem = newItems[existingItemIndex];
+      const newQuantity = existingItem.quantity + 1;
+      newItems[existingItemIndex] = {
+        ...existingItem,
+        quantity: newQuantity,
+        totalPrice: unitPrice * newQuantity,
+      };
+      Analytics.trackCartQuantityChanged(existingItem, existingItem.quantity, newQuantity, currentRestaurantId);
+    } else {
+      const newItem: CartItem = {
+        id: itemId,
+        dish,
+        selectedComplements: new Map(selectedComplements),
+        quantity: 1,
+        unitPrice,
+        totalPrice: unitPrice,
+      };
+      newItems.push(newItem);
+      Analytics.trackCartItemAdded(dish, selectedComplements, 1, currentRestaurantId);
+    }
+    updateCart(currentRestaurantId, { ...cart, items: newItems });
+  }, [currentRestaurantId, allCarts]);
 
   const removeItem = useCallback((itemId: string) => {
-    setItems(prevItems => {
-      const itemToRemove = prevItems.find(item => item.id === itemId);
-      if (itemToRemove) {
-        // Track analytics for item removal
-        const restaurantId = getCurrentRestaurantId();
-        if (restaurantId) {
-          Analytics.trackCartItemRemoved(itemToRemove, restaurantId);
-        }
-      }
-      return prevItems.filter(item => item.id !== itemId);
-    });
-  }, []);
+    if (!currentRestaurantId) return;
+    const cart = allCarts[currentRestaurantId];
+    if (!cart) return;
+
+    const itemToRemove = cart.items.find(item => item.id === itemId);
+    if (itemToRemove) {
+      Analytics.trackCartItemRemoved(itemToRemove, currentRestaurantId);
+    }
+    const newItems = cart.items.filter(item => item.id !== itemId);
+    updateCart(currentRestaurantId, { ...cart, items: newItems });
+  }, [currentRestaurantId, allCarts]);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
+    if (!currentRestaurantId) return;
     if (quantity <= 0) {
       removeItem(itemId);
       return;
     }
+    const cart = allCarts[currentRestaurantId];
+    if (!cart) return;
 
-    setItems(prevItems => 
-      prevItems.map(item => {
-        if (item.id === itemId) {
-          const oldQuantity = item.quantity;
-          const newQuantity = quantity;
-          
-          // Track analytics for quantity change
-          const restaurantId = getCurrentRestaurantId();
-          if (restaurantId && oldQuantity !== newQuantity) {
-            Analytics.trackCartQuantityChanged(item, oldQuantity, newQuantity, restaurantId);
-          }
-          
-          return {
-            ...item,
-            quantity,
-            totalPrice: item.unitPrice * quantity,
-          };
-        }
-        return item;
-      })
-    );
-  }, [removeItem]);
+    const newItems = cart.items.map(item => {
+      if (item.id === itemId) {
+        Analytics.trackCartQuantityChanged(item, item.quantity, quantity, currentRestaurantId);
+        return {
+          ...item,
+          quantity,
+          totalPrice: item.unitPrice * quantity,
+        };
+      }
+      return item;
+    });
+    updateCart(currentRestaurantId, { ...cart, items: newItems });
+  }, [currentRestaurantId, allCarts, removeItem]);
 
   const clearCart = useCallback(() => {
-    // Track analytics before clearing
-    const restaurantId = getCurrentRestaurantId();
-    if (restaurantId && items.length > 0) {
-      Analytics.trackCartCleared(items.length, totalPrice, restaurantId);
+    if (!currentRestaurantId) return;
+    const cart = allCarts[currentRestaurantId];
+    if (cart) {
+      Analytics.trackCartCleared(cart.items.length, cart.totalPrice, currentRestaurantId);
     }
-    
-    setItems([]);
+    updateCart(currentRestaurantId, { items: [], totalItems: 0, totalPrice: 0 });
     setIsCartOpen(false);
-  }, [items.length, totalPrice]);
+  }, [currentRestaurantId, allCarts]);
 
   const openCart = useCallback(() => {
-    // Track analytics when cart is opened
-    const restaurantId = getCurrentRestaurantId();
-    if (restaurantId) {
-      Analytics.trackCartOpened(totalItems, totalPrice, restaurantId);
+    if (currentRestaurantId) {
+      Analytics.trackCartOpened(currentCart.totalItems, currentCart.totalPrice, currentRestaurantId);
     }
-    
     setIsCartOpen(true);
-  }, [totalItems, totalPrice]);
+  }, [currentRestaurantId, currentCart]);
 
-  const closeCart = useCallback(() => {
-    setIsCartOpen(false);
-  }, []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
-  // Funcionalidades adicionais para melhor UX
-  const incrementQuantity = useCallback((itemId: string) => {
-    setItems(prevItems => 
-      prevItems.map(item => {
-        if (item.id === itemId) {
-          const newQuantity = item.quantity + 1;
-          return {
-            ...item,
-            quantity: newQuantity,
-            totalPrice: item.unitPrice * newQuantity,
-          };
-        }
-        return item;
-      })
-    );
-  }, []);
-
-  const decrementQuantity = useCallback((itemId: string) => {
-    setItems(prevItems => 
-      prevItems.map(item => {
-        if (item.id === itemId) {
-          const newQuantity = Math.max(1, item.quantity - 1);
-          return {
-            ...item,
-            quantity: newQuantity,
-            totalPrice: item.unitPrice * newQuantity,
-          };
-        }
-        return item;
-      })
-    );
-  }, []);
-
-  // Context value
   const value: CartContextType = {
-    items,
-    totalItems,
-    totalPrice,
+    items: currentCart.items,
+    totalItems: currentCart.totalItems,
+    totalPrice: currentCart.totalPrice,
     addItem,
     removeItem,
     updateQuantity,
@@ -287,18 +177,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     isCartOpen,
     openCart,
     closeCart,
-  };
-
-  // Adicionar funcionalidades extras ao contexto se necessário
-  const extendedValue = {
-    ...value,
-    incrementQuantity,
-    decrementQuantity,
-    isInitialized,
+    setCurrentRestaurant,
+    cartRestaurantId: currentRestaurantId,
   };
 
   return (
-    <CartContext.Provider value={extendedValue as CartContextType}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
@@ -310,18 +194,4 @@ export function useCart() {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-}
-
-// Hook adicional para funcionalidades estendidas
-export function useCartExtended() {
-  const context = useContext(CartContext) as any;
-  if (context === undefined) {
-    throw new Error('useCartExtended must be used within a CartProvider');
-  }
-  return {
-    ...context,
-    incrementQuantity: context.incrementQuantity,
-    decrementQuantity: context.decrementQuantity,
-    isInitialized: context.isInitialized,
-  };
 }
