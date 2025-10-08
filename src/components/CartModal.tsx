@@ -50,17 +50,6 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   // Controlar scroll do body quando modal estiver aberto
   useModalScroll(isCartOpen);
 
-  useEffect(() => {
-    if (isCartOpen && permissionStatus !== 'granted') {
-      getCurrentPosition();
-      setTimeout(() => {
-        checkPermissionStatus().then(() => {
-          setPermissionUpdate(prev => prev + 1);
-        });
-      }, 5000);
-    }
-  }, [isCartOpen, permissionStatus, getCurrentPosition, checkPermissionStatus]);
-
   const handleClose = React.useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {

@@ -40,7 +40,7 @@ export default function GooglePlacesAutocompleteRobust({
     if (typeof (window as any).google !== 'undefined' && 
         (window as any).google.maps && 
         (window as any).google.maps.places && 
-        (window as any).google.maps.places.PlaceAutocompleteElement) {
+        (window as any).google.maps.places.Autocomplete) {
       console.log('Google Maps Places já está carregado');
       setIsLoaded(true);
       return Promise.resolve();
@@ -58,7 +58,7 @@ export default function GooglePlacesAutocompleteRobust({
           if (typeof (window as any).google !== 'undefined' && 
               (window as any).google.maps && 
               (window as any).google.maps.places && 
-              (window as any).google.maps.places.PlaceAutocompleteElement) {
+              (window as any).google.maps.places.Autocomplete) {
             clearInterval(checkInterval);
             console.log('Google Maps Places carregado via script existente');
             setIsLoaded(true);
@@ -112,7 +112,7 @@ export default function GooglePlacesAutocompleteRobust({
     if (typeof (window as any).google === 'undefined' || 
         !(window as any).google.maps || 
         !(window as any).google.maps.places || 
-        !(window as any).google.maps.places.PlaceAutocompleteElement) {
+        !(window as any).google.maps.places.Autocomplete) {
       console.log('Google Maps Places ainda não está disponível, aguardando...');
       return;
     }
@@ -127,33 +127,33 @@ export default function GooglePlacesAutocompleteRobust({
         autocompleteRef.current = null;
       }
       
-      const autocompleteElement = new (window as any).google.maps.places.PlaceAutocompleteElement({
-        inputElement: inputRef.current,
-        componentRestrictions: { country: 'br' },
-        types: ['address'],
-      });
+      const autocomplete = new (window as any).google.maps.places.Autocomplete(
+        inputRef.current,
+        {
+          componentRestrictions: { country: 'br' },
+          types: ['address'],
+        }
+      );
 
-      autocompleteRef.current = autocompleteElement;
+      autocompleteRef.current = autocomplete;
 
-      const listener = autocompleteElement.addEventListener('gmp-placechange', (event: any) => {
-        const place = event.detail.place;
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
         
-        if (place.formattedAddress) {
-          onChange(place.formattedAddress);
+        if (place && place.formatted_address) {
+          onChange(place.formatted_address);
           
-          if (place.location) {
+          if (place.geometry && place.geometry.location) {
             const coordinates = {
-              latitude: place.location.latitude,
-              longitude: place.location.longitude
+              latitude: place.geometry.location.lat(),
+              longitude: place.geometry.location.lng()
             };
-            onCoordinatesChange?.(coordinates, place.formattedAddress);
+            onCoordinatesChange?.(coordinates, place.formatted_address);
           } else {
             onCoordinatesChange?.(null);
           }
         }
       });
-
-      (autocompleteElement as any).listener = listener;
 
       const style = document.createElement('style');
       style.id = 'google-places-attribution-hide';
@@ -178,6 +178,24 @@ export default function GooglePlacesAutocompleteRobust({
         }
         .pac-container .pac-item-selected:hover {
           background-color: #2563eb !important;
+        }
+        .dark .pac-container {
+          background-color: #1f1f1f !important;
+          border-color: #4b5563 !important;
+        }
+        .dark .pac-item {
+          color: #d1d5db !important;
+          border-bottom-color: #4b5563 !important;
+        }
+        .dark .pac-item:hover {
+          background-color: #374151 !important;
+        }
+        .dark .pac-item-selected {
+          background-color: #2563eb !important;
+          color: white !important;
+        }
+        .dark .pac-item-selected:hover {
+          background-color: #1d4ed8 !important;
         }
       `;
       document.head.appendChild(style);

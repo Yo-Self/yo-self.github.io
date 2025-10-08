@@ -171,48 +171,6 @@ export default function CustomerDataForm({
           <p className="text-xs text-gray-500 dark:text-gray-400">
             💡 Digite o endereço ou click no icone de localização e selecione uma das sugestões que aparecerem.
           </p>
-          {geolocationError && (
-            <div className={`text-xs ${isBlocked ? 'text-red-600 dark:text-red-400' : 'text-red-600 dark:text-red-400'}`}>
-              {isBlocked ? (
-                <div>
-                  <p className="font-medium mb-2">🚫 Permissão bloqueada pelo navegador</p>
-                  <div className="text-xs space-y-1">
-                    <p><strong>Para resolver:</strong></p>
-                    {isSafariIOS ? (
-                      <>
-                        <p>1. Vá em Configurações → Safari → Localização</p>
-                        <p>2. Mude para &quot;Perguntar&quot; ou &quot;Permitir&quot;</p>
-                        <p>3. Recarregue a página</p>
-                        <p className="text-blue-600 dark:text-blue-400 mt-2">
-                          💡 Ou acesse: Configurações → Privacidade e Segurança → Localização → Safari
-                        </p>
-                      </>
-                    ) : typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh') && navigator.userAgent.includes('Safari') ? (
-                      <>
-                        <p>1. Vá em Safari → Configurações (ou Safari → Preferências)</p>
-                        <p>2. Clique na aba &quot;Websites&quot;</p>
-                        <p>3. Encontre &quot;Localização&quot; na lista lateral</p>
-                        <p>4. Mude para &quot;Perguntar&quot; ou &quot;Permitir&quot;</p>
-                        <p>5. Recarregue a página</p>
-                        <p className="text-blue-600 dark:text-blue-400 mt-2">
-                          💡 Ou acesse: Configurações → Privacidade e Segurança → Localização → Safari
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p>1. Clique no ícone 🔒 ao lado da URL</p>
-                        <p>2. Vá em &quot;Configurações do site&quot;</p>
-                        <p>3. Encontre &quot;Localização&quot; e mude para &quot;Perguntar&quot;</p>
-                        <p>4. Recarregue a página</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p>⚠️ {geolocationError}</p>
-              )}
-            </div>
-          )}
         </div>
       </div>
       )}
