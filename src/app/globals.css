@@ -60,6 +60,7 @@ body.dark {
 /* Modificado para permitir scroll interno nos modais */
 html.modal-open {
   overflow: hidden;
+  height: 100%;
 }
 
 body.modal-open {
@@ -67,8 +68,12 @@ body.modal-open {
   position: fixed;
   width: 100%;
   height: 100%;
-  /* Permitir scroll interno nos modais */
-  overscroll-behavior: contain;
+  /* Bloquear completamente o scroll do body */
+  overscroll-behavior: none;
+  /* Prevenir scroll em dispositivos touch */
+  touch-action: none;
+  /* Melhor suporte para iOS Safari */
+  -webkit-overflow-scrolling: auto;
 }
 
 /* Garantir que modais internos possam fazer scroll */
@@ -78,6 +83,10 @@ body.modal-open {
   overflow-x: hidden !important;
   /* Permitir scroll interno */
   overscroll-behavior: contain;
+  /* Permitir gestos de scroll em dispositivos touch dentro dos modais */
+  touch-action: pan-y !important;
+  /* Melhor suporte para iOS Safari */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Garantir que o chat possa fazer scroll */
@@ -85,6 +94,10 @@ body.modal-open {
 .modal-open [class*="overflow-y-auto"] {
   overflow-y: auto !important;
   overscroll-behavior: contain;
+  /* Permitir gestos de scroll em dispositivos touch */
+  touch-action: pan-y !important;
+  /* Melhor suporte para iOS Safari */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Regras específicas para o chat */
@@ -98,9 +111,11 @@ body.modal-open {
   scroll-behavior: smooth;
   /* Garantir que o scroll funcione mesmo com o modal aberto */
   position: relative;
-  z-index: 1;
-  /* Garantir que o scroll funcione em todos os navegadores */
+  /* Permitir gestos de scroll em dispositivos touch */
+  touch-action: pan-y !important;
+  /* Melhor suporte para iOS Safari */
   -webkit-overflow-scrolling: touch;
+  z-index: 1;
   /* Prevenir conflitos de scroll */
   isolation: isolate;
 }

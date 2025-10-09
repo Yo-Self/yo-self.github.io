@@ -97,7 +97,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
       style={{
         background: 'rgba(0, 0, 0, 0.5)',
         backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)'
+        WebkitBackdropFilter: 'blur(8px)',
+        overflow: 'hidden',
+        touchAction: 'none'
       }}
     >
       <div 
@@ -173,7 +175,13 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
           ) : (
             <>
               {/* Lista de itens */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div 
+                className="flex-1 overflow-y-auto p-6 space-y-4"
+                style={{
+                  touchAction: 'pan-y',
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
                 {items.map((item) => (
                   <CartItemComponent
                     key={item.id}
