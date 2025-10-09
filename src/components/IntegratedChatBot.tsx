@@ -64,12 +64,12 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
       const openTime = Date.now();
       setChatOpenTime(openTime);
       Analytics.trackChatbotOpened(restaurant.id, 'integrated');
-    } else if (chatOpenTime) {
+    } else if (chatOpenTime !== null) {
       const sessionLength = Math.round((Date.now() - chatOpenTime) / 1000);
       Analytics.trackChatbotClosed(restaurant.id, sessionLength, messages.length);
       setChatOpenTime(null);
     }
-  }, [isOpen, restaurant.id, messages.length, chatOpenTime]);
+  }, [isOpen, restaurant.id]);
 
   // Auto-scroll para a última mensagem
   const scrollToBottom = () => {
@@ -614,81 +614,15 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
         </div>
       </div>
       
-      {/* Modal de detalhes do prato */}
-      {showDishModal && selectedDish && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden">
-            <div className="relative">
-              <img
-                src={selectedDish.image}
-                alt={selectedDish.name}
-                className="w-full h-48 object-cover"
-              />
-              <button
-                onClick={handleCloseDishModal}
-                className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-
-            </div>
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {selectedDish.name}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-primary dark:text-cyan-500">
-                    R$ {selectedDish.price}
-                  </span>
-                  {selectedDish.tags && selectedDish.tags.length > 0 && (
-                    <div className="flex gap-1">
-                      {selectedDish.tags.map(tag => (
-                        <span key={tag} className="bg-primary dark:bg-cyan-700 text-white text-xs px-2 py-0.5 rounded-full">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {selectedDish.description}
-              </p>
-              <div className="space-y-3">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                    Ingredientes
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedDish.ingredients}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                    Porção
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedDish.portion}
-                  </p>
-                </div>
-                {selectedDish.allergens && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                      Alergênicos
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedDish.allergens}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal de detalhes do prato - usando o componente DishModal completo */}
+      <DishModal
+        open={showDishModal}
+        dish={selectedDish}
+        restaurantId={restaurant.id}
+        restaurant={restaurant}
+        fallbackImage={restaurant.image}
+        onClose={handleCloseDishModal}
+      />
       
       {/* Notificação de voz */}
       <VoiceNotification 

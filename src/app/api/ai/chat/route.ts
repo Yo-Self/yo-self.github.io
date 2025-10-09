@@ -4,8 +4,68 @@ import { NextRequest, NextResponse } from 'next/server';
 // Inicializar o cliente do Google AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-// Modelo Gemini Flash (gratuito e disponível)
-const MODEL_NAME = 'gemini-1.5-flash';
+// Modelos disponíveis (em ordem de preferência)
+const MODELS = [
+  'gemini-2.0-flash-exp',  // Mais novo e rápido
+  'gemini-1.5-pro',        // Mais completo
+  'gemini-pro',            // Fallback estável
+] as const;
+
+// Função para tentar diferentes modelos
+async function tryModelsSequentially(
+  message: string,
+  restaurantContext: string,
+  chatHistory: any[]
+): Promise<{ text: string; model: string }> {
+  let lastError: Error | null = null;
+
+  for (const modelName of MODELS) {
+    try {
+      console.log(`Tentando modelo: ${modelName}`);
+      
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+      });
+
+      const chat = model.startChat({
+        history: chatHistory?.map((msg: any) => ({
+          role: msg.role === 'assistant' ? 'model' : msg.role,
+          parts: [{ text: msg.content }],
+        })) || [],
+      });
+
+      const result = await chat.sendMessage(`${restaurantContext}\n\nCliente: ${message}`);
+      const response = await result.response;
+      const text = response.text();
+
+      console.log(`Sucesso com modelo: ${modelName}`);
+      return { text, model: modelName };
+      
+    } catch (error: any) {
+      console.error(`Modelo ${modelName} falhou:`, error.message);
+      lastError = error;
+      
+      // Se for o último modelo, propaga o erro
+      if (modelName === MODELS[MODELS.length - 1]) {
+        throw new Error(
+          `Todos os modelos falharam. Último erro: ${error.message}`
+        );
+      }
+      
+      // Continua para o próximo modelo
+      continue;
+    }
+  }
+
+  // Se chegou aqui, algo deu muito errado
+  throw lastError || new Error('Falha ao processar requisição');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,32 +100,16 @@ export async function POST(request: NextRequest) {
       6. Mantenha as respostas concisas mas informativas
     `;
 
-    // Configurar o modelo
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_NAME,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 1024,
-      },
-    });
-
-    // Preparar histórico de conversa
-    const chat = model.startChat({
-      history: chatHistory?.map((msg: any) => ({
-        role: msg.role === 'assistant' ? 'model' : msg.role,
-        parts: [{ text: msg.content }],
-      })) || [],
-    });
-
-    // Enviar mensagem
-    const result = await chat.sendMessage(`${restaurantContext}\n\nCliente: ${message}`);
-    const response = await result.response;
-    const text = response.text();
+    // Tentar diferentes modelos até encontrar um que funcione
+    const { text, model: usedModel } = await tryModelsSequentially(
+      message,
+      restaurantContext,
+      chatHistory
+    );
 
     return NextResponse.json({
       message: text,
+      model: usedModel,
       timestamp: new Date().toISOString(),
     });
 

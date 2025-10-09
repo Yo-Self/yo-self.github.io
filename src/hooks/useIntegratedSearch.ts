@@ -125,37 +125,109 @@ export function useIntegratedSearch(): UseIntegratedSearchReturn {
           items: searchResults
         });
       } else {
-        // Usar LLM
+        // Usar LLM - primeiro tenta Edge Function, depois fallback para API local
+        let data;
+        let usedFallback = false;
+        
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         
-        if (!supabaseUrl || !supabaseKey) {
-          throw new Error('Configuração do Supabase não encontrada.');
-        }
-        
-        const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;
-        
-        const response = await fetch(functionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`,
-          },
-          body: JSON.stringify({
-            message: query,
-            restaurantData,
-            chatHistory: [],
-          }),
-        });
+        // Tentar Edge Function primeiro
+        if (supabaseUrl && supabaseKey) {
+          try {
+            const functionUrl = `${supabaseUrl}/functions/v1/ai-chat`;
+            
+            const response = await fetch(functionUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseKey}`,
+              },
+              body: JSON.stringify({
+                message: query,
+                restaurantData,
+                chatHistory: [],
+              }),
+            });
 
-        if (!response.ok) {
-          throw new Error('Erro na comunicação com a IA');
-        }
+            if (!response.ok) {
+              // Tentar extrair detalhes do erro da resposta
+              let errorDetails = 'Erro na comunicação com a IA';
+              try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                  errorDetails = errorData.error;
+                }
+                if (errorData.details) {
+                  errorDetails += `: ${errorData.details}`;
+                }
+              } catch (parseError) {
+                // Se não conseguir parsear o JSON, usa a mensagem padrão
+                errorDetails = `Erro ${response.status}: ${response.statusText}`;
+              }
+              throw new Error(errorDetails);
+            }
 
-        const data = await response.json();
+            data = await response.json();
 
-        if (data.error) {
-          throw new Error(data.error);
+            if (data.error) {
+              throw new Error(data.error);
+            }
+          } catch (edgeFunctionError) {
+            console.warn('Edge Function falhou, tentando fallback local:', edgeFunctionError);
+            // Tentar fallback para API local
+            try {
+              const fallbackResponse = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  message: query,
+                  restaurantData,
+                  chatHistory: [],
+                }),
+              });
+
+              if (!fallbackResponse.ok) {
+                throw new Error('Fallback API também falhou');
+              }
+
+              data = await fallbackResponse.json();
+              usedFallback = true;
+
+              if (data.error) {
+                throw new Error(data.error);
+              }
+            } catch (fallbackError) {
+              // Se ambos falharem, propagar o erro original
+              throw edgeFunctionError;
+            }
+          }
+        } else {
+          // Se não tem configuração do Supabase, usa API local direto
+          const fallbackResponse = await fetch('/api/ai/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: query,
+              restaurantData,
+              chatHistory: [],
+            }),
+          });
+
+          if (!fallbackResponse.ok) {
+            throw new Error('Erro na comunicação com a IA');
+          }
+
+          data = await fallbackResponse.json();
+          usedFallback = true;
+
+          if (data.error) {
+            throw new Error(data.error);
+          }
         }
         
         // Extrair pratos recomendados da resposta

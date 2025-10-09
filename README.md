@@ -14,20 +14,20 @@ Uma aplicação moderna de cardápio digital com chatbot inteligente usando **Go
 - 📊 **Analytics**: Integração com PostHog e OpenReplay
 - 🚀 **Performance**: Otimizado para velocidade
 
-## 🚀 Chatbot com Gemma 3 SuperTo
+## 🚀 Chatbot com Google Gemini AI
 
-O chatbot agora usa o **Google Gemma 3 SuperTo** como modelo padrão, oferecendo:
+O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:
 
-- ⚡ **Velocidade**: 2-3x mais rápido que modelos anteriores
+- ⚡ **Velocidade**: Respostas em segundos
 - 🧠 **Qualidade**: Melhor compreensão e respostas mais naturais
-- 💪 **Confiabilidade**: Sistema de fallback automático
+- 💪 **Confiabilidade**: Sistema de fallback automático com múltiplos modelos
 - 🎯 **Precisão**: Informações precisas sobre pratos e preços
 
 ### Modelos Disponíveis
 
-1. **🤖 Gemma 3 SuperTo** (Padrão) - Mais rápido e inteligente
-2. **⚡ Gemma 3 Flash** (Fallback) - Otimizado para velocidade
-3. **💎 Gemini 1.5 Flash** (Último recurso) - Compatibilidade garantida
+1. **🚀 Gemini 2.0 Flash Exp** (Padrão) - Mais novo e rápido
+2. **💎 Gemini 1.5 Pro** (Fallback 1) - Mais completo e robusto
+3. **⚡ Gemini Pro** (Fallback 2) - Estável e confiável
 
 ## 🛠️ Tecnologias
 
@@ -68,9 +68,12 @@ O chatbot agora usa o **Google Gemma 3 SuperTo** como modelo padrão, oferecendo
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   GOOGLE_AI_API_KEY=your_google_ai_api_key
    NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
    NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY=your_openreplay_key
    ```
+   
+   **📚 [Veja o guia completo de configuração da Google AI API](GOOGLE_AI_SETUP.md)**
 
 4. **Configure o Supabase**:
    - Crie um projeto no [Supabase](https://supabase.com)
@@ -86,12 +89,14 @@ O chatbot agora usa o **Google Gemma 3 SuperTo** como modelo padrão, oferecendo
 
 ## 🧪 Testando
 
-### Gemma 3 SuperTo
-Execute o script de teste para verificar se tudo está funcionando:
+### Chatbot AI
+Execute o script de teste para verificar se o chatbot está funcionando:
 
 ```bash
 node test-gemma3.js
 ```
+
+**Nota:** Este script ainda funciona mesmo após a migração para Gemini 2.0.
 
 ### Funcionalidade de Voz
 Para testar a funcionalidade de text-to-speech:
