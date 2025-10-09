@@ -30,6 +30,8 @@ import TableParamHandler from "@/components/TableParamHandler";
 import CartRestaurantValidator from "@/components/CartRestaurantValidator";
 import { Suspense } from "react";
 
+import { RestaurantProvider } from "@/context/RestaurantContext";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -118,7 +120,8 @@ export default function RootLayout({
         <LegacyAppWrapper>
           <ErrorBoundary>
             <PostHogProvider>
-              <AccessibilityProvider>
+              <RestaurantProvider>
+                <AccessibilityProvider>
                 <CartProvider>
                   <CustomerDataProvider>
                     <CustomerCoordinatesProvider>
@@ -144,6 +147,7 @@ export default function RootLayout({
                   </CustomerDataProvider>
                 </CartProvider>
               </AccessibilityProvider>
+            </RestaurantProvider>
               <Analytics />
             </PostHogProvider>
           </ErrorBoundary>

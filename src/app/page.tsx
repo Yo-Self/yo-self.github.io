@@ -5,7 +5,8 @@ import DynamicCarousel from "../components/DynamicCarousel";
 import ImageWithLoading from "@/components/ImageWithLoading";
 import Image from "next/image";
 import AnimatedStaticDishCard from "@/components/AnimatedStaticDishCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRestaurant } from "@/context/RestaurantContext";
 import { Restaurant } from "@/components/data";
 
 // Dados reais do Café Moendo para demonstração
@@ -108,6 +109,12 @@ function StaticDishCard({ dish, size = "large", index = 0 }: { dish: typeof samp
 
 
 export default function Home() {
+  const { setRestaurantId } = useRestaurant();
+
+  useEffect(() => {
+    setRestaurantId("cafe-moendo");
+  }, [setRestaurantId]);
+
   // Use fallback data initially to avoid build issues
   const [moendoRestaurant, setMoendoRestaurant] = useState<Restaurant | null>({
     id: "fallback",

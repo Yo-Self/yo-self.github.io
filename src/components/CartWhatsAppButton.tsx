@@ -29,23 +29,14 @@ export default function CartWhatsAppButton({
 }: CartWhatsAppButtonProps) {
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty } = useCart();
   const { config, isLoading } = useWhatsAppConfig(restaurantId);
-  const { customerData, isCustomerDataComplete } = useCustomerData();
+  const { customerData } = useCustomerData();
   const { customerCoordinates } = useCustomerCoordinates();
   const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
   const { restaurant } = useRestaurantBySlug(restaurantId);
   const { tablePayment } = useRestaurantTablePayment(restaurantId);
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
 
-  // Verificar se os dados do cliente estão completos baseado no modo de pagamento
-  const isCustomerDataCompleteForMode = React.useMemo(() => {
-    if (tablePayment) {
-      // Para pagamento na mesa: nome e WhatsApp obrigatórios
-      return customerData.name?.trim() && customerData.whatsapp?.trim();
-    } else {
-      // Para delivery: nome e endereço obrigatórios
-      return customerData.name?.trim() && customerData.address?.trim();
-    }
-  }, [customerData, tablePayment]);
+  // O botão agora está sempre habilitado, então a verificação de dados do cliente foi removida.
 
   // Não renderizar se carrinho estiver vazio
   if (isEmpty) {
@@ -196,7 +187,7 @@ export default function CartWhatsAppButton({
   };
 
   const handleCreateOrderAndSendWhatsApp = async () => {
-    if (isLoading || isCreatingOrder || isEmpty || !isCustomerDataCompleteForMode) return;
+    if (isLoading || isCreatingOrder || isEmpty) return;
 
     if (!restaurant) {
       console.error("Restaurant not found, cannot create order.");
@@ -204,6 +195,7 @@ export default function CartWhatsAppButton({
       return;
     }
 
+    console.log('[CartWhatsAppButton] Iniciando a criação do pedido...');
     setIsCreatingOrder(true);
 
     try {
@@ -235,9 +227,13 @@ export default function CartWhatsAppButton({
         ),
       }));
 
+      console.log('[CartWhatsAppButton] Chamando createOrder...');
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
+      console.log('[CartWhatsAppButton] Pedido criado com sucesso:', newOrder);
 
       const message = generateCartWhatsAppMessage(newOrder);
+      console.log('[CartWhatsAppButton] Mensagem do WhatsApp gerada.');
+
       const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
 
       const currentRestaurantId = getCurrentRestaurantId();
@@ -245,15 +241,17 @@ export default function CartWhatsAppButton({
         Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
       }
 
+      console.log('[CartWhatsAppButton] Abrindo URL do WhatsApp...');
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
       if (onSent) {
         onSent();
       }
     } catch (error) {
-      console.error("Failed to create order:", error);
+      console.error("[CartWhatsAppButton] Falha ao criar o pedido:", error);
       alert("Houve um erro ao criar o seu pedido. Por favor, tente novamente.");
     } finally {
+      console.log('[CartWhatsAppButton] Finalizando o processo.');
       setIsCreatingOrder(false);
     }
   };
@@ -266,14 +264,11 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty || !isCustomerDataCompleteForMode}
+      disabled={isLoading || isCreatingOrder || isEmpty}
       className={`
         w-full flex items-center justify-center gap-3 
         px-6 py-4 
-        ${isCustomerDataCompleteForMode 
-          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
-          : 'bg-gradient-to-r from-gray-400 to-gray-500'
-        }
+        bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
         text-white font-semibold 
         rounded-xl shadow-lg hover:shadow-xl
         transition-all duration-200 
@@ -297,15 +292,10 @@ export default function CartWhatsAppButton({
       {/* Texto do botão */}
       <div className="flex flex-col items-start min-w-0">
         <span className="text-lg font-bold">
-          {isLoading || isCreatingOrder ? 'Criando Pedido...' : 
-           !isCustomerDataCompleteForMode ? (tablePayment ? 'Preencha nome e WhatsApp' : 'Preencha nome e endereço') : 
-           'Fazer Pedido'}
+          {isLoading || isCreatingOrder ? 'Criando Pedido...' : 'Fazer Pedido'}
         </span>
         <span className="text-sm opacity-90 truncate">
-          {isCustomerDataCompleteForMode 
-            ? `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`
-            : tablePayment ? 'Preencha para continuar' : 'Preencha para continuar'
-          }
+          {`${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`}
         </span>
       </div>
 

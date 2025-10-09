@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import GooglePlacesAutocompleteRobust from './GooglePlacesAutocompleteRobust';
 import NearbyAddresses from './NearbyAddresses';
 import { useCustomerData } from '../hooks/useCustomerData';
+import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useReverseGeocodingRobust } from '../hooks/useReverseGeocodingRobust';
 import { AddressResult } from '../hooks/useReverseGeocoding';
 
@@ -33,6 +34,7 @@ export default function CustomerDataForm({
   addressActive = true
 }: CustomerDataFormProps) {
   const { customerData, updateName, updateAddress, updateNumber, updateComplement } = useCustomerData();
+  const { updateCoordinates } = useCustomerCoordinates();
   const { addresses, isLoading: isReverseGeocodingLoading, error: reverseGeocodingError, getAddressesFromCoordinates, clearAddresses } = useReverseGeocodingRobust();
   const [showNearbyAddresses, setShowNearbyAddresses] = useState(false);
 
@@ -129,6 +131,17 @@ export default function CustomerDataForm({
             value={customerData.address}
             onChange={(address) => {
               updateAddress(address);
+              // Limpar coordenadas ao alterar endereço manualmente
+              updateCoordinates(null, address);
+              if (!address.trim()) {
+                updateCoordinates(null, '');
+              }
+            }}
+            onCoordinatesChange={(coordinates, address) => {
+              if (address) {
+                updateAddress(address);
+              }
+              updateCoordinates(coordinates, address || '');
             }}
             placeholder="Digite seu endereço completo"
           />

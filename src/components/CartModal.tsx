@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useCart } from '../hooks/useCart';
 import { useModalScroll } from '../hooks/useModalScroll';
+import { useRestaurant } from '../context/RestaurantContext';
 import { useCurrentRestaurant } from '../hooks/useCurrentRestaurant';
 import { CartItem, CartUtils } from '../types/cart';
 import ImageWithLoading from './ImageWithLoading';
@@ -38,7 +39,8 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
   // Usar o restaurantId passado como prop ou detectar automaticamente
   const detectedRestaurantId = useCurrentRestaurant();
-  const restaurantId = propRestaurantId || detectedRestaurantId;
+  const { restaurantId: contextRestaurantId } = useRestaurant();
+  const restaurantId = propRestaurantId || detectedRestaurantId || contextRestaurantId;
   const { addressActive } = useRestaurantAddressActive(restaurantId);
   const { tablePayment } = useRestaurantTablePayment(restaurantId);
 
