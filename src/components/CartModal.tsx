@@ -44,6 +44,22 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const { addressActive } = useRestaurantAddressActive(restaurantId);
   const { tablePayment } = useRestaurantTablePayment(restaurantId);
 
+  // Debug: Log do restaurantId quando o modal abrir
+  useEffect(() => {
+    if (isCartOpen) {
+      console.log('[CartModal] Modal aberto com restaurantId:', {
+        final: restaurantId,
+        prop: propRestaurantId,
+        detected: detectedRestaurantId,
+        context: contextRestaurantId
+      });
+      
+      if (!restaurantId || restaurantId === 'default') {
+        console.warn('[CartModal] AVISO: restaurantId inválido detectado!');
+      }
+    }
+  }, [isCartOpen, restaurantId, propRestaurantId, detectedRestaurantId, contextRestaurantId]);
+
   const [isClosing, setIsClosing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const [permissionUpdate, setPermissionUpdate] = useState(0);
@@ -230,6 +246,15 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
                 {/* Botões de ação */}
                 <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Alerta se restaurantId estiver inválido */}
+                  {(!restaurantId || restaurantId === 'default') && (
+                    <div className="w-full mb-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        ⚠️ Aguardando identificação do restaurante. Se o problema persistir, recarregue a página.
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="flex-1">
                     <CartWhatsAppButton restaurantId={restaurantId} />
                   </div>

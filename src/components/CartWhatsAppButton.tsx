@@ -32,9 +32,22 @@ export default function CartWhatsAppButton({
   const { customerData } = useCustomerData();
   const { customerCoordinates } = useCustomerCoordinates();
   const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
-  const { restaurant } = useRestaurantBySlug(restaurantId);
+  const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const { tablePayment } = useRestaurantTablePayment(restaurantId);
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
+  const restaurantIdRef = React.useRef(restaurantId);
+
+  // Monitorar mudanças no restaurantId e cancelar operações
+  React.useEffect(() => {
+    if (restaurantIdRef.current !== restaurantId) {
+      console.log('[CartWhatsAppButton] restaurantId mudou de', restaurantIdRef.current, 'para', restaurantId);
+      if (isCreatingOrder) {
+        console.warn('[CartWhatsAppButton] Cancelando operação devido a mudança de restaurante');
+        setIsCreatingOrder(false);
+      }
+      restaurantIdRef.current = restaurantId;
+    }
+  }, [restaurantId, isCreatingOrder]);
 
   // O botão agora está sempre habilitado, então a verificação de dados do cliente foi removida.
 
@@ -187,15 +200,37 @@ export default function CartWhatsAppButton({
   };
 
   const handleCreateOrderAndSendWhatsApp = async () => {
-    if (isLoading || isCreatingOrder || isEmpty) return;
+    // Verificação 1: Validações básicas de estado
+    if (isLoading || isCreatingOrder || isEmpty) {
+      console.log('[CartWhatsAppButton] Operação bloqueada - isLoading:', isLoading, 'isCreatingOrder:', isCreatingOrder, 'isEmpty:', isEmpty);
+      return;
+    }
 
+    // Verificação 2: Aguardar carregamento do restaurante se ainda não carregou
+    if (isLoadingRestaurant) {
+      console.log('[CartWhatsAppButton] Restaurante ainda está carregando. Aguardando...');
+      alert("Por favor, aguarde. Carregando informações do restaurante...");
+      return;
+    }
+
+    // Verificação 3: Validar que o restaurante foi carregado corretamente
     if (!restaurant) {
-      console.error("Restaurant not found, cannot create order.");
-      alert("Erro: Restaurante não encontrado. Não é possível criar o pedido.");
+      console.error("[CartWhatsAppButton] Restaurante não encontrado após carregamento.");
+      console.error("[CartWhatsAppButton] restaurantId:", restaurantId);
+      console.error("[CartWhatsAppButton] isLoadingRestaurant:", isLoadingRestaurant);
+      alert("Erro: Não foi possível carregar as informações do restaurante. Por favor, recarregue a página e tente novamente.");
+      return;
+    }
+
+    // Verificação 4: Validar que temos o ID do restaurante
+    if (!restaurant.id) {
+      console.error("[CartWhatsAppButton] Restaurante carregado mas sem ID:", restaurant);
+      alert("Erro: Dados do restaurante estão incompletos. Por favor, recarregue a página e tente novamente.");
       return;
     }
 
     console.log('[CartWhatsAppButton] Iniciando a criação do pedido...');
+    console.log('[CartWhatsAppButton] Restaurante:', { id: restaurant.id, name: restaurant.name, slug: restaurant.slug });
     setIsCreatingOrder(true);
 
     try {
@@ -264,7 +299,7 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty}
+      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant}
       className={`
         w-full flex items-center justify-center gap-3 
         px-6 py-4 
@@ -274,7 +309,7 @@ export default function CartWhatsAppButton({
         transition-all duration-200 
         transform hover:scale-[1.02] active:scale-[0.98]
         focus:outline-none focus:ring-4 focus:ring-green-300
-        disabled:cursor-not-allowed disabled:transform-none
+        disabled:cursor-not-allowed disabled:transform-none disabled:opacity-50
         ${className}
       `}
       aria-label={`Enviar pedido com ${totalItems} ${totalItems === 1 ? 'item' : 'itens'} pelo WhatsApp`}
@@ -292,7 +327,7 @@ export default function CartWhatsAppButton({
       {/* Texto do botão */}
       <div className="flex flex-col items-start min-w-0">
         <span className="text-lg font-bold">
-          {isLoading || isCreatingOrder ? 'Criando Pedido...' : 'Fazer Pedido'}
+          {isLoadingRestaurant ? 'Carregando Restaurante...' : (isLoading || isCreatingOrder ? 'Criando Pedido...' : 'Fazer Pedido')}
         </span>
         <span className="text-sm opacity-90 truncate">
           {`${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`}
