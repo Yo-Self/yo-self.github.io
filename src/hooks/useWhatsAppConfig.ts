@@ -66,19 +66,30 @@ export function useWhatsAppConfig(restaurantId?: string) {
 
         data = await response.json();
         
+        console.log('[useWhatsAppConfig] Dados do restaurante recebidos:', {
+          restaurantId,
+          dataLength: data?.length,
+          whatsapp_phone: data?.[0]?.whatsapp_phone,
+          whatsapp_enabled: data?.[0]?.whatsapp_enabled,
+          name: data?.[0]?.name
+        });
+        
         if (data && data.length > 0) {
           const restaurant = data[0];
           
           // Só habilitar se tiver número de telefone configurado
           if (restaurant.whatsapp_phone && restaurant.whatsapp_phone.trim() !== '') {
-            setConfig({
+            const configToSet = {
               phoneNumber: restaurant.whatsapp_phone,
               enabled: restaurant.whatsapp_enabled !== false, // Padrão true se não especificado
               customMessage: restaurant.whatsapp_custom_message || "Olá! Gostaria de fazer este pedido.",
               restaurantName: restaurant.name,
-            });
+            };
+            console.log('[useWhatsAppConfig] WhatsApp HABILITADO:', configToSet);
+            setConfig(configToSet);
           } else {
             // WhatsApp indisponível - sem número configurado
+            console.warn('[useWhatsAppConfig] WhatsApp DESABILITADO - sem número de telefone');
             setConfig({
               phoneNumber: "",
               enabled: false,
@@ -88,6 +99,7 @@ export function useWhatsAppConfig(restaurantId?: string) {
           }
         } else {
           // Restaurante não encontrado
+          console.error('[useWhatsAppConfig] Restaurante NÃO ENCONTRADO');
           setConfig({
             phoneNumber: "",
             enabled: false,

@@ -49,6 +49,18 @@ export default function CartWhatsAppButton({
     }
   }, [restaurantId, isCreatingOrder]);
 
+  // Debug: Logar configuração do WhatsApp quando mudar
+  React.useEffect(() => {
+    console.log('[CartWhatsAppButton] Estado atual:', {
+      restaurantId,
+      'config.enabled': config.enabled,
+      'config.phoneNumber': config.phoneNumber,
+      isLoading,
+      isLoadingRestaurant,
+      'restaurant': restaurant ? { id: restaurant.id, name: restaurant.name } : null
+    });
+  }, [restaurantId, config.enabled, config.phoneNumber, isLoading, isLoadingRestaurant, restaurant]);
+
   // O botão agora está sempre habilitado, então a verificação de dados do cliente foi removida.
 
   // Não renderizar se carrinho estiver vazio
@@ -229,8 +241,29 @@ export default function CartWhatsAppButton({
       return;
     }
 
+    // Verificação 5: Validar configuração do WhatsApp
+    console.log('[CartWhatsAppButton] Config WhatsApp:', { 
+      enabled: config.enabled, 
+      phoneNumber: config.phoneNumber,
+      hasPhoneNumber: !!config.phoneNumber,
+      phoneNumberLength: config.phoneNumber?.length 
+    });
+
+    if (!config.enabled) {
+      console.error("[CartWhatsAppButton] WhatsApp não está habilitado para este restaurante");
+      alert("WhatsApp não está disponível para este restaurante. Entre em contato diretamente.");
+      return;
+    }
+
+    if (!config.phoneNumber || config.phoneNumber.trim() === '') {
+      console.error("[CartWhatsAppButton] Número de telefone do WhatsApp não configurado");
+      alert("Número de WhatsApp não configurado para este restaurante. Entre em contato diretamente.");
+      return;
+    }
+
     console.log('[CartWhatsAppButton] Iniciando a criação do pedido...');
     console.log('[CartWhatsAppButton] Restaurante:', { id: restaurant.id, name: restaurant.name, slug: restaurant.slug });
+    console.log('[CartWhatsAppButton] Telefone WhatsApp:', config.phoneNumber);
     setIsCreatingOrder(true);
 
     try {
@@ -268,16 +301,31 @@ export default function CartWhatsAppButton({
 
       const message = generateCartWhatsAppMessage(newOrder);
       console.log('[CartWhatsAppButton] Mensagem do WhatsApp gerada.');
+      console.log('[CartWhatsAppButton] Tamanho da mensagem:', message.length);
 
       const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
+      console.log('[CartWhatsAppButton] URL do WhatsApp:', whatsappUrl.substring(0, 100) + '...');
+      console.log('[CartWhatsAppButton] Número completo:', config.phoneNumber);
 
       const currentRestaurantId = getCurrentRestaurantId();
       if (currentRestaurantId) {
         Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
       }
 
-      console.log('[CartWhatsAppButton] Abrindo URL do WhatsApp...');
-      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      console.log('[CartWhatsAppButton] Tentando abrir WhatsApp...');
+      const windowResult = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      console.log('[CartWhatsAppButton] window.open retornou:', windowResult ? 'sucesso' : 'bloqueado/falhou');
+      
+      if (!windowResult || windowResult.closed || typeof windowResult.closed === 'undefined') {
+        console.warn('[CartWhatsAppButton] window.open falhou, tentando window.location.href como fallback');
+        // Fallback: redirecionar na mesma aba
+        const userConfirmed = window.confirm(
+          'O WhatsApp será aberto em uma nova aba. Você será redirecionado. Deseja continuar?'
+        );
+        if (userConfirmed) {
+          window.location.href = whatsappUrl;
+        }
+      }
 
       if (onSent) {
         onSent();
