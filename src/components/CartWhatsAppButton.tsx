@@ -230,6 +230,18 @@ export default function CartWhatsAppButton({
       console.error("[CartWhatsAppButton] Restaurante não encontrado após carregamento.");
       console.error("[CartWhatsAppButton] restaurantId:", restaurantId);
       console.error("[CartWhatsAppButton] isLoadingRestaurant:", isLoadingRestaurant);
+      
+      // Rastrear erro no PostHog
+      Analytics.trackError(new Error('Restaurant not found'), {
+        component: 'CartWhatsAppButton',
+        action: 'validation_failed',
+        validationStep: 'restaurant_not_found',
+        restaurantId,
+        isLoadingRestaurant,
+        itemCount: items.length,
+        totalPrice
+      });
+      
       alert("Erro: Não foi possível carregar as informações do restaurante. Por favor, recarregue a página e tente novamente.");
       return;
     }
@@ -237,6 +249,18 @@ export default function CartWhatsAppButton({
     // Verificação 4: Validar que temos o ID do restaurante
     if (!restaurant.id) {
       console.error("[CartWhatsAppButton] Restaurante carregado mas sem ID:", restaurant);
+      
+      // Rastrear erro no PostHog
+      Analytics.trackError(new Error('Restaurant loaded without ID'), {
+        component: 'CartWhatsAppButton',
+        action: 'validation_failed',
+        validationStep: 'restaurant_without_id',
+        restaurantId,
+        restaurantSlug: restaurant.slug,
+        itemCount: items.length,
+        totalPrice
+      });
+      
       alert("Erro: Dados do restaurante estão incompletos. Por favor, recarregue a página e tente novamente.");
       return;
     }
@@ -251,12 +275,37 @@ export default function CartWhatsAppButton({
 
     if (!config.enabled) {
       console.error("[CartWhatsAppButton] WhatsApp não está habilitado para este restaurante");
+      
+      // Rastrear erro no PostHog
+      Analytics.trackError(new Error('WhatsApp not enabled'), {
+        component: 'CartWhatsAppButton',
+        action: 'validation_failed',
+        validationStep: 'whatsapp_not_enabled',
+        restaurantId: restaurant.id,
+        restaurantSlug: restaurant.slug,
+        itemCount: items.length,
+        totalPrice
+      });
+      
       alert("WhatsApp não está disponível para este restaurante. Entre em contato diretamente.");
       return;
     }
 
     if (!config.phoneNumber || config.phoneNumber.trim() === '') {
       console.error("[CartWhatsAppButton] Número de telefone do WhatsApp não configurado");
+      
+      // Rastrear erro no PostHog
+      Analytics.trackError(new Error('WhatsApp phone number not configured'), {
+        component: 'CartWhatsAppButton',
+        action: 'validation_failed',
+        validationStep: 'phone_number_missing',
+        restaurantId: restaurant.id,
+        restaurantSlug: restaurant.slug,
+        configEnabled: config.enabled,
+        itemCount: items.length,
+        totalPrice
+      });
+      
       alert("Número de WhatsApp não configurado para este restaurante. Entre em contato diretamente.");
       return;
     }
@@ -319,6 +368,9 @@ export default function CartWhatsAppButton({
       if (!windowResult || windowResult.closed || typeof windowResult.closed === 'undefined') {
         console.warn('[CartWhatsAppButton] Popup bloqueado pelo navegador, mostrando fallback');
         
+        // Rastrear bloqueio de popup no PostHog
+        Analytics.trackCartWhatsAppPopupBlocked(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+        
         // Fallback: Mostrar confirmação para redirecionar
         const userConfirmed = window.confirm(
           '⚠️ O navegador bloqueou a abertura do WhatsApp.\n\n' +
@@ -328,12 +380,22 @@ export default function CartWhatsAppButton({
         
         if (userConfirmed) {
           console.log('[CartWhatsAppButton] Usuário confirmou, redirecionando...');
+          
+          // Rastrear confirmação do usuário
+          Analytics.trackCartWhatsAppPopupFallbackConfirmed(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+          
           window.location.href = whatsappUrl;
         } else {
           console.log('[CartWhatsAppButton] Usuário cancelou o redirecionamento');
+          
+          // Rastrear cancelamento do usuário
+          Analytics.trackCartWhatsAppPopupFallbackCancelled(restaurant.id, restaurant.slug || '', items.length, totalPrice);
         }
       } else {
         console.log('[CartWhatsAppButton] WhatsApp aberto com sucesso!');
+        
+        // Rastrear sucesso na abertura do WhatsApp
+        Analytics.trackCartWhatsAppOpenedSuccessfully(restaurant.id, restaurant.slug || '', items.length, totalPrice);
       }
 
       if (onSent) {
@@ -341,6 +403,24 @@ export default function CartWhatsAppButton({
       }
     } catch (error) {
       console.error("[CartWhatsAppButton] Falha ao criar o pedido:", error);
+      
+      // Rastrear erro no PostHog
+      Analytics.trackError(error as Error, {
+        component: 'CartWhatsAppButton',
+        action: 'create_order_and_send_whatsapp',
+        restaurantId: restaurant?.id || 'unknown',
+        restaurantSlug: restaurant?.slug || 'unknown',
+        itemCount: items.length,
+        totalPrice,
+        hasRestaurant: !!restaurant,
+        hasRestaurantId: !!restaurant?.id,
+        configEnabled: config.enabled,
+        hasPhoneNumber: !!config.phoneNumber,
+        errorType: (error as Error).name,
+        errorMessage: (error as Error).message,
+        timestamp: new Date().toISOString()
+      });
+      
       alert("Houve um erro ao criar o seu pedido. Por favor, tente novamente.");
     } finally {
       console.log('[CartWhatsAppButton] Finalizando o processo.');

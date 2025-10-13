@@ -313,6 +313,44 @@ export class Analytics {
     })
   }
 
+  // Cart Checkout Error Analytics
+  static trackCartWhatsAppPopupBlocked(restaurantId: string, restaurantSlug: string, itemCount: number, totalPrice: number): void {
+    this.track('cart_whatsapp_popup_blocked', {
+      restaurant_id: restaurantId,
+      restaurant_slug: restaurantSlug,
+      item_count: itemCount,
+      total_price: totalPrice,
+      browser: typeof window !== 'undefined' ? navigator.userAgent : 'unknown'
+    })
+  }
+
+  static trackCartWhatsAppPopupFallbackConfirmed(restaurantId: string, restaurantSlug: string, itemCount: number, totalPrice: number): void {
+    this.track('cart_whatsapp_popup_fallback_confirmed', {
+      restaurant_id: restaurantId,
+      restaurant_slug: restaurantSlug,
+      item_count: itemCount,
+      total_price: totalPrice
+    })
+  }
+
+  static trackCartWhatsAppPopupFallbackCancelled(restaurantId: string, restaurantSlug: string, itemCount: number, totalPrice: number): void {
+    this.track('cart_whatsapp_popup_fallback_cancelled', {
+      restaurant_id: restaurantId,
+      restaurant_slug: restaurantSlug,
+      item_count: itemCount,
+      total_price: totalPrice
+    })
+  }
+
+  static trackCartWhatsAppOpenedSuccessfully(restaurantId: string, restaurantSlug: string, itemCount: number, totalPrice: number): void {
+    this.track('cart_whatsapp_opened_successfully', {
+      restaurant_id: restaurantId,
+      restaurant_slug: restaurantSlug,
+      item_count: itemCount,
+      total_price: totalPrice
+    })
+  }
+
   // Feature Usage Analytics
   static trackFeatureUsed(feature: string, context?: Record<string, any>): void {
     this.track('feature_used', {
