@@ -35,6 +35,8 @@ ou
 ```
 
 #### Ao clicar em "Fazer Pedido":
+
+**Quando popups são permitidos (cenário ideal):**
 ```
 [CartWhatsAppButton] Config WhatsApp: { enabled: true, phoneNumber: "...", ... }
 [CartWhatsAppButton] Iniciando a criação do pedido...
@@ -44,8 +46,23 @@ ou
 [CartWhatsAppButton] Pedido criado com sucesso: {...}
 [CartWhatsAppButton] Mensagem do WhatsApp gerada.
 [CartWhatsAppButton] URL do WhatsApp: https://wa.me/...
-[CartWhatsAppButton] Tentando abrir WhatsApp...
-[CartWhatsAppButton] window.open retornou: sucesso/bloqueado/falhou
+[CartWhatsAppButton] Abrindo WhatsApp...
+[CartWhatsAppButton] WhatsApp aberto com sucesso!
+```
+
+**Quando popups são bloqueados (fallback):**
+```
+[CartWhatsAppButton] Config WhatsApp: { enabled: true, phoneNumber: "...", ... }
+[CartWhatsAppButton] Iniciando a criação do pedido...
+[CartWhatsAppButton] Restaurante: { id: "...", name: "...", slug: "..." }
+[CartWhatsAppButton] Telefone WhatsApp: "..."
+[CartWhatsAppButton] Chamando createOrder...
+[CartWhatsAppButton] Pedido criado com sucesso: {...}
+[CartWhatsAppButton] Mensagem do WhatsApp gerada.
+[CartWhatsAppButton] URL do WhatsApp: https://wa.me/...
+[CartWhatsAppButton] Abrindo WhatsApp...
+[CartWhatsAppButton] Popup bloqueado pelo navegador, mostrando fallback
+[CartWhatsAppButton] Usuário confirmou, redirecionando...
 ```
 
 ### 3. Possíveis Problemas
@@ -60,16 +77,21 @@ Se aparecer no console:
 - `whatsapp_phone` preenchido (ex: "5511999999999")
 - `whatsapp_enabled` = `true` (ou `NULL`, que é considerado `true`)
 
-#### B. Popup Bloqueado
-Se aparecer:
-```
-[CartWhatsAppButton] window.open retornou: bloqueado/falhou
-```
+#### B. Popup Bloqueado pelo Navegador
+Se o WhatsApp não abrir e aparecer um popup de confirmação, significa que o navegador está bloqueando popups.
 
-**Solução**: 
-1. O sistema agora mostra um diálogo perguntando se deseja continuar
-2. Se confirmar, redireciona na mesma aba
-3. Ou permita popups para o site no navegador
+**Comportamento Atual**:
+1. Sistema tenta abrir WhatsApp automaticamente
+2. Navegador bloqueia
+3. Sistema detecta e mostra popup pedindo confirmação
+4. Usuário clica OK → WhatsApp abre na mesma aba
+
+**Solução Permanente**: 
+1. Permitir popups para o site nas configurações do navegador
+2. Após permitir, não haverá mais popup de confirmação
+3. WhatsApp abrirá direto em nova aba
+
+**Ícone de Bloqueio**: Geralmente aparece na barra de endereço do navegador
 
 #### C. Número Inválido
 Se o WhatsApp abrir mas der erro, verifique o formato do número:
@@ -94,12 +116,36 @@ Se o WhatsApp abrir mas der erro, verifique o formato do número:
 - [ ] O WhatsApp abre em nova aba?
 - [ ] Se não abrir, aparece o diálogo de confirmação?
 
-### 6. Fallback Implementado
+### 6. Comportamento Esperado
 
-Se o `window.open` falhar (popup bloqueado), o sistema:
-1. Detecta a falha
-2. Mostra um diálogo: "O WhatsApp será aberto em uma nova aba. Você será redirecionado. Deseja continuar?"
-3. Se confirmar, usa `window.location.href` para redirecionar
+Ao clicar em "Fazer Pedido", o sistema deve:
+1. ✅ Mostrar "Criando Pedido..." no botão
+2. ✅ Criar o pedido no banco de dados
+3. ✅ Gerar a mensagem formatada para WhatsApp
+4. ✅ **Tentar abrir o WhatsApp automaticamente em nova aba**
+
+**Dois cenários possíveis:**
+
+#### Cenário A - Popups Permitidos (Ideal)
+- WhatsApp abre automaticamente em nova aba
+- Sem nenhum popup intermediário
+- Experiência 100% fluida ✅
+
+#### Cenário B - Popups Bloqueados
+- Navegador bloqueia a abertura automática
+- Sistema detecta o bloqueio
+- Mostra popup com mensagem:
+  ```
+  ⚠️ O navegador bloqueou a abertura do WhatsApp.
+  
+  Clique em OK para abrir o WhatsApp agora.
+  
+  Dica: Permita popups para este site nas configurações do navegador para uma experiência melhor.
+  ```
+- Se usuário clicar OK → Redireciona para WhatsApp
+- Se usuário clicar Cancelar → Nada acontece (pedido já foi criado no banco)
+
+**Nota**: O popup SÓ aparece quando o navegador bloqueia. Na maioria dos casos, abre direto!
 
 ## Comandos de Teste
 

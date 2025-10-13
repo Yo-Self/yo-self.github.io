@@ -312,19 +312,28 @@ export default function CartWhatsAppButton({
         Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
       }
 
-      console.log('[CartWhatsAppButton] Tentando abrir WhatsApp...');
+      console.log('[CartWhatsAppButton] Abrindo WhatsApp...');
       const windowResult = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-      console.log('[CartWhatsAppButton] window.open retornou:', windowResult ? 'sucesso' : 'bloqueado/falhou');
       
+      // Verificar se window.open foi bloqueado
       if (!windowResult || windowResult.closed || typeof windowResult.closed === 'undefined') {
-        console.warn('[CartWhatsAppButton] window.open falhou, tentando window.location.href como fallback');
-        // Fallback: redirecionar na mesma aba
+        console.warn('[CartWhatsAppButton] Popup bloqueado pelo navegador, mostrando fallback');
+        
+        // Fallback: Mostrar confirmação para redirecionar
         const userConfirmed = window.confirm(
-          'O WhatsApp será aberto em uma nova aba. Você será redirecionado. Deseja continuar?'
+          '⚠️ O navegador bloqueou a abertura do WhatsApp.\n\n' +
+          'Clique em OK para abrir o WhatsApp agora.\n\n' +
+          'Dica: Permita popups para este site nas configurações do navegador para uma experiência melhor.'
         );
+        
         if (userConfirmed) {
+          console.log('[CartWhatsAppButton] Usuário confirmou, redirecionando...');
           window.location.href = whatsappUrl;
+        } else {
+          console.log('[CartWhatsAppButton] Usuário cancelou o redirecionamento');
         }
+      } else {
+        console.log('[CartWhatsAppButton] WhatsApp aberto com sucesso!');
       }
 
       if (onSent) {
