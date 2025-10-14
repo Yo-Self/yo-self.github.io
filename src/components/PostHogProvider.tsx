@@ -57,10 +57,11 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         // Configurar retry com backoff exponencial
         xhr_headers: {},
         
-        // Sanitize properties to avoid leaking sensitive data
-        sanitize_properties: (properties, event) => {
-          // Remove sensitive data
-          return properties
+        // Sanitize properties to avoid leaking sensitive data (usando before_send)
+        before_send: (event) => {
+          // Remove sensitive data if needed
+          // You can modify event.properties here
+          return event
         },
       })
       

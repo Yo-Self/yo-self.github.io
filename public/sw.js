@@ -1,5 +1,5 @@
 // Cache version - increment this when you want to force cache refresh
-const CACHE_VERSION = 1760453958167; // Increment this for each deployment
+const CACHE_VERSION = 1760463087945; // Increment this for each deployment
 const CACHE_NAME = `restaurant-app-v${CACHE_VERSION}`;
 
 // URLs that should never be cached (Next.js internal files)

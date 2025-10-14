@@ -1,21 +1,22 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
+import { sendMessageWithTracking, generateTraceId, type PostHogLLMOptions } from '@/lib/posthog-gemini-server';
 
 // Inicializar o cliente do Google AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-// Modelos disponíveis (em ordem de preferência)
+// Modelos disponíveis (em ordem de preferência) - apenas modelos que funcionam
 const MODELS = [
-  'gemini-2.0-flash-exp',  // Mais novo e rápido
-  'gemini-1.5-pro',        // Mais completo
-  'gemini-pro',            // Fallback estável
-] as const;
+  'gemini-2.0-flash-exp',      // Mais novo e rápido
+  'gemini-1.5-pro-latest',     // Mais completo (fallback)
+];
 
-// Função para tentar diferentes modelos
+// Função para tentar diferentes modelos (agora com tracking do PostHog)
 async function tryModelsSequentially(
   message: string,
   restaurantContext: string,
-  chatHistory: any[]
+  chatHistory: any[],
+  trackingOptions: PostHogLLMOptions
 ): Promise<{ text: string; model: string }> {
   let lastError: Error | null = null;
 
@@ -23,14 +24,16 @@ async function tryModelsSequentially(
     try {
       console.log(`Tentando modelo: ${modelName}`);
       
+      const generationConfig = {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      };
+
       const model = genAI.getGenerativeModel({ 
         model: modelName,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
+        generationConfig,
       });
 
       const chat = model.startChat({
@@ -40,9 +43,15 @@ async function tryModelsSequentially(
         })) || [],
       });
 
-      const result = await chat.sendMessage(`${restaurantContext}\n\nCliente: ${message}`);
-      const response = await result.response;
-      const text = response.text();
+      // Usar wrapper do PostHog para capturar evento $ai_generation
+      const fullMessage = `${restaurantContext}\n\nCliente: ${message}`;
+      const { text } = await sendMessageWithTracking(
+        chat,
+        fullMessage,
+        modelName,
+        generationConfig,
+        trackingOptions
+      );
 
       console.log(`Sucesso com modelo: ${modelName}`);
       return { text, model: modelName };
@@ -69,7 +78,7 @@ async function tryModelsSequentially(
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, restaurantData, chatHistory } = await request.json();
+    const { message, restaurantData, chatHistory, distinct_id, trace_id } = await request.json();
 
     if (!process.env.GOOGLE_AI_API_KEY) {
       return NextResponse.json(
@@ -100,17 +109,32 @@ export async function POST(request: NextRequest) {
       6. Mantenha as respostas concisas mas informativas
     `;
 
-    // Tentar diferentes modelos até encontrar um que funcione
+    // Opções de tracking do PostHog
+    const trackingOptions: PostHogLLMOptions = {
+      distinct_id: distinct_id || 'anonymous',
+      trace_id: trace_id || generateTraceId(),
+      properties: {
+        restaurant_name: restaurantData?.name,
+        restaurant_slug: restaurantData?.slug,
+        message_length: message.length,
+        history_length: chatHistory?.length || 0,
+        source: 'api_route',
+      },
+    };
+
+    // Tentar diferentes modelos até encontrar um que funcione (com tracking)
     const { text, model: usedModel } = await tryModelsSequentially(
       message,
       restaurantContext,
-      chatHistory
+      chatHistory,
+      trackingOptions
     );
 
     return NextResponse.json({
       message: text,
       model: usedModel,
       timestamp: new Date().toISOString(),
+      trace_id: trackingOptions.trace_id,
     });
 
   } catch (error) {

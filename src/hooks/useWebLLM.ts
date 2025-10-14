@@ -1,4 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { usePostHog } from 'posthog-js/react';
+
+// Gera um trace_id único para uma sessão de chat
+function generateTraceId(): string {
+  return `trace_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+}
 
 // Função para extrair pratos recomendados da resposta da IA
 function extractRecommendedDishes(message: string, restaurantData: any): any[] {
@@ -88,6 +94,10 @@ export function useWebLLM(): UseWebLLMReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const posthog = usePostHog();
+  
+  // Gerar trace_id uma única vez por sessão de chat
+  const traceId = useMemo(() => generateTraceId(), []);
 
   const sendMessage = useCallback(async (message: string, restaurantData: any): Promise<string> => {
     if (!message.trim()) return '';
@@ -130,6 +140,9 @@ export function useWebLLM(): UseWebLLMReturn {
             role: msg.role,
             content: msg.content,
           })),
+          // Passar informações do PostHog para tracking no servidor
+          distinct_id: posthog?.get_distinct_id?.() || 'anonymous',
+          trace_id: traceId,
         }),
       });
 
