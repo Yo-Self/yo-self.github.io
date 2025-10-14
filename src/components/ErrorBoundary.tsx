@@ -2,6 +2,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import CacheCleaner from './CacheCleaner';
+import posthog from 'posthog-js';
 
 interface Props {
   children: ReactNode;
@@ -29,6 +30,24 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log the error to console and analytics
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Capture error in PostHog
+    try {
+      if (typeof window !== 'undefined' && posthog) {
+        posthog.captureException(error, {
+          extra: {
+            componentStack: errorInfo.componentStack,
+            errorInfo: errorInfo,
+          },
+          tags: {
+            error_boundary: 'root',
+            source: 'react_error_boundary',
+          },
+        });
+      }
+    } catch (captureError) {
+      console.error('Failed to capture error in PostHog:', captureError);
+    }
     
     this.setState({
       error,
