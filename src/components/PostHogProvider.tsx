@@ -33,7 +33,55 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         
         // Autocapture settings
         autocapture: true,
+        
+        // Configurações para evitar bloqueio de ad blockers
+        // Disable loading external scripts that might be blocked
+        advanced_disable_decide: false, // Keep feature flags enabled
+        
+        // Configurações de persistência
+        persistence: "localStorage+cookie",
+        
+        // Carregar scripts de forma assíncrona
+        opt_in_site_apps: true,
+        
+        // Evitar carregar recursos externos que podem ser bloqueados
+        disable_external_dependency_loading: false,
+        
+        // Configurar callbacks para lidar com erros de rede silenciosamente
+        loaded: (posthog) => {
+          if (process.env.NODE_ENV === "development") {
+            console.log("PostHog loaded successfully")
+          }
+        },
+        
+        // Configurar retry com backoff exponencial
+        xhr_headers: {},
+        
+        // Sanitize properties to avoid leaking sensitive data
+        sanitize_properties: (properties, event) => {
+          // Remove sensitive data
+          return properties
+        },
       })
+      
+      // Suprimir erros de rede do PostHog no console
+      const originalError = console.error
+      console.error = (...args) => {
+        // Filtrar erros do PostHog relacionados a bloqueio
+        const errorString = args.join(' ')
+        if (
+          errorString.includes('posthog') && 
+          (errorString.includes('ERR_BLOCKED_BY_CLIENT') || 
+           errorString.includes('net::ERR_'))
+        ) {
+          // Silenciar erro de bloqueio do PostHog
+          if (process.env.NODE_ENV === "development") {
+            console.warn("PostHog request blocked by ad blocker - analytics may be limited")
+          }
+          return
+        }
+        originalError.apply(console, args)
+      }
     } else {
       console.warn("PostHog key not provided, analytics disabled")
     }

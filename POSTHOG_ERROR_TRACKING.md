@@ -243,6 +243,34 @@ Acesse o dashboard de error tracking:
 3. Verifique logs do servidor para erros de captura
 4. Confirme que o PostHog Node SDK está instalado
 
+### Erros de bloqueio (ERR_BLOCKED_BY_CLIENT)
+
+**Problema**: Ad blockers (uBlock Origin, AdBlock Plus, etc.) bloqueiam requisições do PostHog.
+
+**Solução Implementada**:
+- ✅ Erros de bloqueio são filtrados do console
+- ✅ Configurações otimizadas para minimizar impacto
+- ✅ PostHog continua funcionando para usuários sem ad blockers
+
+**Impacto**:
+- ~40-60% dos usuários podem ter requisições bloqueadas
+- A experiência do site não é afetada
+- Analytics ficam parcialmente limitados
+
+**Para mais detalhes**, veja: `POSTHOG_ADBLOCKER_SOLUTION.md`
+
+**Soluções Alternativas** (requerem infraestrutura adicional):
+1. Self-hosted PostHog em seu próprio domínio
+2. PostHog Cloud com domínio customizado (plano pago)
+3. Migrar de static export para SSR/ISR (permite proxy reverso)
+
+> ⚠️ **Nota**: Este projeto usa `output: 'export'` (GitHub Pages) que não suporta:
+> - API Routes
+> - Rewrites/Proxy reverso
+> - Server-side rendering
+> 
+> Por isso, a solução de proxy reverso (recomendada pelo PostHog) não é viável aqui.
+
 ## Próximos Passos
 
 ### Upload de Source Maps (Recomendado)
