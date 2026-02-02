@@ -206,7 +206,7 @@ export function useWebLLM(): UseWebLLMReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [messages]);
+  }, [messages, posthog, traceId]);
 
   const clearChat = useCallback(() => {
     setMessages([]);

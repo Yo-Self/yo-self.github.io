@@ -2,9 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { MenuItem } from '../types/restaurant';
-import { 
-  CartItem, 
-  CartContextType, 
+import {
+  CartItem,
+  CartContextType,
   SerializableCarts,
   RestaurantCart,
   CartUtils
@@ -16,7 +16,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 const CARTS_STORAGE_KEY = 'digital-menu-carts';
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [allCarts, setAllCarts] = useState<{[restaurantId: string]: RestaurantCart}>({});
+  const [allCarts, setAllCarts] = useState<{ [restaurantId: string]: RestaurantCart }>({});
   const [currentRestaurantId, setCurrentRestaurantId] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -26,7 +26,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const savedCarts = localStorage.getItem(CARTS_STORAGE_KEY);
       if (savedCarts) {
         const parsedCarts: SerializableCarts = JSON.parse(savedCarts);
-        const loadedCarts: {[restaurantId: string]: RestaurantCart} = {};
+        const loadedCarts: { [restaurantId: string]: RestaurantCart } = {};
         for (const restaurantId in parsedCarts) {
           const serializableCart = parsedCarts[restaurantId];
           const items = serializableCart.items.map(CartUtils.serializableToItem);
@@ -61,28 +61,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [allCarts, isInitialized]);
 
-  const currentCart = currentRestaurantId ? allCarts[currentRestaurantId] || { items: [], totalItems: 0, totalPrice: 0 } : { items: [], totalItems: 0, totalPrice: 0 };
+  const currentCart = React.useMemo(() => {
+    return currentRestaurantId ? allCarts[currentRestaurantId] || { items: [], totalItems: 0, totalPrice: 0 } : { items: [], totalItems: 0, totalPrice: 0 };
+  }, [currentRestaurantId, allCarts]);
 
   const setCurrentRestaurant = useCallback((restaurantId: string) => {
     setCurrentRestaurantId(restaurantId);
   }, []);
 
-  const updateCart = (restaurantId: string, newCart: RestaurantCart) => {
-    const newAllCarts = { ...allCarts, [restaurantId]: newCart };
-    newAllCarts[restaurantId] = {
-      ...newCart,
-      totalItems: newCart.items.reduce((sum, item) => sum + item.quantity, 0),
-      totalPrice: newCart.items.reduce((sum, item) => sum + item.totalPrice, 0),
-    };
-    setAllCarts(newAllCarts);
-  };
+  const updateCart = useCallback((restaurantId: string, newCart: RestaurantCart) => {
+    setAllCarts(prevCarts => {
+      const newAllCarts = { ...prevCarts, [restaurantId]: newCart };
+      newAllCarts[restaurantId] = {
+        ...newCart,
+        totalItems: newCart.items.reduce((sum, item) => sum + item.quantity, 0),
+        totalPrice: newCart.items.reduce((sum, item) => sum + item.totalPrice, 0),
+      };
+      return newAllCarts;
+    });
+  }, []);
 
   const addItem = useCallback((dish: MenuItem, selectedComplements: Map<string, Set<string>>) => {
     if (!currentRestaurantId) return;
 
     const unitPrice = CartUtils.calculateUnitPrice(dish, selectedComplements);
     const itemId = CartUtils.generateItemId(dish, selectedComplements);
-    
+
     const cart = allCarts[currentRestaurantId] || { items: [], totalItems: 0, totalPrice: 0 };
     const newItems = [...cart.items];
     const existingItemIndex = newItems.findIndex(item => item.id === itemId);
@@ -145,7 +149,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return item;
     });
     updateCart(currentRestaurantId, { ...cart, items: newItems });
-  }, [currentRestaurantId, allCarts, removeItem]);
+  }, [currentRestaurantId, allCarts, removeItem, updateCart]);
 
   const clearCart = useCallback(() => {
     if (!currentRestaurantId) return;
@@ -155,7 +159,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     updateCart(currentRestaurantId, { items: [], totalItems: 0, totalPrice: 0 });
     setIsCartOpen(false);
-  }, [currentRestaurantId, allCarts]);
+  }, [currentRestaurantId, allCarts, updateCart]);
 
   const openCart = useCallback(() => {
     if (currentRestaurantId) {

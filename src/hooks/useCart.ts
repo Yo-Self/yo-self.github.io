@@ -52,7 +52,7 @@ export function useCart() {
     if (item) {
       context.updateQuantity(itemId, item.quantity + 1);
     }
-  }, [context.items, context.updateQuantity]);
+  }, [context]);
 
   // Decrementar quantidade de um item
   const decrementQuantity = useCallback((itemId: string) => {
@@ -60,11 +60,9 @@ export function useCart() {
     if (item) {
       if (item.quantity <= 1) {
         context.removeItem(itemId);
-      } else {
-        context.updateQuantity(itemId, item.quantity - 1);
       }
     }
-  }, [context.items, context.updateQuantity, context.removeItem]);
+  }, [context]);
 
   // Estatísticas do carrinho
   const stats = useMemo(() => ({
