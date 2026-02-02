@@ -5,18 +5,62 @@ import { sendMessageWithTracking, generateTraceId, type PostHogLLMOptions } from
 // Inicializar o cliente do Google AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
-// Modelos disponíveis (em ordem de preferência) - apenas modelos que funcionam
+// Modelos disponíveis (em ordem de preferência)
+// Atualizado para usar modelos estáveis e suportados
 const MODELS = [
-  'gemini-2.0-flash-exp',      // Mais novo e rápido
-  'gemini-1.5-pro-latest',     // Mais completo (fallback)
+  'gemini-1.5-pro',            // Modelo estável e inteligente
+  'gemini-1.5-flash',          // Modelo rápido e econômico (fallback)
 ];
+
+// Interface para itens do menu
+interface MenuItem {
+  name: string;
+  description: string;
+  price: string;
+  ingredients: string;
+  [key: string]: any;
+}
+
+// Função de busca de fallback quando a IA falha
+function searchFallback(message: string, restaurantData: any): string {
+  if (!restaurantData || !restaurantData.menu_items) {
+    return "Desculpe, não consigo acessar o cardápio no momento.";
+  }
+
+  const query = message.toLowerCase();
+  // Remove pontuação e caracteres especiais, mantendo apenas letras, números e espaços
+  const cleanQuery = query.replace(/[^\w\s\u00C0-\u00FF]/g, ' ');
+  const keywords = cleanQuery.split(/\s+/).filter(w => w.length > 3); // Ignora palavras curtas
+  
+  if (keywords.length === 0) {
+    return "Poderia repetir com mais detalhes o que você procura?";
+  }
+
+  const matches = restaurantData.menu_items.filter((item: MenuItem) => {
+    const textToSearch = `${item.name} ${item.description} ${item.ingredients || ''}`.toLowerCase();
+    // Verifica se alguma palavra-chave está presente
+    return keywords.some(keyword => textToSearch.includes(keyword));
+  });
+
+  if (matches.length > 0) {
+    // Limitar a 3 sugestões
+    const suggestions = matches.slice(0, 3).map((item: MenuItem) => 
+      `*${item.name}* - ${item.description} (R$ ${item.price})`
+    ).join('\n\n');
+
+    return `A IA está temporariamente indisponível, mas encontrei estes pratos relacionados ao que você pediu:\n\n${suggestions}\n\nPosso ajudar com algo mais específico?`;
+  }
+
+  return "A IA está indisponível no momento e não encontrei pratos exatos com esses termos. Tente buscar por ingredientes como 'camarão', 'carne' ou 'doce'.";
+}
 
 // Função para tentar diferentes modelos (agora com tracking do PostHog)
 async function tryModelsSequentially(
   message: string,
   restaurantContext: string,
   chatHistory: any[],
-  trackingOptions: PostHogLLMOptions
+  trackingOptions: PostHogLLMOptions,
+  restaurantData?: any // Adicionado para fallback
 ): Promise<{ text: string; model: string }> {
   let lastError: Error | null = null;
 
@@ -60,20 +104,15 @@ async function tryModelsSequentially(
       console.error(`Modelo ${modelName} falhou:`, error.message);
       lastError = error;
       
-      // Se for o último modelo, propaga o erro
-      if (modelName === MODELS[MODELS.length - 1]) {
-        throw new Error(
-          `Todos os modelos falharam. Último erro: ${error.message}`
-        );
-      }
-      
-      // Continua para o próximo modelo
+      // Continua para o próximo modelo se houver
       continue;
     }
   }
 
-  // Se chegou aqui, algo deu muito errado
-  throw lastError || new Error('Falha ao processar requisição');
+  // Se todos os modelos falharem, usar fallback de busca
+  console.log("Todos os modelos falharam, ativando fallback de busca local");
+  const fallbackText = searchFallback(message, restaurantData);
+  return { text: fallbackText, model: 'local-search-fallback' };
 }
 
 export async function POST(request: NextRequest) {
@@ -81,10 +120,14 @@ export async function POST(request: NextRequest) {
     const { message, restaurantData, chatHistory, distinct_id, trace_id } = await request.json();
 
     if (!process.env.GOOGLE_AI_API_KEY) {
-      return NextResponse.json(
-        { error: 'API key não configurada' },
-        { status: 500 }
-      );
+      // Fallback imediato se não tiver API key
+      const fallbackText = searchFallback(message, restaurantData);
+      return NextResponse.json({
+        message: fallbackText,
+        model: 'local-search-no-key',
+        timestamp: new Date().toISOString(),
+        trace_id: trace_id || generateTraceId(),
+      });
     }
 
     // Criar contexto baseado nos dados do restaurante
@@ -123,11 +166,13 @@ export async function POST(request: NextRequest) {
     };
 
     // Tentar diferentes modelos até encontrar um que funcione (com tracking)
+    // Passamos restaurantData para o fallback
     const { text, model: usedModel } = await tryModelsSequentially(
       message,
       restaurantContext,
       chatHistory,
-      trackingOptions
+      trackingOptions,
+      restaurantData
     );
 
     return NextResponse.json({
@@ -145,3 +190,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
