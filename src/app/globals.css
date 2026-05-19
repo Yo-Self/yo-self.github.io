@@ -172,40 +172,7 @@ html:not(.dark) {
   color: #ededed !important;
 }
 
-/* Garantir que todos os elementos principais tenham o tema aplicado */
-.dark body {
-  background: #0a0a0a !important;
-  color: #ededed !important;
-}
-
-.dark html {
-  background: #0a0a0a !important;
-  color: #ededed !important;
-}
-
-/* Garantir que o main tenha o tema aplicado */
-.dark main {
-  background: #0a0a0a !important;
-  color: #ededed !important;
-}
-
-/* Garantir que as seções tenham o tema aplicado */
-.dark section {
-  background: #0a0a0a !important;
-  color: #ededed !important;
-}
-
-/* Garantir que os containers tenham o tema aplicado */
-.dark .container {
-  background: #0a0a0a !important;
-  color: #ededed !important;
-}
-
-/* Garantir que elementos específicos tenham o tema aplicado */
-.dark .carousel-section {
-  background: #0a0a0a !important;
-  color: #ededed !important;
-}
+/* Removed abusive !important dark mode styles for main/section/container */
 
 /* Animações personalizadas para o carrossel - Efeito Roda Gigante */
 @keyframes ferrisWheelLeft {
