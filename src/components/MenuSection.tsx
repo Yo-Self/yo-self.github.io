@@ -67,10 +67,7 @@ export default function MenuSection({
     prevSearchTerm.current = searchTerm;
   }, [searchTerm, setActiveCategory]);
 
-  useEffect(() => {
-    // Sempre que a categoria ativa mudar, rolar para ela
-    // Se necessário, implemente scroll para a categoria ativa aqui
-  }, [activeCategory, isSearching]);
+
 
   // Função para verificar se a barra de categorias deve ser fixada
   const checkCategoriesPosition = useCallback(() => {
@@ -119,10 +116,7 @@ export default function MenuSection({
     // No modo navegador, deixar a lógica de scroll funcionar normalmente
   }, [isWebAppMode]);
   
-  // Forçar re-renderização quando a ordenação mudar
-  useEffect(() => {
-    // Ordenação mudou
-  }, [currentSort]);
+
 
 
 
@@ -153,7 +147,6 @@ export default function MenuSection({
         
         // Verificar se os nomes são válidos
         if (!nameA || !nameB) {
-          console.warn(`⚠️ Nome inválido detectado: "${a.name}" ou "${b.name}"`);
           return 0;
         }
         
@@ -194,7 +187,6 @@ export default function MenuSection({
   
   // Verificar se há itens para renderizar
   if (filteredItems.length === 0) {
-    console.warn('⚠️ Nenhum item encontrado para renderizar');
     return (
       <section className="menu-section py-0 bg-white dark:bg-black">
         <div className="container mx-auto px-4 py-8">

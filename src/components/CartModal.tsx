@@ -44,21 +44,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const { addressActive } = useRestaurantAddressActive(restaurantId);
   const { tablePayment } = useRestaurantTablePayment(restaurantId);
 
-  // Debug: Log do restaurantId quando o modal abrir
-  useEffect(() => {
-    if (isCartOpen) {
-      console.log('[CartModal] Modal aberto com restaurantId:', {
-        final: restaurantId,
-        prop: propRestaurantId,
-        detected: detectedRestaurantId,
-        context: contextRestaurantId
-      });
-      
-      if (!restaurantId || restaurantId === 'default') {
-        console.warn('[CartModal] AVISO: restaurantId inválido detectado!');
-      }
-    }
-  }, [isCartOpen, restaurantId, propRestaurantId, detectedRestaurantId, contextRestaurantId]);
+
 
   const [isClosing, setIsClosing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);

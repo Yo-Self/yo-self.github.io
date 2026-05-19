@@ -72,13 +72,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
         }, 300);
         const pinTimer = setTimeout(() => {
           setShowPinTutorial(false);
-          if (typeof window !== 'undefined') {
-            if (typeof window !== 'undefined') {
-          if (typeof window !== 'undefined') {
-        localStorage.setItem('journalSwipeTutorialDone', '1');
-      }
-        }
-          }
+          localStorage.setItem('journalSwipeTutorialDone', '1');
         }, 6000);
         tutorialTimersRef.current = [pinTimer];
       }, 6000);
@@ -105,11 +99,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
       }, 300);
       const pinTimer = setTimeout(() => {
         setShowPinTutorial(false);
-        if (typeof window !== 'undefined') {
-          if (typeof window !== 'undefined') {
         localStorage.setItem('journalSwipeTutorialDone', '1');
-      }
-        }
       }, 6000);
       tutorialTimersRef.current = [pinTimer];
     } else if (showPinTutorial) {
@@ -156,13 +146,7 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
             }, 300);
             const pinTimer = setTimeout(() => {
               setShowPinTutorial(false);
-              if (typeof window !== 'undefined') {
-            if (typeof window !== 'undefined') {
-          if (typeof window !== 'undefined') {
-        localStorage.setItem('journalSwipeTutorialDone', '1');
-      }
-        }
-          }
+              localStorage.setItem('journalSwipeTutorialDone', '1');
             }, 6000);
             tutorialTimersRef.current = [pinTimer];
           }, 6000);

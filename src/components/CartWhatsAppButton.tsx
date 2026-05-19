@@ -37,29 +37,16 @@ export default function CartWhatsAppButton({
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
   const restaurantIdRef = React.useRef(restaurantId);
 
-  // Monitorar mudanças no restaurantId e cancelar operações
+  // Monitorar mudanças no restaurantId e cancelar operações em andamento
   React.useEffect(() => {
     if (restaurantIdRef.current !== restaurantId) {
-      console.log('[CartWhatsAppButton] restaurantId mudou de', restaurantIdRef.current, 'para', restaurantId);
       if (isCreatingOrder) {
-        console.warn('[CartWhatsAppButton] Cancelando operação devido a mudança de restaurante');
         setIsCreatingOrder(false);
       }
       restaurantIdRef.current = restaurantId;
     }
   }, [restaurantId, isCreatingOrder]);
 
-  // Debug: Logar configuração do WhatsApp quando mudar
-  React.useEffect(() => {
-    console.log('[CartWhatsAppButton] Estado atual:', {
-      restaurantId,
-      'config.enabled': config.enabled,
-      'config.phoneNumber': config.phoneNumber,
-      isLoading,
-      isLoadingRestaurant,
-      'restaurant': restaurant ? { id: restaurant.id, name: restaurant.name } : null
-    });
-  }, [restaurantId, config.enabled, config.phoneNumber, isLoading, isLoadingRestaurant, restaurant]);
 
   // O botão agora está sempre habilitado, então a verificação de dados do cliente foi removida.
 
@@ -220,17 +207,13 @@ export default function CartWhatsAppButton({
 
     // Verificação 2: Aguardar carregamento do restaurante se ainda não carregou
     if (isLoadingRestaurant) {
-      console.log('[CartWhatsAppButton] Restaurante ainda está carregando. Aguardando...');
       alert("Por favor, aguarde. Carregando informações do restaurante...");
       return;
     }
 
     // Verificação 3: Validar que o restaurante foi carregado corretamente
     if (!restaurant) {
-      console.error("[CartWhatsAppButton] Restaurante não encontrado após carregamento.");
-      console.error("[CartWhatsAppButton] restaurantId:", restaurantId);
-      console.error("[CartWhatsAppButton] isLoadingRestaurant:", isLoadingRestaurant);
-      
+
       // Rastrear erro no PostHog
       Analytics.trackError(new Error('Restaurant not found'), {
         component: 'CartWhatsAppButton',
@@ -265,16 +248,8 @@ export default function CartWhatsAppButton({
       return;
     }
 
-    // Verificação 5: Validar configuração do WhatsApp
-    console.log('[CartWhatsAppButton] Config WhatsApp:', { 
-      enabled: config.enabled, 
-      phoneNumber: config.phoneNumber,
-      hasPhoneNumber: !!config.phoneNumber,
-      phoneNumberLength: config.phoneNumber?.length 
-    });
-
     if (!config.enabled) {
-      console.error("[CartWhatsAppButton] WhatsApp não está habilitado para este restaurante");
+
       
       // Rastrear erro no PostHog
       Analytics.trackError(new Error('WhatsApp not enabled'), {
@@ -292,7 +267,7 @@ export default function CartWhatsAppButton({
     }
 
     if (!config.phoneNumber || config.phoneNumber.trim() === '') {
-      console.error("[CartWhatsAppButton] Número de telefone do WhatsApp não configurado");
+
       
       // Rastrear erro no PostHog
       Analytics.trackError(new Error('WhatsApp phone number not configured'), {
@@ -310,9 +285,6 @@ export default function CartWhatsAppButton({
       return;
     }
 
-    console.log('[CartWhatsAppButton] Iniciando a criação do pedido...');
-    console.log('[CartWhatsAppButton] Restaurante:', { id: restaurant.id, name: restaurant.name, slug: restaurant.slug });
-    console.log('[CartWhatsAppButton] Telefone WhatsApp:', config.phoneNumber);
     setIsCreatingOrder(true);
 
     try {
@@ -344,29 +316,22 @@ export default function CartWhatsAppButton({
         ),
       }));
 
-      console.log('[CartWhatsAppButton] Chamando createOrder...');
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
-      console.log('[CartWhatsAppButton] Pedido criado com sucesso:', newOrder);
 
       const message = generateCartWhatsAppMessage(newOrder);
-      console.log('[CartWhatsAppButton] Mensagem do WhatsApp gerada.');
-      console.log('[CartWhatsAppButton] Tamanho da mensagem:', message.length);
 
       const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
-      console.log('[CartWhatsAppButton] URL do WhatsApp:', whatsappUrl.substring(0, 100) + '...');
-      console.log('[CartWhatsAppButton] Número completo:', config.phoneNumber);
+
 
       const currentRestaurantId = getCurrentRestaurantId();
       if (currentRestaurantId) {
         Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
       }
 
-      console.log('[CartWhatsAppButton] Abrindo WhatsApp...');
       const windowResult = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-      
+
       // Verificar se window.open foi bloqueado
       if (!windowResult || windowResult.closed || typeof windowResult.closed === 'undefined') {
-        console.warn('[CartWhatsAppButton] Popup bloqueado pelo navegador, mostrando fallback');
         
         // Rastrear bloqueio de popup no PostHog
         Analytics.trackCartWhatsAppPopupBlocked(restaurant.id, restaurant.slug || '', items.length, totalPrice);
@@ -379,20 +344,13 @@ export default function CartWhatsAppButton({
         );
         
         if (userConfirmed) {
-          console.log('[CartWhatsAppButton] Usuário confirmou, redirecionando...');
-          
-          // Rastrear confirmação do usuário
           Analytics.trackCartWhatsAppPopupFallbackConfirmed(restaurant.id, restaurant.slug || '', items.length, totalPrice);
-          
           window.location.href = whatsappUrl;
         } else {
-          console.log('[CartWhatsAppButton] Usuário cancelou o redirecionamento');
-          
           // Rastrear cancelamento do usuário
           Analytics.trackCartWhatsAppPopupFallbackCancelled(restaurant.id, restaurant.slug || '', items.length, totalPrice);
         }
       } else {
-        console.log('[CartWhatsAppButton] WhatsApp aberto com sucesso!');
         
         // Rastrear sucesso na abertura do WhatsApp
         Analytics.trackCartWhatsAppOpenedSuccessfully(restaurant.id, restaurant.slug || '', items.length, totalPrice);
@@ -423,7 +381,6 @@ export default function CartWhatsAppButton({
       
       alert("Houve um erro ao criar o seu pedido. Por favor, tente novamente.");
     } finally {
-      console.log('[CartWhatsAppButton] Finalizando o processo.');
       setIsCreatingOrder(false);
     }
   };

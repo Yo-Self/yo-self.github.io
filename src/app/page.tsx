@@ -259,18 +259,7 @@ export default function Home() {
         <p className="text-center text-gray-600 dark:text-gray-300 mb-12">Carousel interativo com pratos especiais do restaurante Moendo</p>
         <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 bg-white dark:bg-gray-800 p-8">
           {moendoRestaurant && moendoRestaurant.featured_dishes && moendoRestaurant.featured_dishes.length > 0 ? (
-            (() => {
-              try {
-                return <DynamicCarousel restaurant={moendoRestaurant} showMostOrderedTitle={true} />;
-              } catch (error) {
-                console.error('Erro ao renderizar carousel:', error);
-                return (
-                  <div className="text-center py-12">
-                    <p className="text-gray-600 dark:text-gray-300">Carousel temporariamente indisponível.</p>
-                  </div>
-                );
-              }
-            })()
+            <DynamicCarousel restaurant={moendoRestaurant} showMostOrderedTitle={true} />
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-600 dark:text-gray-300">Nenhum destaque disponível no momento.</p>

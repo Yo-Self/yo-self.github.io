@@ -60,6 +60,8 @@ export function useCart() {
     if (item) {
       if (item.quantity <= 1) {
         context.removeItem(itemId);
+      } else {
+        context.updateQuantity(itemId, item.quantity - 1);
       }
     }
   }, [context]);

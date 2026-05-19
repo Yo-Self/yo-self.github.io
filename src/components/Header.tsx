@@ -30,9 +30,7 @@ function SmartRestaurantTitle({ name }: { name: string }) {
         const element = titleRef;
         if (!element) return;
 
-        const lineHeight = 24; // Approximate line height for text-xl
         const maxHeight = 48; // Max height for 2 lines
-        const maxLines = 2;
         
         // Check if text overflows
         if (element.scrollHeight > maxHeight) {

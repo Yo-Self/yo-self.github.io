@@ -113,7 +113,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       Analytics.trackCartItemAdded(dish, selectedComplements, 1, currentRestaurantId);
     }
     updateCart(currentRestaurantId, { ...cart, items: newItems });
-  }, [currentRestaurantId, allCarts]);
+  }, [currentRestaurantId, allCarts, updateCart]);
 
   const removeItem = useCallback((itemId: string) => {
     if (!currentRestaurantId) return;
@@ -126,7 +126,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     const newItems = cart.items.filter(item => item.id !== itemId);
     updateCart(currentRestaurantId, { ...cart, items: newItems });
-  }, [currentRestaurantId, allCarts]);
+  }, [currentRestaurantId, allCarts, updateCart]);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (!currentRestaurantId) return;

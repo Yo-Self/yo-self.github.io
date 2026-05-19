@@ -175,7 +175,7 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     // Armazenar referência e iniciar fala
     speechRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [isSupported, isEnabled, selectedVoice, readMessages, stop, isSpeaking]);
+  }, [isSupported, isEnabled, selectedVoice, readMessages, isSpeaking]);
 
   const clearReadHistory = useCallback(() => {
     setReadMessages(new Set());

@@ -251,31 +251,27 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
     // Garante que sempre haja pelo menos o fallbackImage
     const imagesToUse = React.useMemo(() => images.length > 0 ? images : [fallbackImage], [images, fallbackImage]);
     const [current, setCurrent] = React.useState(0);
-    const [loadedImages, setLoadedImages] = React.useState<Set<string>>(new Set());
+    // Usa ref em vez de state para não causar re-renders em cascata ao carregar imagens
+    const loadedImagesRef = React.useRef<Set<string>>(new Set());
 
     // Pré-carrega as imagens de forma mais robusta
     React.useEffect(() => {
-      const preloadImages = async () => {
-        const promises = imagesToUse.map((imgSrc) => {
-          if (imgSrc && !loadedImages.has(imgSrc)) {
-            return new Promise<void>((resolve) => {
-              const img = new window.Image();
-              img.onload = () => {
-                setLoadedImages(prev => new Set(prev).add(imgSrc));
-                resolve();
-              };
-              img.onerror = () => {
-                resolve(); // Resolve mesmo com erro para não bloquear
-              };
-              img.src = imgSrc;
-            });
+      const preloadImages = () => {
+        imagesToUse.forEach((imgSrc) => {
+          if (imgSrc && !loadedImagesRef.current.has(imgSrc)) {
+            const img = new window.Image();
+            img.onload = () => {
+              loadedImagesRef.current.add(imgSrc);
+            };
+            img.onerror = () => {
+              loadedImagesRef.current.add(imgSrc); // Marca como processada mesmo com erro
+            };
+            img.src = imgSrc;
           }
-          return Promise.resolve();
         });
-        await Promise.all(promises);
       };
       preloadImages();
-    }, [imagesToUse, loadedImages]);
+    }, [imagesToUse]);
 
     // Troca de imagem simples sem transição complexa para evitar flickering
     React.useEffect(() => {

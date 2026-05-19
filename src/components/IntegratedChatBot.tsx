@@ -58,16 +58,23 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
   const inputRef = useRef<HTMLInputElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  // Track chatbot session
+  // Track chatbot session — usa refs para chatOpenTime e messages.length
+  // para evitar stale closures sem re-executar o efeito desnecessariamente
+  const chatOpenTimeRef = useRef<number | null>(null);
+  const messagesLengthRef = useRef(0);
+  messagesLengthRef.current = messages.length;
+
   useEffect(() => {
     if (isOpen) {
       const openTime = Date.now();
       setChatOpenTime(openTime);
+      chatOpenTimeRef.current = openTime;
       Analytics.trackChatbotOpened(restaurant.id, 'integrated');
-    } else if (chatOpenTime !== null) {
-      const sessionLength = Math.round((Date.now() - chatOpenTime) / 1000);
-      Analytics.trackChatbotClosed(restaurant.id, sessionLength, messages.length);
+    } else if (chatOpenTimeRef.current !== null) {
+      const sessionLength = Math.round((Date.now() - chatOpenTimeRef.current) / 1000);
+      Analytics.trackChatbotClosed(restaurant.id, sessionLength, messagesLengthRef.current);
       setChatOpenTime(null);
+      chatOpenTimeRef.current = null;
     }
   }, [isOpen, restaurant.id]);
 
@@ -300,51 +307,50 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
     });
   };
 
-  // Função para processar o conteúdo das mensagens e transformar nomes de pratos com asteriscos em links
-  const processMessageContent = (content: string) => {
-    // Regex para encontrar nomes de pratos entre asteriscos (*nome do prato*)
+  // Função para processar o conteúdo das mensagens e transformar nomes de pratos com asteriscos em spans clicáveis
+  // Retorna React nodes para evitar dangerouslySetInnerHTML (XSS)
+  const processMessageContent = useCallback((content: string): React.ReactNode[] => {
     const dishNameRegex = /\*([^*]+)\*/g;
-    
-    // Substituir nomes de pratos por links clicáveis
-    const processedContent = content.replace(dishNameRegex, (match, dishName) => {
-      // Buscar o prato no cardápio do restaurante
-      const foundDish = restaurant.menu_items?.find(item => 
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = dishNameRegex.exec(content)) !== null) {
+      // Texto antes do match
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+
+      const dishName = match[1];
+      const foundDish = restaurant.menu_items?.find(item =>
         item.name.toLowerCase().includes(dishName.toLowerCase()) ||
         dishName.toLowerCase().includes(item.name.toLowerCase())
       );
-      
+
       if (foundDish) {
-        // Se encontrou o prato, criar um link clicável
-        return `<span class="inline-block px-2 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 rounded-md cursor-pointer hover:bg-cyan-200 dark:hover:bg-cyan-800 transition-colors" onclick="window.dishClickHandler && window.dishClickHandler('${foundDish.name}')">${dishName}</span>`;
+        parts.push(
+          <span
+            key={`${match.index}-${dishName}`}
+            className="inline-block px-2 py-1 bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 rounded-md cursor-pointer hover:bg-cyan-200 dark:hover:bg-cyan-800 transition-colors"
+            onClick={() => handleDishClick(foundDish)}
+          >
+            {dishName}
+          </span>
+        );
+      } else {
+        parts.push(dishName);
       }
-      
-      // Se não encontrou, apenas remover os asteriscos
-      return dishName;
-    });
-    
-    return processedContent;
-  };
 
-  // Função para lidar com cliques nos nomes dos pratos
-  const handleDishNameClick = useCallback((dishName: string) => {
-    const foundDish = restaurant.menu_items?.find(item => 
-      item.name.toLowerCase().includes(dishName.toLowerCase()) ||
-      dishName.toLowerCase().includes(item.name.toLowerCase())
-    );
-    
-    if (foundDish) {
-      handleDishClick(foundDish);
+      lastIndex = match.index + match[0].length;
     }
-  }, [restaurant.menu_items, handleDishClick]);
 
-  // Expor a função globalmente para o onclick funcionar
-  useEffect(() => {
-    (window as any).dishClickHandler = handleDishNameClick;
-    
-    return () => {
-      delete (window as any).dishClickHandler;
-    };
-  }, [handleDishNameClick]);
+    // Texto restante
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+
+    return parts;
+  }, [restaurant.menu_items, handleDishClick]);
 
   // Calcular posição do botão para a animação
   const getButtonPosition = () => {
@@ -520,7 +526,7 @@ export default function IntegratedChatBot({ restaurant, restaurants, isOpen, onC
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: processMessageContent(message.content) }}></p>
+                  <p className="text-sm whitespace-pre-wrap">{processMessageContent(message.content)}</p>
                   <div className="flex items-center justify-between mt-1">
                     <p className={`text-xs ${
                       message.role === 'user' ? 'text-cyan-100' : 'text-gray-500 dark:text-gray-400'
