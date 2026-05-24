@@ -395,8 +395,8 @@ export default function CartWhatsAppButton({
       onClick={handleCreateOrderAndSendWhatsApp}
       disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant}
       className={`
-        w-full flex items-center justify-center gap-3 
-        px-6 py-4 
+        w-full flex items-center justify-center gap-2 sm:gap-3 
+        px-3 sm:px-6 py-3.5 sm:py-4 
         bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
         text-white font-semibold 
         rounded-xl shadow-lg hover:shadow-xl
@@ -410,7 +410,7 @@ export default function CartWhatsAppButton({
     >
       {/* Ícone do WhatsApp */}
       <svg 
-        className="w-6 h-6 flex-shrink-0" 
+        className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" 
         fill="currentColor" 
         viewBox="0 0 24 24"
         aria-hidden="true"
@@ -420,17 +420,17 @@ export default function CartWhatsAppButton({
 
       {/* Texto do botão */}
       <div className="flex flex-col items-start min-w-0">
-        <span className="text-lg font-bold">
-          {isLoadingRestaurant ? 'Carregando Restaurante...' : (isLoading || isCreatingOrder ? 'Criando Pedido...' : 'Fazer Pedido')}
+        <span className="text-base sm:text-lg font-bold whitespace-nowrap">
+          {isLoadingRestaurant ? 'Carregando...' : (isLoading || isCreatingOrder ? 'Criando...' : 'Fazer Pedido')}
         </span>
-        <span className="text-sm opacity-90 truncate">
+        <span className="text-xs opacity-90 truncate hidden sm:block">
           {`${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`}
         </span>
       </div>
 
       {/* Ícone de seta */}
       <svg 
-        className="w-5 h-5 flex-shrink-0" 
+        className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 hidden sm:block" 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"

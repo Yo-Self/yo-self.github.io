@@ -1,5 +1,5 @@
 // Cache version - increment this when you want to force cache refresh
-const CACHE_VERSION = 1760463087945; // Increment this for each deployment
+const CACHE_VERSION = 1779233856825; // Increment this for each deployment
 const CACHE_NAME = `restaurant-app-v${CACHE_VERSION}`;
 
 // URLs that should never be cached (Next.js internal files)
@@ -137,11 +137,29 @@ self.addEventListener('fetch', (event) => {
             // Se a resposta da rede foi bem-sucedida, cachear com timestamp
             if (networkResponse.ok) {
               const responseToCache = networkResponse.clone();
-              responseToCache.headers.set('sw-cache-date', new Date().toISOString());
               
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
+              try {
+                // Criar novos cabeçalhos a partir dos originais para podermos modificá-los de forma segura
+                const headers = new Headers(responseToCache.headers);
+                headers.set('sw-cache-date', new Date().toISOString());
+                
+                // Construir uma nova resposta com cabeçalhos mutáveis contendo o timestamp
+                const customResponse = new Response(responseToCache.body, {
+                  status: responseToCache.status,
+                  statusText: responseToCache.statusText,
+                  headers: headers
+                });
+                
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, customResponse);
+                });
+              } catch (cacheError) {
+                console.error('SW: Error setting custom cache headers:', cacheError);
+                // Fallback seguro: salvar clone original sem o cabeçalho personalizado
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, responseToCache);
+                });
+              }
             }
             
             return networkResponse;

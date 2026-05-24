@@ -9,6 +9,7 @@ export interface Order {
   total_price: number;
   status: OrderStatus;
   stripe_payment_intent_id?: string;
+  stripe_checkout_session_id?: string;
   created_at: string;
   updated_at: string;
 }

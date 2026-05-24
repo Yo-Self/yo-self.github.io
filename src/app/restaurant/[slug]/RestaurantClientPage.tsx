@@ -9,6 +9,7 @@ import AnimatedCategoryGrid from "@/components/AnimatedCategoryGrid";
 import { useSearchParams } from "next/navigation";
 import { SortOption } from "@/components/SortModal";
 import { useModalScroll } from "@/hooks/useModalScroll";
+import PaymentSuccessHandler from "@/components/PaymentSuccessHandler";
 
 interface RestaurantClientPageProps {
   initialRestaurant: Restaurant;
@@ -409,6 +410,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
       <Suspense fallback={null}>
         {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} />}
         {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} restaurant={selectedRestaurant} />}
+        <PaymentSuccessHandler restaurantId={selectedRestaurant.id} />
       </Suspense>
       <Header
         restaurant={selectedRestaurant}

@@ -8,11 +8,13 @@ import { useCurrentRestaurant } from '../hooks/useCurrentRestaurant';
 import { CartItem, CartUtils } from '../types/cart';
 import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
+import StripeCheckoutButton from './StripeCheckoutButton';
 import CartIcon from './CartIcon';
 import CustomerDataForm from './CustomerDataForm';
 import TablePaymentForm from './TablePaymentForm';
 import { useRestaurantAddressActive } from '../hooks/useRestaurantAddressActive';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
+import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
 
@@ -43,6 +45,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const restaurantId = propRestaurantId || detectedRestaurantId || contextRestaurantId;
   const { addressActive } = useRestaurantAddressActive(restaurantId);
   const { tablePayment } = useRestaurantTablePayment(restaurantId);
+  const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
 
 
 
@@ -230,17 +233,22 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   </p>
                 </div>
 
+                {/* Alerta se restaurantId estiver inválido */}
+                {(!restaurantId || restaurantId === 'default') && (
+                  <div className="w-full mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      ⚠️ Aguardando identificação do restaurante. Se o problema persistir, recarregue a página.
+                    </p>
+                  </div>
+                )}
+
                 {/* Botões de ação */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  {/* Alerta se restaurantId estiver inválido */}
-                  {(!restaurantId || restaurantId === 'default') && (
-                    <div className="w-full mb-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                        ⚠️ Aguardando identificação do restaurante. Se o problema persistir, recarregue a página.
-                      </p>
+                <div className="flex gap-2 sm:gap-3">
+                  {onlinePayment && (
+                    <div className="flex-1">
+                      <StripeCheckoutButton restaurantId={restaurantId} />
                     </div>
                   )}
-                  
                   <div className="flex-1">
                     <CartWhatsAppButton restaurantId={restaurantId} />
                   </div>

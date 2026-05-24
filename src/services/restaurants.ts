@@ -40,6 +40,17 @@ function formatPriceBR(price: number | null): string {
   return fixed.replace('.', ',');
 }
 
+export function getOptimizedImageUrl(url: string | null | undefined, width: number = 400): string {
+  if (!url) return '';
+  
+  if (url.includes('.supabase.co/storage/v1/object/public/images/')) {
+    const cleanUrl = url.replace(/^https?:\/\//i, '');
+    return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}&w=${width}&q=80&output=webp`;
+  }
+  
+  return url;
+}
+
 export type DbRestaurant = {
   id: number | string;
   slug: string | null;
@@ -358,7 +369,7 @@ function composeRestaurantModel(
           name: c.name,
           description: c.description || '',
           price: formatPriceBR(c.price),
-          image: c.image_url || '',
+          image: getOptimizedImageUrl(c.image_url, 200),
           ingredients: c.ingredients || '',
         })),
       }));
@@ -369,7 +380,7 @@ function composeRestaurantModel(
         name: d.name ?? '',
         description: d.description ?? '',
         price: formatPriceBR(d.price),
-        image: d.image_url ?? '',
+        image: getOptimizedImageUrl(d.image_url, 400),
         tags: (d.tags && Array.isArray(d.tags)) ? d.tags : [],
         ingredients: d.ingredients || '',
         allergens: d.allergens || 'Nenhum',
@@ -400,7 +411,7 @@ function composeRestaurantModel(
         name: d.name ?? '',
         description: d.description ?? '',
         price: formatPriceBR(d.price),
-        image: d.image_url ?? '',
+        image: getOptimizedImageUrl(d.image_url, 400),
         tags: (d.tags && d.tags.length ? d.tags : ['Destaque']),
         ingredients: d.ingredients || '',
         allergens: d.allergens || 'Nenhum',
@@ -416,7 +427,7 @@ function composeRestaurantModel(
             name: c.name,
             description: c.description || '',
             price: formatPriceBR(c.price),
-            image: c.image_url || '',
+            image: getOptimizedImageUrl(c.image_url, 200),
             ingredients: c.ingredients || '',
           })),
         })),
@@ -446,7 +457,7 @@ function composeRestaurantModel(
     slug: r.slug || String(r.id), // Usar slug se existir, senão usar ID como fallback
     name: r.name,
     welcome_message: r.description || `Bem-vindo ao ${r.name}`,
-    image: r.image_url || '',
+    image: getOptimizedImageUrl(r.image_url, 800),
     waiter_call_enabled: r.waiter_call_enabled === true,
     whatsapp_phone: r.whatsapp_phone,
     whatsapp_enabled: r.whatsapp_enabled !== false, // Padrão true se não especificado

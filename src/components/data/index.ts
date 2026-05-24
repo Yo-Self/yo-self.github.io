@@ -50,4 +50,5 @@ export type Restaurant = {
   whatsapp_phone?: string;
   whatsapp_enabled?: boolean;
   whatsapp_custom_message?: string;
+  online_payment?: boolean;
 };

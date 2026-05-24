@@ -338,7 +338,9 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
       </button>
       {showSheet && renderSheet()}
       {/* Modal modo jornal */}
-      <JournalView open={journalOpen} onClose={() => setJournalOpen(false)} restaurant={restaurant} selectedCategory={propSelectedCategory} />
+      {journalOpen && (
+        <JournalView open={journalOpen} onClose={() => setJournalOpen(false)} restaurant={restaurant} selectedCategory={propSelectedCategory} />
+      )}
 
       {/* Modal de detalhes do prato */}
       <DishModal open={modalOpen} dish={selectedDish} restaurantId={restaurant.id} restaurant={restaurant} fallbackImage={restaurant.image} onClose={() => setModalOpen(false)} />

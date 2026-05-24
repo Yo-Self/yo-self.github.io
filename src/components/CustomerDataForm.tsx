@@ -189,8 +189,8 @@ export default function CustomerDataForm({
       )}
 
       {addressActive && (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
+      <div className="grid grid-cols-12 gap-3 sm:gap-4">
+        <div className="col-span-4">
           <label 
             htmlFor="customer-number" 
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -216,7 +216,7 @@ export default function CustomerDataForm({
           />
         </div>
 
-        <div>
+        <div className="col-span-8">
           <label 
             htmlFor="customer-complement" 
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
