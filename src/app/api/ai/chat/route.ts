@@ -117,8 +117,12 @@ async function tryModelsSequentially(
 }
 
 export async function POST(request: NextRequest) {
+  let distinctId = 'anonymous';
   try {
     const { message, restaurantData, chatHistory, distinct_id, trace_id } = await request.json();
+    if (distinct_id) {
+      distinctId = distinct_id;
+    }
 
     if (!process.env.GOOGLE_AI_API_KEY) {
       // Fallback imediato se não tiver API key
@@ -155,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Opções de tracking do PostHog
     const trackingOptions: PostHogLLMOptions = {
-      distinct_id: distinct_id || 'anonymous',
+      distinct_id: distinctId,
       trace_id: trace_id || generateTraceId(),
       properties: {
         restaurant_name: restaurantData?.name,
@@ -189,11 +193,9 @@ export async function POST(request: NextRequest) {
     // Capturar erro no PostHog Server-side
     const posthog = getPostHogServer();
     if (posthog) {
-      posthog.captureException(error as Error, {
-        tags: {
-          error_boundary: 'api_route',
-          source: 'next_api_chat',
-        },
+      posthog.captureException(error as Error, distinctId, {
+        error_boundary: 'api_route',
+        source: 'next_api_chat',
       });
       await posthog.flush();
     }
