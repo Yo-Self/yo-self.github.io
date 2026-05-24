@@ -1,17 +1,16 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase as clientSupabase } from '@/lib/supabase/client';
 import { Order, OrderItem } from '../types/order';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Supabase URL and Key must be provided in environment variables.');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const getSupabase = () => {
+  if (!clientSupabase) {
+    throw new Error('Supabase client is not initialized. Check environment variables.');
+  }
+  return clientSupabase;
+};
 
 export const createOrder = async (order: Omit<Order, 'id' | 'created_at' | 'updated_at'>, items: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[]): Promise<Order> => {
+  const supabase = getSupabase();
   // 1. Create the order
   const { data: orderData, error: orderError } = await supabase
     .from('orders')

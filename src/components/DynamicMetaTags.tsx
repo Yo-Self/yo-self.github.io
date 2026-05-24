@@ -28,36 +28,36 @@ export default function DynamicMetaTags() {
       name: `${name} - Cardápio`,
       short_name: name,
       description: `Cardápio digital de ${name}`,
-      start_url: route,
+      start_url: new URL(route, window.location.origin).href,
       display: 'standalone',
       background_color: '#ffffff',
       theme_color: '#000000',
       orientation: 'portrait-primary',
-      scope: '/',
+      scope: new URL('/', window.location.origin).href,
       lang: 'pt-BR',
       categories: ['food', 'lifestyle', 'utilities'],
       prefer_related_applications: false,
       icons: [
         {
-          src: '/favicon-16x16.png',
+          src: new URL('/favicon-16x16.png', window.location.origin).href,
           sizes: '16x16',
           type: 'image/png',
           purpose: 'any maskable'
         },
         {
-          src: '/favicon-32x32.png',
+          src: new URL('/favicon-32x32.png', window.location.origin).href,
           sizes: '32x32',
           type: 'image/png',
           purpose: 'any maskable'
         },
         {
-          src: '/apple-touch-icon.png',
+          src: new URL('/apple-touch-icon.png', window.location.origin).href,
           sizes: '180x180',
           type: 'image/png',
           purpose: 'any maskable'
         },
         {
-          src: '/favicon.ico',
+          src: new URL('/favicon.ico', window.location.origin).href,
           sizes: '48x48',
           type: 'image/x-icon'
         }

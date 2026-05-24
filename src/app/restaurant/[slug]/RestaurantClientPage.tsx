@@ -53,9 +53,7 @@ const getJournalSteps = (hasMultiple: boolean, restaurant?: Restaurant) => [
   },
 ];
 
-const FirstTimeTutorialGrid = ({ onDone }: { onDone: () => void }) => {
-  const searchParams = useSearchParams();
-  const hasMultiple = searchParams.has("multiple");
+const FirstTimeTutorialGrid = ({ onDone, hasMultiple }: { onDone: () => void; hasMultiple: boolean }) => {
   const steps = React.useMemo(() => getGridSteps(hasMultiple), [hasMultiple]);
   const [step, setStep] = React.useState(0);
   const [show, setShow] = React.useState(false);
@@ -207,9 +205,7 @@ const FirstTimeTutorialGrid = ({ onDone }: { onDone: () => void }) => {
   );
 }
 
-const FirstTimeTutorialJournal = ({ onDone, restaurant }: { onDone: () => void; restaurant: Restaurant }) => {
-  const searchParams = useSearchParams();
-  const hasMultiple = searchParams.has("multiple");
+const FirstTimeTutorialJournal = ({ onDone, restaurant, hasMultiple }: { onDone: () => void; restaurant: Restaurant; hasMultiple: boolean }) => {
   const steps = React.useMemo(() => getJournalSteps(hasMultiple, restaurant), [hasMultiple, restaurant]);
   const [step, setStep] = React.useState(0);
   const [show, setShow] = React.useState(false);
@@ -379,6 +375,11 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   // The restaurants array from useRestaurantList only has basic info without menu items
   const selectedRestaurant = initialRestaurant;
   
+  // Filter restaurants belonging to the same organization
+  const orgRestaurants = selectedRestaurant.user_id
+    ? restaurants.filter(r => r.user_id === selectedRestaurant.user_id)
+    : [];
+  const hasMultiple = orgRestaurants.length > 1;
 
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -408,13 +409,13 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   return (
     <div className={`bg-white dark:bg-black text-gray-900 dark:text-gray-100 relative webapp-main-container with-categories ${viewMode === 'list' ? 'list-view' : ''}`}>
       <Suspense fallback={null}>
-        {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} />}
-        {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} restaurant={selectedRestaurant} />}
+        {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} hasMultiple={hasMultiple} />}
+        {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} restaurant={selectedRestaurant} hasMultiple={hasMultiple} />}
         <PaymentSuccessHandler restaurantId={selectedRestaurant.id} />
       </Suspense>
       <Header
         restaurant={selectedRestaurant}
-        restaurants={restaurants}
+        restaurants={orgRestaurants}
         selectedRestaurantId={selectedRestaurantId}
         onSelectRestaurant={setSelectedRestaurantId}
         currentSort={viewMode === "list" ? currentSort : undefined}
@@ -423,18 +424,22 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
       />
       {/* Anchor do Carousel para scroll controlado */}
       <div ref={carouselRef} />
-      {/* Carousel: mostra apenas na home (modo grid) */}
-      {viewMode === 'grid' && (
-        <Carousel 
-          restaurant={{
-            ...selectedRestaurant,
-            featured_dishes: Array.isArray(selectedRestaurant.featured_dishes) 
-              ? (selectedRestaurant.featured_dishes || []).filter(dish => dish && dish.name && dish.name.trim() !== '')
-              : []
-          }} 
-          data-tutorial="carousel" 
-        />
-      )}
+      {/* Carousel: mostra apenas na home (modo grid) se houver pratos em destaque */}
+      {viewMode === 'grid' && (() => {
+        const featuredDishes = Array.isArray(selectedRestaurant.featured_dishes) 
+          ? (selectedRestaurant.featured_dishes || []).filter(dish => dish && dish.name && dish.name.trim() !== '')
+          : [];
+        if (featuredDishes.length === 0) return null;
+        return (
+          <Carousel 
+            restaurant={{
+              ...selectedRestaurant,
+              featured_dishes: featuredDishes
+            }} 
+            data-tutorial="carousel" 
+          />
+        );
+      })()}
       {viewMode === "grid" ? (
         <>
           <div className="flex items-center px-4 mt-4 relative z-1" style={{marginBottom: '0.2em'}}>

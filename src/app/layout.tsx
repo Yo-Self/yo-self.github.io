@@ -21,7 +21,6 @@ import UpdatePrompt from "@/components/UpdatePrompt";
 import DynamicMetaTags from "@/components/DynamicMetaTags";
 import StartupRedirect from "@/components/StartupRedirect";
 import A2HSUrlTagger from "@/components/A2HSUrlTagger";
-import DynamicManifestUpdater from "@/components/DynamicManifestUpdater";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 import { useLegacyAppDetection } from "@/hooks/useLegacyAppDetection";
@@ -142,7 +141,6 @@ export default function RootLayout({
                       <DynamicMetaTags />
                       <StartupRedirect />
                       <A2HSUrlTagger />
-                      <DynamicManifestUpdater />
                     </CustomerCoordinatesProvider>
                   </CustomerDataProvider>
                 </CartProvider>

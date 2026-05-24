@@ -48,9 +48,12 @@ export function useWhatsAppConfig(restaurantId?: string) {
         });
 
         let data = null;
+        if (response.ok) {
+          data = await response.json();
+        }
         
-        // Se não encontrar por slug, tentar por ID
-        if (!response.ok) {
+        // Se não encontrar por slug (erro ou array vazio), tentar por ID
+        if (!response.ok || !data || data.length === 0) {
           response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message,name`, {
             headers: {
               'apikey': supabaseKey,
@@ -58,13 +61,15 @@ export function useWhatsAppConfig(restaurantId?: string) {
               'Content-Type': 'application/json',
             },
           });
+          
+          if (response.ok) {
+            data = await response.json();
+          }
         }
 
         if (!response.ok) {
           throw new Error('Erro ao buscar configuração do WhatsApp');
         }
-
-        data = await response.json();
         
         console.log('[useWhatsAppConfig] Dados do restaurante recebidos:', {
           restaurantId,

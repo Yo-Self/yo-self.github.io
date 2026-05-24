@@ -228,6 +228,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         whatsapp_phone: restaurant.whatsapp_phone || '',
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
         online_payment: restaurant.online_payment || false,
+        user_id: restaurant.user_id || undefined,
         menu_categories: categories.map(cat => cat.name),
         featured_dishes: dishes
           .filter(dish => dish.is_featured)
@@ -398,6 +399,7 @@ export function useRestaurantList() {
         whatsapp_phone: restaurant.whatsapp_phone || '',
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
         online_payment: restaurant.online_payment || false,
+        user_id: restaurant.user_id || undefined,
         menu_categories: [],
         featured_dishes: [],
         menu_items: []
