@@ -5,6 +5,54 @@
 
 set -e
 
+# Fallback do comando timeout para Mac OS
+if ! command -v timeout >/dev/null 2>&1; then
+  if command -v gtimeout >/dev/null 2>&1; then
+    timeout() { gtimeout "$@"; }
+  else
+    timeout() {
+      # Formato simples: timeout DURATION COMMAND
+      # Exemplo: timeout 60s command ou timeout 10m command
+      local duration=$1
+      shift
+      
+      # Converter duração para segundos
+      local seconds=0
+      if [[ $duration =~ ^([0-9]+)s$ ]]; then
+        seconds=${BASH_REMATCH[1]}
+      elif [[ $duration =~ ^([0-9]+)m$ ]]; then
+        seconds=$(( ${BASH_REMATCH[1]} * 60 ))
+      else
+        seconds=$duration
+      fi
+      
+      # Executar o comando em segundo plano
+      "$@" &
+      local pid=$!
+      
+      # Iniciar timer em segundo plano
+      (
+        sleep $seconds
+        if kill -0 $pid 2>/dev/null; then
+          echo "⏰ Timeout atingido! Encerrando processo $pid..."
+          kill -9 $pid 2>/dev/null || true
+        fi
+      ) &
+      local timer_pid=$!
+      
+      # Aguardar o comando terminar
+      wait $pid 2>/dev/null
+      local exit_code=$?
+      
+      # Matar o timer se o comando terminou antes
+      kill $timer_pid 2>/dev/null || true
+      wait $timer_pid 2>/dev/null || true
+      
+      return $exit_code
+    }
+  fi
+fi
+
 echo "🚀 Iniciando execução dos testes com timeout..."
 
 # Configurações
@@ -47,6 +95,14 @@ run_test_with_timeout() {
     return 1
 }
 
+# Garantir que a porta 3000 está livre antes de iniciar
+echo "🧹 Garantindo que a porta 3000 está livre..."
+if lsof -t -i:3000 > /dev/null; then
+  echo "⚠️ Porta 3000 ocupada. Encerrando processos..."
+  lsof -t -i:3000 | xargs kill -9 || true
+  sleep 1
+fi
+
 # Iniciar servidor de desenvolvimento para testes standalone
 echo "🟢 Iniciando servidor de desenvolvimento para testes standalone..."
 NEXT_PUBLIC_DISABLE_SW=true DISABLE_API_CALLS=true NODE_ENV=test npm run dev:test &
@@ -57,6 +113,9 @@ echo "⏳ Aguardando servidor (http://localhost:3000) ficar pronto..."
 if ! timeout 60s bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'; then
   echo "❌ Servidor não ficou pronto em 60s. Encerrando."
   kill $DEV_SERVER_PID || true
+  if lsof -t -i:3000 > /dev/null; then
+    lsof -t -i:3000 | xargs kill -9 || true
+  fi
   exit 1
 fi
 
@@ -71,6 +130,10 @@ run_test_with_timeout \
 # Parar servidor standalone
 echo "🛑 Encerrando servidor de desenvolvimento (standalone)"
 kill $DEV_SERVER_PID || true
+if lsof -t -i:3000 > /dev/null; then
+  echo "🧹 Forçando encerramento de processos na porta 3000..."
+  lsof -t -i:3000 | xargs kill -9 || true
+fi
 sleep 2
 
 # Iniciar servidor para suíte principal (também sem webServer do Playwright)
@@ -85,6 +148,9 @@ echo "⏳ Aguardando servidor (http://localhost:3000) ficar pronto..."
 if ! timeout 60s bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'; then
   echo "❌ Servidor (principal) não ficou pronto em 60s. Encerrando."
   kill $MAIN_SERVER_PID || true
+  if lsof -t -i:3000 > /dev/null; then
+    lsof -t -i:3000 | xargs kill -9 || true
+  fi
   exit 1
 fi
 
@@ -97,6 +163,9 @@ if timeout $TEST_TIMEOUT bash -c '
 '; then
     echo "🎉 Todos os testes executaram com sucesso!"
     kill $MAIN_SERVER_PID || true
+    if lsof -t -i:3000 > /dev/null; then
+      lsof -t -i:3000 | xargs kill -9 || true
+    fi
     exit 0
 else
     exit_code=$?
@@ -110,10 +179,16 @@ else
             ls -la test-results/
         fi
         kill $MAIN_SERVER_PID || true
+        if lsof -t -i:3000 > /dev/null; then
+          lsof -t -i:3000 | xargs kill -9 || true
+        fi
         exit 1
     else
         echo "❌ Testes falharam com código $exit_code"
         kill $MAIN_SERVER_PID || true
+        if lsof -t -i:3000 > /dev/null; then
+          lsof -t -i:3000 | xargs kill -9 || true
+        fi
         exit $exit_code
     fi
 fi

@@ -78,7 +78,7 @@ function SmartRestaurantTitle({
   `.trim();
 
   const content = (
-    <span className="inline-flex items-center justify-center gap-1.5 max-w-full flex-nowrap" data-tutorial="restaurant-switch">
+    <h1 className="inline-flex items-center justify-center gap-1.5 max-w-full flex-nowrap" data-tutorial="restaurant-switch">
       <span 
         ref={setTitleRef}
         className={titleClasses}
@@ -105,7 +105,7 @@ function SmartRestaurantTitle({
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       )}
-    </span>
+    </h1>
   );
 
   if (onClick) {
