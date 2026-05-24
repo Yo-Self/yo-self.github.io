@@ -73,6 +73,11 @@ export default function WaiterCallButton({ restaurantId, waiterCallEnabled = fal
       }
     } catch (err) {
       console.error('Error creating waiter call:', err);
+      Analytics.trackError(err as Error, {
+        component: 'WaiterCallButton',
+        action: 'createCall',
+        restaurant_id: restaurantId,
+      });
     } finally {
       setIsSubmitting(false);
     }

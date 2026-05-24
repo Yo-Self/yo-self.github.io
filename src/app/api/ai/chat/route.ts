@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendMessageWithTracking, generateTraceId, type PostHogLLMOptions } from '@/lib/posthog-gemini-server';
+import { getPostHogServer } from '@/lib/posthog';
 
 // Inicializar o cliente do Google AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
@@ -184,6 +185,19 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro na API de chat:', error);
+    
+    // Capturar erro no PostHog Server-side
+    const posthog = getPostHogServer();
+    if (posthog) {
+      posthog.captureException(error as Error, {
+        tags: {
+          error_boundary: 'api_route',
+          source: 'next_api_chat',
+        },
+      });
+      await posthog.flush();
+    }
+
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

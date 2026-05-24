@@ -306,11 +306,24 @@ export class Analytics {
   }
 
   static trackError(error: Error, context?: Record<string, any>): void {
+    // Registra como evento customizado
     this.track('app_error', {
       error_message: error.message,
       error_stack: error.stack,
       ...context
     })
+
+    // Captura como Exception oficial do PostHog para o Error Tracking no client-side
+    if (this.isInitialized()) {
+      try {
+        posthog.captureException(error, {
+          extra: context,
+          tags: { source: 'Analytics.trackError' }
+        });
+      } catch (e) {
+        console.warn('[Analytics] Failed to captureException:', e);
+      }
+    }
   }
 
   // Cart Checkout Error Analytics

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWaiterCalls, WaiterCall } from '@/hooks/useWaiterCalls';
+import { Analytics } from '@/lib/analytics';
 
 interface WaiterCallNotificationsProps {
   restaurantId: string;
@@ -44,6 +45,11 @@ export default function WaiterCallNotifications({
       }
     } catch (err) {
       console.error('Error attending call:', err);
+      Analytics.trackError(err as Error, {
+        component: 'WaiterCallNotifications',
+        action: 'handleAttendCall',
+        call_id: call.id,
+      });
     }
   };
 
@@ -52,6 +58,11 @@ export default function WaiterCallNotifications({
       await updateCall(call.id, 'cancelled');
     } catch (err) {
       console.error('Error cancelling call:', err);
+      Analytics.trackError(err as Error, {
+        component: 'WaiterCallNotifications',
+        action: 'handleCancelCall',
+        call_id: call.id,
+      });
     }
   };
 

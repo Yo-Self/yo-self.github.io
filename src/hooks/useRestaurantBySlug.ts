@@ -277,8 +277,8 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
     setIsLoading(true);
     setError(null);
 
-    // Eager fallback for test slug or when Supabase client is not configured
-    if (slug === 'auri-monteiro' || !supabase) {
+    // Eager fallback when Supabase client is not configured
+    if (!supabase) {
       console.log('🧪 Using mock/fallback restaurant data for slug:', slug);
       setRestaurant({
         ...MOCK_RESTAURANT,
