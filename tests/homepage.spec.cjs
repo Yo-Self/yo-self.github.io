@@ -20,12 +20,12 @@ test.describe('Página Inicial', () => {
     await expect(page.locator('nav img[alt="Yoself"]')).toBeVisible();
     
     // Verificar se o título principal está visível
-    await expect(page.locator('h1:has-text("Plataforma de cardápio digital")')).toBeVisible();
+    await expect(page.locator('h1:has-text("A experiência que o seu")')).toBeVisible();
   });
 
   test('deve exibir carrossel de pratos em destaque', async ({ page }) => {
     // Verificar se o carrossel está visível
-    await expect(page.locator('section:has-text("Destaques que chamam atenção")')).toBeVisible();
+    await expect(page.locator('section:has-text("Destaques que dão água na boca")')).toBeVisible();
     
     // Verificar se há pratos em destaque
     const featuredDishes = page.locator('.carousel-card');
@@ -89,7 +89,7 @@ test.describe('Página Inicial', () => {
 
   test('deve ter seção de destaque do carrossel', async ({ page }) => {
     // Verificar se há seção de destaque
-    await expect(page.locator('h2:has-text("Destaques que chamam atenção")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Destaques que dão água na boca")')).toBeVisible();
     
     // Verificar se há carrossel interativo
     const carousel = page.locator('.carousel-section');
@@ -109,7 +109,7 @@ test.describe('Página Inicial', () => {
 
   test('deve ter seção de call-to-action', async ({ page }) => {
     // Verificar se há seção de call-to-action
-    const ctaSection = page.locator('h3:has-text("Pronto para elevar seu cardápio?")');
+    const ctaSection = page.locator('h2:has-text("Eleve o nível do seu restaurante")');
     if (await ctaSection.count() > 0) {
       await expect(ctaSection.first()).toBeVisible();
     }
