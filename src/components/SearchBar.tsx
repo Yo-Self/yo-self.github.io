@@ -45,8 +45,31 @@ export default function SearchBar({ searchTerm, onSearchTermChange, restaurant, 
   
   // Track search analytics
   const handleSearchChange = (value: string) => {
+    const newTerm = value.trim().toLowerCase();
+    
+    let resultsCount = 0;
+    if (newTerm) {
+      const newFilterFn = (item: MenuItem) =>
+        item.name.toLowerCase().includes(newTerm) ||
+        item.description.toLowerCase().includes(newTerm) ||
+        (item.tags && item.tags.some(tag => tag.toLowerCase().includes(newTerm)));
+        
+      const current = restaurant.menu_items.filter(item => {
+        if (!newFilterFn(item)) return false;
+        if (propSelectedCategory === 'all' || !propSelectedCategory) return true;
+        return item.categories && item.categories.includes(propSelectedCategory);
+      });
+      const other = restaurants
+        .filter(r => r.id !== restaurant.id)
+        .flatMap(r => r.menu_items.filter(newFilterFn));
+        
+      resultsCount = current.length + other.length;
+    }
+
     Analytics.trackMenuSearch({
       query: value,
+      resultCount: resultsCount,
+      has_results: resultsCount > 0,
       restaurantId: getCurrentRestaurantId() || 'unknown'
     });
     onSearchTermChange(value);

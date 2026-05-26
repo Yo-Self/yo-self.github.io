@@ -345,6 +345,8 @@ export default function CartWhatsAppButton({
         
         if (userConfirmed) {
           Analytics.trackCartWhatsAppPopupFallbackConfirmed(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+          Analytics.trackPurchaseCompleted(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+          Analytics.trackSurveyOpportunity('post_checkout', restaurant.id, restaurant.slug || '');
           window.location.href = whatsappUrl;
         } else {
           // Rastrear cancelamento do usuário
@@ -354,6 +356,8 @@ export default function CartWhatsAppButton({
         
         // Rastrear sucesso na abertura do WhatsApp
         Analytics.trackCartWhatsAppOpenedSuccessfully(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+        Analytics.trackPurchaseCompleted(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+        Analytics.trackSurveyOpportunity('post_checkout', restaurant.id, restaurant.slug || '');
       }
 
       if (onSent) {

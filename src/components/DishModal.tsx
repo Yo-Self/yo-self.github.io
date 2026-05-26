@@ -27,6 +27,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   const [isClosing, setIsClosing] = useState(false);
   const [showAddedFeedback, setShowAddedFeedback] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const wasAddedToCart = useRef(false);
   
   // Hook da comanda
   const { addItem, isItemInCart, getItemQuantity, openCart, removeItem, incrementQuantity, decrementQuantity } = useCart();
@@ -101,6 +102,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     if (dish) {
       setSelectedComplements(new Map());
       setIsClosing(false);
+      wasAddedToCart.current = false;
     }
   }, [dish]);
 
@@ -115,10 +117,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
         // Track modal close when it actually closes
         const modalOpenTime = Date.now();
         return () => {
-          if (!open) {
-            const timeSpent = Math.round((Date.now() - modalOpenTime) / 1000);
-            Analytics.trackDishModalClosed(dish, restaurantId, timeSpent);
-          }
+          const timeSpent = Math.round((Date.now() - modalOpenTime) / 1000);
+          Analytics.trackDishModalClosed(dish, restaurantId, timeSpent, wasAddedToCart.current);
         };
       }
     }
@@ -205,6 +205,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     try {
       const menuItem = convertToMenuItem(dish);
       addItem(menuItem, selectedComplements);
+      
+      wasAddedToCart.current = true;
       
       // Feedback visual
       setShowAddedFeedback(true);

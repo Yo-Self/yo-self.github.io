@@ -156,10 +156,11 @@ export class Analytics {
     })
   }
 
-  static trackMenuSearch(params: { query: string; resultCount?: number; restaurantId: string }): void {
+  static trackMenuSearch(params: { query: string; resultCount?: number; has_results?: boolean; restaurantId: string }): void {
     this.track('menu_searched', {
       search_query: params.query,
       result_count: params.resultCount || 0,
+      has_results: params.has_results ?? (params.resultCount ? params.resultCount > 0 : false),
       query_length: params.query.length,
       restaurant_id: params.restaurantId
     })
@@ -197,11 +198,12 @@ export class Analytics {
     })
   }
 
-  static trackDishModalClosed(dish: any, restaurantId: string, timeSpent: number): void {
+  static trackDishModalClosed(dish: any, restaurantId: string, timeSpent: number, addedToCart: boolean = false): void {
     this.track('dish_modal_closed', {
       dish_name: dish.name,
       restaurant_id: restaurantId,
-      time_spent_seconds: timeSpent
+      time_spent_seconds: timeSpent,
+      added_to_cart: addedToCart
     })
   }
 
@@ -333,6 +335,7 @@ export class Analytics {
       restaurant_slug: restaurantSlug,
       item_count: itemCount,
       total_price: totalPrice,
+      checkout_step: 'popup_blocked',
       browser: typeof window !== 'undefined' ? navigator.userAgent : 'unknown'
     })
   }
@@ -342,7 +345,8 @@ export class Analytics {
       restaurant_id: restaurantId,
       restaurant_slug: restaurantSlug,
       item_count: itemCount,
-      total_price: totalPrice
+      total_price: totalPrice,
+      checkout_step: 'fallback_confirmed'
     })
   }
 
@@ -351,7 +355,8 @@ export class Analytics {
       restaurant_id: restaurantId,
       restaurant_slug: restaurantSlug,
       item_count: itemCount,
-      total_price: totalPrice
+      total_price: totalPrice,
+      checkout_step: 'fallback_cancelled'
     })
   }
 
@@ -360,7 +365,28 @@ export class Analytics {
       restaurant_id: restaurantId,
       restaurant_slug: restaurantSlug,
       item_count: itemCount,
-      total_price: totalPrice
+      total_price: totalPrice,
+      checkout_step: 'whatsapp_opened'
+    })
+  }
+
+  // Final Conversion & Surveys
+  static trackPurchaseCompleted(restaurantId: string, restaurantSlug: string, itemCount: number, totalPrice: number): void {
+    this.track('purchase_completed', {
+      restaurant_id: restaurantId,
+      restaurant_slug: restaurantSlug,
+      item_count: itemCount,
+      total_price: totalPrice,
+      checkout_method: 'whatsapp',
+      checkout_step: 'purchase_completed'
+    })
+  }
+
+  static trackSurveyOpportunity(context: string, restaurantId: string, restaurantSlug: string): void {
+    this.track('survey_opportunity', {
+      location: context,
+      restaurant_id: restaurantId,
+      restaurant_slug: restaurantSlug
     })
   }
 
