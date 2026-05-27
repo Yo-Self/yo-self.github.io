@@ -285,6 +285,13 @@ export default function CartWhatsAppButton({
       return;
     }
 
+    // 🔑 CORREÇÃO CRÍTICA: Abrir janela em branco SINCRONAMENTE antes de qualquer await.
+    // Browsers bloqueiam window.open() quando chamado após operações assíncronas (await),
+    // pois o gesto do usuário (clique) é considerado "expirado" após o primeiro await.
+    // Ao abrir a janela aqui (na mesma call stack do clique), garantimos que não será bloqueada.
+    // Após a criação do pedido, navegamos a janela já aberta para a URL do WhatsApp.
+    const whatsappWindow = window.open('', '_blank');
+
     setIsCreatingOrder(true);
 
     try {
@@ -322,42 +329,25 @@ export default function CartWhatsAppButton({
 
       const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
 
-
       const currentRestaurantId = getCurrentRestaurantId();
       if (currentRestaurantId) {
         Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
       }
 
-      const windowResult = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      if (whatsappWindow && !whatsappWindow.closed) {
+        // Navegar a janela já aberta para a URL do WhatsApp
+        whatsappWindow.location.href = whatsappUrl;
 
-      // Verificar se window.open foi bloqueado
-      if (!windowResult || windowResult.closed || typeof windowResult.closed === 'undefined') {
-        
-        // Rastrear bloqueio de popup no PostHog
-        Analytics.trackCartWhatsAppPopupBlocked(restaurant.id, restaurant.slug || '', items.length, totalPrice);
-        
-        // Fallback: Mostrar confirmação para redirecionar
-        const userConfirmed = window.confirm(
-          '⚠️ O navegador bloqueou a abertura do WhatsApp.\n\n' +
-          'Clique em OK para abrir o WhatsApp agora.\n\n' +
-          'Dica: Permita popups para este site nas configurações do navegador para uma experiência melhor.'
-        );
-        
-        if (userConfirmed) {
-          Analytics.trackCartWhatsAppPopupFallbackConfirmed(restaurant.id, restaurant.slug || '', items.length, totalPrice);
-          Analytics.trackPurchaseCompleted(restaurant.id, restaurant.slug || '', items.length, totalPrice);
-          Analytics.trackSurveyOpportunity('post_checkout', restaurant.id, restaurant.slug || '');
-          window.location.href = whatsappUrl;
-        } else {
-          // Rastrear cancelamento do usuário
-          Analytics.trackCartWhatsAppPopupFallbackCancelled(restaurant.id, restaurant.slug || '', items.length, totalPrice);
-        }
-      } else {
-        
         // Rastrear sucesso na abertura do WhatsApp
         Analytics.trackCartWhatsAppOpenedSuccessfully(restaurant.id, restaurant.slug || '', items.length, totalPrice);
         Analytics.trackPurchaseCompleted(restaurant.id, restaurant.slug || '', items.length, totalPrice);
         Analytics.trackSurveyOpportunity('post_checkout', restaurant.id, restaurant.slug || '');
+      } else {
+        // Fallback: janela foi fechada pelo usuário antes do pedido ser criado,
+        // ou ainda foi bloqueada (ex: navegadores muito restritivos).
+        // Redirecionar a aba atual como último recurso.
+        Analytics.trackCartWhatsAppPopupBlocked(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+        window.location.href = whatsappUrl;
       }
 
       if (onSent) {
@@ -365,6 +355,11 @@ export default function CartWhatsAppButton({
       }
     } catch (error) {
       console.error("[CartWhatsAppButton] Falha ao criar o pedido:", error);
+
+      // Fechar a janela em branco se a criação do pedido falhou
+      if (whatsappWindow && !whatsappWindow.closed) {
+        whatsappWindow.close();
+      }
       
       // Rastrear erro no PostHog
       Analytics.trackError(error as Error, {
