@@ -389,7 +389,8 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
           return supabase
             .from('dish_complement_groups')
             .select('dish_id,complement_group_id,position')
-            .in('dish_id', chunk);
+            .in('dish_id', chunk)
+            .order('position', { ascending: true, nullsFirst: true });
         });
 
         const [dishCategoryResults, junctionResults] = await Promise.all([
@@ -504,13 +505,24 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
 
             // Get complement groups for this dish
             const dishAssociations = associations.get(String(dish.id)) || [];
-            const dishGroups = dishAssociations
+            // Sort complement groups by position ascending
+            const sortedAssociations = [...dishAssociations].sort((a, b) => {
+              const posA = a.position !== null && a.position !== undefined ? a.position : 999;
+              const posB = b.position !== null && b.position !== undefined ? b.position : 999;
+              return posA - posB;
+            });
+            const dishGroups = sortedAssociations
               .map(assoc => {
                 const group = complementGroups.find(g => g.id === assoc.groupId);
                 if (!group) return null;
                 
                 const groupComplements = complements
                   .filter(comp => comp.group_id === group.id)
+                  .sort((a, b) => {
+                    const posA = a.position !== null && a.position !== undefined ? a.position : 999;
+                    const posB = b.position !== null && b.position !== undefined ? b.position : 999;
+                    return posA - posB;
+                  })
                   .map(comp => ({
                     id: String(comp.id),
                     name: comp.name,
@@ -557,16 +569,28 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
 
           // Get complement groups for this dish
           const dishAssociations = associations.get(String(dish.id)) || [];
-          const dishGroups = dishAssociations
+          // Sort complement groups by position ascending
+          const sortedAssociations = [...dishAssociations].sort((a, b) => {
+            const posA = a.position !== null && a.position !== undefined ? a.position : 999;
+            const posB = b.position !== null && b.position !== undefined ? b.position : 999;
+            return posA - posB;
+          });
+          const dishGroups = sortedAssociations
             .map(assoc => {
               const group = complementGroups.find(g => g.id === assoc.groupId);
               if (!group) return null;
               
               const groupComplements = complements
                 .filter(comp => comp.group_id === group.id)
-                                  .map(comp => ({
-                                    id: String(comp.id),
-                                    name: comp.name,                  description: comp.description || '',
+                .sort((a, b) => {
+                  const posA = a.position !== null && a.position !== undefined ? a.position : 999;
+                  const posB = b.position !== null && b.position !== undefined ? b.position : 999;
+                  return posA - posB;
+                })
+                .map(comp => ({
+                  id: String(comp.id),
+                  name: comp.name,
+                  description: comp.description || '',
                   price: comp.price ? comp.price.toFixed(2).replace('.', ',') : '0,00',
                   image: comp.image_url || '',
                   ingredients: comp.ingredients || '',
