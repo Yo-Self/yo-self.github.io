@@ -18,6 +18,10 @@ Uma aplicação moderna, interativa e premium de cardápio digital para restaura
 - **Validação de Subtotal**: Exibição de um banner visual e amigável no carrinho de compras quando o valor mínimo estipulado pelo restaurante não for atingido.
 - **Bloqueio de Checkout**: Omissão/desativação automática dos botões de finalização por WhatsApp e Stripe se o subtotal for menor que o pedido mínimo do estabelecimento.
 
+### 🍳 Roteamento Inteligente de Pedidos e Controle de Cozinha
+- **Detecção de Preparação**: Os itens do cardápio possuem o campo `needs_preparation` vindo do banco de dados (Supabase) via mapeamento na API.
+- **Roteamento Inteligente de Checkout**: Ao realizar pedidos via WhatsApp ou Stripe, a flag `sent_to_kitchen` é automaticamente calculada para cada item (verdadeiro se o prato precisa de preparo na cozinha, falso caso contrário), permitindo que o gestor receba pedidos mistos organizados na cozinha sem misturar itens prontos e mantendo a experiência do cliente idêntica e sem atritos visuais.
+
 ### 🤖 Assistente Virtual IA com Gemini 2.0 Flash
 - **Inteligência Conversacional**: Assistente integrado ao cardápio com suporte a comandos de voz e fallbacks resilientes de modelos (`gemini-2.0-flash-exp` -> `gemini-1.5-pro` -> `gemini-pro`).
 - **Navegação Assistida**: Destaques de pratos sugeridos na conversa são formatados como cartões interativos e clicáveis para abrir detalhes de complements instantaneamente.

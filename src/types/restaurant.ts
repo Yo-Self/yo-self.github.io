@@ -77,6 +77,9 @@ export interface MenuItem {
   
   /** Grupos de complementos opcionais */
   complement_groups?: ComplementGroup[];
+
+  /** Se o prato necessita de preparo na cozinha */
+  needs_preparation?: boolean;
 }
 
 export interface ComplementGroup {
@@ -290,6 +293,7 @@ export function dishToMenuItem(dishItem: Dish | MenuItem): MenuItem {
     ingredients: dishItem.ingredients || '',
     allergens: dishItem.allergens || '',
     portion: dishItem.portion || '',
+    needs_preparation: (dishItem as any).needs_preparation !== false,
     complement_groups: dishItem.complement_groups?.map(group => ({
       ...group,
       description: group.description || '',

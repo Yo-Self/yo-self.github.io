@@ -79,6 +79,7 @@ export function useStripeCheckout({
               };
             })
         ),
+        sent_to_kitchen: item.dish.needs_preparation !== false,
       }));
 
       const newOrder = await createOrder(orderToCreate, itemsToCreate);

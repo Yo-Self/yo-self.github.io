@@ -39,6 +39,7 @@ export const createOrder = async (order: Omit<Order, 'id' | 'created_at' | 'upda
     quantity: item.quantity,
     price_at_time_of_order: item.price_at_time_of_order,
     selected_complements: item.selected_complements,
+    sent_to_kitchen: item.sent_to_kitchen !== false,
   }));
 
   const { error: itemsError } = await supabase.from('order_items').insert(orderItems);

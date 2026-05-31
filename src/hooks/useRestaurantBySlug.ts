@@ -557,6 +557,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
               allergens: dish.allergens || '',
               portion: dish.portion || '',
               categories: dishCats,
+              needs_preparation: dish.needs_preparation !== false,
               complement_groups: dishGroups.length > 0 ? dishGroups : undefined
             };
           }),
@@ -622,6 +623,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
             portion: dish.portion || '',
             category: primaryCategory,
             categories: dishCats,
+            needs_preparation: dish.needs_preparation !== false,
             complement_groups: dishGroups.length > 0 ? dishGroups : undefined
           };
         })
