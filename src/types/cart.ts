@@ -63,7 +63,7 @@ export class CartUtils {
     return {
       id: item.id,
       dish: item.dish,
-      selectedComplements: this.mapToSerializable(item.selectedComplements),
+      selectedComplements: CartUtils.mapToSerializable(item.selectedComplements),
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       totalPrice: item.totalPrice,
@@ -77,7 +77,7 @@ export class CartUtils {
     return {
       id: serializable.id || '',
       dish: serializable.dish,
-      selectedComplements: this.serializableToMap(serializable.selectedComplements || []),
+      selectedComplements: CartUtils.serializableToMap(serializable.selectedComplements || []),
       quantity: serializable.quantity || 1,
       unitPrice: serializable.unitPrice || 0,
       totalPrice: serializable.totalPrice || 0,

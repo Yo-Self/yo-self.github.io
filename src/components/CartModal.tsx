@@ -15,6 +15,8 @@ import TablePaymentForm from './TablePaymentForm';
 import { useRestaurantAddressActive } from '../hooks/useRestaurantAddressActive';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
+import { usePathname } from 'next/navigation';
+import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
 
@@ -43,9 +45,18 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const detectedRestaurantId = useCurrentRestaurant();
   const { restaurantId: contextRestaurantId } = useRestaurant();
   const restaurantId = propRestaurantId || detectedRestaurantId || contextRestaurantId;
-  const { addressActive } = useRestaurantAddressActive(restaurantId);
-  const { tablePayment } = useRestaurantTablePayment(restaurantId);
+  const { addressActive: dbAddressActive } = useRestaurantAddressActive(restaurantId);
+  const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
   const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
+  const { restaurant } = useRestaurantBySlug(restaurantId || "");
+
+  const pathname = usePathname();
+  const isDeliveryRoute = pathname?.startsWith('/delivery');
+  const tablePayment = isDeliveryRoute ? false : dbTablePayment;
+  const addressActive = isDeliveryRoute ? true : false;
+
+  const minOrderValue = restaurant?.min_order_value || 0;
+  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
 
 
 
@@ -238,6 +249,19 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   <div className="w-full mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <p className="text-sm text-yellow-800 dark:text-yellow-200">
                       ⚠️ Aguardando identificação do restaurante. Se o problema persistir, recarregue a página.
+                    </p>
+                  </div>
+                )}
+
+                {/* Banner de Pedido Mínimo Não Atingido */}
+                {isMinOrderNotMet && (
+                  <div className="w-full mb-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl flex flex-col gap-1.5 animate-fade-in shadow-sm">
+                    <span className="text-amber-850 dark:text-amber-300 font-bold flex items-center gap-1.5 text-sm">
+                      ⚠️ Pedido Mínimo Não Atingido
+                    </span>
+                    <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                      O valor mínimo para pedidos de delivery é de <strong className="font-mono">R$ {minOrderValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>. 
+                      Falta <strong className="font-mono">R$ {(minOrderValue - totalPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> para você poder finalizar o pedido.
                     </p>
                   </div>
                 )}

@@ -8,6 +8,7 @@ import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useRestaurantCoordinates } from '../hooks/useRestaurantCoordinates';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
+import { usePathname } from 'next/navigation';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
@@ -33,8 +34,15 @@ export default function CartWhatsAppButton({
   const { customerCoordinates } = useCustomerCoordinates();
   const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
-  const { tablePayment } = useRestaurantTablePayment(restaurantId);
+  const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
+
+  const pathname = usePathname();
+  const isDeliveryRoute = pathname?.startsWith('/delivery');
+  const tablePayment = isDeliveryRoute ? false : dbTablePayment;
+
+  const minOrderValue = restaurant?.min_order_value || 0;
+  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
   const restaurantIdRef = React.useRef(restaurantId);
 
   // Monitorar mudanças no restaurantId e cancelar operações em andamento
@@ -392,7 +400,7 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant}
+      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet}
       className={`
         w-full flex items-center justify-center gap-2 sm:gap-3 
         px-3 sm:px-6 py-3.5 sm:py-4 

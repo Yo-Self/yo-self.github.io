@@ -9,8 +9,8 @@ export function useCurrentRoute() {
     setCurrentRoute(pathname);
   }, [pathname]);
 
-  // Verificar se está em uma página de restaurante
-  const isRestaurantPage = currentRoute.startsWith('/restaurant/');
+  // Verificar se está em uma página de restaurante (mesa ou delivery)
+  const isRestaurantPage = currentRoute.startsWith('/restaurant/') || currentRoute.startsWith('/delivery/');
   
   // Obter nome do restaurante da URL
   const getRestaurantName = () => {

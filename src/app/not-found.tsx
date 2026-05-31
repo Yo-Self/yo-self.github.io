@@ -8,8 +8,8 @@ export default function NotFound() {
   useEffect(() => {
     try {
       const path = window.location.pathname || "";
-      // Se estiver acessando /restaurant/<id> sem barra final, redireciona para a versão com barra
-      const m = path.match(/^\/restaurant\/([^\/]+)$/);
+      // Se estiver acessando /restaurant/<id> ou /delivery/<id> sem barra final, redireciona para a versão com barra
+      const m = path.match(/^\/(restaurant|delivery)\/([^\/]+)$/);
       if (m && !isRedirecting) {
         setIsRedirecting(true);
         const target = path + "/" + (window.location.search || "") + (window.location.hash || "");

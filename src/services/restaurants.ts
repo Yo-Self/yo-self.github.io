@@ -64,6 +64,7 @@ export type DbRestaurant = {
   whatsapp_custom_message?: string;
   created_at?: string;
   updated_at?: string;
+  min_order_value?: number;
 };
 
 export type DbCategory = {
@@ -465,6 +466,7 @@ function composeRestaurantModel(
     menu_categories: categories.map(c => c.name),
     featured_dishes: featured,
     menu_items: menuItems,
+    min_order_value: r.min_order_value !== undefined && r.min_order_value !== null ? Number(r.min_order_value) : 0,
   };
 }
 

@@ -7,14 +7,17 @@ export function useCurrentRestaurant() {
 
   useEffect(() => {
     // Extrair o ID do restaurante da URL
-    // Formato esperado: /restaurant/[slug] ou /restaurant/entry?id=...
-    if (pathname.startsWith('/restaurant/')) {
+    // Formato esperado: /restaurant/[slug] ou /restaurant/entry?id=... ou /delivery/[slug]
+    const isRestaurant = pathname.startsWith('/restaurant/');
+    const isDelivery = pathname.startsWith('/delivery/');
+    
+    if (isRestaurant || isDelivery) {
       const segments = pathname.split('/');
       if (segments.length >= 3) {
         const slug = segments[2];
         
         // Se for a página de entrada com ID na query string
-        if (slug === 'entry') {
+        if (isRestaurant && slug === 'entry') {
           // Tentar extrair o ID da query string se disponível
           if (typeof window !== 'undefined') {
             const urlParams = new URLSearchParams(window.location.search);
@@ -27,7 +30,6 @@ export function useCurrentRestaurant() {
         }
         
         // Para outras páginas, usar o slug como identificador
-        // O hook useWhatsAppConfig irá buscar a configuração correta no banco
         setRestaurantId(slug);
       }
     } else {

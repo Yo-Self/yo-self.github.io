@@ -272,6 +272,7 @@ interface CartItem {
 - Errors: Use `ErrorBoundary` for React render errors; `Analytics.trackError()` for operational errors
 - Console output: No `console.log`/`console.warn` in production code — only `console.error` for actual errors
 - Security: Never use `dangerouslySetInnerHTML` — render user/AI content as React nodes
+- Documentation: Always update the `README.md` file whenever adding or modifying core features (such as API integration hooks, minimum order constraints, PWA manifest updates, or chatbot models) to guarantee that user-facing features stay aligned with technical capabilities.
 
 ## Testing
 

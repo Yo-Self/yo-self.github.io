@@ -7,11 +7,12 @@ export default function DynamicManifestUpdater() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Verificar se estamos em uma página de restaurante
-    const restaurantMatch = pathname.match(/^\/restaurant\/([^\/]+)/);
+    // Verificar se estamos em uma página de restaurante (mesa ou delivery)
+    const restaurantMatch = pathname.match(/^\/(restaurant|delivery)\/([^\/]+)/);
     
     if (restaurantMatch) {
-      const slug = restaurantMatch[1];
+      const prefix = restaurantMatch[1];
+      const slug = restaurantMatch[2];
       const restaurantName = slug
         .replace(/-/g, ' ')
         .replace(/\b\w/g, l => l.toUpperCase())
@@ -22,7 +23,7 @@ export default function DynamicManifestUpdater() {
         name: restaurantName,
         short_name: restaurantName,
         description: `Cardápio digital de ${restaurantName}`,
-        start_url: `/restaurant/${slug}?utm_source=web_app_manifest`,
+        start_url: `/${prefix}/${slug}?utm_source=web_app_manifest`,
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#000000',

@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 export default function Navigation() {
   const pathname = usePathname();
   
-  // Não mostrar navegação em páginas específicas de restaurante
-  if (pathname.startsWith('/restaurant/')) {
+  // Não mostrar navegação em páginas específicas de restaurante e delivery
+  if (pathname.startsWith('/restaurant/') || pathname.startsWith('/delivery/')) {
     return null;
   }
 

@@ -22,6 +22,7 @@ const MOCK_RESTAURANT: Restaurant = {
   whatsapp_phone: '5511999999999',
   whatsapp_custom_message: 'Olá, gostaria de fazer um pedido!',
   online_payment: true,
+  min_order_value: 0,
   menu_categories: ['Tortas', 'Doces', 'Bebidas'],
   featured_dishes: [
     {
@@ -268,7 +269,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchRestaurant = async (slug: string) => {
-    if (!slug || slug === '[slug]') {
+    if (!slug || slug === '[slug]' || slug === 'default') {
       setRestaurant(null);
       setIsLoading(false);
       return;
@@ -493,6 +494,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
         online_payment: restaurant.online_payment || false,
         user_id: restaurant.user_id || undefined,
+        min_order_value: restaurant.min_order_value !== undefined && restaurant.min_order_value !== null ? Number(restaurant.min_order_value) : 0,
         menu_categories: categories.map(cat => cat.name),
         featured_dishes: dishes
           .filter(dish => dish.is_featured)
@@ -704,6 +706,7 @@ export function useRestaurantList() {
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
         online_payment: restaurant.online_payment || false,
         user_id: restaurant.user_id || undefined,
+        min_order_value: restaurant.min_order_value !== undefined && restaurant.min_order_value !== null ? Number(restaurant.min_order_value) : 0,
         menu_categories: [],
         featured_dishes: [],
         menu_items: []

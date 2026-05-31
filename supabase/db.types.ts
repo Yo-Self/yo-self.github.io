@@ -564,6 +564,7 @@ export type Database = {
           whatsapp_custom_message: string | null
           whatsapp_enabled: boolean | null
           whatsapp_phone: string | null
+          min_order_value: number | null
         }
         Insert: {
           background_light?: string | null
@@ -582,6 +583,7 @@ export type Database = {
           whatsapp_custom_message?: string | null
           whatsapp_enabled?: boolean | null
           whatsapp_phone?: string | null
+          min_order_value?: number | null
         }
         Update: {
           background_light?: string | null
@@ -600,6 +602,7 @@ export type Database = {
           whatsapp_custom_message?: string | null
           whatsapp_enabled?: boolean | null
           whatsapp_phone?: string | null
+          min_order_value?: number | null
         }
         Relationships: [
           {

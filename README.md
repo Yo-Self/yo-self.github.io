@@ -1,18 +1,32 @@
 # 🍽️ Cardápio Digital - Web Version
 
-Uma aplicação moderna de cardápio digital com chatbot inteligente usando **Google Gemma 3 SuperTo**.
+Uma aplicação moderna, interativa e premium de cardápio digital para restaurantes, com chatbot inteligente alimentado pela API oficial do **Google Gemini 2.0 Flash**.
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades de Destaque
 
-- 📱 **Interface Responsiva**: Design moderno e adaptável
-- 🤖 **Chatbot Inteligente**: Assistente de IA com Google Gemma 3 SuperTo
-- 🔊 **Leitura de Voz**: Text-to-speech para respostas do chatbot
-- 🍽️ **Cardápio Interativo**: Navegação por categorias e busca
-- 📋 **QR Code para Mesas**: Acesso instantâneo ao cardápio via QR Code
-- 🌙 **Modo Escuro**: Suporte completo a tema escuro
-- 🔍 **Busca Avançada**: Filtros por categoria e preço
-- 📊 **Analytics**: Integração com PostHog e OpenReplay
-- 🚀 **Performance**: Otimizado para velocidade
+### 🛵 Canais de Atendimento Separados (Mesa vs. Delivery)
+- **Consumo Local / Mesa (`/restaurant/[slug]`)**:
+  - Identificação de mesa física por URL (`?table=XX`) com salvamento e limpeza inteligente de rota.
+  - Omissão completa de formulários de entrega para agilizar o fluxo local.
+  - **🔔 Chamadas de Garçom**: Chamador de garçom em tempo real integrado à Edge Function `waiter-calls` para suporte direto à mesa.
+- **Pedidos Delivery (`/delivery/[slug]`)**:
+  - Ocultação do cabeçalho da home para manter o foco total do cliente no cardápio de entrega.
+  - Formulário completo de dados de entrega (Nome, Endereço, Número, Complemento).
+  - Campo de endereço robusto com busca integrada ao **Google Places Autocomplete** (restringido para o Brasil).
+
+### 💰 Configuração e Bloqueio de Pedido Mínimo
+- **Validação de Subtotal**: Exibição de um banner visual e amigável no carrinho de compras quando o valor mínimo estipulado pelo restaurante não for atingido.
+- **Bloqueio de Checkout**: Omissão/desativação automática dos botões de finalização por WhatsApp e Stripe se o subtotal for menor que o pedido mínimo do estabelecimento.
+
+### 🤖 Assistente Virtual IA com Gemini 2.0 Flash
+- **Inteligência Conversacional**: Assistente integrado ao cardápio com suporte a comandos de voz e fallbacks resilientes de modelos (`gemini-2.0-flash-exp` -> `gemini-1.5-pro` -> `gemini-pro`).
+- **Navegação Assistida**: Destaques de pratos sugeridos na conversa são formatados como cartões interativos e clicáveis para abrir detalhes de complements instantaneamente.
+- **Leitura de Respostas por Voz**: Síntese de voz com o recurso Text-To-Speech calibrado para a voz pt-BR.
+
+### 🎨 Outros Diferenciais Premium
+- 📱 **Interface Responsiva**: Design moderno, adaptável e extremamente polido (com suporte completo a tema escuro).
+- 📦 **PWA Instalável**: Service worker (`sw.js`) e manifesto atualizado em tempo real para permitir instalação como aplicativo no celular.
+- 📊 **Analytics Avançado**: Integração com PostHog (eventos, LLM analytics, taxas de cliques) e OpenReplay.
 
 ## 🚀 Chatbot com Google Gemini AI
 
@@ -168,7 +182,7 @@ npm run build
 
 ### Edge Function
 
-A Edge Function `ai-chat` está configurada para usar o Gemma 3 SuperTo com fallback automático. Para atualizar:
+A Edge Function `ai-chat` está configurada para usar o Gemini 2.0 Flash com fallback automático. Para atualizar:
 
 ```bash
 supabase functions deploy ai-chat
@@ -204,4 +218,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ---
 
-Desenvolvido com ❤️ usando Next.js e Google Gemma 3 SuperTo
+Desenvolvido com ❤️ usando Next.js e Google Gemini 2.0 Flash

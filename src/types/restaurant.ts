@@ -36,6 +36,9 @@ export interface Restaurant {
   
   /** ID da organização/usuário proprietário */
   user_id?: string;
+  
+  /** Valor de pedido mínimo para delivery */
+  min_order_value?: number;
 }
 
 export interface MenuItem {

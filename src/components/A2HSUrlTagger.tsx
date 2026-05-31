@@ -31,7 +31,8 @@ export default function A2HSUrlTagger() {
     if (!slug) return;
 
     const hash = `#rest=${encodeURIComponent(slug)}`;
-    const base = `${window.location.origin}/restaurant/${slug}`;
+    const prefix = currentRoute.startsWith('/delivery/') ? '/delivery' : '/restaurant';
+    const base = `${window.location.origin}${prefix}/${slug}`;
 
     // Se já tiver o hash correto, não fazer nada
     if (window.location.hash === hash) return;

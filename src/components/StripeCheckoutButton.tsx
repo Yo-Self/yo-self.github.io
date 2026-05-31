@@ -4,6 +4,7 @@ import React from 'react';
 import { useCart } from '../hooks/useCart';
 import { useStripeCheckout } from '../hooks/useStripeCheckout';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
+import { usePathname } from 'next/navigation';
 
 interface StripeCheckoutButtonProps {
   restaurantId?: string;
@@ -14,8 +15,13 @@ export default function StripeCheckoutButton({
   restaurantId = "default",
   className = "",
 }: StripeCheckoutButtonProps) {
-  const { totalItems, formattedTotalPrice, isEmpty } = useCart();
+  const { totalPrice, totalItems, formattedTotalPrice, isEmpty } = useCart();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
+  
+  const pathname = usePathname();
+  const isDeliveryRoute = pathname?.startsWith('/delivery');
+  const minOrderValue = restaurant?.min_order_value || 0;
+  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
   
   const { initiateCheckout, isLoading, error } = useStripeCheckout({
     restaurantId,
@@ -38,7 +44,7 @@ export default function StripeCheckoutButton({
   return (
     <button
       onClick={initiateCheckout}
-      disabled={isLoading || isEmpty || isLoadingRestaurant || !restaurant}
+      disabled={isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet}
       className={`
         w-full flex items-center justify-center gap-2 sm:gap-3 
         px-3 sm:px-6 py-3.5 sm:py-4 
