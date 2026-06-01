@@ -5,6 +5,11 @@ import { useEffect } from 'react';
 export default function ThemeScript() {
   // Função para atualizar meta tags baseado no tema
   const updateMetaTagsForTheme = (isDark: boolean) => {
+    // Se a splash screen estiver ativa, não sobrescreve as meta tags (RestaurantClient as gerencia)
+    if (typeof document !== 'undefined' && document.documentElement.classList.contains('splash-active')) {
+      return;
+    }
+
     const themeColor = isDark ? '#000000' : '#ffffff';
     const statusBarStyle = isDark ? 'black-translucent' : 'default';
     

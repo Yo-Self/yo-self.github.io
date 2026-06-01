@@ -104,8 +104,9 @@ export default function DynamicMetaTags() {
     // Detectar tema atual
     const isDark = document.documentElement.classList.contains('dark') || 
                    document.body.classList.contains('dark');
+    const isSplashActive = document.documentElement.classList.contains('splash-active');
     
-    const themeColor = isDark ? '#000000' : '#ffffff';
+    const themeColor = isSplashActive ? '#53859b' : (isDark ? '#000000' : '#ffffff');
     const statusBarStyle = isDark ? 'black-translucent' : 'default';
     
     // Atualizar meta tags existentes ou criar novas
@@ -205,8 +206,9 @@ export default function DynamicMetaTags() {
     // Detectar tema atual
     const isDark = document.documentElement.classList.contains('dark') || 
                    document.body.classList.contains('dark');
+    const isSplashActive = document.documentElement.classList.contains('splash-active');
     
-    const themeColor = isDark ? '#000000' : '#ffffff';
+    const themeColor = isSplashActive ? '#53859b' : (isDark ? '#000000' : '#ffffff');
     const statusBarStyle = isDark ? 'black-translucent' : 'default';
     
     // Reset para valores padrão

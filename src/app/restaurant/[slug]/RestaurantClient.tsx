@@ -21,7 +21,7 @@ function RestaurantLoading() {
 function PremiumSplash({ phase }: { phase: 'entering' | 'waiting' | 'exiting' }) {
   return (
     <div 
-      className={`fixed inset-0 z-[99999] flex items-center justify-center bg-gradient-to-br from-[#53859b] to-[#e59b6e] splash-overlay ${
+      className={`fixed inset-0 z-[99999] flex items-center justify-center bg-gradient-to-b from-[#53859b] to-[#e59b6e] splash-overlay ${
         phase === 'exiting' ? 'splash-exiting' : ''
       }`}
     >
@@ -83,6 +83,48 @@ export default function RestaurantClient({ slug }: { slug: string }) {
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
   useEffect(() => {
+    if (showSplash && splashPhase !== 'exiting') {
+      document.documentElement.classList.add("splash-active");
+      document.body.classList.add("splash-active");
+
+      // Sobrescrever dinamicamente a tag meta theme-color
+      let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      let originalThemeColor: string | null = null;
+      let wasCreated = false;
+
+      if (themeColorMeta) {
+        originalThemeColor = themeColorMeta.getAttribute("content");
+        themeColorMeta.setAttribute("content", "#53859b");
+      } else {
+        themeColorMeta = document.createElement("meta");
+        themeColorMeta.setAttribute("name", "theme-color");
+        themeColorMeta.setAttribute("content", "#53859b");
+        document.head.appendChild(themeColorMeta);
+        wasCreated = true;
+      }
+
+      return () => {
+        document.documentElement.classList.remove("splash-active");
+        document.body.classList.remove("splash-active");
+        
+        // Usar double requestAnimationFrame para garantir com 100% de certeza que o Safari
+        // finalizou o paint do fundo branco antes de atualizarmos a meta tag de cor.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              const currentThemeMeta = document.querySelector('meta[name="theme-color"]');
+              if (currentThemeMeta) {
+                const isDark = document.documentElement.classList.contains("dark") || document.body.classList.contains("dark");
+                currentThemeMeta.setAttribute("content", isDark ? "#000000" : "#ffffff");
+              }
+            }, 10);
+          });
+        });
+      };
+    }
+  }, [showSplash, splashPhase]);
+
+  useEffect(() => {
     // 1. Iniciar animação de mola do logo
     const enterTimer = setTimeout(() => {
       setSplashPhase('waiting');
@@ -104,10 +146,10 @@ export default function RestaurantClient({ slug }: { slug: string }) {
     if (!isLoading && minTimeElapsed && restaurant) {
       setSplashPhase('exiting');
       
-      // 4. Remover completamente do DOM após a animação de saída de 0.8s
+      // 4. Remover completamente do DOM após a animação de saída
       const exitTimer = setTimeout(() => {
         setShowSplash(false);
-      }, 800);
+      }, 400);
 
       return () => clearTimeout(exitTimer);
     }
@@ -139,7 +181,23 @@ export default function RestaurantClient({ slug }: { slug: string }) {
 
       {/* Splash Screen Premium por cima com z-index elevadíssimo */}
       {showSplash && (
-        <PremiumSplash phase={splashPhase} />
+        <>
+          {splashPhase !== 'exiting' && (
+            <style dangerouslySetInnerHTML={{ __html: `
+              html,
+              body {
+                background: linear-gradient(180deg, #53859b, #e59b6e) !important;
+                background-color: #53859b !important;
+                height: 100dvh !important;
+                min-height: 100dvh !important;
+                overflow: hidden !important;
+                position: fixed !important;
+                width: 100% !important;
+              }
+            ` }} />
+          )}
+          <PremiumSplash phase={splashPhase} />
+        </>
       )}
     </>
   );

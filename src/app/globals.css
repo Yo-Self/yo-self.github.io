@@ -1617,11 +1617,11 @@ button span.text-white {
 
 /* Transição de zoom out (mola expansiva de saída) */
 .splash-overlay {
-  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), backdrop-filter 0.8s ease;
+  transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), backdrop-filter 1s ease;
 }
 
 .splash-logo {
-  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease-out;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease-out;
 }
 
 .splash-exiting {
@@ -1632,4 +1632,16 @@ button span.text-white {
 .splash-logo-exiting {
   transform: scale(15) !important;
   opacity: 0;
+}
+
+/* Sobrescrever fundos brancos/pretos com o degradê do splash no Safari/iOS */
+html.splash-active,
+body.splash-active {
+  background: linear-gradient(180deg, #53859b, #e59b6e) !important;
+  background-color: #53859b !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
 }
