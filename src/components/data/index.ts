@@ -54,4 +54,5 @@ export type Restaurant = {
   table_ordering?: boolean;
   user_id?: string;
   min_order_value?: number;
+  stripe_connect_id?: string;
 };

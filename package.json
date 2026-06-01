@@ -16,6 +16,8 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@openreplay/tracker": "^16.4.7",
+    "@stripe/react-stripe-js": "^6.5.0",
+    "@stripe/stripe-js": "^9.7.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
     "framer-motion": "^12.23.0",

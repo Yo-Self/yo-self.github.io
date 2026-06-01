@@ -98,7 +98,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
 
     const windowResult = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 
-    if (!windowResult || windowResult.closed) {
+    if (!windowResult) {
       const userConfirmed = window.confirm(
         '⚠️ O navegador bloqueou a abertura do WhatsApp.\n\n' +
         'Clique em OK para abrir o WhatsApp agora.'

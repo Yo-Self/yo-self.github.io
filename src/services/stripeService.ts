@@ -74,3 +74,48 @@ export async function createCheckoutSession(
 
   return data;
 }
+
+export interface ExpressPaymentIntentResponse {
+  payment_intent_client_secret: string;
+  publishable_key: string;
+}
+
+export async function createExpressPaymentIntent(
+  params: Omit<CreateCheckoutSessionParams, 'successUrl' | 'cancelUrl'>
+): Promise<ExpressPaymentIntentResponse> {
+  if (!supabaseUrl) {
+    throw new Error('Supabase URL não configurada.');
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({
+      order_id: params.orderId,
+      restaurant_id: params.restaurantId,
+      items: params.items,
+      customer_name: params.customerName,
+      customer_phone: params.customerPhone,
+      is_express_checkout: true,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido', details: '' }));
+    const errMsg = errorData.details 
+      ? `${errorData.error} (${errorData.details})`
+      : (errorData.error || `Erro ao criar payment intent (${response.status})`);
+    throw new Error(errMsg);
+  }
+
+  const data: ExpressPaymentIntentResponse = await response.json();
+
+  if (!data.payment_intent_client_secret) {
+    throw new Error('Client secret não retornado pelo servidor.');
+  }
+
+  return data;
+}

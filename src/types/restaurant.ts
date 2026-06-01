@@ -40,6 +40,9 @@ export interface Restaurant {
   
   /** Valor de pedido mínimo para delivery */
   min_order_value?: number;
+  
+  /** ID da conta conectada do Stripe (se houver) */
+  stripe_connect_id?: string;
 }
 
 export interface MenuItem {

@@ -24,6 +24,7 @@ interface CheckoutRequest {
   cancel_url?: string
   apple_pay_payment_data?: string
   use_payment_sheet?: boolean
+  is_express_checkout?: boolean
 }
 
 /**
@@ -72,7 +73,7 @@ serve(async (req) => {
       )
     }
     const body: CheckoutRequest = await req.json()
-    const { order_id, restaurant_id, items, customer_name, customer_phone, customer_email, success_url, cancel_url, apple_pay_payment_data, use_payment_sheet } = body
+    const { order_id, restaurant_id, items, customer_name, customer_phone, customer_email, success_url, cancel_url, apple_pay_payment_data, use_payment_sheet, is_express_checkout } = body
 
     if (!order_id) {
       return new Response(
@@ -92,13 +93,13 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-    if (!use_payment_sheet && !apple_pay_payment_data && !success_url) {
+    if (!use_payment_sheet && !is_express_checkout && !apple_pay_payment_data && !success_url) {
       return new Response(
         JSON.stringify({ error: 'success_url is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-    if (!use_payment_sheet && !apple_pay_payment_data && !cancel_url) {
+    if (!use_payment_sheet && !is_express_checkout && !apple_pay_payment_data && !cancel_url) {
       return new Response(
         JSON.stringify({ error: 'cancel_url is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -164,8 +165,8 @@ serve(async (req) => {
       }
     }
 
-    // PaymentIntent Flow for Native iOS PaymentSheet
-    if (use_payment_sheet) {
+    // PaymentIntent Flow for Native iOS PaymentSheet or Web Express Checkout
+    if (use_payment_sheet || is_express_checkout) {
       try {
         const totalAmountCents = items.reduce((acc, item) => acc + (item.price_cents * item.quantity), 0)
 

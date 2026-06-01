@@ -9,6 +9,7 @@ import { CartItem, CartUtils } from '../types/cart';
 import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
 import StripeCheckoutButton from './StripeCheckoutButton';
+import StripeExpressCheckoutButton from './StripeExpressCheckoutButton';
 import SendOrderButton from './SendOrderButton';
 import { getTableId } from './TableParamHandler';
 import CartIcon from './CartIcon';
@@ -308,8 +309,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                 {isDeliveryRoute ? (
                   <div className="flex gap-2 sm:gap-3">
                     {(onlinePayment || tablePayment) && (
-                      <div className="flex-1">
+                      <div className="flex-1 flex flex-col sm:flex-row gap-2">
                         <StripeCheckoutButton restaurantId={restaurantId} />
+                        <StripeExpressCheckoutButton restaurantId={restaurantId} />
                       </div>
                     )}
                     <div className="flex-1">
@@ -323,8 +325,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   ) : (
                     <div className="flex gap-2 sm:gap-3">
                       {(onlinePayment || tablePayment) && (
-                        <div className="flex-1">
+                        <div className="flex-1 flex flex-col sm:flex-row gap-2">
                           <StripeCheckoutButton restaurantId={restaurantId} />
+                          <StripeExpressCheckoutButton restaurantId={restaurantId} />
                         </div>
                       )}
                       {restaurant?.table_ordering && (
