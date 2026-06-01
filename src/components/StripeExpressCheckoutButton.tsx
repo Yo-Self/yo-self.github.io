@@ -186,6 +186,7 @@ const ExpressCheckoutInner = ({
         <ExpressCheckoutElement 
           onConfirm={handleConfirm} 
           onReady={handleReady}
+          onLoadError={({ error }: any) => setDebugInfo(`Erro Load: ${error?.message || 'Desconhecido'}`)}
           options={{
             buttonType: {
               applePay: 'buy',
@@ -239,8 +240,6 @@ export default function StripeExpressCheckoutButton({
             mode: 'payment', 
             amount: amountCents > 0 ? amountCents : 100, // Amount must be > 0
             currency: 'brl',
-            paymentMethodTypes: ['card', 'link'], // explicitly request card/link so Apple/Google pay is evaluated
-            paymentMethodCreation: 'manual', // since we create the intent on the server after confirmation
           }}
         >
           <ExpressCheckoutInner 
