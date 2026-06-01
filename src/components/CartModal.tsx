@@ -311,9 +311,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                 {isDeliveryRoute ? (
                   <div className="flex gap-2 sm:gap-3">
                     {(onlinePayment || tablePayment) && (
-                      <div className="flex-1 flex flex-col sm:flex-row gap-2">
-                        <StripeCheckoutButton restaurantId={restaurantId} />
-                        <StripeExpressCheckoutButton restaurantId={restaurantId} />
+                      <div className="flex-1 flex flex-row gap-2 items-stretch min-w-0">
+                        <StripeCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
+                        <StripeExpressCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
                       </div>
                     )}
                     <div className="flex-1">
@@ -327,9 +327,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   ) : (
                     <div className="flex gap-2 sm:gap-3">
                       {(onlinePayment || tablePayment) && (
-                        <div className="flex-1 flex flex-col sm:flex-row gap-2">
-                          <StripeCheckoutButton restaurantId={restaurantId} />
-                          <StripeExpressCheckoutButton restaurantId={restaurantId} />
+                        <div className="flex-1 flex flex-row gap-2 items-stretch min-w-0">
+                          <StripeCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
+                          <StripeExpressCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
                         </div>
                       )}
                       {restaurant?.table_ordering && (
