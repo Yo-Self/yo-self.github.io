@@ -6,6 +6,7 @@ import { useCart } from '../hooks/useCart';
 import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { CartUtils } from '../types/cart';
 import Analytics from '../lib/analytics';
+import { useActiveOrders } from '../hooks/useActiveOrders';
 
 interface PaymentSuccessHandlerProps {
   restaurantId?: string;
@@ -18,6 +19,7 @@ interface PaymentSuccessHandlerProps {
 export default function PaymentSuccessHandler({ restaurantId = "default" }: PaymentSuccessHandlerProps) {
   const searchParams = useSearchParams();
   const { items, formattedTotalPrice, totalItems, clearCart } = useCart();
+  const { addActiveOrderId } = useActiveOrders();
   const { config } = useWhatsAppConfig(restaurantId);
 
   const [showModal, setShowModal] = useState(false);
@@ -38,6 +40,9 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
       // Track successful payment
       Analytics.trackCartCheckout(items, 0, restaurantId, 'stripe_completed');
 
+      // Save order id for tracking
+      addActiveOrderId(orderIdParam);
+
       // Clean URL without reloading
       const url = new URL(window.location.href);
       url.searchParams.delete('payment_success');
@@ -53,7 +58,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
       url.searchParams.delete('order_id');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [searchParams, items, restaurantId]);
+  }, [searchParams, items, restaurantId, addActiveOrderId]);
 
   const handleClose = useCallback(() => {
     setIsClosing(true);

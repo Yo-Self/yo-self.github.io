@@ -15,6 +15,7 @@ import SessionTracker from "@/components/SessionTracker";
 import Navigation from "@/components/Navigation";
 import ThemeScript from "@/components/ThemeScript";
 import CartModal from "@/components/CartModal";
+import ActiveOrdersWidget from "@/components/ActiveOrdersWidget";
 import InstallPrompt from "@/components/InstallPrompt";
 import SafariInstallPrompt from "@/components/SafariInstallPrompt";
 import UpdatePrompt from "@/components/UpdatePrompt";
@@ -132,6 +133,7 @@ export default function RootLayout({
                       {children}
                       {/* Componentes globais do carrinho */}
                       <CartModal />
+                      <ActiveOrdersWidget />
                       <InstallPrompt />
                       <SafariInstallPrompt />
                       <UpdatePrompt />

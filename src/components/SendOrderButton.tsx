@@ -8,6 +8,7 @@ import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
 import { Order, OrderItem } from '../types/order';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
+import { useActiveOrders } from '../hooks/useActiveOrders';
 
 interface SendOrderButtonProps {
   restaurantId?: string;
@@ -24,6 +25,7 @@ export default function SendOrderButton({
 }: SendOrderButtonProps) {
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty, clearCart } = useCart();
   const { customerData } = useCustomerData();
+  const { addActiveOrderId } = useActiveOrders();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const [isSending, setIsSending] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -85,6 +87,9 @@ export default function SendOrderButton({
       }));
 
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
+
+      // Save order id for tracking
+      addActiveOrderId(newOrder.id);
 
       // Track analytics
       const currentRestaurantId = getCurrentRestaurantId();

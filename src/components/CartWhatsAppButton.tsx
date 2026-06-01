@@ -14,6 +14,7 @@ import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
 import { Order, OrderItem } from '../types/order';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
+import { useActiveOrders } from '../hooks/useActiveOrders';
 
 interface CartWhatsAppButtonProps {
   restaurantId?: string;
@@ -29,6 +30,7 @@ export default function CartWhatsAppButton({
   onSent
 }: CartWhatsAppButtonProps) {
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty } = useCart();
+  const { addActiveOrderId } = useActiveOrders();
   const { config, isLoading } = useWhatsAppConfig(restaurantId);
   const { customerData } = useCustomerData();
   const { customerCoordinates } = useCustomerCoordinates();
@@ -335,6 +337,9 @@ export default function CartWhatsAppButton({
       }));
 
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
+
+      // Save order id for tracking
+      addActiveOrderId(newOrder.id);
 
       const message = generateCartWhatsAppMessage(newOrder);
 
