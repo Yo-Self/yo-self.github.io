@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { useCart } from '../hooks/useCart';
 import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { CartUtils } from '../types/cart';
@@ -21,6 +21,8 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
   const { items, formattedTotalPrice, totalItems, clearCart } = useCart();
   const { addActiveOrderId } = useActiveOrders();
   const { config } = useWhatsAppConfig(restaurantId);
+  const pathname = usePathname();
+  const isDeliveryRoute = pathname?.startsWith('/delivery');
 
   const [showModal, setShowModal] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -69,6 +71,14 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
       clearCart();
     }, 300);
   }, [clearCart]);
+
+  const handleTrackOrder = useCallback(() => {
+    handleClose();
+    // Emitir evento para o Header abrir o modal de acompanhamento
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('open-order-tracking'));
+    }, 400); // Dar tempo do modal atual fechar
+  }, [handleClose]);
 
   const handleSendWhatsApp = useCallback(() => {
     if (!config.phoneNumber || !orderId) return;
@@ -190,8 +200,8 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
 
         {/* Action Buttons */}
         <div className="p-6 pt-0 space-y-3">
-          {/* WhatsApp Button - send order to restaurant */}
-          {config.enabled && config.phoneNumber && !whatsAppSent && (
+          {/* WhatsApp Button - send order to restaurant (Only in Delivery) */}
+          {isDeliveryRoute && config.enabled && config.phoneNumber && !whatsAppSent && (
             <button
               onClick={handleSendWhatsApp}
               className="
@@ -212,7 +222,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
           )}
 
           {/* WhatsApp sent confirmation */}
-          {whatsAppSent && (
+          {isDeliveryRoute && whatsAppSent && (
             <div className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-700 dark:text-green-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -221,21 +231,43 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
             </div>
           )}
 
-          {/* Close Button */}
-          <button
-            onClick={handleClose}
-            className="
-              w-full px-6 py-3
-              text-gray-700 dark:text-gray-300
-              border border-gray-300 dark:border-gray-600
-              rounded-xl
-              hover:bg-gray-50 dark:hover:bg-gray-800
-              transition-colors
-              font-medium
-            "
-          >
-            {whatsAppSent ? 'Fechar' : 'Fechar e Enviar Depois'}
-          </button>
+          {/* Track Order Button (Only in Restaurant mode OR if WhatsApp was already sent) */}
+          {(!isDeliveryRoute || whatsAppSent) ? (
+            <button
+              onClick={handleTrackOrder}
+              className="
+                w-full flex items-center justify-center gap-3
+                px-6 py-4
+                bg-indigo-500 hover:bg-indigo-600 text-white
+                border border-transparent
+                rounded-xl shadow-lg
+                hover:shadow-xl
+                transition-all duration-200
+                transform hover:scale-[1.02] active:scale-[0.98]
+                font-bold
+              "
+            >
+              <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Acompanhar Pedido
+            </button>
+          ) : (
+            <button
+              onClick={handleClose}
+              className="
+                w-full px-6 py-3
+                text-gray-700 dark:text-gray-300
+                border border-gray-300 dark:border-gray-600
+                rounded-xl
+                hover:bg-gray-50 dark:hover:bg-gray-800
+                transition-colors
+                font-medium
+              "
+            >
+              Fechar e Enviar Depois
+            </button>
+          )}
         </div>
       </div>
 

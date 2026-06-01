@@ -11,6 +11,7 @@ import { useCart } from '../hooks/useCart';
 import { CartUtils } from '../types/cart';
 import CartIcon from './CartIcon';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
+import { usePathname } from 'next/navigation';
 import "./dishModal.css";
 
 type DishModalProps = {
@@ -28,6 +29,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   const [showAddedFeedback, setShowAddedFeedback] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const wasAddedToCart = useRef(false);
+  const pathname = usePathname();
+  const isDeliveryRoute = pathname?.startsWith('/delivery');
   
   // Hook da comanda
   const { addItem, isItemInCart, getItemQuantity, openCart, removeItem, incrementQuantity, decrementQuantity } = useCart();
@@ -520,8 +523,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
                 </>
               )}
 
-              {/* Botão WhatsApp - Só exibir se o restaurante tiver WhatsApp habilitado E o item não estiver na comanda */}
-              {restaurant?.whatsapp_enabled !== false && !currentItemInCart && (
+              {/* Botão WhatsApp - Só exibir se for delivery, restaurante habilitou E item não estiver na comanda */}
+              {isDeliveryRoute && restaurant?.whatsapp_enabled !== false && !currentItemInCart && (
                 <OrderButton 
                   dish={dish}
                   selectedComplements={selectedComplements}

@@ -305,11 +305,33 @@ function ShareButton({ restaurant }: { restaurant: Restaurant }) {
 
 function TrackOrderButton({ orderId }: { orderId: string }) {
   const [showModal, setShowModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    const handleOpenTracking = () => setShowModal(true);
+    
+    const handleShowTutorial = () => {
+      setShowTutorial(true);
+      // Ocultar automaticamente após 8 segundos
+      setTimeout(() => setShowTutorial(false), 8000);
+    };
+
+    window.addEventListener('open-order-tracking', handleOpenTracking);
+    window.addEventListener('show-tracking-tutorial', handleShowTutorial);
+
+    return () => {
+      window.removeEventListener('open-order-tracking', handleOpenTracking);
+      window.removeEventListener('show-tracking-tutorial', handleShowTutorial);
+    };
+  }, []);
 
   return (
-    <>
+    <div className="relative flex items-center justify-center">
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => {
+          setShowModal(true);
+          setShowTutorial(false);
+        }}
         className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-colors duration-200 shadow-lg relative"
         aria-label="Acompanhar Pedido"
         title="Acompanhar Pedido"
@@ -320,13 +342,36 @@ function TrackOrderButton({ orderId }: { orderId: string }) {
         </svg>
       </button>
 
+      {/* Tooltip Tutorial */}
+      {showTutorial && (
+        <div 
+          className="absolute top-full right-0 mt-3 w-48 bg-indigo-600 text-white text-sm font-medium p-3 rounded-xl shadow-xl z-[100] animate-fade-in"
+          style={{ animation: 'bounce 2s infinite' }}
+        >
+          <div className="absolute -top-2 right-3 w-4 h-4 bg-indigo-600 transform rotate-45"></div>
+          <div className="relative z-10 flex items-start gap-2">
+            <span className="text-xl">🛵</span>
+            <span className="leading-tight">Acompanhe seu pedido por aqui!</span>
+          </div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowTutorial(false);
+            }}
+            className="absolute top-1 right-1 p-1 text-white/70 hover:text-white"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      )}
+
       {showModal && (
         <OrderStatusModal 
           orderId={orderId} 
           onClose={() => setShowModal(false)} 
         />
       )}
-    </>
+    </div>
   );
 }
 

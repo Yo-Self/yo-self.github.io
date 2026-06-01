@@ -118,6 +118,12 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
     if (status === 'completed' || status === 'finished' || status === 'cancelled') {
       removeActiveOrderId(orderId);
     }
+
+    if (typeof window !== 'undefined' && !localStorage.getItem('has_seen_tracking_tutorial')) {
+      localStorage.setItem('has_seen_tracking_tutorial', 'true');
+      window.dispatchEvent(new CustomEvent('show-tracking-tutorial'));
+    }
+
     handleClose();
   };
 
