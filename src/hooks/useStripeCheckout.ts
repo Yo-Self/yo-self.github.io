@@ -52,12 +52,17 @@ export function useStripeCheckout({
     setError(null);
 
     try {
-      // 1. Create order in Supabase with pending_payment status
+      const isDeliveryRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/delivery');
+      const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
+
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
         restaurant_id: restaurant.id,
+        table_name: !isDeliveryRoute && tableId ? `Mesa ${tableId}` : undefined,
         customer_info: {
-          name: customerData.name,
+          name: customerData.name || (!isDeliveryRoute && tableId ? `Cliente Mesa ${tableId}` : undefined),
           phone: customerData.whatsapp,
+          delivery_type: isDeliveryRoute ? 'delivery' : 'dine_in',
+          address: isDeliveryRoute ? (customerData.address || null) : (tableId ? `Mesa ${tableId}` : null),
         },
         total_price: Math.round(totalPrice * 100),
         status: 'pending_payment',

@@ -59,8 +59,11 @@ export async function createCheckoutSession(
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new Error(errorData.error || `Erro ao criar sessão de pagamento (${response.status})`);
+    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido', details: '' }));
+    const errMsg = errorData.details 
+      ? `${errorData.error} (${errorData.details})`
+      : (errorData.error || `Erro ao criar sessão de pagamento (${response.status})`);
+    throw new Error(errMsg);
   }
 
   const data: CheckoutSessionResponse = await response.json();

@@ -309,6 +309,8 @@ export default function CartWhatsAppButton({
         customer_info: {
           name: customerData.name,
           phone: customerData.whatsapp,
+          delivery_type: isDeliveryRoute ? 'delivery' : 'dine_in',
+          address: customerData.address || null,
         },
         total_price: Math.round(totalPrice * 100),
         status: 'pending_payment',

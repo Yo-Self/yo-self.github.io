@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -137,6 +137,33 @@ serve(async (req) => {
       )
     }
 
+    // Fetch restaurant's stripe_connect_id if configured
+    let stripeConnectId: string | null = null
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    if (supabaseUrl && supabaseServiceKey) {
+      try {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+        const { data: restData, error: restError } = await supabase
+          .from('restaurants')
+          .select('stripe_connect_id')
+          .eq('id', restaurant_id)
+          .single()
+
+        if (restError) {
+          console.error('Error fetching restaurant stripe_connect_id:', restError)
+        } else if (restData) {
+          stripeConnectId = restData.stripe_connect_id
+          if (stripeConnectId) {
+            console.log(`Using Stripe Connect Account: ${stripeConnectId} for restaurant: ${restaurant_id}`)
+          }
+        }
+      } catch (err) {
+        console.error('Unexpected error loading restaurant data:', err)
+      }
+    }
+
     // PaymentIntent Flow for Native iOS PaymentSheet
     if (use_payment_sheet) {
       try {
@@ -167,6 +194,7 @@ serve(async (req) => {
           headers: {
             'Authorization': `Bearer ${stripeSecretKey}`,
             'Content-Type': 'application/x-www-form-urlencoded',
+            ...(stripeConnectId ? { 'Stripe-Account': stripeConnectId } : {}),
           },
           body: encodedPIBody,
         })
@@ -232,6 +260,7 @@ serve(async (req) => {
           headers: {
             'Authorization': `Bearer ${stripeSecretKey}`,
             'Content-Type': 'application/x-www-form-urlencoded',
+            ...(stripeConnectId ? { 'Stripe-Account': stripeConnectId } : {}),
           },
           body: encodedTokenBody,
         })
@@ -277,6 +306,7 @@ serve(async (req) => {
           headers: {
             'Authorization': `Bearer ${stripeSecretKey}`,
             'Content-Type': 'application/x-www-form-urlencoded',
+            ...(stripeConnectId ? { 'Stripe-Account': stripeConnectId } : {}),
           },
           body: encodedPIBody,
         })
@@ -382,6 +412,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${stripeSecretKey}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        ...(stripeConnectId ? { 'Stripe-Account': stripeConnectId } : {}),
       },
       body: encodedBody,
     })
@@ -398,10 +429,6 @@ serve(async (req) => {
         { status: stripeResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-
-    // Update order in Supabase with the Stripe checkout session ID
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
     if (supabaseUrl && supabaseServiceKey) {
       const supabase = createClient(supabaseUrl, supabaseServiceKey)

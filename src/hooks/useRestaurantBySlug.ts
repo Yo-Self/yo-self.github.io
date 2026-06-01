@@ -22,6 +22,7 @@ const MOCK_RESTAURANT: Restaurant = {
   whatsapp_phone: '5511999999999',
   whatsapp_custom_message: 'Olá, gostaria de fazer um pedido!',
   online_payment: true,
+  table_ordering: true,
   min_order_value: 0,
   menu_categories: ['Tortas', 'Doces', 'Bebidas'],
   featured_dishes: [
@@ -493,6 +494,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         whatsapp_phone: restaurant.whatsapp_phone || '',
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
         online_payment: restaurant.online_payment || false,
+        table_ordering: restaurant.table_ordering || false,
         user_id: restaurant.user_id || undefined,
         min_order_value: restaurant.min_order_value !== undefined && restaurant.min_order_value !== null ? Number(restaurant.min_order_value) : 0,
         menu_categories: categories.map(cat => cat.name),
@@ -707,6 +709,7 @@ export function useRestaurantList() {
         whatsapp_phone: restaurant.whatsapp_phone || '',
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
         online_payment: restaurant.online_payment || false,
+        table_ordering: restaurant.table_ordering || false,
         user_id: restaurant.user_id || undefined,
         min_order_value: restaurant.min_order_value !== undefined && restaurant.min_order_value !== null ? Number(restaurant.min_order_value) : 0,
         menu_categories: [],

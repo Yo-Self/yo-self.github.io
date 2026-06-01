@@ -1594,3 +1594,42 @@ button span.text-white {
   fill: white !important;
   stroke: white !important;
 }
+
+/* Efeito de mola (spring) para a entrada do logo */
+@keyframes splashLogoEnter {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.0);
+    opacity: 1;
+  }
+}
+
+.animate-splash-logo-enter {
+  animation: splashLogoEnter 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Transição de zoom out (mola expansiva de saída) */
+.splash-overlay {
+  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), backdrop-filter 0.8s ease;
+}
+
+.splash-logo {
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease-out;
+}
+
+.splash-exiting {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-logo-exiting {
+  transform: scale(15) !important;
+  opacity: 0;
+}

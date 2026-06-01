@@ -5,7 +5,7 @@ export interface Order {
   id: string;
   restaurant_id: string;
   table_name?: string;
-  customer_info?: { name?: string; phone?: string };
+  customer_info?: { name?: string; phone?: string; [key: string]: any };
   total_price: number;
   status: OrderStatus;
   stripe_payment_intent_id?: string;

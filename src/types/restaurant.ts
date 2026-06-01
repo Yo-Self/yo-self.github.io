@@ -33,6 +33,7 @@ export interface Restaurant {
   whatsapp_enabled?: boolean;
   whatsapp_custom_message?: string;
   online_payment?: boolean;
+  table_ordering?: boolean;
   
   /** ID da organização/usuário proprietário */
   user_id?: string;

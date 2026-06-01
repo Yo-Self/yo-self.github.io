@@ -9,6 +9,8 @@ import { CartItem, CartUtils } from '../types/cart';
 import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
 import StripeCheckoutButton from './StripeCheckoutButton';
+import SendOrderButton from './SendOrderButton';
+import { getTableId } from './TableParamHandler';
 import CartIcon from './CartIcon';
 import CustomerDataForm from './CustomerDataForm';
 import TablePaymentForm from './TablePaymentForm';
@@ -63,7 +65,17 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const [isClosing, setIsClosing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const [permissionUpdate, setPermissionUpdate] = useState(0);
+  const [tableNumber, setTableNumber] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isCartOpen) {
+      const tid = getTableId();
+      if (tid) {
+        setTableNumber(tid);
+      }
+    }
+  }, [isCartOpen]);
 
   // Controlar scroll do body quando modal estiver aberto
   useModalScroll(isCartOpen);
@@ -205,6 +217,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     onIncrement={() => incrementQuantity(item.id)}
                     onDecrement={() => decrementQuantity(item.id)}
                     onRemove={() => removeItem(item.id)}
+                    fallbackImage={restaurant?.image}
                   />
                 ))}
                 
@@ -266,17 +279,66 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   </div>
                 )}
 
-                {/* Botões de ação */}
-                <div className="flex gap-2 sm:gap-3">
-                  {onlinePayment && (
-                    <div className="flex-1">
-                      <StripeCheckoutButton restaurantId={restaurantId} />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <CartWhatsAppButton restaurantId={restaurantId} />
+                {/* Campo de identificação de Mesa (Apenas para Dine-in) */}
+                {!isDeliveryRoute && (restaurant?.table_ordering || tablePayment) && (
+                  <div className="mb-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl">
+                    <label htmlFor="modal-table-number" className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 flex items-center gap-1.5">
+                      <span>🛋️ Número da sua Mesa</span>
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="modal-table-number"
+                      type="text"
+                      placeholder="Digite o número da mesa (ex: 5)"
+                      value={tableNumber}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setTableNumber(value);
+                        localStorage.setItem('table_id', value);
+                      }}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      💡 Necessário para enviar os pratos diretamente para você
+                    </p>
                   </div>
-                </div>
+                )}
+
+                {/* Botões de ação */}
+                {isDeliveryRoute ? (
+                  <div className="flex gap-2 sm:gap-3">
+                    {(onlinePayment || tablePayment) && (
+                      <div className="flex-1">
+                        <StripeCheckoutButton restaurantId={restaurantId} />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <CartWhatsAppButton restaurantId={restaurantId} />
+                    </div>
+                  </div>
+                ) : (
+                  // Fluxo Presencial / Na Mesa
+                  (!restaurant?.table_ordering && !tablePayment) ? (
+                    null
+                  ) : (
+                    <div className="flex gap-2 sm:gap-3">
+                      {(onlinePayment || tablePayment) && (
+                        <div className="flex-1">
+                          <StripeCheckoutButton restaurantId={restaurantId} />
+                        </div>
+                      )}
+                      {restaurant?.table_ordering && (
+                        <div className="flex-1">
+                          <SendOrderButton 
+                            restaurantId={restaurantId} 
+                            tableNumber={tableNumber}
+                            onSent={handleClose}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
+                )}
               </div>
             </>
           )}
@@ -323,12 +385,14 @@ function CartItemComponent({
   item, 
   onIncrement, 
   onDecrement, 
-  onRemove 
+  onRemove,
+  fallbackImage
 }: {
   item: CartItem;
   onIncrement: () => void;
   onDecrement: () => void;
   onRemove: () => void;
+  fallbackImage?: string;
 }) {
   return (
     <div className="flex gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -338,7 +402,7 @@ function CartItemComponent({
           src={item.dish.image}
           alt={item.dish.name}
           className="w-20 h-20 object-cover rounded-lg"
-          fallbackSrc="/window.svg"
+          fallbackSrc={fallbackImage || "/window.svg"}
         />
       </div>
 

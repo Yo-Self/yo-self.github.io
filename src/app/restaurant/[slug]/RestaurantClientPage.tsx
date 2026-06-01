@@ -376,10 +376,9 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   const selectedRestaurant = initialRestaurant;
   
   // Filter restaurants belonging to the same organization
-  const orgRestaurants = selectedRestaurant.user_id
-    ? restaurants.filter(r => r.user_id === selectedRestaurant.user_id)
-    : [];
-  const hasMultiple = orgRestaurants.length > 1;
+  // Desativado por solicitação do usuário para fluxo de restaurante único
+  const orgRestaurants: Restaurant[] = [];
+  const hasMultiple = false;
 
   const carouselRef = React.useRef<HTMLDivElement | null>(null);
 

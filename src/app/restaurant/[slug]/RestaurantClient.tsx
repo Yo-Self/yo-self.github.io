@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import RestaurantClientPage from "./RestaurantClientPage";
 import { useRestaurantBySlug, useRestaurantList } from "@/hooks/useRestaurantBySlug";
 import SetCurrentRestaurant from "@/components/SetCurrentRestaurant";
@@ -13,6 +13,30 @@ function RestaurantLoading() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p className="text-gray-600">Carregando restaurante...</p>
       </div>
+    </div>
+  );
+}
+
+// Novo componente premium de Splash Screen que espelha o iOS
+function PremiumSplash({ phase }: { phase: 'entering' | 'waiting' | 'exiting' }) {
+  return (
+    <div 
+      className={`fixed inset-0 z-[99999] flex items-center justify-center bg-gradient-to-br from-[#53859b] to-[#e59b6e] splash-overlay ${
+        phase === 'exiting' ? 'splash-exiting' : ''
+      }`}
+    >
+      <img
+        src="/yoself.png"
+        alt="YoSelf Logo"
+        className={`w-36 h-36 rounded-[28px] shadow-2xl border border-white/10 splash-logo ${
+          phase === 'entering' ? 'animate-splash-logo-enter' : ''
+        } ${
+          phase === 'exiting' ? 'splash-logo-exiting' : ''
+        }`}
+        style={{
+          transform: phase === 'waiting' ? 'scale(1)' : undefined
+        }}
+      />
     </div>
   );
 }
@@ -54,27 +78,69 @@ export default function RestaurantClient({ slug }: { slug: string }) {
   const { restaurant, isLoading, error, refetch } = useRestaurantBySlug(slug);
   const { restaurants } = useRestaurantList();
 
-  if (isLoading) {
-    return <RestaurantLoading />;
-  }
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashPhase, setSplashPhase] = useState<'entering' | 'waiting' | 'exiting'>('entering');
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
-  if (error) {
+  useEffect(() => {
+    // 1. Iniciar animação de mola do logo
+    const enterTimer = setTimeout(() => {
+      setSplashPhase('waiting');
+    }, 650);
+
+    // 2. Garantir tempo mínimo de 1.5s
+    const minTimeTimer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 1500);
+
+    return () => {
+      clearTimeout(enterTimer);
+      clearTimeout(minTimeTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    // 3. Quando o carregamento terminar e o tempo mínimo passar, inicia saída
+    if (!isLoading && minTimeElapsed && restaurant) {
+      setSplashPhase('exiting');
+      
+      // 4. Remover completamente do DOM após a animação de saída de 0.8s
+      const exitTimer = setTimeout(() => {
+        setShowSplash(false);
+      }, 800);
+
+      return () => clearTimeout(exitTimer);
+    }
+  }, [isLoading, minTimeElapsed, restaurant]);
+
+  // Se houver erro ANTES do carregamento inicial, exibe a tela de erro
+  if (error && !restaurant) {
     return <RestaurantError error={error} onRetry={refetch} />;
   }
 
-  if (!restaurant) {
+  // Se o carregamento terminou e o restaurante não existe, exibe 404
+  if (!isLoading && !restaurant && minTimeElapsed) {
     return <RestaurantNotFound />;
   }
 
   return (
     <>
       <SetCurrentRestaurant />
-      <Suspense fallback={<RestaurantLoading />}>
-        <RestaurantClientPage
-          initialRestaurant={restaurant}
-          restaurants={restaurants}
-        />
-      </Suspense>
+      
+      {/* Renderiza a página em background se os dados já estiverem disponíveis */}
+      {restaurant && (
+        <Suspense fallback={<RestaurantLoading />}>
+          <RestaurantClientPage
+            initialRestaurant={restaurant}
+            restaurants={restaurants}
+          />
+        </Suspense>
+      )}
+
+      {/* Splash Screen Premium por cima com z-index elevadíssimo */}
+      {showSplash && (
+        <PremiumSplash phase={splashPhase} />
+      )}
     </>
   );
 }
