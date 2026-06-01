@@ -20,6 +20,8 @@ import Analytics from '../lib/analytics';
 interface StripeExpressCheckoutButtonProps {
   restaurantId?: string;
   className?: string;
+  /** Informa o pai quando Apple Pay / Google Pay ficam visíveis (para ajustar largura do botão de cartão). */
+  onWalletAvailabilityChange?: (visible: boolean) => void;
 }
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -46,8 +48,11 @@ const getStripe = (stripeAccount?: string) => {
 type AvailablePaymentMethods =
   StripeExpressCheckoutElementAvailablePaymentMethodsChangeEvent['paymentMethods'];
 
-function isApplePayAvailable(methods: AvailablePaymentMethods): boolean {
-  return methods?.applePay?.available === true;
+function isWalletPayAvailable(methods: AvailablePaymentMethods): boolean {
+  return (
+    methods?.applePay?.available === true ||
+    methods?.googlePay?.available === true
+  );
 }
 
 const ExpressCheckoutInner = ({
@@ -170,22 +175,24 @@ const ExpressCheckoutInner = ({
       <ExpressCheckoutElement
         onConfirm={handleConfirm}
         onAvailablePaymentMethodsChange={(event) => {
-          onAvailabilityChange(isApplePayAvailable(event.paymentMethods), event.paymentMethods);
+          onAvailabilityChange(isWalletPayAvailable(event.paymentMethods), event.paymentMethods);
         }}
         options={{
           paymentMethods: {
-            // 'auto' mostra o botão com o cartão principal quando o cliente já tem Apple Pay ativo
+            // 'auto' mostra o botão com o cartão principal quando o cliente já tem carteira ativa
             applePay: 'auto',
-            googlePay: 'never',
+            googlePay: 'auto',
             link: 'never',
             amazonPay: 'never',
             paypal: 'never',
           },
           buttonType: {
             applePay: 'plain',
+            googlePay: 'plain',
           },
           buttonTheme: {
             applePay: 'black',
+            googlePay: 'black',
           },
           buttonHeight: 52,
           layout: {
@@ -206,11 +213,12 @@ const ExpressCheckoutInner = ({
 export default function StripeExpressCheckoutButton({
   restaurantId = "default",
   className = "",
+  onWalletAvailabilityChange,
 }: StripeExpressCheckoutButtonProps) {
   const { totalPrice, isEmpty } = useCart();
   const { restaurant, isLoading } = useRestaurantBySlug(restaurantId);
   const [stripePromiseObj, setStripePromiseObj] = useState<Promise<Stripe | null> | null>(null);
-  const [applePayAvailable, setApplePayAvailable] = useState<boolean | null>(null);
+  const [walletPayAvailable, setWalletPayAvailable] = useState<boolean | null>(null);
   const [debugMethods, setDebugMethods] = useState<AvailablePaymentMethods>(undefined);
 
   const amountCents = Math.round(totalPrice * 100);
@@ -222,29 +230,30 @@ export default function StripeExpressCheckoutButton({
   }, [isLoading, restaurant, restaurant?.stripe_connect_id]);
 
   const handleAvailabilityChange = useCallback((available: boolean, methods: AvailablePaymentMethods) => {
-    setApplePayAvailable(available);
+    setWalletPayAvailable(available);
+    onWalletAvailabilityChange?.(available);
     if (isDev) {
       setDebugMethods(methods);
     }
-  }, []);
+  }, [onWalletAvailabilityChange]);
 
   if (isEmpty || isLoading || !restaurant || !stripePromiseObj) {
     return null;
   }
 
-  if (isDev && applePayAvailable === false) {
+  if (isDev && walletPayAvailable === false) {
     return (
       <div className={`text-[10px] text-gray-400 font-mono p-2 border border-dashed rounded-lg ${className}`}>
-        Apple Pay indisponível: {JSON.stringify(debugMethods)}
+        Carteira digital indisponível: {JSON.stringify(debugMethods)}
       </div>
     );
   }
 
-  if (applePayAvailable === false) {
+  if (walletPayAvailable === false) {
     return null;
   }
 
-  const isVisible = applePayAvailable === true;
+  const isVisible = walletPayAvailable === true;
 
   return (
     <div

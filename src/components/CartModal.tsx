@@ -67,7 +67,14 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const [permissionUpdate, setPermissionUpdate] = useState(0);
   const [tableNumber, setTableNumber] = useState('');
+  const [walletPayVisible, setWalletPayVisible] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isCartOpen) {
+      setWalletPayVisible(false);
+    }
+  }, [isCartOpen]);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -309,16 +316,21 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
                 {/* Botões de ação */}
                 {isDeliveryRoute ? (
-                  <div className="flex gap-2 sm:gap-3">
-                    {(onlinePayment || tablePayment) && (
-                      <div className="flex-1 flex flex-row gap-2 items-stretch min-w-0">
-                        <StripeCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
-                        <StripeExpressCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
+                  <div className="flex flex-col gap-2 sm:gap-3 w-full">
+                    <CartWhatsAppButton restaurantId={restaurantId} className="w-full" />
+                    {onlinePayment && (
+                      <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
+                        <StripeCheckoutButton
+                          restaurantId={restaurantId}
+                          className={walletPayVisible ? 'flex-1 min-w-0' : 'w-full min-w-0'}
+                        />
+                        <StripeExpressCheckoutButton
+                          restaurantId={restaurantId}
+                          className="flex-1 min-w-0"
+                          onWalletAvailabilityChange={setWalletPayVisible}
+                        />
                       </div>
                     )}
-                    <div className="flex-1">
-                      <CartWhatsAppButton restaurantId={restaurantId} />
-                    </div>
                   </div>
                 ) : (
                   // Fluxo Presencial / Na Mesa
@@ -328,8 +340,15 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     <div className="flex gap-2 sm:gap-3">
                       {(onlinePayment || tablePayment) && (
                         <div className="flex-1 flex flex-row gap-2 items-stretch min-w-0">
-                          <StripeCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
-                          <StripeExpressCheckoutButton restaurantId={restaurantId} className="flex-1 min-w-0" />
+                          <StripeCheckoutButton
+                            restaurantId={restaurantId}
+                            className={walletPayVisible ? 'flex-1 min-w-0' : 'w-full min-w-0'}
+                          />
+                          <StripeExpressCheckoutButton
+                            restaurantId={restaurantId}
+                            className="flex-1 min-w-0"
+                            onWalletAvailabilityChange={setWalletPayVisible}
+                          />
                         </div>
                       )}
                       {restaurant?.table_ordering && (
