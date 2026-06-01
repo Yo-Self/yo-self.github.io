@@ -219,7 +219,7 @@ export default function StripeExpressCheckoutButton({
       const promise = getStripe(restaurant.stripe_connect_id);
       setStripePromiseObj(promise);
     }
-  }, [isLoading, restaurant?.stripe_connect_id]);
+  }, [isLoading, restaurant, restaurant?.stripe_connect_id]);
 
   if (isEmpty || isLoading || !restaurant || !stripePromiseObj) {
     return null;
@@ -252,7 +252,7 @@ export default function StripeExpressCheckoutButton({
           <strong>Debug Apple/Google Pay:</strong><br/>
           {debugInfo}<br/>
           <span className="text-gray-400 mt-1 block">
-            Se Apple Pay for "Não", verifique no Painel Stripe se o domínio foi registrado e se você tem um cartão configurado no Wallet.
+            Se Apple Pay for &quot;Não&quot;, verifique no Painel Stripe se o domínio foi registrado e se você tem um cartão configurado no Wallet.
           </span>
         </div>
       )}
