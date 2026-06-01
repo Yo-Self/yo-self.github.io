@@ -163,6 +163,11 @@ const ExpressCheckoutInner = ({
         <ExpressCheckoutElement 
           onConfirm={handleConfirm} 
           options={{
+            // @ts-ignore - 'always' is sometimes supported internally to force display if possible
+            wallets: {
+              applePay: 'always',
+              googlePay: 'always'
+            },
             buttonType: {
               applePay: 'buy',
               googlePay: 'buy',
@@ -241,6 +246,7 @@ export default function StripeExpressCheckoutButton({
               mode: 'payment', 
               amount: amountCents > 0 ? amountCents : 100,
               currency: 'brl',
+              paymentMethodTypes: ['card'],
             }}
           >
             <ExpressCheckoutInner restaurantId={restaurantId} />
