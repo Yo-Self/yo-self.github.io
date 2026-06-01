@@ -20,6 +20,8 @@ import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import { usePathname } from 'next/navigation';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
+import { useActiveOrders } from '../hooks/useActiveOrders';
+import OrderStatusModal from './OrderStatusModal';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
 
@@ -42,6 +44,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     incrementQuantity,
     decrementQuantity
   } = useCart();
+  const { activeOrderIds } = useActiveOrders();
   const { getCurrentPosition, permissionStatus, isLoading: isGeolocationLoading, error: geolocationError, isSupported, isBlocked, isSafariIOS, checkPermissionStatus, position } = useGeolocationSafariIOSFinal();
 
   // Usar o restaurantId passado como prop ou detectar automaticamente
@@ -68,6 +71,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const [permissionUpdate, setPermissionUpdate] = useState(0);
   const [tableNumber, setTableNumber] = useState('');
   const [walletPayVisible, setWalletPayVisible] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -218,6 +222,29 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   WebkitOverflowScrolling: 'touch'
                 }}
               >
+                {activeOrderIds.length > 0 && (
+                  <div 
+                    onClick={() => setSelectedOrderId(activeOrderIds[activeOrderIds.length - 1])}
+                    className="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-xl cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors shadow-sm mb-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-800/50 rounded-full">
+                        <div className="absolute inset-0 bg-indigo-400 rounded-full animate-ping opacity-50"></div>
+                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-300 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-indigo-900 dark:text-indigo-200">Acompanhar Pedido</h4>
+                        <p className="text-xs text-indigo-700 dark:text-indigo-400">Ver status em tempo real</p>
+                      </div>
+                    </div>
+                    <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                )}
+
                 {items.map((item) => (
                   <CartItemComponent
                     key={item.id}
@@ -401,6 +428,13 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
             </div>
           </div>
         </div>
+      )}
+
+      {selectedOrderId && (
+        <OrderStatusModal 
+          orderId={selectedOrderId} 
+          onClose={() => setSelectedOrderId(null)} 
+        />
       )}
     </div>
   );

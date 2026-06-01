@@ -15,13 +15,9 @@ import SessionTracker from "@/components/SessionTracker";
 import Navigation from "@/components/Navigation";
 import ThemeScript from "@/components/ThemeScript";
 import CartModal from "@/components/CartModal";
-import ActiveOrdersWidget from "@/components/ActiveOrdersWidget";
-import InstallPrompt from "@/components/InstallPrompt";
-import SafariInstallPrompt from "@/components/SafariInstallPrompt";
 import UpdatePrompt from "@/components/UpdatePrompt";
 import DynamicMetaTags from "@/components/DynamicMetaTags";
 import StartupRedirect from "@/components/StartupRedirect";
-import A2HSUrlTagger from "@/components/A2HSUrlTagger";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ServiceWorkerCleanup from "@/components/ServiceWorkerCleanup";
 import { useLegacyAppDetection } from "@/hooks/useLegacyAppDetection";
@@ -133,13 +129,9 @@ export default function RootLayout({
                       {children}
                       {/* Componentes globais do carrinho */}
                       <CartModal />
-                      <ActiveOrdersWidget />
-                      <InstallPrompt />
-                      <SafariInstallPrompt />
                       <UpdatePrompt />
                       <DynamicMetaTags />
                       <StartupRedirect />
-                      <A2HSUrlTagger />
                     </CustomerCoordinatesProvider>
                   </CustomerDataProvider>
                 </CartProvider>

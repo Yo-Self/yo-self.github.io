@@ -10,6 +10,9 @@ import { SortOption } from "./SortModal";
 import AccessibilityButton from "./AccessibilityButton";
 import ImageWithLoading from "./ImageWithLoading";
 import { CartIconHeader } from "./CartIcon";
+import { useActiveOrders } from "@/hooks/useActiveOrders";
+import OrderStatusModal from "./OrderStatusModal";
+import { useCart } from "@/hooks/useCart";
 
 // Smart Restaurant Title Component
 function SmartRestaurantTitle({ 
@@ -300,6 +303,33 @@ function ShareButton({ restaurant }: { restaurant: Restaurant }) {
   );
 }
 
+function TrackOrderButton({ orderId }: { orderId: string }) {
+  const [showModal, setShowModal] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500 hover:bg-indigo-600 transition-colors duration-200 shadow-lg relative"
+        aria-label="Acompanhar Pedido"
+        title="Acompanhar Pedido"
+      >
+        <div className="absolute inset-0 bg-indigo-400 rounded-full animate-ping opacity-50"></div>
+        <svg className="w-4 h-4 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      </button>
+
+      {showModal && (
+        <OrderStatusModal 
+          orderId={orderId} 
+          onClose={() => setShowModal(false)} 
+        />
+      )}
+    </>
+  );
+}
+
 function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, current }: { restaurants: Restaurant[], selectedRestaurantId?: string, onSelect: (id: string) => void, current?: Restaurant }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -379,6 +409,9 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
 
 export default function Header({ restaurant, restaurants, selectedRestaurantId, onSelectRestaurant, currentSort, onSortChange }: HeaderProps) {
   const { t } = useTranslation();
+  const { activeOrderIds } = useActiveOrders();
+  const { isEmpty } = useCart();
+  const hasActiveOrder = activeOrderIds.length > 0;
   
   return (
     <header className="header bg-white dark:bg-black p-0 m-0 h-[60px] flex items-center shadow-sm relative z-40">
@@ -405,8 +438,12 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
         
         {restaurant && (
           <div className="flex items-center gap-2 w-20 justify-end">
-            <ShareButton restaurant={restaurant} />
-            <CartIconHeader />
+            {hasActiveOrder && isEmpty ? (
+              <TrackOrderButton orderId={activeOrderIds[activeOrderIds.length - 1]} />
+            ) : (
+              <ShareButton restaurant={restaurant} />
+            )}
+            {!isEmpty && <CartIconHeader />}
           </div>
         )}
       </div>
