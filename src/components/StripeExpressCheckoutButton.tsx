@@ -40,8 +40,10 @@ const getStripe = (stripeAccount?: string) => {
 // Inner component that actually uses the hooks from Elements
 const ExpressCheckoutInner = ({ 
   restaurantId,
+  onMethodsChange,
 }: { 
   restaurantId: string;
+  onMethodsChange: (methods: any) => void;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -162,9 +164,17 @@ const ExpressCheckoutInner = ({
       <div className="w-full overflow-hidden rounded-xl">
         <ExpressCheckoutElement 
           onConfirm={handleConfirm} 
+          onReady={(element: any) => {
+            console.log('Stripe ExpressCheckoutElement mounted.');
+            element.on('availablepaymentmethodschange', (event: any) => {
+              console.log('Stripe Express Checkout methods loaded:', event.paymentMethods);
+              if (event.paymentMethods) {
+                onMethodsChange(event.paymentMethods);
+              }
+            });
+          }}
           options={{
-            // @ts-ignore - 'always' is sometimes supported internally to force display if possible
-            wallets: {
+            paymentMethods: {
               applePay: 'always',
               googlePay: 'always'
             },
@@ -196,6 +206,9 @@ export default function StripeExpressCheckoutButton({
   const [stripePromiseObj, setStripePromiseObj] = useState<Promise<Stripe | null> | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
   const [debugInfo, setDebugInfo] = useState<string>("Verificando canMakePayment...");
+  const [availableMethods, setAvailableMethods] = useState<any>(null);
+  const [elementReady, setElementReady] = useState<boolean>(false);
+  
   const amountCents = Math.round(totalPrice * 100);
 
   useEffect(() => {
@@ -219,7 +232,7 @@ export default function StripeExpressCheckoutButton({
             pr.canMakePayment().then(result => {
               if (result) {
                 setIsAvailable(true);
-                setDebugInfo(`Suportado: ${JSON.stringify(result)}`);
+                setDebugInfo(`canMakePayment: OK (${JSON.stringify(result)})`);
               } else {
                 setIsAvailable(false);
                 setDebugInfo(`canMakePayment: null. (Apple Pay desativado ou Domínio não validado para a conta conectada)`);
@@ -236,6 +249,30 @@ export default function StripeExpressCheckoutButton({
     }
   }, [isLoading, restaurant, restaurant?.stripe_connect_id, amountCents]);
 
+  const handleMethodsChange = useCallback((methods: any) => {
+    setAvailableMethods(methods);
+    setElementReady(true);
+  }, []);
+
+  const showDebugBox = !isAvailable || (availableMethods && !Object.values(availableMethods).some(v => v === true || v === 'available'));
+  
+  let currentStatus = debugInfo;
+  if (isAvailable) {
+    if (!elementReady) {
+      currentStatus = "canMakePayment detectado. Carregando ExpressCheckoutElement...";
+    } else if (availableMethods) {
+      const activeMethods = Object.entries(availableMethods)
+        .filter(([, v]) => v === true || v === 'available')
+        .map(([k]) => k);
+      
+      if (activeMethods.length > 0) {
+        currentStatus = `Métodos ativos detectados: ${activeMethods.join(', ')}`;
+      } else {
+        currentStatus = `canMakePayment: OK, mas Express Checkout retornou 0 métodos disponíveis. Evento: ${JSON.stringify(availableMethods)}. Verifique se a conta conectada tem Apple/Google Pay ativos e se o domínio está registrado para a conta conectada no painel Stripe.`;
+      }
+    }
+  }
+
   return (
     <div className="w-full flex flex-col items-center">
       {isAvailable && (
@@ -246,19 +283,27 @@ export default function StripeExpressCheckoutButton({
               mode: 'payment', 
               amount: amountCents > 0 ? amountCents : 100,
               currency: 'brl',
-              paymentMethodTypes: ['card'],
+              // Omitting paymentMethodTypes lets Stripe automatically fetch all dashboard-enabled payment methods
             }}
           >
-            <ExpressCheckoutInner restaurantId={restaurantId} />
+            <ExpressCheckoutInner 
+              restaurantId={restaurantId} 
+              onMethodsChange={handleMethodsChange}
+            />
           </Elements>
         </div>
       )}
       
-      {/* Campo de debug para o logista ver o motivo da ocultação */}
-      {!isAvailable && (
+      {/* Campo de debug para o logista ver o motivo da ocultação ou se não houver métodos ativos */}
+      {showDebugBox && (
         <div className="w-full mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 font-mono text-center">
-          <strong>Debug Apple Pay:</strong><br/>
-          {debugInfo}<br/>
+          <strong>Debug Apple/Google Pay:</strong><br/>
+          {currentStatus}<br/>
+          {isAvailable && (
+            <span className="text-[10px] text-gray-400 mt-1 block font-sans">
+              Dica: Abra no Safari no iOS para Apple Pay ou Chrome no Android para Google Pay.
+            </span>
+          )}
         </div>
       )}
     </div>
