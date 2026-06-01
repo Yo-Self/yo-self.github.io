@@ -16,6 +16,7 @@ import { createExpressPaymentIntent } from '../services/stripeService';
 import { Order, OrderItem } from '../types/order';
 import { CartUtils } from '../types/cart';
 import Analytics from '../lib/analytics';
+import { usePathname } from 'next/navigation';
 
 interface StripeExpressCheckoutButtonProps {
   restaurantId?: string;
@@ -58,9 +59,13 @@ function isWalletPayAvailable(methods: AvailablePaymentMethods): boolean {
 const ExpressCheckoutInner = ({
   restaurantId,
   onAvailabilityChange,
+  isMinOrderNotMet,
+  minOrderMessage,
 }: {
   restaurantId: string;
   onAvailabilityChange: (available: boolean, methods: AvailablePaymentMethods) => void;
+  isMinOrderNotMet: boolean;
+  minOrderMessage: string;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -71,6 +76,11 @@ const ExpressCheckoutInner = ({
 
   const handleConfirm = useCallback(async (event: StripeExpressCheckoutElementConfirmEvent) => {
     if (!stripe || !elements || !restaurant) {
+      return;
+    }
+
+    if (isMinOrderNotMet) {
+      event.paymentFailed({ message: minOrderMessage });
       return;
     }
 
@@ -166,7 +176,7 @@ const ExpressCheckoutInner = ({
       setErrorMessage(message);
       event.paymentFailed({ message });
     }
-  }, [stripe, elements, restaurant, items, totalPrice, customerData]);
+  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage]);
 
   if (isEmpty) return null;
 
@@ -175,7 +185,8 @@ const ExpressCheckoutInner = ({
       <ExpressCheckoutElement
         onConfirm={handleConfirm}
         onAvailablePaymentMethodsChange={(event) => {
-          onAvailabilityChange(isWalletPayAvailable(event.paymentMethods), event.paymentMethods);
+          const walletAvailable = isWalletPayAvailable(event.paymentMethods) && !isMinOrderNotMet;
+          onAvailabilityChange(walletAvailable, event.paymentMethods);
         }}
         options={{
           paymentMethods: {
@@ -217,6 +228,15 @@ export default function StripeExpressCheckoutButton({
 }: StripeExpressCheckoutButtonProps) {
   const { totalPrice, isEmpty } = useCart();
   const { restaurant, isLoading } = useRestaurantBySlug(restaurantId);
+  const pathname = usePathname();
+  const isDeliveryRoute = pathname?.startsWith('/delivery');
+  const minOrderValue = restaurant?.min_order_value || 0;
+  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
+  const minOrderMessage =
+    minOrderValue > 0
+      ? `O pedido mínimo para delivery é de R$ ${minOrderValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`
+      : 'Pedido mínimo não atingido.';
+
   const [stripePromiseObj, setStripePromiseObj] = useState<Promise<Stripe | null> | null>(null);
   const [walletPayAvailable, setWalletPayAvailable] = useState<boolean | null>(null);
   const [debugMethods, setDebugMethods] = useState<AvailablePaymentMethods>(undefined);
@@ -229,15 +249,27 @@ export default function StripeExpressCheckoutButton({
     }
   }, [isLoading, restaurant, restaurant?.stripe_connect_id]);
 
+  useEffect(() => {
+    if (isMinOrderNotMet) {
+      setWalletPayAvailable(false);
+      onWalletAvailabilityChange?.(false);
+    }
+  }, [isMinOrderNotMet, onWalletAvailabilityChange]);
+
   const handleAvailabilityChange = useCallback((available: boolean, methods: AvailablePaymentMethods) => {
-    setWalletPayAvailable(available);
-    onWalletAvailabilityChange?.(available);
+    const effectiveAvailable = available && !isMinOrderNotMet;
+    setWalletPayAvailable(effectiveAvailable);
+    onWalletAvailabilityChange?.(effectiveAvailable);
     if (isDev) {
       setDebugMethods(methods);
     }
-  }, [onWalletAvailabilityChange]);
+  }, [isMinOrderNotMet, onWalletAvailabilityChange]);
 
   if (isEmpty || isLoading || !restaurant || !stripePromiseObj) {
+    return null;
+  }
+
+  if (isMinOrderNotMet) {
     return null;
   }
 
@@ -271,6 +303,8 @@ export default function StripeExpressCheckoutButton({
         <ExpressCheckoutInner
           restaurantId={restaurantId}
           onAvailabilityChange={handleAvailabilityChange}
+          isMinOrderNotMet={isMinOrderNotMet}
+          minOrderMessage={minOrderMessage}
         />
       </Elements>
     </div>
