@@ -316,22 +316,24 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
                 {/* Botões de ação */}
                 {isDeliveryRoute ? (
-                  <div className="flex flex-col gap-2 sm:gap-3 w-full">
-                    <CartWhatsAppButton restaurantId={restaurantId} className="w-full" />
-                    {onlinePayment && (
-                      <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
-                        <StripeCheckoutButton
-                          restaurantId={restaurantId}
-                          className={walletPayVisible ? 'flex-1 min-w-0' : 'w-full min-w-0'}
-                        />
-                        <StripeExpressCheckoutButton
-                          restaurantId={restaurantId}
-                          className="flex-1 min-w-0"
-                          onWalletAvailabilityChange={setWalletPayVisible}
-                        />
-                      </div>
-                    )}
-                  </div>
+                  !isMinOrderNotMet && (
+                    <div className="flex flex-col gap-2 sm:gap-3 w-full">
+                      <CartWhatsAppButton restaurantId={restaurantId} className="w-full" />
+                      {onlinePayment && (
+                        <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
+                          <StripeCheckoutButton
+                            restaurantId={restaurantId}
+                            className={walletPayVisible ? 'flex-1 min-w-0' : 'w-full min-w-0'}
+                          />
+                          <StripeExpressCheckoutButton
+                            restaurantId={restaurantId}
+                            className="flex-1 min-w-0"
+                            onWalletAvailabilityChange={setWalletPayVisible}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
                 ) : (
                   // Fluxo Presencial / Na Mesa
                   (!restaurant?.table_ordering && !tablePayment) ? (

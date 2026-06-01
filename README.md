@@ -16,7 +16,7 @@ Uma aplicação moderna, interativa e premium de cardápio digital para restaura
 
 ### 💰 Configuração e Bloqueio de Pedido Mínimo
 - **Validação de Subtotal**: Exibição de um banner visual e amigável no carrinho de compras quando o valor mínimo estipulado pelo restaurante não for atingido.
-- **Bloqueio de Checkout**: Omissão/desativação automática dos botões de finalização por WhatsApp e Stripe se o subtotal for menor que o pedido mínimo do estabelecimento.
+- **Bloqueio de Checkout**: Ocultação automática dos botões de finalização por WhatsApp e Stripe se o subtotal for menor que o pedido mínimo do estabelecimento para economizar espaço em tela e evitar poluição visual na comanda.
 
 ### 🍳 Roteamento Inteligente de Pedidos e Controle de Cozinha
 - **Detecção de Preparação**: Os itens do cardápio possuem o campo `needs_preparation` vindo do banco de dados (Supabase) via mapeamento na API.
