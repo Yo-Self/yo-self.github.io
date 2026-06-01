@@ -161,13 +161,16 @@ const ExpressCheckoutInner = ({
 
   if (isEmpty) return null;
 
-  const handleReady = ({ availablePaymentMethods }: any) => {
+  const handleReady = (event: any) => {
+    const { availablePaymentMethods, error } = event;
     const isAvailable = availablePaymentMethods && (availablePaymentMethods.applePay || availablePaymentMethods.googlePay || availablePaymentMethods.link);
     onAvailabilityChange(!!isAvailable);
     
     // Set debug info to help understand why it might not be showing
-    if (!availablePaymentMethods) {
-      setDebugInfo("Stripe não retornou métodos de pagamento.");
+    if (error) {
+      setDebugInfo(`Erro Stripe: ${error.message}`);
+    } else if (!availablePaymentMethods) {
+      setDebugInfo(`Stripe não retornou métodos. Evento: ${JSON.stringify(event)}`);
     } else {
       setDebugInfo(
         `Apple Pay: ${availablePaymentMethods.applePay ? '✅ Sim' : '❌ Não'} | ` +
@@ -236,6 +239,8 @@ export default function StripeExpressCheckoutButton({
             mode: 'payment', 
             amount: amountCents > 0 ? amountCents : 100, // Amount must be > 0
             currency: 'brl',
+            paymentMethodTypes: ['card', 'link'], // explicitly request card/link so Apple/Google pay is evaluated
+            paymentMethodCreation: 'manual', // since we create the intent on the server after confirmation
           }}
         >
           <ExpressCheckoutInner 
