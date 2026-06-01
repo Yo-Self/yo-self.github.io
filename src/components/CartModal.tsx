@@ -253,9 +253,34 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     <span>Total do Pedido:</span>
                     <span>R$ {formattedTotalPrice}</span>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {totalItems} {totalItems === 1 ? 'item' : 'itens'} • Taxa de entrega não incluída
-                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {totalItems} {totalItems === 1 ? 'item' : 'itens'} • Taxa de entrega não incluída
+                    </p>
+                    
+                    {!isDeliveryRoute && (restaurant?.table_ordering || tablePayment) && (
+                      <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <label htmlFor="small-table-select" className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          Mesa:
+                        </label>
+                        <select 
+                          id="small-table-select"
+                          value={tableNumber}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setTableNumber(value);
+                            localStorage.setItem('table_id', value);
+                          }}
+                          className="bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-0 font-bold cursor-pointer"
+                        >
+                          <option value="">--</option>
+                          {Array.from({ length: 50 }, (_, i) => i + 1).map(num => (
+                            <option key={num} value={num.toString()}>{num}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Alerta se restaurantId estiver inválido */}
@@ -280,30 +305,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   </div>
                 )}
 
-                {/* Campo de identificação de Mesa (Apenas para Dine-in) */}
-                {!isDeliveryRoute && (restaurant?.table_ordering || tablePayment) && (
-                  <div className="mb-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl">
-                    <label htmlFor="modal-table-number" className="block text-sm font-bold text-gray-800 dark:text-gray-200 mb-1.5 flex items-center gap-1.5">
-                      <span>🛋️ Número da sua Mesa</span>
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="modal-table-number"
-                      type="text"
-                      placeholder="Digite o número da mesa (ex: 5)"
-                      value={tableNumber}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setTableNumber(value);
-                        localStorage.setItem('table_id', value);
-                      }}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      💡 Necessário para enviar os pratos diretamente para você
-                    </p>
-                  </div>
-                )}
+
 
                 {/* Botões de ação */}
                 {isDeliveryRoute ? (

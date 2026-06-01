@@ -40,8 +40,10 @@ const getStripe = (stripeAccount?: string) => {
 // Inner component that actually uses the hooks from Elements
 const ExpressCheckoutInner = ({ 
   restaurantId,
+  onAvailabilityChange,
 }: { 
   restaurantId: string;
+  onAvailabilityChange: (isAvailable: boolean) => void;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -157,11 +159,17 @@ const ExpressCheckoutInner = ({
 
   if (isEmpty) return null;
 
+  const handleReady = ({ availablePaymentMethods }: any) => {
+    const isAvailable = availablePaymentMethods && (availablePaymentMethods.applePay || availablePaymentMethods.googlePay || availablePaymentMethods.link);
+    onAvailabilityChange(!!isAvailable);
+  };
+
   return (
     <div className="w-full flex flex-col items-center">
       <div className="w-full min-h-[44px] overflow-hidden rounded-xl">
         <ExpressCheckoutElement 
           onConfirm={handleConfirm} 
+          onReady={handleReady}
           options={{
             buttonType: {
               applePay: 'buy',
@@ -189,6 +197,7 @@ export default function StripeExpressCheckoutButton({
   const { totalPrice, isEmpty } = useCart();
   const { restaurant, isLoading } = useRestaurantBySlug(restaurantId);
   const [stripePromiseObj, setStripePromiseObj] = useState<Promise<Stripe | null> | null>(null);
+  const [isAvailable, setIsAvailable] = useState<boolean>(false); // starts false (hidden) until ready
 
   useEffect(() => {
     if (!isLoading && restaurant) {
@@ -205,7 +214,7 @@ export default function StripeExpressCheckoutButton({
   const amountCents = Math.round(totalPrice * 100);
 
   return (
-    <div className={`w-full flex items-center justify-center ${className}`}>
+    <div className={`${isAvailable ? 'w-full' : 'hidden'} flex items-center justify-center ${className}`}>
       <Elements 
         stripe={stripePromiseObj} 
         options={{ 
@@ -214,7 +223,10 @@ export default function StripeExpressCheckoutButton({
           currency: 'brl',
         }}
       >
-        <ExpressCheckoutInner restaurantId={restaurantId} />
+        <ExpressCheckoutInner 
+          restaurantId={restaurantId} 
+          onAvailabilityChange={setIsAvailable}
+        />
       </Elements>
     </div>
   );
