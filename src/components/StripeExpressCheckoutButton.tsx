@@ -41,9 +41,11 @@ const getStripe = (stripeAccount?: string) => {
 const ExpressCheckoutInner = ({ 
   restaurantId,
   onAvailabilityChange,
+  setDebugInfo,
 }: { 
   restaurantId: string;
   onAvailabilityChange: (isAvailable: boolean) => void;
+  setDebugInfo: (info: string) => void;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -162,6 +164,17 @@ const ExpressCheckoutInner = ({
   const handleReady = ({ availablePaymentMethods }: any) => {
     const isAvailable = availablePaymentMethods && (availablePaymentMethods.applePay || availablePaymentMethods.googlePay || availablePaymentMethods.link);
     onAvailabilityChange(!!isAvailable);
+    
+    // Set debug info to help understand why it might not be showing
+    if (!availablePaymentMethods) {
+      setDebugInfo("Stripe não retornou métodos de pagamento.");
+    } else {
+      setDebugInfo(
+        `Apple Pay: ${availablePaymentMethods.applePay ? '✅ Sim' : '❌ Não'} | ` +
+        `Google Pay: ${availablePaymentMethods.googlePay ? '✅ Sim' : '❌ Não'} | ` +
+        `Link: ${availablePaymentMethods.link ? '✅ Sim' : '❌ Não'}`
+      );
+    }
   };
 
   return (
@@ -198,6 +211,7 @@ export default function StripeExpressCheckoutButton({
   const { restaurant, isLoading } = useRestaurantBySlug(restaurantId);
   const [stripePromiseObj, setStripePromiseObj] = useState<Promise<Stripe | null> | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean>(false); // starts false (hidden) until ready
+  const [debugInfo, setDebugInfo] = useState<string>("Verificando disponibilidade de carteiras digitais...");
 
   useEffect(() => {
     if (!isLoading && restaurant) {
@@ -214,20 +228,34 @@ export default function StripeExpressCheckoutButton({
   const amountCents = Math.round(totalPrice * 100);
 
   return (
-    <div className={`${isAvailable ? 'w-full' : 'hidden'} flex items-center justify-center ${className}`}>
-      <Elements 
-        stripe={stripePromiseObj} 
-        options={{ 
-          mode: 'payment', 
-          amount: amountCents > 0 ? amountCents : 100, // Amount must be > 0
-          currency: 'brl',
-        }}
-      >
-        <ExpressCheckoutInner 
-          restaurantId={restaurantId} 
-          onAvailabilityChange={setIsAvailable}
-        />
-      </Elements>
+    <div className="w-full flex flex-col items-center">
+      <div className={`${isAvailable ? 'w-full' : 'hidden'} flex items-center justify-center ${className}`}>
+        <Elements 
+          stripe={stripePromiseObj} 
+          options={{ 
+            mode: 'payment', 
+            amount: amountCents > 0 ? amountCents : 100, // Amount must be > 0
+            currency: 'brl',
+          }}
+        >
+          <ExpressCheckoutInner 
+            restaurantId={restaurantId} 
+            onAvailabilityChange={setIsAvailable}
+            setDebugInfo={setDebugInfo}
+          />
+        </Elements>
+      </div>
+      
+      {/* Campo de debug para o logista ver o motivo da ocultação */}
+      {!isAvailable && (
+        <div className="w-full mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 font-mono text-center">
+          <strong>Debug Apple/Google Pay:</strong><br/>
+          {debugInfo}<br/>
+          <span className="text-gray-400 mt-1 block">
+            Se Apple Pay for "Não", verifique no Painel Stripe se o domínio foi registrado e se você tem um cartão configurado no Wallet.
+          </span>
+        </div>
+      )}
     </div>
   );
 }
