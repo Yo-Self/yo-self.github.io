@@ -8,6 +8,7 @@ import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useRestaurantCoordinates } from '../hooks/useRestaurantCoordinates';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
+import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import { usePathname } from 'next/navigation';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
@@ -38,6 +39,7 @@ export default function CartWhatsAppButton({
   const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
+  const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
 
   const pathname = usePathname();
@@ -477,7 +479,7 @@ export default function CartWhatsAppButton({
                 ? 'Sem Cobertura' 
                 : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location') 
                   ? 'Informe o Endereço' 
-                  : 'WhatsApp por PIX'}
+                  : (onlinePayment ? 'Pedir pelo Whatsapp por Pix' : 'Pedir pelo Whatsapp')}
         </span>
         <span className="text-xs opacity-90 truncate hidden sm:block">
           {isDeliveryOutsideCoverage

@@ -3,6 +3,7 @@
 import React from "react";
 import { Dish, MenuItem } from "./data";
 import { useWhatsAppConfig } from "../hooks/useWhatsAppConfig";
+import { useRestaurantOnlinePayment } from "../hooks/useRestaurantOnlinePayment";
 import { useParams } from 'next/navigation';
 
 interface OrderButtonProps {
@@ -19,6 +20,7 @@ export default function OrderButton({
   const params = useParams();
   const restaurantId = params.slug as string;
   const { config, isLoading } = useWhatsAppConfig(restaurantId);
+  const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
 
   if (!config.enabled) {
     return null;
@@ -94,9 +96,9 @@ ${complementsText.join('\n')}}
       onClick={handleOrderViaWhatsApp}
       disabled={isLoading}
       className={`flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl ${className}`}
-      aria-label="WhatsApp por PIX"
+      aria-label={onlinePayment ? "Pedir pelo Whatsapp por Pix" : "Pedir pelo Whatsapp"}
     >
-      {isLoading ? "Carregando..." : "WhatsApp por PIX"}
+      {isLoading ? "Carregando..." : (onlinePayment ? "Pedir pelo Whatsapp por Pix" : "Pedir pelo Whatsapp")}
     </button>
   );
 }

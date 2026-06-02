@@ -184,10 +184,10 @@ export default function CustomerDataForm({
 
       {addressActive && (
       <div className="grid grid-cols-12 gap-2 sm:gap-3">
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-3">
           <label 
             htmlFor="customer-number" 
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
             Número *
           </label>
@@ -198,11 +198,11 @@ export default function CustomerDataForm({
             onChange={(e) => updateNumber(e.target.value)}
             placeholder="Ex: 123"
             className="
-              w-full px-3 py-2 
+              w-full px-2 sm:px-3 py-2 
               border border-gray-300 dark:border-gray-600 
               rounded-lg 
               bg-white dark:bg-gray-800 
-              text-gray-900 dark:text-gray-100 
+              text-sm sm:text-base text-gray-900 dark:text-gray-100 
               placeholder-gray-500 dark:placeholder-gray-400
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
               transition-colors duration-200
@@ -210,10 +210,10 @@ export default function CustomerDataForm({
           />
         </div>
 
-        <div className="col-span-6 sm:col-span-4">
+        <div className="col-span-4">
           <label 
             htmlFor="customer-complement" 
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
             Complemento
           </label>
@@ -224,11 +224,11 @@ export default function CustomerDataForm({
             onChange={(e) => updateComplement(e.target.value)}
             placeholder="Ex: Apt 45"
             className="
-              w-full px-3 py-2 
+              w-full px-2 sm:px-3 py-2 
               border border-gray-300 dark:border-gray-600 
               rounded-lg 
               bg-white dark:bg-gray-800 
-              text-gray-900 dark:text-gray-100 
+              text-sm sm:text-base text-gray-900 dark:text-gray-100 
               placeholder-gray-500 dark:placeholder-gray-400
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
               transition-colors duration-200
@@ -236,10 +236,10 @@ export default function CustomerDataForm({
           />
         </div>
 
-        <div className="col-span-6 sm:col-span-4">
+        <div className="col-span-5">
           <label 
             htmlFor="customer-whatsapp" 
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
             Telefone *
           </label>
@@ -250,11 +250,11 @@ export default function CustomerDataForm({
             onChange={(e) => updateWhatsApp(e.target.value)}
             placeholder="(11) 90000-0000"
             className="
-              w-full px-3 py-2 
+              w-full px-2 sm:px-3 py-2 
               border border-gray-300 dark:border-gray-600 
               rounded-lg 
               bg-white dark:bg-gray-800 
-              text-gray-900 dark:text-gray-100 
+              text-sm sm:text-base text-gray-900 dark:text-gray-100 
               placeholder-gray-500 dark:placeholder-gray-400
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
               transition-colors duration-200

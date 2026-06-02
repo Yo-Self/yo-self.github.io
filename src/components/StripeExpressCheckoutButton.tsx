@@ -61,11 +61,13 @@ const ExpressCheckoutInner = ({
   onAvailabilityChange,
   isMinOrderNotMet,
   minOrderMessage,
+  isDeliveryRoute,
 }: {
   restaurantId: string;
   onAvailabilityChange: (available: boolean, methods: AvailablePaymentMethods) => void;
   isMinOrderNotMet: boolean;
   minOrderMessage: string;
+  isDeliveryRoute: boolean;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -93,7 +95,6 @@ const ExpressCheckoutInner = ({
         return;
       }
 
-      const isDeliveryRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/delivery');
       const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
 
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
@@ -176,24 +177,18 @@ const ExpressCheckoutInner = ({
       setErrorMessage(message);
       event.paymentFailed({ message });
     }
-  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage]);
+  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage, isDeliveryRoute]);
 
   if (isEmpty) return null;
-
-  const isDeliveryRoute = typeof window !== 'undefined' 
-    ? window.location.pathname.startsWith('/restaurant') && !window.location.pathname.includes('/table')
-    : true; // Padrão seguro para SSR
     
   const isCustomerDataValid = isDeliveryRoute 
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
   return (
-    <div className={`h-full min-h-[52px] w-full flex flex-col justify-center transition-opacity duration-200 ${!isCustomerDataValid ? 'opacity-60 grayscale' : ''}`}>
+    <div className={`h-full min-h-[52px] w-full flex flex-col justify-center transition-all duration-200 ${!isCustomerDataValid ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
       <ExpressCheckoutElement
         onClick={({ resolve }) => {
-          const isDeliveryRoute = window.location.pathname.startsWith('/restaurant') && !window.location.pathname.includes('/table');
-          
           const throwError = (msg: string) => {
             alert(msg);
             resolve({
@@ -259,7 +254,7 @@ export default function StripeExpressCheckoutButton({
   const { totalPrice, isEmpty } = useCart();
   const { restaurant, isLoading } = useRestaurantBySlug(restaurantId);
   const pathname = usePathname();
-  const isDeliveryRoute = pathname?.startsWith('/delivery');
+  const isDeliveryRoute = pathname?.startsWith('/delivery') || false;
   const minOrderValue = restaurant?.min_order_value || 0;
   const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
   const minOrderMessage =
@@ -327,6 +322,7 @@ export default function StripeExpressCheckoutButton({
           onAvailabilityChange={handleAvailabilityChange}
           isMinOrderNotMet={isMinOrderNotMet}
           minOrderMessage={minOrderMessage}
+          isDeliveryRoute={isDeliveryRoute}
         />
       </Elements>
     </div>

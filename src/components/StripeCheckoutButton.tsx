@@ -21,7 +21,7 @@ export default function StripeCheckoutButton({
   const { totalPrice, totalItems, formattedTotalPrice, isEmpty } = useCart();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const pathname = usePathname();
-  const isDeliveryRoute = pathname ? !pathname.includes('/table') : true;
+  const isDeliveryRoute = pathname ? pathname.startsWith('/delivery') : true;
   const { customerCoordinates } = useCustomerCoordinates();
   const { customerData } = useCustomerData();
 
@@ -134,7 +134,7 @@ export default function StripeCheckoutButton({
 
       {/* Button Text */}
       <div className="flex flex-col items-start min-w-0">
-        <span className="text-base sm:text-lg font-bold whitespace-nowrap">
+        <span className="text-sm sm:text-base font-bold whitespace-normal sm:whitespace-nowrap leading-tight">
           {isLoading 
             ? 'Processando...' 
             : isDeliveryOutsideCoverage 
