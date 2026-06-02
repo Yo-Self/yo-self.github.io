@@ -10,6 +10,7 @@ import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { usePathname } from 'next/navigation';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
+import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
 import { Order, OrderItem } from '../types/order';
@@ -45,6 +46,16 @@ export default function CartWhatsAppButton({
 
   const minOrderValue = restaurant?.min_order_value || 0;
   const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
+
+  const deliveryCalc = React.useMemo(() => {
+    if (!isDeliveryRoute || !restaurant) return { covered: true, fee: 0, reason: undefined };
+    return calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null);
+  }, [isDeliveryRoute, restaurant, customerCoordinates?.coordinates]);
+
+  const deliveryFee = deliveryCalc.fee / 100;
+  const deliveryCovered = deliveryCalc.covered;
+  const totalPriceWithShipping = totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0);
+  const isDeliveryOutsideCoverage = isDeliveryRoute && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
   const restaurantIdRef = React.useRef(restaurantId);
 
   // Monitorar mudanças no restaurantId e cancelar operações em andamento
@@ -192,8 +203,17 @@ export default function CartWhatsAppButton({
       message += `*Subtotal:* R$ ${CartUtils.formatPrice(item.totalPrice)}\n\n`;
     });
 
-    // Total geral
-    message += `💰 *TOTAL GERAL: R$ ${formattedTotalPrice}*\n\n`;
+    // Resumo dos Totais
+    if (isDeliveryRoute) {
+      const subtotalCents = Math.round(totalPrice * 100);
+      const deliveryFeeCents = order.delivery_fee || 0;
+      message += `📋 *RESUMO DOS VALORES:*\n`;
+      message += `• *Subtotal dos Itens:* R$ ${formattedTotalPrice}\n`;
+      message += `• *Taxa de Entrega:* ${deliveryFeeCents === 0 ? 'Grátis' : 'R$ ' + (deliveryFeeCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
+      message += `💰 *TOTAL GERAL: R$ ${(order.total_price / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n\n`;
+    } else {
+      message += `💰 *TOTAL GERAL: R$ ${formattedTotalPrice}*\n\n`;
+    }
 
     // Informações adicionais
     message += `📱 *Pedido via Cardápio Digital*\n`;
@@ -314,8 +334,21 @@ export default function CartWhatsAppButton({
           delivery_type: isDeliveryRoute ? 'delivery' : 'dine_in',
           address: customerData.address || null,
         },
-        total_price: Math.round(totalPrice * 100),
+        total_price: Math.round((totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0)) * 100),
         status: 'pending_payment',
+        order_type: isDeliveryRoute ? 'delivery' : 'dine_in',
+        delivery_fee: isDeliveryRoute && deliveryCovered ? deliveryCalc.fee : 0,
+        delivery_distance: isDeliveryRoute && deliveryCovered ? deliveryCalc.distanceKm : null,
+        delivery_address: isDeliveryRoute 
+          ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
+          : null,
+        delivery_coords_lat: isDeliveryRoute && customerCoordinates.coordinates ? customerCoordinates.coordinates.latitude : null,
+        delivery_coords_lng: isDeliveryRoute && customerCoordinates.coordinates ? customerCoordinates.coordinates.longitude : null,
+        delivery_address_details: isDeliveryRoute ? {
+          street: customerData.address,
+          number: customerData.number,
+          complement: customerData.complement
+        } : null,
       };
 
       const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item => ({
@@ -408,7 +441,7 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet}
+      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isDeliveryRoute && deliveryCalc.reason === 'waiting_location')}
       className={`
         w-full flex items-center justify-center gap-2 sm:gap-3 
         px-3 sm:px-6 py-3.5 sm:py-4 
@@ -436,10 +469,22 @@ export default function CartWhatsAppButton({
       {/* Texto do botão */}
       <div className="flex flex-col items-start min-w-0">
         <span className="text-base sm:text-lg font-bold whitespace-nowrap">
-          {isLoadingRestaurant ? 'Carregando...' : (isLoading || isCreatingOrder ? 'Criando...' : 'Fazer Pedido')}
+          {isLoadingRestaurant 
+            ? 'Carregando...' 
+            : isCreatingOrder 
+              ? 'Criando...' 
+              : isDeliveryOutsideCoverage 
+                ? 'Sem Cobertura' 
+                : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location') 
+                  ? 'Informe o Endereço' 
+                  : 'WhatsApp por PIX'}
         </span>
         <span className="text-xs opacity-90 truncate hidden sm:block">
-          {`${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`}
+          {isDeliveryOutsideCoverage
+            ? 'Endereço fora da área de entrega'
+            : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location')
+              ? 'Preencha os dados acima'
+              : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isDeliveryRoute && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
         </span>
       </div>
 

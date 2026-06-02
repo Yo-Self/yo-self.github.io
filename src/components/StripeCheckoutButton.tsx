@@ -5,6 +5,9 @@ import { useCart } from '../hooks/useCart';
 import { useStripeCheckout } from '../hooks/useStripeCheckout';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { usePathname } from 'next/navigation';
+import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
+import { useCustomerData } from '../hooks/useCustomerData';
+import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 
 interface StripeCheckoutButtonProps {
   restaurantId?: string;
@@ -17,12 +20,22 @@ export default function StripeCheckoutButton({
 }: StripeCheckoutButtonProps) {
   const { totalPrice, totalItems, formattedTotalPrice, isEmpty } = useCart();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
-  
   const pathname = usePathname();
-  const isDeliveryRoute = pathname?.startsWith('/delivery');
-  const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
-  
+  const isDeliveryRoute = pathname ? !pathname.includes('/table') : true;
+  const { customerCoordinates } = useCustomerCoordinates();
+  const { customerData } = useCustomerData();
+
+  const deliveryCalc = React.useMemo(() => {
+    if (!isDeliveryRoute || !restaurant) return { covered: true, fee: 0, reason: undefined };
+    return calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null);
+  }, [isDeliveryRoute, restaurant, customerCoordinates?.coordinates]);
+
+  const deliveryFee = deliveryCalc.fee / 100;
+  const deliveryCovered = deliveryCalc.covered;
+  const isDeliveryOutsideCoverage = isDeliveryRoute && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+
+  const isMinOrderNotMet = restaurant?.min_order_value && totalPrice < restaurant.min_order_value;
+
   const { initiateCheckout, isLoading, error } = useStripeCheckout({
     restaurantId,
     onError: (err) => {
@@ -30,6 +43,38 @@ export default function StripeCheckoutButton({
       alert(`Erro no pagamento: ${err.message}`);
     },
   });
+
+  const handleCheckoutClick = () => {
+    if (isDeliveryRoute) {
+      if (!customerData.name?.trim()) {
+        alert('Por favor, informe seu Nome antes de continuar com o pagamento.');
+        return;
+      }
+      if (!customerData.address?.trim()) {
+        alert('Por favor, informe seu Endereço antes de continuar com o pagamento.');
+        return;
+      }
+      if (!customerData.number?.trim()) {
+        alert('Por favor, informe o Número do endereço antes de continuar com o pagamento.');
+        return;
+      }
+      if (!customerData.whatsapp?.trim()) {
+        alert('Por favor, informe seu Telefone antes de continuar com o pagamento.');
+        return;
+      }
+    } else {
+      if (!customerData.name?.trim()) {
+        alert('Por favor, informe seu Nome antes de continuar com o pagamento.');
+        return;
+      }
+      if (!customerData.whatsapp?.trim()) {
+        alert('Por favor, informe seu Telefone antes de continuar com o pagamento.');
+        return;
+      }
+    }
+    
+    initiateCheckout();
+  };
 
   // Don't render if cart is empty
   if (isEmpty) {
@@ -41,20 +86,32 @@ export default function StripeCheckoutButton({
     return null;
   }
 
+  const totalPriceWithShipping = totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0);
+
+  const isCustomerDataValid = isDeliveryRoute 
+    ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
+    : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
+
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isDeliveryRoute && deliveryCalc.reason === 'waiting_location');
+
   return (
     <button
-      onClick={initiateCheckout}
-      disabled={isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet}
+      onClick={handleCheckoutClick}
+      disabled={isNativelyDisabled}
       className={`
         w-full flex items-center justify-center gap-2 sm:gap-3 
         px-3 sm:px-6 py-3.5 sm:py-4 
-        bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700
-        text-white font-semibold 
-        rounded-xl shadow-lg hover:shadow-xl
+        font-semibold rounded-xl shadow-lg hover:shadow-xl
         transition-all duration-200 
         transform hover:scale-[1.02] active:scale-[0.98]
         focus:outline-none focus:ring-4 focus:ring-violet-300
         disabled:cursor-not-allowed disabled:transform-none disabled:opacity-50
+        ${isNativelyDisabled 
+          ? 'bg-gray-300 text-gray-500 border border-transparent' 
+          : (!isCustomerDataValid 
+              ? 'bg-gray-300 text-gray-600 border border-transparent'
+              : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white')
+        }
         ${className}
       `}
       aria-label={`Pagar pedido com ${totalItems} ${totalItems === 1 ? 'item' : 'itens'} via cartão`}
@@ -78,10 +135,20 @@ export default function StripeCheckoutButton({
       {/* Button Text */}
       <div className="flex flex-col items-start min-w-0">
         <span className="text-base sm:text-lg font-bold whitespace-nowrap">
-          {isLoading ? 'Processando...' : 'Pagar Agora'}
+          {isLoading 
+            ? 'Processando...' 
+            : isDeliveryOutsideCoverage 
+              ? 'Sem Cobertura' 
+              : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location') 
+                ? 'Informe o Endereço' 
+                : 'Pagar com cartão'}
         </span>
         <span className="text-xs opacity-90 truncate hidden sm:block">
-          {`${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${formattedTotalPrice}`}
+          {isDeliveryOutsideCoverage
+            ? 'Endereço fora da área de entrega'
+            : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location')
+              ? 'Preencha os dados acima'
+              : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isDeliveryRoute && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
         </span>
       </div>
 

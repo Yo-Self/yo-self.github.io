@@ -22,6 +22,8 @@ import { usePathname } from 'next/navigation';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useActiveOrders } from '../hooks/useActiveOrders';
 import OrderStatusModal from './OrderStatusModal';
+import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
+import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
 
@@ -63,6 +65,21 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
   const minOrderValue = restaurant?.min_order_value || 0;
   const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
+
+  const { customerCoordinates } = useCustomerCoordinates();
+
+  const deliveryCalc = React.useMemo(() => {
+    if (!isDeliveryRoute || !restaurant) return { covered: true, fee: 0, reason: undefined };
+    return calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null);
+  }, [isDeliveryRoute, restaurant, customerCoordinates?.coordinates]);
+
+  const deliveryFee = deliveryCalc.fee / 100; // converter centavos para reais
+  const deliveryCovered = deliveryCalc.covered;
+  const isDeliveryOutsideCoverage = isDeliveryRoute && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const deliveryReason = deliveryCalc.reason;
+  const deliveryZoneName = deliveryCalc.zoneName;
+
+  const totalPriceWithShipping = totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0);
 
 
 
@@ -282,14 +299,38 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
               <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800">
 
                 {/* Resumo do pedido */}
-                <div className="mb-4">
-                  <div className="flex justify-between items-center text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <div className="mb-4 space-y-1.5">
+                  {isDeliveryRoute && (
+                    <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
+                      <span>Subtotal:</span>
+                      <span className="font-medium">R$ {formattedTotalPrice}</span>
+                    </div>
+                  )}
+
+                  {isDeliveryRoute && (
+                    <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
+                      <span>Taxa de Entrega:</span>
+                      <span className="font-medium">
+                        {deliveryReason === 'waiting_location' 
+                          ? 'Aguardando endereço...' 
+                          : !deliveryCovered
+                            ? 'Indisponível'
+                            : deliveryFee === 0 
+                              ? 'Grátis' 
+                              : `R$ ${deliveryFee.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                        }
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center text-lg font-semibold text-gray-800 dark:text-gray-200 border-t border-gray-200/50 dark:border-gray-700/50 pt-1.5">
                     <span>Total do Pedido:</span>
-                    <span>R$ {formattedTotalPrice}</span>
+                    <span>R$ {isDeliveryRoute && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}</span>
                   </div>
+
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-2">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {totalItems} {totalItems === 1 ? 'item' : 'itens'} • Taxa de entrega não incluída
+                      {totalItems} {totalItems === 1 ? 'item' : 'itens'} • {isDeliveryRoute ? (deliveryCovered ? 'Taxa de entrega incluída' : 'Entrega indisponível') : 'Pedido para consumo no local'}
                     </p>
                     
                     {!isDeliveryRoute && (restaurant?.table_ordering || tablePayment) && (
@@ -316,6 +357,20 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     )}
                   </div>
                 </div>
+
+                {/* Banner de Endereço sem Cobertura */}
+                {isDeliveryOutsideCoverage && (
+                  <div className="w-full mb-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl flex flex-col gap-1.5 animate-fade-in shadow-sm">
+                    <span className="text-red-650 dark:text-red-400 font-bold flex items-center gap-1.5 text-sm">
+                      ⚠️ Endereço sem Cobertura
+                    </span>
+                    <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
+                      {deliveryReason === 'distance_exceeded' && `Sinto muito! Este restaurante entrega até no máximo ${restaurant?.delivery_max_distance || 10} km de distância. Seu endereço está a ${(deliveryCalc.distanceKm || 0).toFixed(1)} km.`}
+                      {deliveryReason === 'exclusion_zone' && `O restaurante não realiza entregas na região selecionada (${deliveryZoneName || 'Zona de Exclusão'}).`}
+                      {deliveryReason === 'delivery_disabled' && 'O restaurante não está aceitando pedidos para entrega no momento.'}
+                    </p>
+                  </div>
+                )}
 
                 {/* Alerta se restaurantId estiver inválido */}
                 {(!restaurantId || restaurantId === 'default') && (

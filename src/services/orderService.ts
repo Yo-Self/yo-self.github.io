@@ -22,6 +22,13 @@ export const createOrder = async (order: Omit<Order, 'id' | 'created_at' | 'upda
         total_price: order.total_price,
         status: order.status,
         stripe_payment_intent_id: order.stripe_payment_intent_id,
+        order_type: order.order_type || 'dine_in',
+        delivery_fee: order.delivery_fee,
+        delivery_distance: order.delivery_distance,
+        delivery_address: order.delivery_address,
+        delivery_coords_lat: order.delivery_coords_lat,
+        delivery_coords_lng: order.delivery_coords_lng,
+        delivery_address_details: order.delivery_address_details,
       },
     ])
     .select()

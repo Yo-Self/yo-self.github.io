@@ -55,4 +55,9 @@ export type Restaurant = {
   user_id?: string;
   min_order_value?: number;
   stripe_connect_id?: string;
+  delivery_enabled?: boolean;
+  delivery_max_distance?: number;
+  delivery_base_fee?: number;
+  delivery_fee_per_km?: number;
+  delivery_zones?: any[];
 };

@@ -43,6 +43,13 @@ export interface Restaurant {
   
   /** ID da conta conectada do Stripe (se houver) */
   stripe_connect_id?: string;
+
+  /** Configurações de entrega / delivery */
+  delivery_enabled?: boolean;
+  delivery_max_distance?: number;
+  delivery_base_fee?: number;
+  delivery_fee_per_km?: number;
+  delivery_zones?: any[];
 }
 
 export interface MenuItem {

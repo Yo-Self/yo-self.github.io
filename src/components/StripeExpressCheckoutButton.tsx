@@ -180,9 +180,39 @@ const ExpressCheckoutInner = ({
 
   if (isEmpty) return null;
 
+  const isDeliveryRoute = typeof window !== 'undefined' 
+    ? window.location.pathname.startsWith('/restaurant') && !window.location.pathname.includes('/table')
+    : true; // Padrão seguro para SSR
+    
+  const isCustomerDataValid = isDeliveryRoute 
+    ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
+    : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
+
   return (
-    <div className="h-full min-h-[52px] w-full flex flex-col justify-center">
+    <div className={`h-full min-h-[52px] w-full flex flex-col justify-center transition-opacity duration-200 ${!isCustomerDataValid ? 'opacity-60 grayscale' : ''}`}>
       <ExpressCheckoutElement
+        onClick={({ resolve }) => {
+          const isDeliveryRoute = window.location.pathname.startsWith('/restaurant') && !window.location.pathname.includes('/table');
+          
+          const throwError = (msg: string) => {
+            alert(msg);
+            resolve({
+              applePay: { error: { message: msg } },
+              googlePay: { error: { message: msg } }
+            } as any);
+          };
+
+          if (isDeliveryRoute) {
+            if (!customerData.name?.trim()) return throwError('Por favor, informe seu Nome antes de continuar com o pagamento.');
+            if (!customerData.address?.trim()) return throwError('Por favor, informe seu Endereço antes de continuar com o pagamento.');
+            if (!customerData.number?.trim()) return throwError('Por favor, informe o Número do endereço antes de continuar com o pagamento.');
+            if (!customerData.whatsapp?.trim()) return throwError('Por favor, informe seu Telefone antes de continuar com o pagamento.');
+          } else {
+            if (!customerData.name?.trim()) return throwError('Por favor, informe seu Nome antes de continuar com o pagamento.');
+            if (!customerData.whatsapp?.trim()) return throwError('Por favor, informe seu Telefone antes de continuar com o pagamento.');
+          }
+          resolve();
+        }}
         onConfirm={handleConfirm}
         onAvailablePaymentMethodsChange={(event) => {
           const walletAvailable = isWalletPayAvailable(event.paymentMethods) && !isMinOrderNotMet;
@@ -271,14 +301,6 @@ export default function StripeExpressCheckoutButton({
 
   if (isMinOrderNotMet) {
     return null;
-  }
-
-  if (isDev && walletPayAvailable === false) {
-    return (
-      <div className={`text-[10px] text-gray-400 font-mono p-2 border border-dashed rounded-lg ${className}`}>
-        Carteira digital indisponível: {JSON.stringify(debugMethods)}
-      </div>
-    );
   }
 
   if (walletPayAvailable === false) {

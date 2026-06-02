@@ -94,9 +94,9 @@ ${complementsText.join('\n')}}
       onClick={handleOrderViaWhatsApp}
       disabled={isLoading}
       className={`flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl ${className}`}
-      aria-label="Fazer Pedido via WhatsApp"
+      aria-label="WhatsApp por PIX"
     >
-      {isLoading ? "Carregando..." : "Fazer Pedido via WhatsApp"}
+      {isLoading ? "Carregando..." : "WhatsApp por PIX"}
     </button>
   );
 }

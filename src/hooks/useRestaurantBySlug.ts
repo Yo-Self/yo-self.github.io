@@ -498,6 +498,14 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         stripe_connect_id: restaurant.stripe_connect_id || undefined,
         user_id: restaurant.user_id || undefined,
         min_order_value: restaurant.min_order_value !== undefined && restaurant.min_order_value !== null ? Number(restaurant.min_order_value) : 0,
+        delivery_enabled: restaurant.delivery_enabled || false,
+        delivery_max_distance: restaurant.delivery_max_distance !== undefined && restaurant.delivery_max_distance !== null ? Number(restaurant.delivery_max_distance) : 10.0,
+        delivery_base_fee: restaurant.delivery_base_fee !== undefined && restaurant.delivery_base_fee !== null ? Number(restaurant.delivery_base_fee) : 0,
+        delivery_fee_per_km: restaurant.delivery_fee_per_km !== undefined && restaurant.delivery_fee_per_km !== null ? Number(restaurant.delivery_fee_per_km) : 0,
+        delivery_zones: restaurant.delivery_zones || [],
+        latitude: restaurant.latitude !== null ? Number(restaurant.latitude) : undefined,
+        longitude: restaurant.longitude !== null ? Number(restaurant.longitude) : undefined,
+        address: restaurant.address || undefined,
         menu_categories: categories.map(cat => cat.name),
         featured_dishes: dishes
           .filter(dish => dish.is_featured)

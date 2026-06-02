@@ -12,6 +12,15 @@ export interface Order {
   stripe_checkout_session_id?: string;
   created_at: string;
   updated_at: string;
+  
+  // Novos campos de delivery
+  order_type?: 'dine_in' | 'delivery' | 'pickup' | null;
+  delivery_fee?: number | null;
+  delivery_distance?: number | null;
+  delivery_address?: string | null;
+  delivery_coords_lat?: number | null;
+  delivery_coords_lng?: number | null;
+  delivery_address_details?: any;
 }
 
 export interface OrderItem {

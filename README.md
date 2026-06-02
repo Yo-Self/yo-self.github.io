@@ -13,6 +13,14 @@ Uma aplicação moderna, interativa e premium de cardápio digital para restaura
   - Ocultação do cabeçalho da home para manter o foco total do cliente no cardápio de entrega.
   - Formulário completo de dados de entrega (Nome, Endereço, Número, Complemento).
   - Campo de endereço robusto com busca integrada ao **Google Places Autocomplete** (restringido para o Brasil).
+  - **Cálculo Dinâmico de Frete & Cobertura**: Integração do utilitário `deliveryCalculator.ts` que determina a distância exata do cliente ao restaurante via algoritmo de Haversine e calcula a taxa padrão (`Taxa Base + Distância * Valor/Km`).
+  - **Círculos e Polígonos de Exclusão**: Valida o endereço do cliente contra as regras geográficas do restaurante. Se o cliente estiver acima da distância limite ou dentro de uma zona de exclusão desenhada pelo gestor:
+    - Exibe um banner visual premium em vermelho alertando sobre a falta de cobertura.
+    - **Bloqueia e desabilita completamente as opções de checkout** por WhatsApp e Stripe.
+    - Se o cliente estiver dentro de uma zona com taxa especial cadastrada, o sistema aplica a taxa fixa correspondente no subtotal.
+  - **Integração Completa de Checkout**:
+    - **WhatsApp Checkout**: Atualiza o preço final, salva os metadados completos de delivery (`order_type: 'delivery'`, distância, taxa, coordenadas, e detalhes do endereço) no Supabase, e formata a mensagem do WhatsApp para detalhar a taxa e o total.
+    - **Stripe Checkout**: Mapeia o frete como uma linha separada ("Taxa de Entrega") na transação online, atualizando o banco de dados em tempo real ao concluir o pagamento.
 
 ### 💰 Configuração e Bloqueio de Pedido Mínimo
 - **Validação de Subtotal**: Exibição de um banner visual e amigável no carrinho de compras quando o valor mínimo estipulado pelo restaurante não for atingido.
