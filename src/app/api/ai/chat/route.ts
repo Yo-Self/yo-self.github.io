@@ -9,8 +9,10 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 // Modelos disponíveis (em ordem de preferência)
 // Atualizado para usar modelos estáveis e suportados
 const MODELS = [
-  'gemini-1.5-pro',            // Modelo estável e inteligente
-  'gemini-1.5-flash',          // Modelo rápido e econômico (fallback)
+  'gemini-3.5-flash',          // Modelo mais novo, extremamente inteligente e rápido
+  'gemini-2.5-flash',          // Modelo estável de alta performance
+  'gemini-2.5-flash-lite',     // Modelo rápido e econômico
+  'gemini-flash-latest',       // Modelo de fallback estável (Gemini 1.5 Flash)
 ];
 
 // Interface para itens do menu

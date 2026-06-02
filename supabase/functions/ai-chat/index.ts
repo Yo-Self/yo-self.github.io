@@ -10,8 +10,10 @@ const corsHeaders = {
 // Configuração dos modelos disponíveis
 // Lista de modelos para tentar em ordem de preferência
 const MODELS = [
-  'gemini-1.5-pro', // Modelo estável e inteligente
-  'gemini-1.5-flash', // Modelo rápido e econômico
+  'gemini-3.5-flash',          // Modelo mais novo, extremamente inteligente e rápido
+  'gemini-2.5-flash',          // Modelo estável de alta performance
+  'gemini-2.5-flash-lite',     // Modelo rápido e econômico
+  'gemini-flash-latest',       // Modelo de fallback estável (Gemini 1.5 Flash)
 ]
 
 // Função para estimar tokens baseado no texto

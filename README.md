@@ -1,6 +1,6 @@
 # 🍽️ Cardápio Digital - Web Version
 
-Uma aplicação moderna, interativa e premium de cardápio digital para restaurantes, com chatbot inteligente alimentado pela API oficial do **Google Gemini 2.0 Flash**.
+Uma aplicação moderna, interativa e premium de cardápio digital para restaurantes, com chatbot inteligente alimentado pela API oficial do **Google Gemini 2.5 Flash**.
 
 ## ✨ Funcionalidades de Destaque
 
@@ -56,9 +56,10 @@ O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:
 
 ### Modelos Disponíveis
 
-1. **🚀 Gemini 2.0 Flash Exp** (Padrão) - Mais novo e rápido
-2. **💎 Gemini 1.5 Pro** (Fallback 1) - Mais completo e robusto
-3. **⚡ Gemini Pro** (Fallback 2) - Estável e confiável
+1. **🚀 Gemini 2.5 Flash** (Padrão) - Modelo mais recente e inteligente
+2. **⚡ Gemini 2.0 Flash** (Fallback 1) - Intermediário rápido
+3. **💎 Gemini 1.5 Pro** (Fallback 2) - Completo e robusto
+4. **⚡ Gemini 1.5 Flash** (Fallback 3) - Econômico
 
 ## 🛠️ Tecnologias
 
@@ -235,4 +236,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ---
 
-Desenvolvido com ❤️ usando Next.js e Google Gemini 2.0 Flash
+Desenvolvido com ❤️ usando Next.js e Google Gemini 2.5 Flash

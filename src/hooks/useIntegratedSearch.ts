@@ -21,6 +21,15 @@ export interface UseIntegratedSearchReturn {
 function isSimpleSearch(query: string): boolean {
   const normalizedQuery = query.toLowerCase().trim();
   
+  // Lista de saudações comuns para que comecem uma conversa com a IA
+  const greetings = [
+    'oi', 'ola', 'olá', 'bom dia', 'boa tarde', 'boa noite', 'opa', 'eae', 'eaí', 'tudo bem', 'tudo bom'
+  ];
+  
+  if (greetings.includes(normalizedQuery)) {
+    return false;
+  }
+  
   // Palavras que indicam uma pergunta ou solicitação complexa
   const questionWords = [
     'qual', 'quais', 'como', 'quando', 'onde', 'por que', 'porque', 'quanto', 'quanta',
@@ -29,7 +38,8 @@ function isSimpleSearch(query: string): boolean {
     'barato', 'caro', 'econômico', 'premium', 'vegetariano', 'vegano', 'sem glúten',
     'apimentado', 'doce', 'salgado', 'quente', 'frio', 'grande', 'pequeno',
     'tem', 'contém', 'inclui', 'feito', 'preparado', 'cozido', 'assado', 'frito',
-    'grelhado', 'cru', 'fresco', 'congelado', 'orgânico', 'natural', 'artesanal'
+    'grelhado', 'cru', 'fresco', 'congelado', 'orgânico', 'natural', 'artesanal',
+    'quero', 'gostaria', 'preciso', 'ajuda', 'indica'
   ];
   
   // Verificar se contém palavras de pergunta
@@ -43,17 +53,13 @@ function isSimpleSearch(query: string): boolean {
   // Verificar se tem múltiplas palavras (mais provável ser uma pergunta)
   const wordCount = normalizedQuery.split(/\s+/).length;
   
-  // Se tem 3 ou mais palavras, é mais provável ser uma pergunta
+  // Se tem 3 ou mais palavras, é mais provável ser uma frase complexa/pergunta (deve usar IA)
   if (wordCount >= 3) {
-    return !hasQuestionWords && !isDirectQuestion;
+    return false;
   }
   
-  // Se tem 1-2 palavras, é mais provável ser uma busca simples
-  if (wordCount <= 2) {
-    return !hasQuestionWords && !isDirectQuestion;
-  }
-  
-  return false;
+  // Se tem 1-2 palavras, só é busca simples se não tiver palavras de pergunta/saudação e não for pergunta direta
+  return !hasQuestionWords && !isDirectQuestion;
 }
 
 // Função para buscar itens no menu
