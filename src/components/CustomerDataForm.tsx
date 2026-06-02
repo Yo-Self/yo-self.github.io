@@ -33,7 +33,7 @@ export default function CustomerDataForm({
   position,
   addressActive = true
 }: CustomerDataFormProps) {
-  const { customerData, updateName, updateAddress, updateNumber, updateComplement } = useCustomerData();
+  const { customerData, updateName, updateAddress, updateNumber, updateComplement, updateWhatsApp } = useCustomerData();
   const { updateCoordinates } = useCustomerCoordinates();
   const { addresses, isLoading: isReverseGeocodingLoading, error: reverseGeocodingError, getAddressesFromCoordinates, clearAddresses } = useReverseGeocodingRobust();
   const [showNearbyAddresses, setShowNearbyAddresses] = useState(false);
@@ -247,7 +247,7 @@ export default function CustomerDataForm({
             id="customer-whatsapp"
             type="text"
             value={customerData.whatsapp || ''}
-            onChange={(e) => updateWhatsapp(e.target.value)}
+            onChange={(e) => updateWhatsApp(e.target.value)}
             placeholder="(11) 90000-0000"
             className="
               w-full px-3 py-2 

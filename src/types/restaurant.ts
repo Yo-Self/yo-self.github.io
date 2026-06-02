@@ -50,6 +50,11 @@ export interface Restaurant {
   delivery_base_fee?: number;
   delivery_fee_per_km?: number;
   delivery_zones?: any[];
+
+  /** Coordenadas e endereço do restaurante (cálculo de taxa de entrega) */
+  latitude?: number;
+  longitude?: number;
+  address?: string;
 }
 
 export interface MenuItem {
