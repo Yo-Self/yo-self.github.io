@@ -99,8 +99,8 @@ export default function StripeCheckoutButton({
       onClick={handleCheckoutClick}
       disabled={isNativelyDisabled}
       className={`
-        w-full flex items-center justify-center gap-2 sm:gap-3 
-        px-3 sm:px-6 py-3.5 sm:py-4 
+        w-full flex items-center justify-center gap-1.5 sm:gap-3 
+        px-2 sm:px-6 py-3.5 sm:py-4 
         font-semibold rounded-xl shadow-lg hover:shadow-xl
         transition-all duration-200 
         transform hover:scale-[1.02] active:scale-[0.98]
@@ -118,7 +118,7 @@ export default function StripeCheckoutButton({
     >
       {/* Credit Card Icon */}
       <svg 
-        className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" 
+        className="w-4 h-4 sm:w-6 sm:h-6 flex-shrink-0" 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"
@@ -134,7 +134,7 @@ export default function StripeCheckoutButton({
 
       {/* Button Text */}
       <div className="flex flex-col items-start min-w-0">
-        <span className="text-sm sm:text-base font-bold whitespace-normal sm:whitespace-nowrap leading-tight">
+        <span className="text-xs sm:text-base font-bold whitespace-normal sm:whitespace-nowrap leading-tight">
           {isLoading 
             ? 'Processando...' 
             : isDeliveryOutsideCoverage 

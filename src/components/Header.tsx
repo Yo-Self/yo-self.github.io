@@ -452,6 +452,7 @@ function RestaurantDropdown({ restaurants, selectedRestaurantId, onSelect, curre
   );
 }
 
+
 export default function Header({ restaurant, restaurants, selectedRestaurantId, onSelectRestaurant, currentSort, onSortChange }: HeaderProps) {
   const { t } = useTranslation();
   const { activeOrderIds } = useActiveOrders();

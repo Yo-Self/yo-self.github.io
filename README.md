@@ -26,6 +26,11 @@ Uma aplicação moderna, interativa e premium de cardápio digital para restaura
 - **Validação de Subtotal**: Exibição de um banner visual e amigável no carrinho de compras quando o valor mínimo estipulado pelo restaurante não for atingido.
 - **Bloqueio de Checkout**: Ocultação automática dos botões de finalização por WhatsApp e Stripe se o subtotal for menor que o pedido mínimo do estabelecimento para economizar espaço em tela e evitar poluição visual na comanda.
 
+### 🕒 Controle de Abertura & Fechamento
+- **Validação de Status**: O cardápio digital verifica se o estabelecimento está aberto (`open === true` no painel do gestor).
+- **Banner de Alerta**: Se o restaurante estiver fechado, exibe um banner vermelho premium no cabeçalho indicando o status e disponibilizando um menu expansível com os horários de funcionamento de cada dia da semana.
+- **Bloqueio de Pedidos**: Oculta automaticamente todos os botões de adicionar itens à comanda (no DishModal) e os botões de checkout no carrinho de compras (CartModal), prevenindo novos pedidos enquanto estiver fechado.
+
 ### 🍳 Roteamento Inteligente de Pedidos e Controle de Cozinha
 - **Detecção de Preparação**: Os itens do cardápio possuem o campo `needs_preparation` vindo do banco de dados (Supabase) via mapeamento na API.
 - **Roteamento Inteligente de Checkout**: Ao realizar pedidos via WhatsApp ou Stripe, a flag `sent_to_kitchen` é automaticamente calculada para cada item (verdadeiro se o prato precisa de preparo na cozinha, falso caso contrário), permitindo que o gestor receba pedidos mistos organizados na cozinha sem misturar itens prontos e mantendo a experiência do cliente idêntica e sem atritos visuais.

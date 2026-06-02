@@ -331,7 +331,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       }
 
       // Fetch related data
-      const [categoriesResult, dishesResult] = await Promise.all([
+      const [categoriesResult, dishesResult, hoursResult] = await Promise.all([
         supabase
           .from('categories')
           .select('*')
@@ -341,7 +341,12 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
           .from('dishes')
           .select('*')
           .eq('restaurant_id', restaurant.id)
-          .eq('is_available', true)
+          .eq('is_available', true),
+        supabase
+          .from('restaurant_hours')
+          .select('*')
+          .eq('restaurant_id', restaurant.id)
+          .order('day_of_week')
       ]);
 
       if (categoriesResult.error) {
@@ -352,8 +357,13 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         throw dishesResult.error;
       }
 
+      if (hoursResult.error) {
+        throw hoursResult.error;
+      }
+
       const categories = categoriesResult.data || [];
       const dishes = dishesResult.data || [];
+      const hours = hoursResult.data || [];
 
       // Get dish IDs for fetching complements
       const dishIds = dishes.map(d => String(d.id));
@@ -487,6 +497,15 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         id: String(restaurant.id),
         slug: restaurant.slug || '',
         name: restaurant.name || '',
+        open: restaurant.open,
+        operating_hours: hours.map(h => ({
+          id: String(h.id),
+          restaurant_id: String(h.restaurant_id),
+          day_of_week: Number(h.day_of_week),
+          open_time: String(h.open_time),
+          close_time: String(h.close_time),
+          is_closed: Boolean(h.is_closed)
+        })),
         welcome_message: restaurant.description || `Bem-vindo ao ${restaurant.name}!`,
         image: restaurant.image_url || '',
         waiter_call_enabled: restaurant.waiter_call_enabled || false,
@@ -711,6 +730,7 @@ export function useRestaurantList() {
         id: String(restaurant.id),
         slug: restaurant.slug || '',
         name: restaurant.name || '',
+        open: restaurant.open,
         welcome_message: restaurant.description || `Bem-vindo ao ${restaurant.name}!`,
         image: restaurant.image_url || '',
         waiter_call_enabled: restaurant.waiter_call_enabled || false,

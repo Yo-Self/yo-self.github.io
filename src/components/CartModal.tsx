@@ -20,6 +20,7 @@ import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import { usePathname } from 'next/navigation';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
+import { formatOperatingHours } from '../utils/hoursFormatter';
 import { useActiveOrders } from '../hooks/useActiveOrders';
 import OrderStatusModal from './OrderStatusModal';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
@@ -397,7 +398,26 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
 
                 {/* Botões de ação */}
-                {isDeliveryRoute ? (
+                {restaurant?.open === false ? (
+                  <div className="w-full mt-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl text-center shadow-sm">
+                    <p className="text-red-700 dark:text-red-400 font-bold mb-1 flex items-center justify-center gap-1.5">
+                      Estabelecimento Fechado
+                    </p>
+                    <p className="text-xs text-gray-655 dark:text-gray-405 leading-relaxed mb-3">
+                      Não é possível finalizar ou enviar novos pedidos enquanto o restaurante estiver fechado.
+                    </p>
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400 pt-2.5 border-t border-red-200/50 dark:border-red-900/30 text-center max-w-sm mx-auto">
+                      <p className="font-bold text-gray-700 dark:text-gray-300 mb-1">Horário de Funcionamento (Hoje):</p>
+                      <p className="font-medium text-gray-600 dark:text-gray-450">
+                        {(() => {
+                          const formattedHours = formatOperatingHours(restaurant.operating_hours);
+                          const todayDayOfWeek = new Date().getDay();
+                          return formattedHours.length === 7 ? formattedHours[todayDayOfWeek] : formattedHours[0];
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                ) : isDeliveryRoute ? (
                   !isMinOrderNotMet && (
                     <div className="flex flex-col gap-2 sm:gap-3 w-full">
                       <CartWhatsAppButton restaurantId={restaurantId} className="w-full" />
@@ -453,7 +473,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
         </div>
       </div>
 
-      {/* Modal de confirmação para limpar carrinho */}
+            {/* Modal de confirmação para limpar carrinho */}
       {showClearConfirmation && (
         <div className="absolute inset-0 flex items-center justify-center z-[9999999]">
           <div 

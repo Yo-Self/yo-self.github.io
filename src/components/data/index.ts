@@ -63,4 +63,13 @@ export type Restaurant = {
   latitude?: number;
   longitude?: number;
   address?: string;
+  open?: boolean;
+  operating_hours?: {
+    id: string;
+    restaurant_id: string;
+    day_of_week: number;
+    open_time: string;
+    close_time: string;
+    is_closed: boolean;
+  }[];
 };

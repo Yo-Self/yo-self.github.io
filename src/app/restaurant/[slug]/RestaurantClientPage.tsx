@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { SortOption } from "@/components/SortModal";
 import { useModalScroll } from "@/hooks/useModalScroll";
 import PaymentSuccessHandler from "@/components/PaymentSuccessHandler";
+import { formatOperatingHours } from "@/utils/hoursFormatter";
 
 interface RestaurantClientPageProps {
   initialRestaurant: Restaurant;
@@ -421,6 +422,29 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         onSortChange={viewMode === "list" ? handleSortChange : undefined}
         data-tutorial="restaurant-switch"
       />
+      {selectedRestaurant?.open === false && (
+        <div className="bg-cyan-500 text-white shadow-md relative z-30">
+          <div className="max-w-4xl mx-auto px-4 py-1.5 sm:py-2 text-center flex flex-col items-center justify-center gap-0.5 sm:gap-1">
+            <span className="text-xs sm:text-sm font-semibold">
+              Restaurante fechado no momento, fique livre para conhecer nosso cardápio
+            </span>
+            
+            <details className="text-xs sm:text-sm font-normal text-white/90 select-none cursor-pointer mt-0.5 group">
+              <summary className="hover:text-white font-semibold transition-colors list-none flex items-center justify-center gap-1 focus:outline-none [&::-webkit-details-marker]:hidden">
+                <span>Ver horário de funcionamento</span>
+                <span className="inline-block transition-transform duration-200 group-open:rotate-180">▼</span>
+              </summary>
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 bg-black/15 rounded-xl p-3 border border-white/10 text-left font-medium max-w-md mx-auto">
+                {formatOperatingHours(selectedRestaurant.operating_hours).map((h, i) => (
+                  <div key={i} className="flex justify-between border-b border-white/5 pb-1 last:border-b-0 last:pb-0">
+                    {h}
+                  </div>
+                ))}
+              </div>
+            </details>
+          </div>
+        </div>
+      )}
       {/* Anchor do Carousel para scroll controlado */}
       <div ref={carouselRef} />
       {/* Carousel: mostra apenas na home (modo grid) se houver pratos em destaque */}
