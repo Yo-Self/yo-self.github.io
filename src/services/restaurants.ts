@@ -1,4 +1,5 @@
 import type { Restaurant, MenuItem } from '@/components/data';
+import { getOptimizedImageUrl } from '@/utils/imageUrl';
 
 // Cache simples em memória + localStorage (TTL segundos)
 const DEFAULT_TTL_SECONDS = 90;
@@ -40,16 +41,7 @@ function formatPriceBR(price: number | null): string {
   return fixed.replace('.', ',');
 }
 
-export function getOptimizedImageUrl(url: string | null | undefined, width: number = 400): string {
-  if (!url) return '';
-  
-  if (url.includes('.supabase.co/storage/v1/object/public/images/')) {
-    const cleanUrl = url.replace(/^https?:\/\//i, '');
-    return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}&w=${width}&q=80&output=webp`;
-  }
-  
-  return url;
-}
+export { getOptimizedImageUrl } from '@/utils/imageUrl';
 
 export type DbRestaurant = {
   id: number | string;

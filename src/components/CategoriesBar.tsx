@@ -35,28 +35,12 @@ export default function CategoriesBar({ allCategories, activeCategory, setActive
         item.categories && item.categories.includes(category)
       );
       images[category] = categoryItems.length > 0 
-        ? categoryItems.map(item => item.image || fallbackImage)
+        ? categoryItems.slice(0, 3).map(item => item.image || fallbackImage)
         : [fallbackImage];
     });
     images["all"] = [fallbackImage];
     return images;
   }, [allCategories, menuItems, fallbackImage]);
-
-  // Pré-carrega as imagens das categorias para melhorar performance
-  useEffect(() => {
-    const preloadImages = () => {
-      Object.values(categoryImages).flat().forEach(imageUrl => {
-        if (imageUrl && imageUrl !== fallbackImage) {
-          const img = new window.Image();
-          img.src = imageUrl;
-        }
-      });
-    };
-    
-    // Pré-carrega as imagens após um pequeno delay para não bloquear a renderização inicial
-    const timer = setTimeout(preloadImages, 100);
-    return () => clearTimeout(timer);
-  }, [categoryImages, fallbackImage]);
 
   // --- Correção: permitir scroll vertical na página mesmo ao tocar na barra de categorias ---
   // Se o movimento for mais vertical que horizontal, não impedir scroll da página
@@ -251,27 +235,6 @@ const CategoryBarCard = React.memo(React.forwardRef<HTMLButtonElement, {
     // Garante que sempre haja pelo menos o fallbackImage
     const imagesToUse = React.useMemo(() => images.length > 0 ? images : [fallbackImage], [images, fallbackImage]);
     const [current, setCurrent] = React.useState(0);
-    // Usa ref em vez de state para não causar re-renders em cascata ao carregar imagens
-    const loadedImagesRef = React.useRef<Set<string>>(new Set());
-
-    // Pré-carrega as imagens de forma mais robusta
-    React.useEffect(() => {
-      const preloadImages = () => {
-        imagesToUse.forEach((imgSrc) => {
-          if (imgSrc && !loadedImagesRef.current.has(imgSrc)) {
-            const img = new window.Image();
-            img.onload = () => {
-              loadedImagesRef.current.add(imgSrc);
-            };
-            img.onerror = () => {
-              loadedImagesRef.current.add(imgSrc); // Marca como processada mesmo com erro
-            };
-            img.src = imgSrc;
-          }
-        });
-      };
-      preloadImages();
-    }, [imagesToUse]);
 
     // Troca de imagem simples sem transição complexa para evitar flickering
     React.useEffect(() => {

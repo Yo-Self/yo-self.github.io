@@ -29,22 +29,18 @@ export default function ImageWithLoading({
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const { isImageLoaded, isImageError, preloadImage } = useImageCache();
+  const { isImageLoaded, isImageError } = useImageCache();
 
-  // Memoize the checkCache function to prevent infinite re-renders
-  const checkCache = useCallback(async () => {
+  const checkCache = useCallback(() => {
     if (!src) return;
 
-    // Se a imagem já está carregada no cache, não mostrar loading
     if (isImageLoaded(src)) {
       setIsLoading(false);
       setHasError(false);
       setCurrentSrc(src);
-      onLoad?.();
       return;
     }
 
-    // Se a imagem deu erro no cache, usar fallback
     if (isImageError(src)) {
       if (fallbackSrc) {
         setCurrentSrc(fallbackSrc);
@@ -58,47 +54,10 @@ export default function ImageWithLoading({
       return;
     }
 
-    // Se não está no cache, tentar pré-carregar
-    try {
-      setIsLoading(true);
-      setHasError(false);
-      setCurrentSrc(src);
-      
-      const success = await preloadImage(src);
-      if (success) {
-        setIsLoading(false);
-        onLoad?.();
-      } else {
-        // Se falhou, tentar fallback
-        if (fallbackSrc) {
-          setCurrentSrc(fallbackSrc);
-          setHasError(false);
-          setIsLoading(true);
-          const fallbackSuccess = await preloadImage(fallbackSrc);
-          setIsLoading(false);
-          if (!fallbackSuccess) {
-            setHasError(true);
-            onError?.();
-          }
-        } else {
-          setIsLoading(false);
-          setHasError(true);
-          onError?.();
-        }
-      }
-    } catch (error) {
-      console.warn('Erro ao carregar imagem:', error);
-      if (fallbackSrc) {
-        setCurrentSrc(fallbackSrc);
-        setHasError(false);
-        setIsLoading(true);
-      } else {
-        setIsLoading(false);
-        setHasError(true);
-        onError?.();
-      }
-    }
-  }, [src, fallbackSrc, isImageLoaded, isImageError, preloadImage, onLoad, onError]);
+    setIsLoading(true);
+    setHasError(false);
+    setCurrentSrc(src);
+  }, [src, fallbackSrc, isImageLoaded, isImageError, onError]);
 
   // Verificar se a imagem já está no cache
   useEffect(() => {
@@ -131,12 +90,9 @@ export default function ImageWithLoading({
 
   // Memoize the onLoad handler
   const handleImageLoad = useCallback(() => {
-    // Só dispara onLoad se não estiver usando cache
-    if (!isImageLoaded(currentSrc)) {
-      setIsLoading(false);
-      onLoad?.();
-    }
-  }, [currentSrc, isImageLoaded, onLoad]);
+    setIsLoading(false);
+    onLoad?.();
+  }, [onLoad]);
 
   // Memoize the onError handler
   const handleImageError = useCallback(() => {

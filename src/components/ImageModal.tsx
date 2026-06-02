@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { getOptimizedImageUrl } from "@/utils/imageUrl";
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -77,7 +78,7 @@ export default function ImageModal({ isOpen, imageSrc, imageAlt, onClose }: Imag
         {/* Imagem */}
         <div className="p-2">
           <img
-            src={imageSrc}
+            src={getOptimizedImageUrl(imageSrc, 800)}
             alt={imageAlt}
             className="max-w-full max-h-full object-contain w-auto h-auto rounded-2xl"
             draggable={false}

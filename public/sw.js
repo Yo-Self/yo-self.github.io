@@ -23,15 +23,20 @@ function shouldNeverCache(url) {
   return NEVER_CACHE_PATTERNS.some(pattern => pattern.test(url));
 }
 
-// Check if a cached response is stale (older than 1 hour)
-function isStaleResponse(response) {
+// Check if a cached response is stale
+function isStaleResponse(response, requestUrl) {
   const cacheDate = response.headers.get('sw-cache-date');
   if (!cacheDate) return true;
   
   const cacheTime = new Date(cacheDate).getTime();
   const now = Date.now();
-  const oneHour = 60 * 60 * 1000;
+
+  // Supabase Storage: cache 7 days to reduce repeated egress
+  if (requestUrl.includes('.supabase.co/storage/v1/')) {
+    return (now - cacheTime) > 7 * 24 * 60 * 60 * 1000;
+  }
   
+  const oneHour = 60 * 60 * 1000;
   return (now - cacheTime) > oneHour;
 }
 
@@ -124,7 +129,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request)
       .then((response) => {
         // Se temos uma resposta em cache, verificar se não está stale
-        if (response && !isStaleResponse(response)) {
+        if (response && !isStaleResponse(response, requestUrl)) {
           console.log('SW: Serving from cache:', event.request.url);
           return response;
         }

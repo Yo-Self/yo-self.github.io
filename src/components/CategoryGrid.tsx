@@ -37,7 +37,7 @@ export default function CategoryGrid({ categories, menuItems, onSelectCategory, 
         const items = menuItems.filter(item => 
           item.categories && item.categories.includes(category)
         );
-        const images = items.map(item => item.image || fallbackImage);
+        const images = items.slice(0, 3).map(item => item.image || fallbackImage);
         const imagesToUse = images.length > 0 ? images : [fallbackImage];
         return (
           <CategoryCard

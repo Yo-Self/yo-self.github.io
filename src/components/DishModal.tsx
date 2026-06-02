@@ -10,6 +10,7 @@ import { useCart } from '../hooks/useCart';
 import { CartUtils } from '../types/cart';
 import CartIcon from './CartIcon';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
+import { getOptimizedImageUrl } from '@/utils/imageUrl';
 import { usePathname } from 'next/navigation';
 import "./dishModal.css";
 
@@ -258,7 +259,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
       >
         <div className="relative modal-image-container">
           <ImageWithLoading
-            src={dish.image}
+            src={getOptimizedImageUrl(dish.image, 800)}
             alt={dish.name}
             className="w-full h-48 object-cover"
             fallbackSrc={fallbackImage || restaurant?.image || "/window.svg"}

@@ -4,6 +4,7 @@ import React from "react";
 import { useOrganizationBySlug } from "@/hooks/useOrganizationBySlug";
 import Link from 'next/link';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/utils/imageUrl';
 
 // Loading component for better UX
 function OrganizationLoading() {
@@ -105,7 +106,7 @@ export default function OrganizationClient({ slug }: { slug: string }) {
               >
                 <div className="relative h-48">
                   <Image
-                    src={restaurant.image_url}
+                    src={getOptimizedImageUrl(restaurant.image_url, 400)}
                     alt={restaurant.name}
                     fill
                     className="object-cover"

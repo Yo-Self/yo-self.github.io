@@ -3,7 +3,6 @@ import { Restaurant, Dish } from "./data";
 import CardJornal from "./CardJornal";
 import DishModal from "./DishModal";
 import { AnimatePresence, motion } from "framer-motion";
-import { usePreloadDishImages } from "../hooks/useImageCache";
 
 interface JournalViewProps {
   open: boolean;
@@ -548,40 +547,6 @@ export default function JournalView({ open, onClose, restaurant, selectedCategor
   // Índice da categoria atual
   const currentCategoryIdx = React.useMemo(() => pageToCategoryIdx[page] || 0, [pageToCategoryIdx, page]);
   const currentCategory = React.useMemo(() => categoryList[currentCategoryIdx], [categoryList, currentCategoryIdx]);
-
-  // Usar o hook de pré-carregamento de imagens
-  const allDishes = React.useMemo(() => {
-    return restaurant.menu_items;
-  }, [restaurant.menu_items]);
-
-  const { preloadProgress, isImageLoaded } = usePreloadDishImages(allDishes);
-
-  // Pré-carregar imagens das próximas páginas quando a página atual mudar
-  useEffect(() => {
-    if (!open || pages.length === 0) return;
-
-    // Pré-carregar imagens das próximas 2 páginas
-    const nextPages = [];
-    for (let i = page + 1; i < Math.min(page + 3, pages.length); i++) {
-      if (pages[i]) {
-        nextPages.push(...pages[i].map(item => item.dish));
-      }
-    }
-
-    // Pré-carregar imagens das páginas anteriores também
-    for (let i = Math.max(0, page - 2); i < page; i++) {
-      if (pages[i]) {
-        nextPages.push(...pages[i].map(item => item.dish));
-      }
-    }
-
-    // Remover duplicatas
-    const uniqueDishes = nextPages.filter((dish, index, self) => 
-      index === self.findIndex(d => d.name === dish.name)
-    );
-
-    // As imagens serão pré-carregadas automaticamente pelo hook
-  }, [page, pages, open]);
 
   if (!open) return null;
   return (

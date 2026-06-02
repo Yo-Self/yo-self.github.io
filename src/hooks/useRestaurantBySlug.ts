@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Restaurant } from '@/components/data';
 import { supabase } from '@/lib/supabase/client';
+import { getOptimizedImageUrl } from '@/utils/imageUrl';
 
 interface UseRestaurantBySlugResult {
   restaurant: Restaurant | null;
@@ -10,6 +11,10 @@ interface UseRestaurantBySlugResult {
   error: string | null;
   refetch: () => void;
 }
+
+const RESTAURANT_CACHE_TTL_MS = 90_000;
+const slugCache = new Map<string, { restaurant: Restaurant; fetchedAt: number }>();
+const inflightFetches = new Map<string, Promise<Restaurant | null>>();
 
 const MOCK_RESTAURANT: Restaurant = {
   id: '1',
@@ -279,6 +284,21 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
     setIsLoading(true);
     setError(null);
 
+    const cached = slugCache.get(slug);
+    if (cached && Date.now() - cached.fetchedAt < RESTAURANT_CACHE_TTL_MS) {
+      setRestaurant(cached.restaurant);
+      setIsLoading(false);
+      return;
+    }
+
+    const inflight = inflightFetches.get(slug);
+    if (inflight) {
+      const result = await inflight;
+      setRestaurant(result);
+      setIsLoading(false);
+      return;
+    }
+
     // Eager fallback when Supabase client is not configured
     if (!supabase) {
       console.log('🧪 Using mock/fallback restaurant data for slug:', slug);
@@ -291,11 +311,8 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       return;
     }
 
+    const fetchPromise = (async (): Promise<Restaurant | null> => {
     try {
-      if (!supabase) {
-        throw new Error('Supabase client not available');
-      }
-
       // First try to fetch by slug
       let { data: restaurants, error: queryError } = await supabase
         .from('restaurants')
@@ -325,9 +342,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       }
 
       if (!restaurant) {
-        setRestaurant(null);
-        setIsLoading(false);
-        return;
+        return null;
       }
 
       // Fetch related data
@@ -507,7 +522,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
           is_closed: Boolean(h.is_closed)
         })),
         welcome_message: restaurant.description || `Bem-vindo ao ${restaurant.name}!`,
-        image: restaurant.image_url || '',
+        image: getOptimizedImageUrl(restaurant.image_url, 800),
         waiter_call_enabled: restaurant.waiter_call_enabled || false,
         whatsapp_enabled: restaurant.whatsapp_enabled || false,
         whatsapp_phone: restaurant.whatsapp_phone || '',
@@ -560,7 +575,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
                     name: comp.name,
                     description: comp.description || '',
                     price: comp.price ? comp.price.toFixed(2).replace('.', ',') : '0,00',
-                    image: comp.image_url || '',
+                    image: getOptimizedImageUrl(comp.image_url, 200),
                     ingredients: comp.ingredients || '',
                     allergens: comp.allergens || '',
                     portion: comp.portion || ''
@@ -581,7 +596,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
               name: dish.name,
               description: dish.description || '',
               price: dish.price ? dish.price.toFixed(2).replace('.', ',') : '0,00',
-              image: dish.image_url || '',
+              image: getOptimizedImageUrl(dish.image_url, 400),
               tags: dish.tags || [],
               ingredients: dish.ingredients || '',
               allergens: dish.allergens || '',
@@ -625,7 +640,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
                   name: comp.name,
                   description: comp.description || '',
                   price: comp.price ? comp.price.toFixed(2).replace('.', ',') : '0,00',
-                  image: comp.image_url || '',
+                  image: getOptimizedImageUrl(comp.image_url, 200),
                   ingredients: comp.ingredients || '',
                   allergens: comp.allergens || '',
                   portion: comp.portion || ''
@@ -646,7 +661,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
             name: dish.name,
             description: dish.description || '',
             price: dish.price ? dish.price.toFixed(2).replace('.', ',') : '0,00',
-            image: dish.image_url || '',
+            image: getOptimizedImageUrl(dish.image_url, 400),
             tags: dish.tags || [],
             ingredients: dish.ingredients || '',
             allergens: dish.allergens || '',
@@ -659,21 +674,35 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         })
       };
 
-      setRestaurant(transformedRestaurant);
+      slugCache.set(slug, { restaurant: transformedRestaurant, fetchedAt: Date.now() });
+      return transformedRestaurant;
     } catch (err) {
       console.warn('⚠️ Error fetching restaurant, falling back to mock data:', err);
-      setRestaurant({
+      const fallback = {
         ...MOCK_RESTAURANT,
         slug: slug,
         name: slug === 'auri-monteiro' ? 'Auri Monteiro' : (slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '))
-      });
+      };
+      return fallback;
+    }
+    })();
+
+    inflightFetches.set(slug, fetchPromise);
+    try {
+      const result = await fetchPromise;
+      setRestaurant(result);
       setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setRestaurant(null);
     } finally {
+      inflightFetches.delete(slug);
       setIsLoading(false);
     }
   };
 
   const refetch = () => {
+    slugCache.delete(slug);
     fetchRestaurant(slug);
   };
 
@@ -732,7 +761,7 @@ export function useRestaurantList() {
         name: restaurant.name || '',
         open: restaurant.open,
         welcome_message: restaurant.description || `Bem-vindo ao ${restaurant.name}!`,
-        image: restaurant.image_url || '',
+        image: getOptimizedImageUrl(restaurant.image_url, 400),
         waiter_call_enabled: restaurant.waiter_call_enabled || false,
         whatsapp_enabled: restaurant.whatsapp_enabled || false,
         whatsapp_phone: restaurant.whatsapp_phone || '',
