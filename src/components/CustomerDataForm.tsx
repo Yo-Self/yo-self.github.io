@@ -19,6 +19,8 @@ interface CustomerDataFormProps {
   isSafariIOS?: boolean;
   position: any;
   addressActive?: boolean;
+  /** Retirada na rota /delivery — exige nome e telefone, sem endereço */
+  isPickup?: boolean;
 }
 
 export default function CustomerDataForm({ 
@@ -31,7 +33,8 @@ export default function CustomerDataForm({
   isBlocked,
   isSafariIOS,
   position,
-  addressActive = true
+  addressActive = true,
+  isPickup = false,
 }: CustomerDataFormProps) {
   const { customerData, updateName, updateAddress, updateNumber, updateComplement, updateWhatsApp } = useCustomerData();
   const { updateCoordinates } = useCustomerCoordinates();
@@ -82,10 +85,12 @@ export default function CustomerDataForm({
         </div>
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Dados para Entrega
+            {isPickup ? 'Dados para Retirada' : addressActive ? 'Dados para Entrega' : 'Seus Dados'}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Preencha seus dados para finalizar o pedido
+            {isPickup
+              ? 'Informe nome e telefone para retirar seu pedido no local'
+              : 'Preencha seus dados para finalizar o pedido'}
           </p>
         </div>
       </div>
@@ -187,6 +192,34 @@ export default function CustomerDataForm({
           </p>
         </div>
       </div>
+      )}
+
+      {isPickup && (
+        <div>
+          <label
+            htmlFor="customer-whatsapp-pickup"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Telefone *
+          </label>
+          <input
+            id="customer-whatsapp-pickup"
+            type="text"
+            value={customerData.whatsapp || ''}
+            onChange={(e) => updateWhatsApp(e.target.value)}
+            placeholder="(11) 90000-0000"
+            className="
+              w-full px-3 py-2
+              border border-gray-300 dark:border-gray-600
+              rounded-lg
+              bg-white dark:bg-gray-800
+              text-gray-900 dark:text-gray-100
+              placeholder-gray-500 dark:placeholder-gray-400
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+              transition-colors duration-200
+            "
+          />
+        </div>
       )}
 
       {addressActive && (

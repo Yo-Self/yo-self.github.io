@@ -367,8 +367,8 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   />
                 ))}
                 
-                {/* Formulário baseado na configuração do restaurante */}
-                {(addressActive || tablePayment) && (
+                {/* Formulário: delivery, retirada (rota /delivery) ou pagamento na mesa */}
+                {(isDeliveryRoute || tablePayment) && (
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                     {tablePayment ? (
                       <TablePaymentForm />
@@ -383,6 +383,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                         isSafariIOS={isSafariIOS}
                         position={position}
                         addressActive={addressActive}
+                        isPickup={isDeliveryRoute && deliveryMode === 'retirada'}
                       />
                     )}
                   </div>
