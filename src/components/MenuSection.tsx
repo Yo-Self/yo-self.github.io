@@ -7,7 +7,7 @@ import { MenuItem } from "./data";
 import DishModal from "./DishModal";
 import { useTranslation } from "./i18n";
 import AnimatedDishCard from "./AnimatedDishCard";
-import { SortOption } from "./SortModal";
+import { SortOption } from "./OptionsModal";
 
 interface MenuSectionProps {
   searchTerm?: string;

@@ -7,7 +7,7 @@ import MenuSection from "@/components/MenuSection";
 import SearchBar from "@/components/SearchBar";
 import AnimatedCategoryGrid from "@/components/AnimatedCategoryGrid";
 import { useSearchParams } from "next/navigation";
-import { SortOption } from "@/components/SortModal";
+import { SortOption } from "@/components/OptionsModal";
 import { useModalScroll } from "@/hooks/useModalScroll";
 import PaymentSuccessHandler from "@/components/PaymentSuccessHandler";
 import { formatOperatingHours } from "@/utils/hoursFormatter";
@@ -19,12 +19,22 @@ interface RestaurantClientPageProps {
 }
 
 // Steps fixos fora do componente para evitar recalculo
-const getGridSteps = (hasMultiple: boolean) => [
+const getGridSteps = (hasMultiple: boolean, restaurant?: Restaurant) => [
   ...(hasMultiple ? [{
     selector: '[data-tutorial="restaurant-switch"]',
     text: 'Aqui você pode trocar de restaurante.',
     arrow: 'down',
   }] : []),
+  ...(restaurant?.table_ordering ? [{
+    selector: '[data-tutorial="delivery-toggle"]',
+    text: 'Alterne aqui se deseja receber em casa (Delivery) ou se está consumindo no local (Retirada).',
+    arrow: 'down',
+  }] : []),
+  {
+    selector: '[data-tutorial="options-button"]',
+    text: 'Acesse aqui as opções de acessibilidade, ordenação do cardápio e compartilhamento.',
+    arrow: 'down',
+  },
   {
     selector: '[data-tutorial="carousel"]',
     text: 'Aqui estão os pratos em destaque do restaurante.',
@@ -55,8 +65,8 @@ const getJournalSteps = (hasMultiple: boolean, restaurant?: Restaurant) => [
   },
 ];
 
-const FirstTimeTutorialGrid = ({ onDone, hasMultiple }: { onDone: () => void; hasMultiple: boolean }) => {
-  const steps = React.useMemo(() => getGridSteps(hasMultiple), [hasMultiple]);
+const FirstTimeTutorialGrid = ({ onDone, hasMultiple, restaurant }: { onDone: () => void; hasMultiple: boolean; restaurant?: Restaurant }) => {
+  const steps = React.useMemo(() => getGridSteps(hasMultiple, restaurant), [hasMultiple, restaurant]);
   const [step, setStep] = React.useState(0);
   const [show, setShow] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
@@ -152,28 +162,39 @@ const FirstTimeTutorialGrid = ({ onDone, hasMultiple }: { onDone: () => void; ha
   }, [step, show, steps, onDone]);
   if (!isClient || !show || step >= steps.length || (pos.width === 0 && pos.height === 0)) return null;
   // Lógica para posicionar a caixa de texto do tutorial
-  let boxLeft = pos.left;
-  let boxTop = steps[step].arrow === 'down' ? pos.top + pos.height + 16 : pos.top;
   const boxWidth = 260;
   const padding = 12;
-  if (steps[step].arrow === 'left') {
+  const minMargin = 8;
+  
+  let boxTop = steps[step].arrow === 'down' ? pos.top + pos.height + 16 : pos.top;
+  let boxLeft = pos.left;
+  
+  if (steps[step].arrow === 'down') {
+    // Alinha pela direita se o elemento estiver na metade direita da tela para evitar corte
+    const isOnRight = pos.left + pos.width / 2 > window.innerWidth / 2;
+    if (isOnRight) {
+      boxLeft = pos.left + pos.width - boxWidth;
+    } else {
+      boxLeft = pos.left;
+    }
+  } else if (steps[step].arrow === 'left') {
     // Para a dica do restaurant-switch (dropdown), priorize mostrar à esquerda se não couber à direita
     if (steps[step].selector === '[data-tutorial="restaurant-switch"]') {
       // Sempre priorize centralizar abaixo do botão do dropdown
-      boxLeft = Math.max(8, pos.left + pos.width/2 - boxWidth/2);
+      boxLeft = Math.max(minMargin, pos.left + pos.width/2 - boxWidth/2);
       // Se a caixa sair da tela para a direita, tente alinhar à direita do botão
-      if (boxLeft + boxWidth > window.innerWidth - 8) {
+      if (boxLeft + boxWidth > window.innerWidth - minMargin) {
         let tryRight = pos.left + pos.width + padding;
-        if (tryRight + boxWidth <= window.innerWidth - 8) {
+        if (tryRight + boxWidth <= window.innerWidth - minMargin) {
           boxLeft = tryRight;
         } else {
           // Se não couber à direita, alinhar à esquerda do botão
           let tryLeft = pos.left - boxWidth - padding;
-          if (tryLeft >= 8) {
+          if (tryLeft >= minMargin) {
             boxLeft = tryLeft;
           } else {
             // Se não couber, força à esquerda da tela
-            boxLeft = 8;
+            boxLeft = minMargin;
           }
         }
       }
@@ -191,6 +212,8 @@ const FirstTimeTutorialGrid = ({ onDone, hasMultiple }: { onDone: () => void; ha
   if (boxTop + 120 > window.innerHeight) {
     boxTop = Math.max(0, window.innerHeight - 140);
   }
+  // Clampeamento final de segurança para boxLeft para evitar qualquer corte
+  boxLeft = Math.max(minMargin, Math.min(window.innerWidth - boxWidth - minMargin, boxLeft));
   return (
     <div className="fixed inset-0 z-[9999]">
       {/* Overlay escuro que captura todos os cliques */}
@@ -307,28 +330,39 @@ const FirstTimeTutorialJournal = ({ onDone, restaurant, hasMultiple }: { onDone:
   }, [step, show, steps, onDone]);
   if (!isClient || !show || step >= steps.length || (pos.width === 0 && pos.height === 0)) return null;
   // Lógica para posicionar a caixa de texto do tutorial
-  let boxLeft = pos.left;
-  let boxTop = steps[step].arrow === 'down' ? pos.top + pos.height + 16 : (pos.top + pos.height / 2 - 60);
   const boxWidth = 260;
   const padding = 12;
-  if (steps[step].arrow === 'left') {
+  const minMargin = 8;
+  
+  let boxTop = steps[step].arrow === 'down' ? pos.top + pos.height + 16 : (pos.top + pos.height / 2 - 60);
+  let boxLeft = pos.left;
+  
+  if (steps[step].arrow === 'down') {
+    // Alinha pela direita se o elemento estiver na metade direita da tela para evitar corte
+    const isOnRight = pos.left + pos.width / 2 > window.innerWidth / 2;
+    if (isOnRight) {
+      boxLeft = pos.left + pos.width - boxWidth;
+    } else {
+      boxLeft = pos.left;
+    }
+  } else if (steps[step].arrow === 'left') {
     // Para a dica do restaurant-switch (dropdown), priorize mostrar à esquerda se não couber à direita
     if (steps[step].selector === '[data-tutorial="restaurant-switch"]') {
       // Sempre priorize centralizar abaixo do botão do dropdown
-      boxLeft = Math.max(8, pos.left + pos.width/2 - boxWidth/2);
+      boxLeft = Math.max(minMargin, pos.left + pos.width/2 - boxWidth/2);
       // Se a caixa sair da tela para a direita, tente alinhar à direita do botão
-      if (boxLeft + boxWidth > window.innerWidth - 8) {
+      if (boxLeft + boxWidth > window.innerWidth - minMargin) {
         let tryRight = pos.left + pos.width + padding;
-        if (tryRight + boxWidth <= window.innerWidth - 8) {
+        if (tryRight + boxWidth <= window.innerWidth - minMargin) {
           boxLeft = tryRight;
         } else {
           // Se não couber à direita, alinhar à esquerda do botão
           let tryLeft = pos.left - boxWidth - padding;
-          if (tryLeft >= 8) {
+          if (tryLeft >= minMargin) {
             boxLeft = tryLeft;
           } else {
             // Se não couber, força à esquerda da tela
-            boxLeft = 8;
+            boxLeft = minMargin;
           }
         }
       }
@@ -346,6 +380,8 @@ const FirstTimeTutorialJournal = ({ onDone, restaurant, hasMultiple }: { onDone:
   if (boxTop + 120 > window.innerHeight) {
     boxTop = Math.max(0, window.innerHeight - 140);
   }
+  // Clampeamento final de segurança para boxLeft para evitar qualquer corte
+  boxLeft = Math.max(minMargin, Math.min(window.innerWidth - boxWidth - minMargin, boxLeft));
   return (
     <div className="fixed inset-0 z-[9999]">
       {/* Overlay escuro que captura todos os cliques */}
@@ -410,7 +446,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
   return (
     <div className={`bg-white dark:bg-black text-gray-900 dark:text-gray-100 relative webapp-main-container with-categories ${viewMode === 'list' ? 'list-view' : ''}`}>
       <Suspense fallback={null}>
-        {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} hasMultiple={hasMultiple} />}
+        {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} hasMultiple={hasMultiple} restaurant={selectedRestaurant} />}
         {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} restaurant={selectedRestaurant} hasMultiple={hasMultiple} />}
         <PaymentSuccessHandler restaurantId={selectedRestaurant.id} />
         <DeliveryRedirectPopup restaurantSlug={selectedRestaurant.slug} />
