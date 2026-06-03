@@ -172,7 +172,7 @@ async function fetchRestaurantsRows(): Promise<DbRestaurant[]> {
   const cached = getCache<DbRestaurant[]>(cacheKey);
   if (cached) return cached;
 
-  const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&order=created_at.asc`);
+  const rows = await sbFetch<DbRestaurant[]>(`restaurants_public?select=*&order=created_at.asc`);
   
   setCache(cacheKey, rows ?? []);
   return rows ?? [];
@@ -496,7 +496,7 @@ export async function fetchFullRestaurants(): Promise<Restaurant[]> {
 // Mais leve: apenas os IDs e slugs (para generateStaticParams)
 export async function fetchRestaurantIds(): Promise<string[]> {
   try {
-    const rows = await sbFetch<Array<Pick<DbRestaurant, 'id' | 'slug'>>>(`restaurants?select=id,slug&order=created_at.asc`);
+    const rows = await sbFetch<Array<Pick<DbRestaurant, 'id' | 'slug'>>>(`restaurants_public?select=id,slug&order=created_at.asc`);
     return (rows ?? []).map(r => r.slug || String(r.id));
   } catch (error) {
     console.error('Erro ao buscar IDs dos restaurantes:', error);
@@ -511,7 +511,7 @@ export async function fetchRestaurantByIdWithData(id: string): Promise<Restauran
   }
 
   try {
-    const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
+    const rows = await sbFetch<DbRestaurant[]>(`restaurants_public?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
     const r = rows && rows[0];
 
     if (!r) return null;
@@ -543,12 +543,12 @@ export async function fetchRestaurantBySlugWithData(slug: string): Promise<Resta
 
   try {
     // Primeiro tenta buscar por slug
-    let rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
+    let rows = await sbFetch<DbRestaurant[]>(`restaurants_public?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
     let r = rows && rows[0];
 
     // Se não encontrou por slug, tenta por ID (para compatibilidade)
     if (!r) {
-      rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&id=eq.${encodeURIComponent(slug)}&limit=1`);
+      rows = await sbFetch<DbRestaurant[]>(`restaurants_public?select=*&id=eq.${encodeURIComponent(slug)}&limit=1`);
       r = rows && rows[0];
     }
 
@@ -575,7 +575,7 @@ export async function fetchRestaurantBySlugWithData(slug: string): Promise<Resta
 }
 
 export async function fetchRestaurantByCuisineWithData(cuisineType: string): Promise<Restaurant | null> {
-  const rows = await sbFetch<DbRestaurant[]>(`restaurants?select=*&cuisine_type=eq.${encodeURIComponent(cuisineType)}&limit=1`);
+  const rows = await sbFetch<DbRestaurant[]>(`restaurants_public?select=*&cuisine_type=eq.${encodeURIComponent(cuisineType)}&limit=1`);
   const r = rows && rows[0];
   if (!r) return null;
   const [cats, dishes] = await Promise.all([

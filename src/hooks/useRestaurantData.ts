@@ -28,7 +28,7 @@ export function useRestaurantData(restaurantId?: string) {
         }
         
         // Tentar buscar por slug primeiro (mais comum), depois por ID
-        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantId)}&select=*`, {
+        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantId)}&select=*`, {
           headers: {
             'apikey': supabaseKey,
             'Authorization': `Bearer ${supabaseKey}`,
@@ -44,7 +44,7 @@ export function useRestaurantData(restaurantId?: string) {
         
         // Se não encontrar por slug, tentar por ID
         if (!response.ok || !data || data.length === 0) {
-          response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}&select=*`, {
+          response = await fetch(`${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantId)}&select=*`, {
             headers: {
               'apikey': supabaseKey,
               'Authorization': `Bearer ${supabaseKey}`,

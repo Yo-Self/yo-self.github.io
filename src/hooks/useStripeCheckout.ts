@@ -6,11 +6,11 @@ import { useCustomerData } from './useCustomerData';
 import { useRestaurantBySlug } from './useRestaurantBySlug';
 import { useCustomerCoordinates } from './useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
-import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
-import { createCheckoutSession, CheckoutItem } from '../services/stripeService';
+import { createCheckoutSession } from '../services/stripeService';
 import { Order, OrderItem } from '../types/order';
 import Analytics from '../lib/analytics';
+import { useActiveOrders } from './useActiveOrders';
 
 interface UseStripeCheckoutOptions {
   restaurantId: string;
@@ -40,6 +40,7 @@ export function useStripeCheckout({
   const { customerData } = useCustomerData();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const { customerCoordinates } = useCustomerCoordinates();
+  const { addActiveOrderId } = useActiveOrders();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,43 +128,18 @@ export function useStripeCheckout({
 
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
 
-      // 2. Build checkout items (including complements in the price)
-      const checkoutItems: CheckoutItem[] = items.map(item => {
-        const unitPriceCents = Math.round(CartUtils.calculateUnitPrice(item.dish, item.selectedComplements) * 100);
-        
-        // Build complement description
-        const complementDesc = Array.from(item.selectedComplements.entries())
-          .flatMap(([, selections]) => Array.from(selections))
-          .join(', ');
+      const currentUrl = window.location.href.split('?')[0];
+      const tokenParam = newOrder.customer_access_token
+        ? `&order_token=${newOrder.customer_access_token}`
+        : '';
+      const successUrl = `${currentUrl}?payment_success=true&order_id=${newOrder.id}${tokenParam}`;
+      const cancelUrl = `${currentUrl}?payment_cancelled=true&order_id=${newOrder.id}${tokenParam}`;
 
-        return {
-          name: item.dish.name,
-          description: complementDesc || item.dish.description?.substring(0, 100) || undefined,
-          quantity: item.quantity,
-          price_cents: unitPriceCents,
-        };
-      });
+      addActiveOrderId(newOrder.id, newOrder.customer_access_token);
 
-      // Add delivery fee as a line item if applicable
-      if (isActuallyDelivery && deliveryCalc.covered && deliveryCalc.fee > 0) {
-        checkoutItems.push({
-          name: 'Taxa de Entrega',
-          description: 'Frete para entrega no endereço informado',
-          quantity: 1,
-          price_cents: deliveryCalc.fee,
-        });
-      }
-
-      // 3. Build success/cancel URLs
-      const currentUrl = window.location.href.split('?')[0]; // Clean URL without query params
-      const successUrl = `${currentUrl}?payment_success=true&order_id=${newOrder.id}`;
-      const cancelUrl = `${currentUrl}?payment_cancelled=true&order_id=${newOrder.id}`;
-
-      // 4. Create Stripe Checkout Session via Edge Function
       const session = await createCheckoutSession({
         orderId: newOrder.id,
         restaurantId: restaurant.id,
-        items: checkoutItems,
         customerName: customerData.name,
         customerPhone: customerData.whatsapp,
         successUrl,
@@ -191,7 +167,7 @@ export function useStripeCheckout({
     } finally {
       setIsLoading(false);
     }
-  }, [isEmpty, isLoading, isLoadingRestaurant, restaurant, customerData, items, totalPrice, customerCoordinates, onError, deliveryMode]);
+  }, [isEmpty, isLoading, isLoadingRestaurant, restaurant, customerData, items, totalPrice, customerCoordinates, onError, deliveryMode, addActiveOrderId]);
 
   return { initiateCheckout, isLoading, error };
 }

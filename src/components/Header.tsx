@@ -231,6 +231,7 @@ interface HeaderProps {
 function TrackOrderButton({ orderId }: { orderId: string }) {
   const [showModal, setShowModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const { getOrderAccessToken } = useActiveOrders();
 
   useEffect(() => {
     const handleOpenTracking = () => setShowModal(true);
@@ -292,7 +293,8 @@ function TrackOrderButton({ orderId }: { orderId: string }) {
 
       {showModal && (
         <OrderStatusModal 
-          orderId={orderId} 
+          orderId={orderId}
+          accessToken={getOrderAccessToken(orderId)}
           onClose={() => setShowModal(false)} 
         />
       )}

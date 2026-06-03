@@ -8,6 +8,7 @@ export interface Order {
   customer_info?: { name?: string; phone?: string; [key: string]: any };
   total_price: number;
   status: OrderStatus;
+  customer_access_token?: string;
   stripe_payment_intent_id?: string;
   stripe_checkout_session_id?: string;
   created_at: string;

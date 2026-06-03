@@ -91,7 +91,7 @@ export default function SendOrderButton({
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
 
       // Save order id for tracking
-      addActiveOrderId(newOrder.id);
+      addActiveOrderId(newOrder.id, newOrder.customer_access_token);
 
       // Track analytics
       const currentRestaurantId = getCurrentRestaurantId();

@@ -1,20 +1,23 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
 import { useCart } from '../hooks/useCart';
 import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { CartUtils } from '../types/cart';
 import Analytics from '../lib/analytics';
 import { useActiveOrders } from '../hooks/useActiveOrders';
+import { waitForCustomerOrderPayment } from '../services/orderTrackingService';
 
 interface PaymentSuccessHandlerProps {
   restaurantId?: string;
 }
 
+type VerificationState = 'idle' | 'verifying' | 'confirmed' | 'processing' | 'failed';
+
 /**
- * Componente que detecta o retorno do Stripe Checkout via query params
- * e exibe um modal de sucesso com opção de enviar pedido via WhatsApp.
+ * Detects Stripe return via query params and verifies payment server-side
+ * before showing the success modal.
  */
 export default function PaymentSuccessHandler({ restaurantId = "default" }: PaymentSuccessHandlerProps) {
   const searchParams = useSearchParams();
@@ -26,40 +29,91 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
 
   const [showModal, setShowModal] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [verificationState, setVerificationState] = useState<VerificationState>('idle');
   const [isClosing, setIsClosing] = useState(false);
   const [whatsAppSent, setWhatsAppSent] = useState(false);
+  const handledRef = useRef(false);
 
-  // Detect payment_success query param
   useEffect(() => {
+    if (handledRef.current) return;
+
     const paymentSuccess = searchParams.get('payment_success');
     const orderIdParam = searchParams.get('order_id');
+    const orderTokenParam = searchParams.get('order_token');
     const paymentCancelled = searchParams.get('payment_cancelled');
 
-    if (paymentSuccess === 'true' && orderIdParam) {
-      setOrderId(orderIdParam);
-      setShowModal(true);
-
-      // Track successful payment
-      Analytics.trackCartCheckout(items, 0, restaurantId, 'stripe_completed');
-
-      // Save order id for tracking
-      addActiveOrderId(orderIdParam);
-
-      // Clean URL without reloading
+    const cleanUrl = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete('payment_success');
-      url.searchParams.delete('order_id');
-      url.searchParams.delete('session_id');
-      window.history.replaceState({}, '', url.toString());
-    }
-
-    if (paymentCancelled === 'true') {
-      // Clean URL
-      const url = new URL(window.location.href);
       url.searchParams.delete('payment_cancelled');
       url.searchParams.delete('order_id');
+      url.searchParams.delete('order_token');
+      url.searchParams.delete('session_id');
       window.history.replaceState({}, '', url.toString());
+    };
+
+    if (paymentCancelled === 'true') {
+      handledRef.current = true;
+      cleanUrl();
+      return;
     }
+
+    if (paymentSuccess !== 'true' || !orderIdParam) {
+      return;
+    }
+
+    handledRef.current = true;
+    cleanUrl();
+
+    setOrderId(orderIdParam);
+    setShowModal(true);
+    addActiveOrderId(orderIdParam, orderTokenParam || undefined);
+
+    if (!orderTokenParam) {
+      setVerificationState('processing');
+      return;
+    }
+
+    let cancelled = false;
+    setVerificationState('verifying');
+
+    (async () => {
+      try {
+        const result = await waitForCustomerOrderPayment(orderIdParam, orderTokenParam, {
+          maxAttempts: 15,
+          intervalMs: 2000,
+        });
+
+        if (cancelled) return;
+
+        if (!result) {
+          setVerificationState('failed');
+          return;
+        }
+
+        if (result.status === 'cancelled') {
+          setVerificationState('failed');
+          return;
+        }
+
+        if (result.is_paid) {
+          setVerificationState('confirmed');
+          Analytics.trackCartCheckout(items, 0, restaurantId, 'stripe_completed');
+          return;
+        }
+
+        setVerificationState('processing');
+      } catch (err) {
+        console.error('Payment verification failed:', err);
+        if (!cancelled) {
+          setVerificationState('processing');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams, items, restaurantId, addActiveOrderId]);
 
   const handleClose = useCallback(() => {
@@ -67,17 +121,17 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
     setTimeout(() => {
       setShowModal(false);
       setIsClosing(false);
-      // Clear cart after closing success modal
-      clearCart();
+      if (verificationState === 'confirmed') {
+        clearCart();
+      }
     }, 300);
-  }, [clearCart]);
+  }, [clearCart, verificationState]);
 
   const handleTrackOrder = useCallback(() => {
     handleClose();
-    // Emitir evento para o Header abrir o modal de acompanhamento
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('open-order-tracking'));
-    }, 400); // Dar tempo do modal atual fechar
+    }, 400);
   }, [handleClose]);
 
   const handleSendWhatsApp = useCallback(() => {
@@ -128,6 +182,10 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
 
   if (!showModal) return null;
 
+  const isConfirmed = verificationState === 'confirmed';
+  const isVerifying = verificationState === 'verifying';
+  const isFailed = verificationState === 'failed';
+
   return (
     <div
       className={`
@@ -149,59 +207,78 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
         `}
         onClick={e => e.stopPropagation()}
       >
-        {/* Success Header */}
-        <div className="p-8 text-center bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-          {/* Animated Checkmark */}
-          <div className="w-20 h-20 mx-auto mb-4 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-            <svg
-              className="w-10 h-10 text-green-600 dark:text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              style={{ animation: 'checkmark 0.5s ease-in-out' }}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+        <div className={`p-8 text-center ${
+          isFailed
+            ? 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20'
+            : isConfirmed
+              ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20'
+              : 'bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20'
+        }`}>
+          <div className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
+            isFailed
+              ? 'bg-red-100 dark:bg-red-900/40'
+              : isConfirmed
+                ? 'bg-green-100 dark:bg-green-900/40'
+                : 'bg-indigo-100 dark:bg-indigo-900/40'
+          }`}>
+            {isVerifying ? (
+              <svg className="animate-spin h-10 w-10 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            ) : isFailed ? (
+              <svg className="w-10 h-10 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
           </div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-            Pagamento Confirmado!
+            {isVerifying && 'Confirmando pagamento...'}
+            {isFailed && 'Pagamento não confirmado'}
+            {isConfirmed && 'Pagamento Confirmado!'}
+            {!isVerifying && !isFailed && !isConfirmed && 'Processando pagamento'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Seu pedido foi pago com sucesso
+            {isVerifying && 'Aguarde enquanto verificamos com o Stripe.'}
+            {isFailed && 'Não foi possível confirmar o pagamento deste pedido.'}
+            {isConfirmed && 'Seu pedido foi pago com sucesso.'}
+            {!isVerifying && !isFailed && !isConfirmed && 'Seu pagamento está sendo processado. Você pode acompanhar o pedido em instantes.'}
           </p>
         </div>
 
-        {/* Order Summary */}
-        <div className="p-6 space-y-4">
-          {orderId && (
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-500 dark:text-gray-400">Pedido</span>
-              <span className="font-mono text-gray-700 dark:text-gray-300">
-                #{orderId.substring(0, 8)}
-              </span>
-            </div>
-          )}
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Itens</span>
-            <span className="text-gray-700 dark:text-gray-300">
-              {totalItems} {totalItems === 1 ? 'item' : 'itens'}
-            </span>
+        {(isConfirmed || verificationState === 'processing') && (
+          <div className="p-6 space-y-4">
+            {orderId && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Pedido</span>
+                <span className="font-mono text-gray-700 dark:text-gray-300">
+                  #{orderId.substring(0, 8)}
+                </span>
+              </div>
+            )}
+            {isConfirmed && (
+              <>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">Itens</span>
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {totalItems} {totalItems === 1 ? 'item' : 'itens'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-3">
+                  <span className="text-gray-800 dark:text-gray-200">Total Pago</span>
+                  <span className="text-green-600 dark:text-green-400">R$ {formattedTotalPrice}</span>
+                </div>
+              </>
+            )}
           </div>
-          <div className="flex justify-between items-center text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-3">
-            <span className="text-gray-800 dark:text-gray-200">Total Pago</span>
-            <span className="text-green-600 dark:text-green-400">R$ {formattedTotalPrice}</span>
-          </div>
-        </div>
+        )}
 
-        {/* Action Buttons */}
         <div className="p-6 pt-0 space-y-3">
-          {/* WhatsApp Button - send order to restaurant (Only in Delivery) */}
-          {isDeliveryRoute && config.enabled && config.phoneNumber && !whatsAppSent && (
+          {isConfirmed && isDeliveryRoute && config.enabled && config.phoneNumber && !whatsAppSent && (
             <button
               onClick={handleSendWhatsApp}
               className="
@@ -221,8 +298,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
             </button>
           )}
 
-          {/* WhatsApp sent confirmation */}
-          {isDeliveryRoute && whatsAppSent && (
+          {isConfirmed && isDeliveryRoute && whatsAppSent && (
             <div className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-700 dark:text-green-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -231,8 +307,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
             </div>
           )}
 
-          {/* Track Order Button (Only in Restaurant mode OR if WhatsApp was already sent) */}
-          {(!isDeliveryRoute || whatsAppSent) ? (
+          {(isConfirmed && (!isDeliveryRoute || whatsAppSent)) || verificationState === 'processing' ? (
             <button
               onClick={handleTrackOrder}
               className="
@@ -252,7 +327,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
               </svg>
               Acompanhar Pedido
             </button>
-          ) : (
+          ) : isConfirmed ? (
             <button
               onClick={handleClose}
               className="
@@ -267,18 +342,24 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
             >
               Fechar e Enviar Depois
             </button>
+          ) : (
+            <button
+              onClick={handleClose}
+              className="
+                w-full px-6 py-3
+                text-gray-700 dark:text-gray-300
+                border border-gray-300 dark:border-gray-600
+                rounded-xl
+                hover:bg-gray-50 dark:hover:bg-gray-800
+                transition-colors
+                font-medium
+              "
+            >
+              Fechar
+            </button>
           )}
         </div>
       </div>
-
-      {/* CSS Animation for checkmark */}
-      <style jsx>{`
-        @keyframes checkmark {
-          0% { transform: scale(0) rotate(-45deg); opacity: 0; }
-          50% { transform: scale(1.2) rotate(0deg); opacity: 1; }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

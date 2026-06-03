@@ -14,9 +14,9 @@ import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { createOrder } from '../services/orderService';
 import { createExpressPaymentIntent } from '../services/stripeService';
 import { Order, OrderItem } from '../types/order';
-import { CartUtils } from '../types/cart';
 import Analytics from '../lib/analytics';
 import { usePathname } from 'next/navigation';
+import { useActiveOrders } from '../hooks/useActiveOrders';
 
 interface StripeExpressCheckoutButtonProps {
   restaurantId?: string;
@@ -77,6 +77,7 @@ const ExpressCheckoutInner = ({
   const { items, totalPrice, isEmpty } = useCart();
   const { customerData } = useCustomerData();
   const { restaurant } = useRestaurantBySlug(restaurantId);
+  const { addActiveOrderId } = useActiveOrders();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
@@ -138,25 +139,11 @@ const ExpressCheckoutInner = ({
       }));
 
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
-
-      const checkoutItems = items.map(item => {
-        const unitPriceCents = Math.round(CartUtils.calculateUnitPrice(item.dish, item.selectedComplements) * 100);
-        const complementDesc = Array.from(item.selectedComplements.entries())
-          .flatMap(([, selections]) => Array.from(selections))
-          .join(', ');
-
-        return {
-          name: item.dish.name,
-          description: complementDesc || item.dish.description?.substring(0, 100) || undefined,
-          quantity: item.quantity,
-          price_cents: unitPriceCents,
-        };
-      });
+      addActiveOrderId(newOrder.id, newOrder.customer_access_token);
 
       const piResponse = await createExpressPaymentIntent({
         orderId: newOrder.id,
         restaurantId: restaurant.id,
-        items: checkoutItems,
         customerName: customerData.name,
         customerPhone: customerData.whatsapp,
       });
@@ -164,7 +151,10 @@ const ExpressCheckoutInner = ({
       Analytics.trackCartCheckout(items, totalPrice, restaurant.id, 'stripe_express');
 
       const currentUrl = window.location.href.split('?')[0];
-      const returnUrl = `${currentUrl}?payment_success=true&order_id=${newOrder.id}`;
+      const tokenParam = newOrder.customer_access_token
+        ? `&order_token=${newOrder.customer_access_token}`
+        : '';
+      const returnUrl = `${currentUrl}?payment_success=true&order_id=${newOrder.id}${tokenParam}`;
 
       const { error } = await stripe.confirmPayment({
         elements,
@@ -185,7 +175,7 @@ const ExpressCheckoutInner = ({
       setErrorMessage(message);
       event.paymentFailed({ message });
     }
-  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage, isDeliveryRoute, isActuallyDelivery, isActuallyRetirada]);
+  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage, isDeliveryRoute, isActuallyDelivery, isActuallyRetirada, addActiveOrderId]);
 
   if (isEmpty) return null;
     

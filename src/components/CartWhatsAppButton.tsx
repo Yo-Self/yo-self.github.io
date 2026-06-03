@@ -381,7 +381,7 @@ export default function CartWhatsAppButton({
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
 
       // Save order id for tracking
-      addActiveOrderId(newOrder.id);
+      addActiveOrderId(newOrder.id, newOrder.customer_access_token);
 
       const message = generateCartWhatsAppMessage(newOrder);
 

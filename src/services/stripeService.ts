@@ -8,17 +8,9 @@
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-export interface CheckoutItem {
-  name: string;
-  description?: string;
-  quantity: number;
-  price_cents: number; // Price in centavos (BRL)
-}
-
 export interface CreateCheckoutSessionParams {
   orderId: string;
   restaurantId: string;
-  items: CheckoutItem[];
   customerName?: string;
   customerPhone?: string;
   successUrl: string;
@@ -30,10 +22,6 @@ export interface CheckoutSessionResponse {
   session_id: string;
 }
 
-/**
- * Creates a Stripe Checkout Session via the Supabase Edge Function.
- * Returns the checkout URL to redirect the user to.
- */
 export async function createCheckoutSession(
   params: CreateCheckoutSessionParams
 ): Promise<CheckoutSessionResponse> {
@@ -50,7 +38,6 @@ export async function createCheckoutSession(
     body: JSON.stringify({
       order_id: params.orderId,
       restaurant_id: params.restaurantId,
-      items: params.items,
       customer_name: params.customerName,
       customer_phone: params.customerPhone,
       success_url: params.successUrl,
@@ -77,11 +64,17 @@ export async function createCheckoutSession(
 
 export interface ExpressPaymentIntentResponse {
   payment_intent_client_secret: string;
-  publishable_key: string;
+}
+
+export interface CreateExpressPaymentIntentParams {
+  orderId: string;
+  restaurantId: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 export async function createExpressPaymentIntent(
-  params: Omit<CreateCheckoutSessionParams, 'successUrl' | 'cancelUrl'>
+  params: CreateExpressPaymentIntentParams
 ): Promise<ExpressPaymentIntentResponse> {
   if (!supabaseUrl) {
     throw new Error('Supabase URL não configurada.');
@@ -96,7 +89,6 @@ export async function createExpressPaymentIntent(
     body: JSON.stringify({
       order_id: params.orderId,
       restaurant_id: params.restaurantId,
-      items: params.items,
       customer_name: params.customerName,
       customer_phone: params.customerPhone,
       is_express_checkout: true,

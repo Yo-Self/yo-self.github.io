@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useActiveOrders } from '@/hooks/useActiveOrders';
 import {
   getStatusEmojiWithType,
@@ -10,81 +9,62 @@ import {
   getProgressValue
 } from '@/utils/orderStatusMapper';
 import { useModalScroll } from '@/hooks/useModalScroll';
+import { cancelCustomerOrder, fetchCustomerOrderStatus } from '@/services/orderTrackingService';
 
 interface OrderStatusModalProps {
   orderId: string;
+  accessToken?: string | null;
   onClose: () => void;
 }
 
-export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalProps) {
+const POLL_INTERVAL_MS = 5000;
+
+export default function OrderStatusModal({ orderId, accessToken, onClose }: OrderStatusModalProps) {
   const [status, setStatus] = useState<string>("pending");
   const [restaurantName, setRestaurantName] = useState<string>("Carregando...");
   const [deliveryType, setDeliveryType] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [accessError, setAccessError] = useState<string | null>(null);
   
-  const { removeActiveOrderId } = useActiveOrders();
+  const { removeActiveOrderId, getOrderAccessToken } = useActiveOrders();
+  const resolvedToken = accessToken ?? getOrderAccessToken(orderId);
 
   useModalScroll(true);
 
-  const fetchOrderDetails = async () => {
-    if (!supabase) return;
+  const fetchOrderDetails = useCallback(async () => {
+    if (!resolvedToken) {
+      setAccessError('Não foi possível verificar este pedido. Token de acesso ausente.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          status, 
-          customer_info, 
-          restaurants ( name )
-        `)
-        .eq('id', orderId)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setStatus(data.status);
-        if (data.restaurants && typeof data.restaurants === 'object' && 'name' in data.restaurants) {
-           setRestaurantName(data.restaurants.name as string);
-        } else if (Array.isArray(data.restaurants) && data.restaurants.length > 0) {
-           setRestaurantName(data.restaurants[0].name as string);
-        }
-
-        const info = data.customer_info as any;
-        if (info && info.delivery_type) {
-          setDeliveryType(info.delivery_type);
-        }
+      const data = await fetchCustomerOrderStatus(orderId, resolvedToken);
+      if (!data) {
+        setAccessError('Pedido não encontrado ou token inválido.');
+        return;
       }
+
+      setAccessError(null);
+      setStatus(data.status);
+      setRestaurantName(data.restaurant_name);
+      setDeliveryType(data.delivery_type);
     } catch (err) {
       console.error("Error fetching order:", err);
+      setAccessError('Erro ao buscar status do pedido.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId, resolvedToken]);
 
   useEffect(() => {
-    if (!supabase) return;
-
     fetchOrderDetails();
 
-    const channel = supabase
-      .channel(`public:orders:id=eq.${orderId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` },
-        (payload) => {
-          if (payload.new && payload.new.status) {
-            setStatus(payload.new.status);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (supabase) supabase.removeChannel(channel);
-    };
-  }, [orderId]);
+    const interval = setInterval(fetchOrderDetails, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [fetchOrderDetails]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -94,15 +74,13 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
   };
 
   const handleCancel = async () => {
-    if (isCancelling || !supabase) return;
+    if (isCancelling || !resolvedToken) return;
     setIsCancelling(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', orderId);
-        
-      if (error) throw error;
+      const cancelled = await cancelCustomerOrder(orderId, resolvedToken);
+      if (!cancelled) {
+        throw new Error('Cancel not allowed');
+      }
       
       removeActiveOrderId(orderId);
       handleClose();
@@ -113,7 +91,6 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
     }
   };
 
-  // Se finalizou, permitimos o usuário ver, mas se ele fechar a tela, removemos dos ativos
   const handleCloseFinal = () => {
     if (status === 'completed' || status === 'finished' || status === 'cancelled') {
       removeActiveOrderId(orderId);
@@ -148,7 +125,6 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
         `}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">
             Acompanhar Pedido
@@ -171,9 +147,18 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
             </svg>
             <p className="text-gray-500">Buscando status do seu pedido...</p>
           </div>
+        ) : accessError ? (
+          <div className="p-8 text-center space-y-4">
+            <p className="text-red-600 dark:text-red-400">{accessError}</p>
+            <button
+              onClick={handleCloseFinal}
+              className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            >
+              Fechar
+            </button>
+          </div>
         ) : (
           <div className="p-6 space-y-6">
-            {/* Restaurant Name */}
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
                 <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
@@ -185,7 +170,6 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
               </span>
             </div>
 
-            {/* Pulsing Emoji */}
             <div className="flex justify-center">
               <div className="relative w-32 h-32 flex items-center justify-center">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-200 to-indigo-200 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-full animate-pulse-slow"></div>
@@ -195,7 +179,6 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
               </div>
             </div>
 
-            {/* Status Text */}
             <div className="text-center space-y-2">
               <h3 className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
                 {getStatusTitle(status, deliveryType)}
@@ -205,7 +188,6 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
               </p>
             </div>
 
-            {/* Progress Bar */}
             <div className="space-y-2 pt-4">
               <div className="flex justify-between text-xs font-bold text-gray-500">
                 <span>Progresso</span>
@@ -221,7 +203,6 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
               </div>
             </div>
 
-            {/* Order ID */}
             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl flex justify-between items-center mt-6 border border-gray-100 dark:border-gray-800">
               <div className="space-y-1">
                 <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">ID do Pedido</span>
@@ -237,7 +218,6 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
               )}
             </div>
 
-            {/* Cancel Button */}
             {status === 'pending_payment' && (
               <button
                 onClick={handleCancel}
@@ -261,7 +241,7 @@ export default function OrderStatusModal({ orderId, onClose }: OrderStatusModalP
             )}
 
             <p className="text-[10px] text-center text-gray-400 mt-4">
-              Este status é sincronizado em tempo real.
+              Status atualizado automaticamente a cada {POLL_INTERVAL_MS / 1000}s.
             </p>
           </div>
         )}

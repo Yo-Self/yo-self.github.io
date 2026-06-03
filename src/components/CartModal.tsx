@@ -48,7 +48,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     incrementQuantity,
     decrementQuantity
   } = useCart();
-  const { activeOrderIds } = useActiveOrders();
+  const { activeOrderIds, getOrderAccessToken } = useActiveOrders();
   const { getCurrentPosition, permissionStatus, isLoading: isGeolocationLoading, error: geolocationError, isSupported, isBlocked, isSafariIOS, checkPermissionStatus, position } = useGeolocationSafariIOSFinal();
 
   // Usar o restaurantId passado como prop ou detectar automaticamente
@@ -551,7 +551,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                           />
                         </div>
                       )}
-                      {restaurant?.table_ordering && (
+                      {restaurant?.table_ordering && !onlinePayment && (
                         <div className="flex-1">
                           <SendOrderButton 
                             restaurantId={restaurantId} 
@@ -603,7 +603,8 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
       {selectedOrderId && (
         <OrderStatusModal 
-          orderId={selectedOrderId} 
+          orderId={selectedOrderId}
+          accessToken={getOrderAccessToken(selectedOrderId)}
           onClose={() => setSelectedOrderId(null)} 
         />
       )}

@@ -315,7 +315,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
     try {
       // First try to fetch by slug
       let { data: restaurants, error: queryError } = await supabase
-        .from('restaurants')
+        .from('restaurants_public')
         .select('*')
         .eq('slug', slug)
         .limit(1);
@@ -329,7 +329,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       // If not found by slug, try by ID (for compatibility)
       if (!restaurant) {
         const { data: restaurantsById, error: idError } = await supabase
-          .from('restaurants')
+          .from('restaurants_public')
           .select('*')
           .eq('id', slug)
           .limit(1);
@@ -741,7 +741,7 @@ export function useRestaurantList() {
       }
 
       const { data: restaurantData, error: queryError } = await supabase
-        .from('restaurants')
+        .from('restaurants_public')
         .select('*')
         .order('name');
 
