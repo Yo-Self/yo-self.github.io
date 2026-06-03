@@ -22,7 +22,7 @@ type VerificationState = 'idle' | 'verifying' | 'confirmed' | 'processing' | 'fa
 export default function PaymentSuccessHandler({ restaurantId = "default" }: PaymentSuccessHandlerProps) {
   const searchParams = useSearchParams();
   const { items, formattedTotalPrice, totalItems, clearCart } = useCart();
-  const { addActiveOrderId } = useActiveOrders();
+  const { addActiveOrderId, getOrderAccessToken } = useActiveOrders();
   const { config } = useWhatsAppConfig(restaurantId);
   const pathname = usePathname();
   const isDeliveryRoute = pathname?.startsWith('/delivery');
@@ -33,6 +33,21 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
   const [isClosing, setIsClosing] = useState(false);
   const [whatsAppSent, setWhatsAppSent] = useState(false);
   const handledRef = useRef(false);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  const cleanPaymentParamsFromUrl = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('payment_success');
+    url.searchParams.delete('payment_cancelled');
+    url.searchParams.delete('order_id');
+    url.searchParams.delete('order_token');
+    url.searchParams.delete('session_id');
+    url.searchParams.delete('redirect_status');
+    url.searchParams.delete('payment_intent');
+    url.searchParams.delete('payment_intent_client_secret');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
 
   useEffect(() => {
     if (handledRef.current) return;
@@ -41,20 +56,11 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
     const orderIdParam = searchParams.get('order_id');
     const orderTokenParam = searchParams.get('order_token');
     const paymentCancelled = searchParams.get('payment_cancelled');
-
-    const cleanUrl = () => {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('payment_success');
-      url.searchParams.delete('payment_cancelled');
-      url.searchParams.delete('order_id');
-      url.searchParams.delete('order_token');
-      url.searchParams.delete('session_id');
-      window.history.replaceState({}, '', url.toString());
-    };
+    const redirectStatus = searchParams.get('redirect_status');
 
     if (paymentCancelled === 'true') {
       handledRef.current = true;
-      cleanUrl();
+      cleanPaymentParamsFromUrl();
       return;
     }
 
@@ -63,28 +69,46 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
     }
 
     handledRef.current = true;
-    cleanUrl();
+
+    const accessToken =
+      orderTokenParam || getOrderAccessToken(orderIdParam);
 
     setOrderId(orderIdParam);
     setShowModal(true);
-    addActiveOrderId(orderIdParam, orderTokenParam || undefined);
+    addActiveOrderId(orderIdParam, accessToken || undefined);
 
-    if (!orderTokenParam) {
-      setVerificationState('processing');
+    if (redirectStatus === 'succeeded') {
+      setVerificationState('confirmed');
+      Analytics.trackCartCheckout(itemsRef.current, 0, restaurantId, 'stripe_completed');
+      cleanPaymentParamsFromUrl();
       return;
     }
 
-    let cancelled = false;
+    if (redirectStatus === 'failed') {
+      setVerificationState('failed');
+      cleanPaymentParamsFromUrl();
+      return;
+    }
+
+    if (!accessToken) {
+      setVerificationState('processing');
+      cleanPaymentParamsFromUrl();
+      return;
+    }
+
+    let isActive = true;
     setVerificationState('verifying');
 
     (async () => {
       try {
-        const result = await waitForCustomerOrderPayment(orderIdParam, orderTokenParam, {
-          maxAttempts: 15,
+        const result = await waitForCustomerOrderPayment(orderIdParam, accessToken, {
+          maxAttempts: 20,
           intervalMs: 2000,
         });
 
-        if (cancelled) return;
+        if (!isActive) return;
+
+        cleanPaymentParamsFromUrl();
 
         if (!result) {
           setVerificationState('failed');
@@ -98,23 +122,39 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
 
         if (result.is_paid) {
           setVerificationState('confirmed');
-          Analytics.trackCartCheckout(items, 0, restaurantId, 'stripe_completed');
+          Analytics.trackCartCheckout(itemsRef.current, 0, restaurantId, 'stripe_completed');
           return;
         }
 
         setVerificationState('processing');
       } catch (err) {
         console.error('Payment verification failed:', err);
-        if (!cancelled) {
+        if (isActive) {
+          cleanPaymentParamsFromUrl();
           setVerificationState('processing');
         }
       }
     })();
 
     return () => {
-      cancelled = true;
+      isActive = false;
     };
-  }, [searchParams, items, restaurantId, addActiveOrderId]);
+  }, [searchParams, restaurantId, addActiveOrderId, getOrderAccessToken, cleanPaymentParamsFromUrl]);
+
+  useEffect(() => {
+    if (verificationState !== 'confirmed') return;
+
+    const needsWhatsApp = isDeliveryRoute && config.enabled && config.phoneNumber;
+    if (needsWhatsApp && !whatsAppSent) return;
+
+    const timer = window.setTimeout(() => {
+      clearCart();
+      setShowModal(false);
+      window.dispatchEvent(new CustomEvent('open-order-tracking'));
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
+  }, [verificationState, whatsAppSent, isDeliveryRoute, config.enabled, config.phoneNumber, clearCart]);
 
   const handleClose = useCallback(() => {
     setIsClosing(true);
