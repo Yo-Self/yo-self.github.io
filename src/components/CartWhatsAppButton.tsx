@@ -47,7 +47,7 @@ export default function CartWhatsAppButton({
   const tablePayment = isDeliveryRoute ? false : dbTablePayment;
 
   const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
+  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue && restaurant?.open !== false;
 
   const deliveryCalc = React.useMemo(() => {
     if (!isDeliveryRoute || !restaurant) return { covered: true, fee: 0, reason: undefined };

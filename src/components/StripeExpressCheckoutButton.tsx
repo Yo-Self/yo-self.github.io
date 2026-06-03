@@ -256,7 +256,7 @@ export default function StripeExpressCheckoutButton({
   const pathname = usePathname();
   const isDeliveryRoute = pathname?.startsWith('/delivery') || false;
   const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
+  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue && restaurant?.open !== false;
   const minOrderMessage =
     minOrderValue > 0
       ? `O pedido mínimo para delivery é de R$ ${minOrderValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`

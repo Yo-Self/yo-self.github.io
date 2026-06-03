@@ -34,7 +34,7 @@ export default function StripeCheckoutButton({
   const deliveryCovered = deliveryCalc.covered;
   const isDeliveryOutsideCoverage = isDeliveryRoute && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
 
-  const isMinOrderNotMet = restaurant?.min_order_value && totalPrice < restaurant.min_order_value;
+  const isMinOrderNotMet = isDeliveryRoute && restaurant?.min_order_value && totalPrice < restaurant.min_order_value && restaurant?.open !== false;
 
   const { initiateCheckout, isLoading, error } = useStripeCheckout({
     restaurantId,

@@ -65,7 +65,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const addressActive = isDeliveryRoute ? true : false;
 
   const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue;
+  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue && restaurant?.open !== false;
 
   const { customerCoordinates } = useCustomerCoordinates();
 

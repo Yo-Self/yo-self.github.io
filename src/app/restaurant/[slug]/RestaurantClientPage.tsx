@@ -11,6 +11,7 @@ import { SortOption } from "@/components/SortModal";
 import { useModalScroll } from "@/hooks/useModalScroll";
 import PaymentSuccessHandler from "@/components/PaymentSuccessHandler";
 import { formatOperatingHours } from "@/utils/hoursFormatter";
+import DeliveryRedirectPopup from "@/components/DeliveryRedirectPopup";
 
 interface RestaurantClientPageProps {
   initialRestaurant: Restaurant;
@@ -412,6 +413,7 @@ export default function RestaurantClientPage({ initialRestaurant, restaurants }:
         {!gridTutorialDone && <FirstTimeTutorialGrid onDone={() => setGridTutorialDone(true)} hasMultiple={hasMultiple} />}
         {viewMode === 'list' && !journalTutorialDone && <FirstTimeTutorialJournal onDone={() => setJournalTutorialDone(true)} restaurant={selectedRestaurant} hasMultiple={hasMultiple} />}
         <PaymentSuccessHandler restaurantId={selectedRestaurant.id} />
+        <DeliveryRedirectPopup restaurantSlug={selectedRestaurant.slug} />
       </Suspense>
       <Header
         restaurant={selectedRestaurant}
