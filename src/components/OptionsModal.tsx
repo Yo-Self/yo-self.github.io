@@ -367,7 +367,7 @@ export default function OptionsModal({ open, onClose, currentSort, onSortChange,
                   Padrão
                 </button>
               </div>
-              <div className="text-[10px] text-center text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/20 py-1.5 px-3 rounded-lg font-medium">
+              <div className="text-[10px] text-center font-size-status-badge py-1.5 px-3 rounded-lg font-medium">
                 Tamanho atual: <span className="font-bold">{getCurrentFontSizeLabel()}</span>
               </div>
             </div>

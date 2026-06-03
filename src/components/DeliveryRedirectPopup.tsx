@@ -124,10 +124,10 @@ export default function DeliveryRedirectPopup({ restaurantSlug }: DeliveryRedire
 
         {/* Text Content */}
         <h3 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">
-          Seu pedido é para entrega?
+          Seu pedido é para entrega ou retirada?
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed px-2">
-          Olá! Identificamos que você está acessando o cardápio local. Se o seu pedido for para <strong className="font-semibold text-cyan-500 dark:text-cyan-400">entrega (delivery)</strong>, precisamos te direcionar para a página de delivery.
+          Olá! Identificamos que você está acessando o cardápio presencial. Se o seu pedido for para <strong className="font-semibold text-cyan-500 dark:text-cyan-400">entrega ou retirada (para levar)</strong>, precisamos te direcionar para a página de delivery/retirada.
         </p>
 
         {/* Action Buttons */}
@@ -136,7 +136,7 @@ export default function DeliveryRedirectPopup({ restaurantSlug }: DeliveryRedire
             onClick={handleChooseDelivery}
             className="w-full py-3.5 px-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl text-base font-semibold shadow-lg shadow-cyan-500/20 active:scale-[0.98] hover:scale-[1.01] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>Sim, é para entrega</span>
+            <span>Sim, é para entrega/retirada</span>
             <svg
               className="w-5 h-5 transition-transform"
               fill="none"
@@ -156,7 +156,7 @@ export default function DeliveryRedirectPopup({ restaurantSlug }: DeliveryRedire
             onClick={handleChooseLocal}
             className="w-full py-3.5 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-300 rounded-2xl text-base font-semibold active:scale-[0.98] hover:scale-[1.01] transition-all duration-200 flex items-center justify-center cursor-pointer"
           >
-            Não, vou comer aqui / retirar
+            Não, vou comer aqui
           </button>
         </div>
       </div>

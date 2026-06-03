@@ -15,6 +15,7 @@ import Analytics from '../lib/analytics';
 interface UseStripeCheckoutOptions {
   restaurantId: string;
   onError?: (error: Error) => void;
+  deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }
 
 interface UseStripeCheckoutReturn {
@@ -32,7 +33,8 @@ interface UseStripeCheckoutReturn {
  */
 export function useStripeCheckout({ 
   restaurantId, 
-  onError 
+  onError,
+  deliveryMode
 }: UseStripeCheckoutOptions): UseStripeCheckoutReturn {
   const { items, totalPrice, isEmpty } = useCart();
   const { customerData } = useCustomerData();
@@ -56,13 +58,15 @@ export function useStripeCheckout({
 
     try {
       const isDeliveryRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/delivery');
+      const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
+      const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
       const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
 
-      const deliveryCalc = isDeliveryRoute
+      const deliveryCalc = isActuallyDelivery
         ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
         : { covered: true, fee: 0, reason: undefined, distanceKm: null };
 
-      if (isDeliveryRoute && !deliveryCalc.covered) {
+      if (isActuallyDelivery && !deliveryCalc.covered) {
         throw new Error(
           deliveryCalc.reason === 'exclusion_zone'
             ? `Endereço indisponível para entrega na região: ${deliveryCalc.zoneName}`
@@ -73,28 +77,29 @@ export function useStripeCheckout({
       }
 
       const deliveryFee = deliveryCalc.fee / 100;
-      const fullDeliveryAddress = isDeliveryRoute 
+      const fullDeliveryAddress = isActuallyDelivery 
         ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
         : undefined;
 
+      const isRetirada = isActuallyRetirada || (!isDeliveryRoute && tableId === 'retirada');
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
         restaurant_id: restaurant.id,
-        table_name: !isDeliveryRoute && tableId ? `Mesa ${tableId}` : undefined,
+        table_name: isActuallyRetirada ? 'Retirada' : (!isDeliveryRoute && tableId ? (isRetirada ? 'Retirada' : `Mesa ${tableId}`) : undefined),
         customer_info: {
-          name: customerData.name || (!isDeliveryRoute && tableId ? `Cliente Mesa ${tableId}` : undefined),
+          name: customerData.name || (!isDeliveryRoute && tableId ? (isRetirada ? 'Cliente Retirada' : `Cliente Mesa ${tableId}`) : undefined),
           phone: customerData.whatsapp,
-          delivery_type: isDeliveryRoute ? 'delivery' : 'dine_in',
-          address: isDeliveryRoute ? (customerData.address || null) : (tableId ? `Mesa ${tableId}` : null),
+          delivery_type: isActuallyDelivery ? 'delivery' : (isRetirada ? 'takeout' : 'dine_in'),
+          address: isActuallyDelivery ? (customerData.address || null) : (tableId ? (isRetirada ? 'Retirada' : `Mesa ${tableId}`) : null),
         },
-        total_price: Math.round((totalPrice + (isDeliveryRoute && deliveryCalc.covered ? deliveryFee : 0)) * 100),
+        total_price: Math.round((totalPrice + (isActuallyDelivery && deliveryCalc.covered ? deliveryFee : 0)) * 100),
         status: 'pending_payment',
-        order_type: isDeliveryRoute ? 'delivery' : 'dine_in',
-        delivery_fee: isDeliveryRoute && deliveryCalc.covered ? deliveryCalc.fee : 0,
-        delivery_distance: isDeliveryRoute && deliveryCalc.covered ? deliveryCalc.distanceKm : null,
+        order_type: isActuallyDelivery ? 'delivery' : (isRetirada ? 'pickup' : 'dine_in'),
+        delivery_fee: isActuallyDelivery && deliveryCalc.covered ? deliveryCalc.fee : 0,
+        delivery_distance: isActuallyDelivery && deliveryCalc.covered ? deliveryCalc.distanceKm : null,
         delivery_address: fullDeliveryAddress,
-        delivery_coords_lat: isDeliveryRoute && customerCoordinates.coordinates ? customerCoordinates.coordinates.latitude : null,
-        delivery_coords_lng: isDeliveryRoute && customerCoordinates.coordinates ? customerCoordinates.coordinates.longitude : null,
-        delivery_address_details: isDeliveryRoute ? {
+        delivery_coords_lat: isActuallyDelivery && customerCoordinates.coordinates ? customerCoordinates.coordinates.latitude : null,
+        delivery_coords_lng: isActuallyDelivery && customerCoordinates.coordinates ? customerCoordinates.coordinates.longitude : null,
+        delivery_address_details: isActuallyDelivery ? {
           street: customerData.address,
           number: customerData.number,
           complement: customerData.complement
@@ -140,7 +145,7 @@ export function useStripeCheckout({
       });
 
       // Add delivery fee as a line item if applicable
-      if (isDeliveryRoute && deliveryCalc.covered && deliveryCalc.fee > 0) {
+      if (isActuallyDelivery && deliveryCalc.covered && deliveryCalc.fee > 0) {
         checkoutItems.push({
           name: 'Taxa de Entrega',
           description: 'Frete para entrega no endereço informado',
@@ -186,7 +191,7 @@ export function useStripeCheckout({
     } finally {
       setIsLoading(false);
     }
-  }, [isEmpty, isLoading, isLoadingRestaurant, restaurant, customerData, items, totalPrice, customerCoordinates, onError]);
+  }, [isEmpty, isLoading, isLoadingRestaurant, restaurant, customerData, items, totalPrice, customerCoordinates, onError, deliveryMode]);
 
   return { initiateCheckout, isLoading, error };
 }

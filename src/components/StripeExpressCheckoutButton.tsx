@@ -23,6 +23,7 @@ interface StripeExpressCheckoutButtonProps {
   className?: string;
   /** Informa o pai quando Apple Pay / Google Pay ficam visíveis (para ajustar largura do botão de cartão). */
   onWalletAvailabilityChange?: (visible: boolean) => void;
+  deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -62,12 +63,14 @@ const ExpressCheckoutInner = ({
   isMinOrderNotMet,
   minOrderMessage,
   isDeliveryRoute,
+  deliveryMode,
 }: {
   restaurantId: string;
   onAvailabilityChange: (available: boolean, methods: AvailablePaymentMethods) => void;
   isMinOrderNotMet: boolean;
   minOrderMessage: string;
   isDeliveryRoute: boolean;
+  deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -75,6 +78,9 @@ const ExpressCheckoutInner = ({
   const { customerData } = useCustomerData();
   const { restaurant } = useRestaurantBySlug(restaurantId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
+  const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
 
   const handleConfirm = useCallback(async (event: StripeExpressCheckoutElementConfirmEvent) => {
     if (!stripe || !elements || !restaurant) {
@@ -97,17 +103,19 @@ const ExpressCheckoutInner = ({
 
       const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
 
+      const isRetirada = isActuallyRetirada || (!isDeliveryRoute && tableId === 'retirada');
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
         restaurant_id: restaurant.id,
-        table_name: !isDeliveryRoute && tableId ? `Mesa ${tableId}` : undefined,
+        table_name: isActuallyRetirada ? 'Retirada' : (!isDeliveryRoute && tableId ? (isRetirada ? 'Retirada' : `Mesa ${tableId}`) : undefined),
         customer_info: {
-          name: customerData.name || (!isDeliveryRoute && tableId ? `Cliente Mesa ${tableId}` : undefined),
+          name: customerData.name || (!isDeliveryRoute && tableId ? (isRetirada ? 'Cliente Retirada' : `Cliente Mesa ${tableId}`) : undefined),
           phone: customerData.whatsapp,
-          delivery_type: isDeliveryRoute ? 'delivery' : 'dine_in',
-          address: isDeliveryRoute ? (customerData.address || null) : (tableId ? `Mesa ${tableId}` : null),
+          delivery_type: isActuallyDelivery ? 'delivery' : (isRetirada ? 'takeout' : 'dine_in'),
+          address: isActuallyDelivery ? (customerData.address || null) : (tableId ? (isRetirada ? 'Retirada' : `Mesa ${tableId}`) : null),
         },
         total_price: Math.round(totalPrice * 100),
         status: 'pending_payment',
+        order_type: isActuallyDelivery ? 'delivery' : (isRetirada ? 'pickup' : 'dine_in'),
       };
 
       const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item => ({
@@ -177,11 +185,11 @@ const ExpressCheckoutInner = ({
       setErrorMessage(message);
       event.paymentFailed({ message });
     }
-  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage, isDeliveryRoute]);
+  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage, isDeliveryRoute, isActuallyDelivery, isActuallyRetirada]);
 
   if (isEmpty) return null;
     
-  const isCustomerDataValid = isDeliveryRoute 
+  const isCustomerDataValid = isActuallyDelivery 
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
@@ -197,7 +205,7 @@ const ExpressCheckoutInner = ({
             } as any);
           };
 
-          if (isDeliveryRoute) {
+          if (isActuallyDelivery) {
             if (!customerData.name?.trim()) return throwError('Por favor, informe seu Nome antes de continuar com o pagamento.');
             if (!customerData.address?.trim()) return throwError('Por favor, informe seu Endereço antes de continuar com o pagamento.');
             if (!customerData.number?.trim()) return throwError('Por favor, informe o Número do endereço antes de continuar com o pagamento.');
@@ -250,13 +258,15 @@ export default function StripeExpressCheckoutButton({
   restaurantId = "default",
   className = "",
   onWalletAvailabilityChange,
+  deliveryMode,
 }: StripeExpressCheckoutButtonProps) {
   const { totalPrice, isEmpty } = useCart();
   const { restaurant, isLoading } = useRestaurantBySlug(restaurantId);
   const pathname = usePathname();
   const isDeliveryRoute = pathname?.startsWith('/delivery') || false;
+  const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
   const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue && restaurant?.open !== false;
+  const isMinOrderNotMet = isActuallyDelivery && totalPrice < minOrderValue && restaurant?.open !== false;
   const minOrderMessage =
     minOrderValue > 0
       ? `O pedido mínimo para delivery é de R$ ${minOrderValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`
@@ -323,6 +333,7 @@ export default function StripeExpressCheckoutButton({
           isMinOrderNotMet={isMinOrderNotMet}
           minOrderMessage={minOrderMessage}
           isDeliveryRoute={isDeliveryRoute}
+          deliveryMode={deliveryMode}
         />
       </Elements>
     </div>

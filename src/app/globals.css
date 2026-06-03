@@ -1645,3 +1645,18 @@ body.splash-active {
   position: fixed !important;
   width: 100% !important;
 }
+
+/* Custom status badge for accessibility font size to fix dark mode contrast */
+.font-size-status-badge {
+  background-color: #ecfeff !important;
+  color: #0891b2 !important;
+}
+
+.dark .font-size-status-badge {
+  background-color: #083344 !important;
+}
+
+.dark .font-size-status-badge,
+.dark .font-size-status-badge span {
+  color: #22d3ee !important;
+}

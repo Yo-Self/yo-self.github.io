@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useTranslation } from "./i18n";
 import { Restaurant } from "./data";
 import { useRouter, usePathname } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import DeliveryModeToggle from "./DeliveryModeToggle";
 import OptionsButton from "./OptionsButton";
 import { SortOption } from "./OptionsModal";
 import ImageWithLoading from "./ImageWithLoading";
@@ -13,6 +12,45 @@ import { CartIconHeader } from "./CartIcon";
 import { useActiveOrders } from "@/hooks/useActiveOrders";
 import OrderStatusModal from "./OrderStatusModal";
 import { useCart } from "@/hooks/useCart";
+
+const TITLE_MAX_HEIGHT_PX = 48;
+
+function getBalancedTwoLineSplit(name: string, font: string): [string, string] | null {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length < 2) return null;
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    const mid = Math.ceil(words.length / 2);
+    return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+  }
+
+  ctx.font = font;
+
+  let bestSplit = 1;
+  let bestDiff = Infinity;
+
+  for (let i = 1; i < words.length; i++) {
+    const line1 = words.slice(0, i).join(' ');
+    const line2 = words.slice(i).join(' ');
+    const diff = Math.abs(ctx.measureText(line1).width - ctx.measureText(line2).width);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestSplit = i;
+    }
+  }
+
+  return [words.slice(0, bestSplit).join(' '), words.slice(bestSplit).join(' ')];
+}
+
+function getLineHeightPx(element: HTMLElement): number {
+  const style = getComputedStyle(element);
+  const parsed = parseFloat(style.lineHeight);
+  if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+  const fontSize = parseFloat(style.fontSize);
+  return Number.isNaN(fontSize) ? 24 : fontSize * 1.2;
+}
 
 // Smart Restaurant Title Component
 function SmartRestaurantTitle({ 
@@ -26,75 +64,118 @@ function SmartRestaurantTitle({
   hasMultiple?: boolean; 
   open?: boolean; 
 }) {
-  const [titleRef, setTitleRef] = useState<HTMLElement | null>(null);
-  const [fontSize, setFontSize] = useState('text-xl');
+  const titleRef = useRef<HTMLSpanElement>(null);
+  const [fontSize, setFontSize] = useState<'text-xl' | 'text-lg' | 'text-base'>('text-xl');
   const [shouldTruncate, setShouldTruncate] = useState(false);
+  const [balancedLines, setBalancedLines] = useState<[string, string] | null>(null);
 
-  useEffect(() => {
-    if (!titleRef || !name) return;
+  useLayoutEffect(() => {
+    const element = titleRef.current;
+    if (!element || !name) return;
 
-    const measureText = () => {
-      // Reset to default state
-      setFontSize('text-xl');
-      setShouldTruncate(false);
-      
-      // Force layout recalculation
-      setTimeout(() => {
-        const element = titleRef;
-        if (!element) return;
+    let cancelled = false;
 
-        const maxHeight = 48; // Max height for 2 lines
-        
-        // Check if text overflows
-        if (element.scrollHeight > maxHeight) {
-          // Try smaller font first
-          setFontSize('text-lg');
-          
-          setTimeout(() => {
-            if (element.scrollHeight > maxHeight) {
-              // If still overflows, check if we should truncate
-              const charLimit = Math.floor(name.length * (maxHeight / element.scrollHeight));
-              const overflow = name.length - charLimit;
-              
-              if (overflow > 10) {
-                setShouldTruncate(true);
-              } else {
-                // Try even smaller font
-                setFontSize('text-base');
-              }
-            }
-          }, 10);
-        }
-      }, 10);
+    const measureLineBreak = () => {
+      if (cancelled || !titleRef.current) return;
+      const el = titleRef.current;
+      const lineHeightPx = getLineHeightPx(el);
+      const needsTwoLines = el.scrollHeight > lineHeightPx * 1.35;
+      const words = name.trim().split(/\s+/).filter(Boolean);
+
+      if (needsTwoLines && words.length >= 2) {
+        const style = getComputedStyle(el);
+        const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        const split = getBalancedTwoLineSplit(name, font);
+        setBalancedLines(split);
+        return;
+      }
+
+      setBalancedLines(null);
     };
 
-    measureText();
-  }, [name, titleRef]);
+    setFontSize('text-xl');
+    setShouldTruncate(false);
+    setBalancedLines(null);
+
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(measureLineBreak);
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      setFontSize('text-xl');
+      setShouldTruncate(false);
+      setBalancedLines(null);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(measureLineBreak);
+      });
+    });
+    resizeObserver.observe(element);
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
+    };
+  }, [name]);
+
+  useLayoutEffect(() => {
+    const el = titleRef.current;
+    if (!el || !name) return;
+
+    if (el.scrollHeight <= TITLE_MAX_HEIGHT_PX) return;
+
+    if (fontSize === 'text-xl') {
+      setFontSize('text-lg');
+      return;
+    }
+
+    if (fontSize === 'text-lg') {
+      const charLimit = Math.floor(name.length * (TITLE_MAX_HEIGHT_PX / el.scrollHeight));
+      if (name.length - charLimit > 10) {
+        setShouldTruncate(true);
+      } else {
+        setFontSize('text-base');
+      }
+    }
+  }, [name, balancedLines, fontSize]);
 
   const titleClasses = `
-    font-bold text-gray-900 dark:text-white text-center max-w-full
+    font-bold text-gray-900 dark:text-white text-center w-full
+    max-w-[min(100%,calc(100vw-6.5rem))] sm:max-w-[min(100%,calc(100vw-30rem))]
     ${fontSize}
-    ${shouldTruncate 
-      ? 'line-clamp-2' 
-      : 'leading-tight'
-    }
+    ${shouldTruncate ? 'line-clamp-2' : 'leading-tight'}
   `.trim();
 
+  const lineHeight = fontSize === 'text-base' ? '1.25' : '1.2';
+
+  const titleContent = balancedLines && !shouldTruncate ? (
+    <>
+      <span className="block">{balancedLines[0]}</span>
+      <span className="block">{balancedLines[1]}</span>
+    </>
+  ) : (
+    name
+  );
+
   const content = (
-    <h1 className="inline-flex items-center justify-center gap-1.5 max-w-full flex-nowrap" data-tutorial="restaurant-switch">
-      <span 
-        ref={setTitleRef}
+    <h1
+      className="inline-flex items-center justify-center gap-1.5 w-full max-w-full flex-nowrap"
+      data-tutorial="restaurant-switch"
+    >
+      <span
+        ref={titleRef}
         className={titleClasses}
         style={{
-          display: '-webkit-box',
-          WebkitBoxOrient: 'vertical',
-          WebkitLineClamp: shouldTruncate ? 2 : 'unset',
+          display: balancedLines && !shouldTruncate ? 'inline-block' : '-webkit-box',
+          WebkitBoxOrient: balancedLines && !shouldTruncate ? undefined : 'vertical',
+          WebkitLineClamp: shouldTruncate ? 2 : balancedLines ? undefined : 'unset',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          lineHeight: fontSize === 'text-base' ? '1.25' : '1.2'
+          lineHeight,
+          textWrap: balancedLines ? undefined : 'balance',
         }}
       >
-        {name}
+        {titleContent}
       </span>
       {hasMultiple && (
         <svg
@@ -303,26 +384,20 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
   const { isEmpty } = useCart();
   const hasActiveOrder = activeOrderIds.length > 0;
   
-  const showToggle = restaurant?.table_ordering;
-  
   return (
     <header className="header bg-white dark:bg-black p-0 m-0 h-[60px] flex items-center shadow-sm relative z-40">
       <div className="container mx-auto flex items-center px-4 m-0">
-        <div className={`flex items-center gap-2 ${showToggle ? 'w-[90px] min-[440px]:w-[220px]' : 'w-[40px]'} sm:w-[220px] shrink-0`}>
-          {restaurant?.slug && (
-            showToggle ? (
-              <DeliveryModeToggle slug={restaurant.slug} />
-            ) : (
-              <OptionsButton 
-                currentSort={currentSort} 
-                onSortChange={onSortChange} 
-                restaurant={restaurant} 
-              />
-            )
+        <div className="flex items-center gap-2 w-[40px] sm:w-[220px] shrink-0">
+          {restaurant && (
+            <OptionsButton 
+              currentSort={currentSort} 
+              onSortChange={onSortChange} 
+              restaurant={restaurant} 
+            />
           )}
         </div>
         
-        <div className="flex-grow px-2 flex items-center justify-center min-w-0">
+        <div className="flex-grow px-2 flex items-center justify-center min-w-0 w-full">
           {restaurants && restaurants.length > 1 ? (
             <RestaurantDropdown
               restaurants={restaurants}
@@ -336,20 +411,8 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
         </div>
         
         {restaurant && (
-          <div className={`flex items-center gap-2 ${showToggle ? (isEmpty ? 'w-[40px]' : 'w-[80px]') : (isEmpty ? 'w-0' : 'w-[40px]')} sm:w-[220px] shrink-0 justify-end`}>
-            {showToggle ? (
-              hasActiveOrder && isEmpty ? (
-                <TrackOrderButton orderId={activeOrderIds[activeOrderIds.length - 1]} />
-              ) : (
-                <OptionsButton 
-                  currentSort={currentSort} 
-                  onSortChange={onSortChange} 
-                  restaurant={restaurant} 
-                />
-              )
-            ) : (
-              hasActiveOrder && isEmpty && <TrackOrderButton orderId={activeOrderIds[activeOrderIds.length - 1]} />
-            )}
+          <div className={`flex items-center gap-2 ${isEmpty && !hasActiveOrder ? 'w-0' : 'w-[40px]'} sm:w-[220px] shrink-0 justify-end`}>
+            {hasActiveOrder && isEmpty && <TrackOrderButton orderId={activeOrderIds[activeOrderIds.length - 1]} />}
             {!isEmpty && <CartIconHeader />}
           </div>
         )}

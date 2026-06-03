@@ -55,17 +55,19 @@ export default function SendOrderButton({
     setIsSending(true);
 
     try {
+      const isRetirada = tableNumber.trim().toLowerCase() === 'retirada';
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
         restaurant_id: restaurant.id,
-        table_name: `Mesa ${tableNumber.trim()}`,
+        table_name: isRetirada ? 'Retirada' : `Mesa ${tableNumber.trim()}`,
         customer_info: {
-          name: customerData.name || `Cliente Mesa ${tableNumber.trim()}`,
+          name: customerData.name || (isRetirada ? 'Cliente Retirada' : `Cliente Mesa ${tableNumber.trim()}`),
           phone: customerData.whatsapp || '',
-          delivery_type: 'dine_in',
-          address: `Mesa ${tableNumber.trim()}`,
+          delivery_type: isRetirada ? 'takeout' : 'dine_in',
+          address: isRetirada ? 'Retirada' : `Mesa ${tableNumber.trim()}`,
         },
         total_price: Math.round(totalPrice * 100),
         status: 'new', // Novo status para ir direto para a cozinha no Kanban do Gestor
+        order_type: isRetirada ? 'pickup' : 'dine_in',
       };
 
       const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item => ({
@@ -196,7 +198,11 @@ export default function SendOrderButton({
             </h3>
             
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed">
-              O seu pedido foi encaminhado diretamente para a nossa cozinha e a comanda foi aberta na <strong className="text-blue-600 dark:text-blue-400 font-bold">Mesa {tableNumber}</strong>. Agora é só relaxar e aguardar!
+              {tableNumber.trim().toLowerCase() === 'retirada' ? (
+                <>O seu pedido foi encaminhado diretamente para a nossa cozinha para <strong className="text-blue-600 dark:text-blue-400 font-bold">retirada no local</strong>. Agora é só relaxar e aguardar!</>
+              ) : (
+                <>O seu pedido foi encaminhado diretamente para a nossa cozinha e a comanda foi aberta na <strong className="text-blue-600 dark:text-blue-400 font-bold">Mesa {tableNumber}</strong>. Agora é só relaxar e aguardar!</>
+              )}
             </p>
 
             <button

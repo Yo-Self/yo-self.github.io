@@ -23,13 +23,15 @@ interface CartWhatsAppButtonProps {
   className?: string;
   customMessage?: string;
   onSent?: () => void; // Callback quando mensagem for enviada
+  deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }
 
 export default function CartWhatsAppButton({
   restaurantId = "default",
   className = "",
   customMessage,
-  onSent
+  onSent,
+  deliveryMode
 }: CartWhatsAppButtonProps) {
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty } = useCart();
   const { addActiveOrderId } = useActiveOrders();
@@ -44,20 +46,22 @@ export default function CartWhatsAppButton({
 
   const pathname = usePathname();
   const isDeliveryRoute = pathname?.startsWith('/delivery');
+  const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
+  const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
   const tablePayment = isDeliveryRoute ? false : dbTablePayment;
 
   const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue && restaurant?.open !== false;
+  const isMinOrderNotMet = isActuallyDelivery && totalPrice < minOrderValue && restaurant?.open !== false;
 
   const deliveryCalc = React.useMemo(() => {
-    if (!isDeliveryRoute || !restaurant) return { covered: true, fee: 0, reason: undefined };
+    if (!isActuallyDelivery || !restaurant) return { covered: true, fee: 0, reason: undefined };
     return calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null);
-  }, [isDeliveryRoute, restaurant, customerCoordinates?.coordinates]);
+  }, [isActuallyDelivery, restaurant, customerCoordinates?.coordinates]);
 
   const deliveryFee = deliveryCalc.fee / 100;
   const deliveryCovered = deliveryCalc.covered;
-  const totalPriceWithShipping = totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0);
-  const isDeliveryOutsideCoverage = isDeliveryRoute && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const totalPriceWithShipping = totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0);
+  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
   const restaurantIdRef = React.useRef(restaurantId);
 
   // Monitorar mudanças no restaurantId e cancelar operações em andamento
@@ -120,7 +124,8 @@ export default function CartWhatsAppButton({
     console.log('🔍 Debug - Modo pagamento na mesa:', tablePayment);
     
     // Calcular distância de entrega se coordenadas estiverem disponíveis (apenas para delivery)
-    const deliveryDistance = !tablePayment ? calculateDeliveryDistance(
+    // Calcular distância de entrega se coordenadas estiverem disponíveis (apenas para delivery)
+    const deliveryDistance = isActuallyDelivery ? calculateDeliveryDistance(
       restaurantCoordinates,
       customerCoordinates.coordinates
     ) : null;
@@ -131,7 +136,9 @@ export default function CartWhatsAppButton({
     const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim() || customerData.whatsapp?.trim();
     
     if (hasCustomerData) {
-      if (tablePayment) {
+      if (isActuallyRetirada) {
+        message += `👤 *DADOS PARA RETIRADA:*\n`;
+      } else if (tablePayment) {
         message += `👤 *DADOS PARA MESA:*\n`;
       } else {
         message += `👤 *DADOS DO CLIENTE:*\n`;
@@ -141,11 +148,11 @@ export default function CartWhatsAppButton({
         message += `• *Nome:* ${customerData.name}\n`;
       }
       
-      if (tablePayment && customerData.whatsapp?.trim()) {
+      if ((tablePayment || isActuallyRetirada) && customerData.whatsapp?.trim()) {
         message += `• *WhatsApp:* ${customerData.whatsapp}\n`;
       }
       
-      if (!tablePayment && customerData.address?.trim()) {
+      if (isActuallyDelivery && customerData.address?.trim()) {
         message += `• *Endereço:* ${customerData.address}`;
         if (customerData.number?.trim()) {
           message += `, ${customerData.number}`;
@@ -156,12 +163,12 @@ export default function CartWhatsAppButton({
         message += `\n`;
       }
       
-      if (!tablePayment && customerData.number?.trim() && !customerData.address?.trim()) {
+      if (isActuallyDelivery && customerData.number?.trim() && !customerData.address?.trim()) {
         message += `• *Número:* ${customerData.number}\n`;
       }
       
       // Adicionar distância de entrega se calculada (apenas para delivery)
-      if (!tablePayment && deliveryDistance) {
+      if (isActuallyDelivery && deliveryDistance) {
         message += `• *Distância de Entrega:* ${deliveryDistance.formattedDistance}\n`;
       }
       
@@ -206,7 +213,7 @@ export default function CartWhatsAppButton({
     });
 
     // Resumo dos Totais
-    if (isDeliveryRoute) {
+    if (isActuallyDelivery) {
       const subtotalCents = Math.round(totalPrice * 100);
       const deliveryFeeCents = order.delivery_fee || 0;
       message += `📋 *RESUMO DOS VALORES:*\n`;
@@ -329,24 +336,24 @@ export default function CartWhatsAppButton({
     try {
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
         restaurant_id: restaurant.id,
-        table_name: tablePayment ? customerData.address : undefined,
+        table_name: isActuallyRetirada ? 'Retirada' : (tablePayment ? customerData.address : undefined),
         customer_info: {
           name: customerData.name,
           phone: customerData.whatsapp,
-          delivery_type: isDeliveryRoute ? 'delivery' : 'dine_in',
-          address: customerData.address || null,
+          delivery_type: isActuallyDelivery ? 'delivery' : (isActuallyRetirada ? 'takeout' : 'dine_in'),
+          address: isActuallyDelivery ? customerData.address || null : null,
         },
-        total_price: Math.round((totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0)) * 100),
+        total_price: Math.round((totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0)) * 100),
         status: 'pending_payment',
-        order_type: isDeliveryRoute ? 'delivery' : 'dine_in',
-        delivery_fee: isDeliveryRoute && deliveryCovered ? deliveryCalc.fee : 0,
-        delivery_distance: isDeliveryRoute && deliveryCovered ? deliveryCalc.distanceKm : null,
-        delivery_address: isDeliveryRoute 
+        order_type: isActuallyDelivery ? 'delivery' : (isActuallyRetirada ? 'pickup' : 'dine_in'),
+        delivery_fee: isActuallyDelivery && deliveryCovered ? deliveryCalc.fee : 0,
+        delivery_distance: isActuallyDelivery && deliveryCovered ? deliveryCalc.distanceKm : null,
+        delivery_address: isActuallyDelivery 
           ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
           : null,
-        delivery_coords_lat: isDeliveryRoute && customerCoordinates.coordinates ? customerCoordinates.coordinates.latitude : null,
-        delivery_coords_lng: isDeliveryRoute && customerCoordinates.coordinates ? customerCoordinates.coordinates.longitude : null,
-        delivery_address_details: isDeliveryRoute ? {
+        delivery_coords_lat: isActuallyDelivery && customerCoordinates.coordinates ? customerCoordinates.coordinates.latitude : null,
+        delivery_coords_lng: isActuallyDelivery && customerCoordinates.coordinates ? customerCoordinates.coordinates.longitude : null,
+        delivery_address_details: isActuallyDelivery ? {
           street: customerData.address,
           number: customerData.number,
           complement: customerData.complement
@@ -443,7 +450,7 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isDeliveryRoute && deliveryCalc.reason === 'waiting_location')}
+      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')}
       className={`
         w-full flex items-center justify-center gap-2 sm:gap-3 
         px-3 sm:px-6 py-3.5 sm:py-4 
@@ -477,16 +484,16 @@ export default function CartWhatsAppButton({
               ? 'Criando...' 
               : isDeliveryOutsideCoverage 
                 ? 'Sem Cobertura' 
-                : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location') 
+                : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location') 
                   ? 'Informe o Endereço' 
                   : (onlinePayment ? 'Pedir pelo Whatsapp por Pix' : 'Pedir pelo Whatsapp')}
         </span>
         <span className="text-xs opacity-90 truncate hidden sm:block">
           {isDeliveryOutsideCoverage
             ? 'Endereço fora da área de entrega'
-            : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location')
+            : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
               ? 'Preencha os dados acima'
-              : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isDeliveryRoute && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
+              : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isActuallyDelivery && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
         </span>
       </div>
 

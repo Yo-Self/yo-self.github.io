@@ -27,6 +27,7 @@ import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
+import { StoreIcon, DeliveryScooterIcon } from './icons/MenuIcons';
 
 interface CartModalProps {
   restaurantId?: string;
@@ -61,26 +62,27 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
   const pathname = usePathname();
   const isDeliveryRoute = pathname?.startsWith('/delivery');
+  const [deliveryMode, setDeliveryMode] = useState<'delivery' | 'retirada'>('delivery');
   const tablePayment = isDeliveryRoute ? false : dbTablePayment;
-  const addressActive = isDeliveryRoute ? true : false;
+  const addressActive = isDeliveryRoute && deliveryMode === 'delivery';
 
   const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && totalPrice < minOrderValue && restaurant?.open !== false;
+  const isMinOrderNotMet = isDeliveryRoute && deliveryMode === 'delivery' && totalPrice < minOrderValue && restaurant?.open !== false;
 
   const { customerCoordinates } = useCustomerCoordinates();
 
   const deliveryCalc = React.useMemo(() => {
-    if (!isDeliveryRoute || !restaurant) return { covered: true, fee: 0, reason: undefined };
+    if (!isDeliveryRoute || deliveryMode !== 'delivery' || !restaurant) return { covered: true, fee: 0, reason: undefined };
     return calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null);
-  }, [isDeliveryRoute, restaurant, customerCoordinates?.coordinates]);
+  }, [isDeliveryRoute, deliveryMode, restaurant, customerCoordinates?.coordinates]);
 
   const deliveryFee = deliveryCalc.fee / 100; // converter centavos para reais
   const deliveryCovered = deliveryCalc.covered;
-  const isDeliveryOutsideCoverage = isDeliveryRoute && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const isDeliveryOutsideCoverage = isDeliveryRoute && deliveryMode === 'delivery' && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
   const deliveryReason = deliveryCalc.reason;
   const deliveryZoneName = deliveryCalc.zoneName;
 
-  const totalPriceWithShipping = totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0);
+  const totalPriceWithShipping = totalPrice + (isDeliveryRoute && deliveryMode === 'delivery' && deliveryCovered ? deliveryFee : 0);
 
 
 
@@ -92,6 +94,12 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const [showDeliveryModeTooltip, setShowDeliveryModeTooltip] = useState(false);
+
+  const dismissDeliveryModeTooltip = React.useCallback(() => {
+    setShowDeliveryModeTooltip(false);
+  }, []);
+
   useEffect(() => {
     if (!isCartOpen) {
       setWalletPayVisible(false);
@@ -100,12 +108,23 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
   useEffect(() => {
     if (isCartOpen) {
+      setDeliveryMode('delivery'); // Sempre reseta para delivery ao abrir
       const tid = getTableId();
       if (tid) {
         setTableNumber(tid);
       }
+
+      if (isDeliveryRoute) {
+        setShowDeliveryModeTooltip(true);
+        const timer = setTimeout(() => {
+          setShowDeliveryModeTooltip(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      setShowDeliveryModeTooltip(false);
     }
-  }, [isCartOpen]);
+  }, [isCartOpen, isDeliveryRoute]);
 
   // Controlar scroll do body quando modal estiver aberto
   useModalScroll(isCartOpen);
@@ -172,34 +191,91 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 gap-4 overflow-visible">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
               <CartIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-200 truncate">
                 Comanda
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {totalItems} {totalItems === 1 ? 'item' : 'itens'} selecionado{totalItems !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleClearCart}
-              className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
-              aria-label="Limpar comanda"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Alternador Delivery/Retirada */}
+            {isDeliveryRoute && (
+              <div className="relative">
+                <div 
+                  className="relative flex items-center bg-gray-100 dark:bg-gray-800 p-0.5 rounded-full shadow-inner select-none shrink-0 border border-gray-200/50 dark:border-gray-800 h-[36px] w-[90px] min-[440px]:w-[220px] transition-all duration-300"
+                >
+                  {/* Sliding indicator */}
+                  <div 
+                    className="absolute top-0.5 bottom-0.5 left-0.5 rounded-full bg-cyan-500 dark:bg-cyan-600 shadow-md transition-all duration-300 ease-out"
+                    style={{
+                      width: 'calc(50% - 2px)',
+                      transform: deliveryMode === 'delivery' ? 'translateX(100%)' : 'translateX(0%)'
+                    }}
+                  />
+                  
+                  {/* Retirada Option */}
+                  <button
+                    onClick={() => {
+                      setDeliveryMode('retirada');
+                      dismissDeliveryModeTooltip();
+                    }}
+                    className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-bold rounded-full transition-colors duration-300 outline-none cursor-pointer h-full ${
+                      deliveryMode === 'retirada' 
+                        ? 'text-white font-extrabold' 
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <StoreIcon className="w-4 h-4 shrink-0" strokeWidth={2.2} />
+                    <span className="max-[440px]:hidden">Retirada</span>
+                  </button>
+
+                  {/* Delivery Option */}
+                  <button
+                    onClick={() => {
+                      setDeliveryMode('delivery');
+                      dismissDeliveryModeTooltip();
+                    }}
+                    className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-bold rounded-full transition-colors duration-300 outline-none cursor-pointer h-full ${
+                      deliveryMode === 'delivery' 
+                        ? 'text-white font-extrabold' 
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <DeliveryScooterIcon className="w-4 h-4 shrink-0" />
+                    <span className="max-[440px]:hidden">Delivery</span>
+                  </button>
+                </div>
+
+                {/* Tooltip: exibido por 3s ao abrir a comanda (rota delivery) */}
+                {showDeliveryModeTooltip && (
+                  <div
+                    role="tooltip"
+                    className="absolute top-full right-0 mt-2.5 w-52 max-w-[min(13rem,calc(100vw-2rem))] bg-gradient-to-br from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700 text-white text-[11px] min-[400px]:text-xs font-medium p-2.5 rounded-xl shadow-xl z-[999] animate-fadein pointer-events-none text-center"
+                  >
+                    <div
+                      className="absolute -top-[7px] right-6 h-0 w-0 border-x-[7px] border-x-transparent border-b-[7px] border-b-cyan-500 dark:border-b-cyan-600"
+                      aria-hidden
+                    />
+                    <p className="relative z-10 leading-snug">
+                      Este botão alterna entre <strong className="font-bold">Delivery</strong> e <strong className="font-bold">Retirada</strong>.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={handleClose}
-              className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+              className="p-1.5 sm:p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors cursor-pointer shrink-0"
               aria-label="Fechar comanda"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,6 +308,23 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
             </div>
           ) : (
             <>
+              {/* Header da Lista de Itens com Limpar Tudo */}
+              <div className="px-6 pt-4 pb-2 flex justify-between items-center border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  Itens Selecionados
+                </span>
+                <button
+                  onClick={handleClearCart}
+                  className="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                  aria-label="Limpar comanda"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Limpar Tudo
+                </button>
+              </div>
+
               {/* Lista de itens */}
               <div 
                 className="flex-1 overflow-y-auto p-6 space-y-4"
@@ -301,14 +394,14 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
                 {/* Resumo do pedido */}
                 <div className="mb-4 space-y-1.5">
-                  {isDeliveryRoute && (
+                  {isDeliveryRoute && deliveryMode === 'delivery' && (
                     <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
                       <span>Subtotal:</span>
                       <span className="font-medium">R$ {formattedTotalPrice}</span>
                     </div>
                   )}
 
-                  {isDeliveryRoute && (
+                  {isDeliveryRoute && deliveryMode === 'delivery' && (
                     <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
                       <span>Taxa de Entrega:</span>
                       <span className="font-medium">
@@ -326,12 +419,12 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
                   <div className="flex justify-between items-center text-lg font-semibold text-gray-800 dark:text-gray-200 border-t border-gray-200/50 dark:border-gray-700/50 pt-1.5">
                     <span>Total do Pedido:</span>
-                    <span>R$ {isDeliveryRoute && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}</span>
+                    <span>R$ {isDeliveryRoute && deliveryMode === 'delivery' && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}</span>
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-2">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {totalItems} {totalItems === 1 ? 'item' : 'itens'} • {isDeliveryRoute ? (deliveryCovered ? 'Taxa de entrega incluída' : 'Entrega indisponível') : 'Pedido para consumo no local'}
+                      {totalItems} {totalItems === 1 ? 'item' : 'itens'} • {isDeliveryRoute ? (deliveryMode === 'delivery' ? (deliveryCovered ? 'Taxa de entrega incluída' : 'Entrega indisponível') : 'Pedido para retirada no local') : (tableNumber === 'retirada' ? 'Pedido para retirada no local' : 'Pedido para consumo no local')}
                     </p>
                     
                     {!isDeliveryRoute && (restaurant?.table_ordering || tablePayment) && (
@@ -349,6 +442,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                           }}
                           className="bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-0 font-bold cursor-pointer"
                         >
+                          <option value="retirada">Retirada</option>
                           <option value="">--</option>
                           {Array.from({ length: 50 }, (_, i) => i + 1).map(num => (
                             <option key={num} value={num.toString()}>{num}</option>
@@ -420,15 +514,17 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                 ) : isDeliveryRoute ? (
                   !isMinOrderNotMet && (
                     <div className="flex flex-col gap-2 sm:gap-3 w-full">
-                      <CartWhatsAppButton restaurantId={restaurantId} className="w-full" />
+                      <CartWhatsAppButton restaurantId={restaurantId} deliveryMode={deliveryMode} className="w-full" />
                       {onlinePayment && (
                         <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
                           <StripeCheckoutButton
                             restaurantId={restaurantId}
+                            deliveryMode={deliveryMode}
                             className={walletPayVisible ? 'flex-1 min-w-0' : 'w-full min-w-0'}
                           />
                           <StripeExpressCheckoutButton
                             restaurantId={restaurantId}
+                            deliveryMode={deliveryMode}
                             className="flex-1 min-w-0"
                             onWalletAvailabilityChange={setWalletPayVisible}
                           />

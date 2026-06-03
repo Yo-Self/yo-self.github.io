@@ -12,32 +12,37 @@ import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 interface StripeCheckoutButtonProps {
   restaurantId?: string;
   className?: string;
+  deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }
 
 export default function StripeCheckoutButton({
   restaurantId = "default",
   className = "",
+  deliveryMode,
 }: StripeCheckoutButtonProps) {
   const { totalPrice, totalItems, formattedTotalPrice, isEmpty } = useCart();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const pathname = usePathname();
   const isDeliveryRoute = pathname ? pathname.startsWith('/delivery') : true;
+  const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
+  const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
   const { customerCoordinates } = useCustomerCoordinates();
   const { customerData } = useCustomerData();
 
   const deliveryCalc = React.useMemo(() => {
-    if (!isDeliveryRoute || !restaurant) return { covered: true, fee: 0, reason: undefined };
+    if (!isActuallyDelivery || !restaurant) return { covered: true, fee: 0, reason: undefined };
     return calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null);
-  }, [isDeliveryRoute, restaurant, customerCoordinates?.coordinates]);
+  }, [isActuallyDelivery, restaurant, customerCoordinates?.coordinates]);
 
   const deliveryFee = deliveryCalc.fee / 100;
   const deliveryCovered = deliveryCalc.covered;
-  const isDeliveryOutsideCoverage = isDeliveryRoute && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
 
-  const isMinOrderNotMet = isDeliveryRoute && restaurant?.min_order_value && totalPrice < restaurant.min_order_value && restaurant?.open !== false;
+  const isMinOrderNotMet = isActuallyDelivery && restaurant?.min_order_value && totalPrice < restaurant.min_order_value && restaurant?.open !== false;
 
   const { initiateCheckout, isLoading, error } = useStripeCheckout({
     restaurantId,
+    deliveryMode,
     onError: (err) => {
       // Error is already tracked in the hook, just show alert
       alert(`Erro no pagamento: ${err.message}`);
@@ -45,7 +50,7 @@ export default function StripeCheckoutButton({
   });
 
   const handleCheckoutClick = () => {
-    if (isDeliveryRoute) {
+    if (isActuallyDelivery) {
       if (!customerData.name?.trim()) {
         alert('Por favor, informe seu Nome antes de continuar com o pagamento.');
         return;
@@ -86,13 +91,13 @@ export default function StripeCheckoutButton({
     return null;
   }
 
-  const totalPriceWithShipping = totalPrice + (isDeliveryRoute && deliveryCovered ? deliveryFee : 0);
+  const totalPriceWithShipping = totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0);
 
-  const isCustomerDataValid = isDeliveryRoute 
+  const isCustomerDataValid = isActuallyDelivery 
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
-  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isDeliveryRoute && deliveryCalc.reason === 'waiting_location');
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && deliveryCalc.reason === 'waiting_location');
 
   return (
     <button
@@ -139,16 +144,16 @@ export default function StripeCheckoutButton({
             ? 'Processando...' 
             : isDeliveryOutsideCoverage 
               ? 'Sem Cobertura' 
-              : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location') 
+              : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location') 
                 ? 'Informe o Endereço' 
                 : 'Pagar com cartão'}
         </span>
         <span className="text-xs opacity-90 truncate hidden sm:block">
           {isDeliveryOutsideCoverage
             ? 'Endereço fora da área de entrega'
-            : (isDeliveryRoute && deliveryCalc.reason === 'waiting_location')
+            : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
               ? 'Preencha os dados acima'
-              : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isDeliveryRoute && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
+              : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isActuallyDelivery && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
         </span>
       </div>
 
