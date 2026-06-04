@@ -65,11 +65,11 @@ export default function CustomerDataForm({
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+    <div className={`space-y-2.5 ${className}`}>
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="p-1.5 bg-blue-100 dark:bg-blue-900 rounded-lg">
           <svg 
-            className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" 
+            className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" 
             viewBox="0 0 256 256"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -84,10 +84,10 @@ export default function CustomerDataForm({
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h3 className="text-sm font-bold sm:text-base text-gray-800 dark:text-gray-200">
             {isPickup ? 'Dados para Retirada' : addressActive ? 'Dados para Entrega' : 'Seus Dados'}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-450">
             {isPickup
               ? 'Informe nome e telefone para retirar seu pedido no local'
               : 'Preencha seus dados para finalizar o pedido'}
@@ -96,12 +96,15 @@ export default function CustomerDataForm({
       </div>
 
       <div>
-        <label 
-          htmlFor="customer-name" 
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          Nome Completo
-        </label>
+        <div className="flex items-center gap-1.5 mb-1">
+          <label 
+            htmlFor="customer-name" 
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Nome Completo
+          </label>
+          <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+        </div>
         <input
           id="customer-name"
           type="text"
@@ -123,13 +126,14 @@ export default function CustomerDataForm({
 
       {addressActive && (
       <div>
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5 mb-1">
           <label 
             htmlFor="customer-address" 
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Endereço Completo
           </label>
+          <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.address?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
         </div>
         
         <div className="relative">
@@ -196,12 +200,15 @@ export default function CustomerDataForm({
 
       {isPickup && (
         <div>
-          <label
-            htmlFor="customer-whatsapp-pickup"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Telefone *
-          </label>
+          <div className="flex items-center gap-1.5 mb-1">
+            <label
+              htmlFor="customer-whatsapp-pickup"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Telefone *
+            </label>
+            <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.whatsapp?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+          </div>
           <input
             id="customer-whatsapp-pickup"
             type="text"
@@ -225,12 +232,15 @@ export default function CustomerDataForm({
       {addressActive && (
       <div className="grid grid-cols-12 gap-2 sm:gap-3">
         <div className="col-span-3">
-          <label 
-            htmlFor="customer-number" 
-            className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Número *
-          </label>
+          <div className="flex items-center gap-1 mb-1">
+            <label 
+              htmlFor="customer-number" 
+              className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Número *
+            </label>
+            <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.number?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+          </div>
           <input
             id="customer-number"
             type="text"
@@ -277,12 +287,15 @@ export default function CustomerDataForm({
         </div>
 
         <div className="col-span-5">
-          <label 
-            htmlFor="customer-whatsapp" 
-            className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Telefone *
-          </label>
+          <div className="flex items-center gap-1 mb-1">
+            <label 
+              htmlFor="customer-whatsapp" 
+              className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Telefone *
+            </label>
+            <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.whatsapp?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+          </div>
           <input
             id="customer-whatsapp"
             type="text"
@@ -304,26 +317,7 @@ export default function CustomerDataForm({
       </div>
       )}
 
-      <div className="flex items-center gap-2 text-sm flex-wrap">
-        <div className={`w-2 h-2 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-        <span className={`transition-colors ${customerData.name?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Nome</span>
-        
-        {addressActive && (
-          <>
-            <span className="text-gray-300 dark:text-gray-600">•</span>
-            <div className={`w-2 h-2 rounded-full transition-colors ${customerData.address?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-            <span className={`transition-colors ${customerData.address?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Endereço</span>
-            
-            <span className="text-gray-300 dark:text-gray-600">•</span>
-            <div className={`w-2 h-2 rounded-full transition-colors ${customerData.number?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-            <span className={`transition-colors ${customerData.number?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Número</span>
-          </>
-        )}
-
-        <span className="text-gray-300 dark:text-gray-600">•</span>
-        <div className={`w-2 h-2 rounded-full transition-colors ${customerData.whatsapp?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-        <span className={`transition-colors ${customerData.whatsapp?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Telefone</span>
-      </div>
+      {/* Indicadores de preenchimento removidos do rodapé */}
 
       {showNearbyAddresses && (
         <NearbyAddresses

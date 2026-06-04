@@ -253,6 +253,36 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     setShowClearConfirmation(false);
   };
 
+  const displayedTotal = isDeliveryRoute && deliveryMode === 'delivery' && deliveryCovered
+    ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+    : formattedTotalPrice;
+
+  const getDeliveryOrLocationText = () => {
+    if (isDeliveryRoute) {
+      if (deliveryMode === 'delivery') {
+        if (deliveryReason === 'waiting_location') {
+          return 'Aguardando endereço...';
+        }
+        if (!deliveryCovered) {
+          return 'Entrega indisponível';
+        }
+        return deliveryFee === 0 
+          ? 'Entrega grátis' 
+          : `Taxa de entrega: R$ ${deliveryFee.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      } else {
+        return 'Retirada no local';
+      }
+    } else {
+      if (tableNumber === 'retirada') {
+        return 'Retirada no local';
+      }
+      if (tableNumber) {
+        return `Consumo na Mesa ${tableNumber}`;
+      }
+      return 'Consumo no local';
+    }
+  };
+
   if (!isCartOpen) return null;
 
   return (
@@ -458,8 +488,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     fallbackImage={restaurant?.image}
                   />
                 ))}
-                
-                {/* Formulário: delivery, retirada (rota /delivery) ou pagamento na mesa */}
+                          {/* Formulário: delivery, retirada (rota /delivery) ou pagamento na mesa */}
                 {(isDeliveryRoute || tablePayment) && (
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                     {tablePayment ? (
@@ -480,53 +509,23 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     )}
                   </div>
                 )}
-              </div>
 
-              {/* Footer com totais e ações */}
-              <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800">
-
-                {/* Resumo do pedido */}
-                <div className="mb-4 space-y-1.5">
-                  {isDeliveryRoute && deliveryMode === 'delivery' && (
-                    <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-                      <span>Subtotal:</span>
-                      <span className="font-medium">R$ {formattedTotalPrice}</span>
-                    </div>
-                  )}
-
-                  {isDeliveryRoute && deliveryMode === 'delivery' && (
-                    <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-                      <span>Taxa de Entrega:</span>
-                      <span className="font-medium">
-                        {deliveryReason === 'waiting_location' 
-                          ? 'Aguardando endereço...' 
-                          : !deliveryCovered
-                            ? 'Indisponível'
-                            : deliveryFee === 0 
-                              ? 'Grátis' 
-                              : `R$ ${deliveryFee.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                        }
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center text-lg font-semibold text-gray-800 dark:text-gray-200 border-t border-gray-200/50 dark:border-gray-700/50 pt-1.5">
-                    <span>Total do Pedido:</span>
-                    <span>R$ {isDeliveryRoute && deliveryMode === 'delivery' && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-2">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {totalItems} {totalItems === 1 ? 'item' : 'itens'} • {isDeliveryRoute ? (deliveryMode === 'delivery' ? (deliveryCovered ? 'Taxa de entrega incluída' : 'Entrega indisponível') : 'Pedido para retirada no local') : (tableNumber === 'retirada' ? 'Pedido para retirada no local' : 'Pedido para consumo no local')}
-                    </p>
-                    
-                    {!isDeliveryRoute && (restaurant?.table_ordering || tablePayment) && (
-                      <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                        <label htmlFor="small-table-select" className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                {/* Bloco de Finalização e Pagamento dentro do Scroll */}
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                  
+                  {/* Seletor de Mesa */}
+                  {!isDeliveryRoute && (restaurant?.table_ordering || tablePayment) && (
+                    <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/35 p-3 rounded-xl border border-gray-250/50 dark:border-gray-700 shadow-sm">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-gray-850 dark:text-gray-200">Mesa de Consumo</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Selecione o número da sua mesa</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <label htmlFor="scroll-table-select" className="text-xs font-bold text-gray-650 dark:text-gray-450 uppercase whitespace-nowrap">
                           Mesa:
                         </label>
                         <select 
-                          id="small-table-select"
+                          id="scroll-table-select"
                           value={tableNumber}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -542,163 +541,178 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                           ))}
                         </select>
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  )}
 
-                {/* Banner de Endereço sem Cobertura */}
-                {isDeliveryOutsideCoverage && (
-                  <div className="w-full mb-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl flex flex-col gap-1.5 animate-fade-in shadow-sm">
-                    <span className="text-red-650 dark:text-red-400 font-bold flex items-center gap-1.5 text-sm">
-                      ⚠️ Endereço sem Cobertura
-                    </span>
-                    <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
-                      {deliveryReason === 'distance_exceeded' && `Sinto muito! Este restaurante entrega até no máximo ${restaurant?.delivery_max_distance || 10} km de distância. Seu endereço está a ${(deliveryCalc.distanceKm || 0).toFixed(1)} km.`}
-                      {deliveryReason === 'exclusion_zone' && `O restaurante não realiza entregas na região selecionada (${deliveryZoneName || 'Zona de Exclusão'}).`}
-                      {deliveryReason === 'delivery_disabled' && 'O restaurante não está aceitando pedidos para entrega no momento.'}
-                    </p>
-                  </div>
-                )}
-
-                {/* Alerta se restaurantId estiver inválido */}
-                {(!restaurantId || restaurantId === 'default') && (
-                  <div className="w-full mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                      ⚠️ Aguardando identificação do restaurante. Se o problema persistir, recarregue a página.
-                    </p>
-                  </div>
-                )}
-
-                {/* Banner de Pedido Mínimo Não Atingido */}
-                {isMinOrderNotMet && (
-                  <div className="w-full mb-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl flex flex-col gap-1.5 animate-fade-in shadow-sm">
-                    <span className="text-amber-850 dark:text-amber-300 font-bold flex items-center gap-1.5 text-sm">
-                      ⚠️ Pedido Mínimo Não Atingido
-                    </span>
-                    <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                      O valor mínimo para pedidos de delivery é de <strong className="font-mono">R$ {minOrderValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>. 
-                      Falta <strong className="font-mono">R$ {(minOrderValue - totalPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> para você poder finalizar o pedido.
-                    </p>
-                  </div>
-                )}
-
-
-
-                {/* Botões de ação */}
-                {!isAcceptingOrders ? (
-                  <div className="w-full mt-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl text-center shadow-sm">
-                    <p className="text-red-700 dark:text-red-400 font-bold mb-1 flex items-center justify-center gap-1.5">
-                      {restaurant?.open === false ? 'Estabelecimento Fechado' : 'Pedidos pausados'}
-                    </p>
-                    <p className="text-xs text-gray-655 dark:text-gray-405 leading-relaxed mb-3">
-                      {restaurant?.open === false
-                        ? 'Não é possível finalizar ou enviar novos pedidos enquanto o restaurante estiver fechado.'
-                        : 'Este restaurante não está aceitando novos pedidos no momento. Ative os pedidos no painel do gestor para testar o checkout.'}
-                    </p>
-                    <div className="text-[11px] text-gray-500 dark:text-gray-400 pt-2.5 border-t border-red-200/50 dark:border-red-900/30 text-center max-w-sm mx-auto">
-                      <p className="font-bold text-gray-700 dark:text-gray-300 mb-1">Horário de Funcionamento (Hoje):</p>
-                      <p className="font-medium text-gray-600 dark:text-gray-450">
-                        {(() => {
-                          const formattedHours = formatOperatingHours(restaurant?.operating_hours);
-                          const todayDayOfWeek = new Date().getDay();
-                          return formattedHours.length === 7 ? formattedHours[todayDayOfWeek] : formattedHours[0];
-                        })()}
+                  {/* Banner de Endereço sem Cobertura */}
+                  {isDeliveryOutsideCoverage && (
+                    <div className="w-full p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl flex flex-col gap-1.5 animate-fade-in shadow-sm">
+                      <span className="text-red-650 dark:text-red-400 font-bold flex items-center gap-1.5 text-sm">
+                        ⚠️ Endereço sem Cobertura
+                      </span>
+                      <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
+                        {deliveryReason === 'distance_exceeded' && `Sinto muito! Este restaurante entrega até no máximo ${restaurant?.delivery_max_distance || 10} km de distância. Seu endereço está a ${(deliveryCalc.distanceKm || 0).toFixed(1)} km.`}
+                        {deliveryReason === 'exclusion_zone' && `O restaurante não realiza entregas na região selecionada (${deliveryZoneName || 'Zona de Exclusão'}).`}
+                        {deliveryReason === 'delivery_disabled' && 'O restaurante não está aceitando pedidos para entrega no momento.'}
                       </p>
                     </div>
-                  </div>
-                ) : isDeliveryRoute ? (
-                  !isMinOrderNotMet && (
-                    <div className="grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3">
-                      <div
-                        className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}
-                      >
-                        <CartWhatsAppButton
-                          restaurantId={restaurantId}
-                          deliveryMode={deliveryMode}
-                          className="w-full"
-                        />
+                  )}
+
+                  {/* Alerta se restaurantId estiver inválido */}
+                  {(!restaurantId || restaurantId === 'default') && (
+                    <div className="w-full p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        ⚠️ Aguardando identificação do restaurante. Se o problema persistir, recarregue a página.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Banner de Pedido Mínimo Não Atingido */}
+                  {isMinOrderNotMet && (
+                    <div className="w-full p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl flex flex-col gap-1.5 animate-fade-in shadow-sm">
+                      <span className="text-amber-850 dark:text-amber-300 font-bold flex items-center gap-1.5 text-sm">
+                        ⚠️ Pedido Mínimo Não Atingido
+                      </span>
+                      <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                        O valor mínimo para pedidos de delivery é de <strong className="font-mono">R$ {minOrderValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>. 
+                        Falta <strong className="font-mono">R$ {(minOrderValue - totalPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> para você poder finalizar o pedido.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Botões de Ação */}
+                  {!isAcceptingOrders ? (
+                    <div className="w-full p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl text-center shadow-sm">
+                      <p className="text-red-700 dark:text-red-400 font-bold mb-1 flex items-center justify-center gap-1.5">
+                        {restaurant?.open === false ? 'Estabelecimento Fechado' : 'Pedidos pausados'}
+                      </p>
+                      <p className="text-xs text-gray-655 dark:text-gray-405 leading-relaxed mb-3">
+                        {restaurant?.open === false
+                          ? 'Não é possível finalizar ou enviar novos pedidos enquanto o restaurante estiver fechado.'
+                          : 'Este restaurante não está aceitando novos pedidos no momento. Ative os pedidos no painel do gestor para testar o checkout.'}
+                      </p>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400 pt-2.5 border-t border-red-200/50 dark:border-red-900/30 text-center max-w-sm mx-auto">
+                        <p className="font-bold text-gray-700 dark:text-gray-300 mb-1">Horário de Funcionamento (Hoje):</p>
+                        <p className="font-medium text-gray-600 dark:text-gray-450">
+                          {(() => {
+                            const formattedHours = formatOperatingHours(restaurant?.operating_hours);
+                            const todayDayOfWeek = new Date().getDay();
+                            return formattedHours.length === 7 ? formattedHours[todayDayOfWeek] : formattedHours[0];
+                          })()}
+                        </p>
                       </div>
-                      {pixPaymentEnabled && (
-                        <div
-                          className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}
-                        >
-                          <InfinitePayPixButton
+                    </div>
+                  ) : isDeliveryRoute ? (
+                    !isMinOrderNotMet && (
+                      <div className="grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3">
+                        <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
+                          <CartWhatsAppButton
                             restaurantId={restaurantId}
                             deliveryMode={deliveryMode}
                             className="w-full"
                           />
                         </div>
-                      )}
-                      {onlinePayment && (
-                        <>
-                          <div
-                            className={`${checkoutActionButtonCellClass}${walletPayVisible ? '' : ' col-span-2'}`}
-                          >
-                            <StripeCheckoutButton
+                        {pixPaymentEnabled && (
+                          <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
+                            <InfinitePayPixButton
                               restaurantId={restaurantId}
                               deliveryMode={deliveryMode}
                               className="w-full"
                             />
                           </div>
-                          <div className={walletPayVisible ? checkoutActionButtonCellClass : 'hidden'}>
-                            <StripeExpressCheckoutButton
-                              restaurantId={restaurantId}
-                              deliveryMode={deliveryMode}
-                              className="w-full"
-                              onWalletAvailabilityChange={setWalletPayVisible}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )
-                ) : (
-                  // Fluxo Presencial / Na Mesa
-                  (!restaurant?.table_ordering && !tablePayment) ? (
-                    null
-                  ) : (
-                    <div className="flex gap-2 sm:gap-3">
-                      {(pixPaymentEnabled || onlinePayment || tablePayment) && (
-                        <div className="flex-1 flex flex-col gap-2 min-w-0">
-                          {pixPaymentEnabled && (
-                            <div className={checkoutActionButtonCellClass}>
-                              <InfinitePayPixButton
+                        )}
+                        {onlinePayment && (
+                          <>
+                            <div className={`${checkoutActionButtonCellClass}${walletPayVisible ? '' : ' col-span-2'}`}>
+                              <StripeCheckoutButton
                                 restaurantId={restaurantId}
+                                deliveryMode={deliveryMode}
                                 className="w-full"
                               />
                             </div>
-                          )}
-                          {(onlinePayment || tablePayment) && (
-                            <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
-                              <div className={walletPayVisible ? checkoutActionButtonCellClass : 'w-full min-w-0 flex'}>
-                                <StripeCheckoutButton
-                                  restaurantId={restaurantId}
-                                  className="w-full"
-                                />
-                              </div>
-                              <div className={checkoutActionButtonCellClass}>
-                                <StripeExpressCheckoutButton
-                                  restaurantId={restaurantId}
-                                  className="w-full"
-                                  onWalletAvailabilityChange={setWalletPayVisible}
-                                />
-                              </div>
+                            <div className={walletPayVisible ? checkoutActionButtonCellClass : 'hidden'}>
+                              <StripeExpressCheckoutButton
+                                restaurantId={restaurantId}
+                                deliveryMode={deliveryMode}
+                                className="w-full"
+                                onWalletAvailabilityChange={setWalletPayVisible}
+                              />
                             </div>
-                          )}
-                        </div>
-                      )}
-                      {restaurant?.table_ordering && !onlinePayment && (
-                        <div className="flex-1">
-                          <SendOrderButton 
-                            restaurantId={restaurantId} 
-                            tableNumber={tableNumber}
-                            onSent={handleClose}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )
-                )}
+                          </>
+                        )}
+                      </div>
+                    )
+                  ) : (
+                    // Fluxo Presencial / Na Mesa
+                    (!restaurant?.table_ordering && !tablePayment) ? null : (
+                      <div className="flex gap-2 sm:gap-3">
+                        {(pixPaymentEnabled || onlinePayment || tablePayment) && (
+                          <div className="flex-1 flex flex-col gap-2 min-w-0">
+                            {pixPaymentEnabled && (
+                              <div className={checkoutActionButtonCellClass}>
+                                <InfinitePayPixButton
+                                  restaurantId={restaurantId}
+                                  className="w-full"
+                                />
+                              </div>
+                            )}
+                            {(onlinePayment || tablePayment) && (
+                              <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
+                                <div className={walletPayVisible ? checkoutActionButtonCellClass : 'w-full min-w-0 flex'}>
+                                  <StripeCheckoutButton
+                                    restaurantId={restaurantId}
+                                    className="w-full"
+                                  />
+                                </div>
+                                <div className={checkoutActionButtonCellClass}>
+                                  <StripeExpressCheckoutButton
+                                    restaurantId={restaurantId}
+                                    className="w-full"
+                                    onWalletAvailabilityChange={setWalletPayVisible}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {restaurant?.table_ordering && !onlinePayment && (
+                          <div className="flex-1">
+                            <SendOrderButton 
+                              restaurantId={restaurantId} 
+                              tableNumber={tableNumber}
+                              onSent={handleClose}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Footer Compacto e Fixo */}
+              <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800/80 backdrop-blur-md">
+                <div className="flex items-center justify-between gap-4">
+                  {/* Lado Esquerdo: Quantidade e Localização/Entrega */}
+                  <div className="min-w-0 flex flex-col">
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                      {totalItems} {totalItems === 1 ? 'item' : 'itens'}
+                    </span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                      {getDeliveryOrLocationText()}
+                    </span>
+                  </div>
+
+                  {/* Lado Direito: Total do Pedido */}
+                  <div className="text-right shrink-0 flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+                      Total
+                    </span>
+                    <span className="text-lg font-black text-blue-600 dark:text-blue-400">
+                      R$ {displayedTotal}
+                    </span>
+                  </div>
+                </div>
               </div>
             </>
           )}

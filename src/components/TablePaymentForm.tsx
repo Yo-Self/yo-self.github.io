@@ -13,11 +13,11 @@ export default function TablePaymentForm({
   const { customerData, updateName, updateWhatsApp } = useCustomerData();
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+    <div className={`space-y-3 ${className}`}>
+      <div className="flex items-center gap-2 mb-2">
+        <div className="p-1.5 bg-green-100 dark:bg-green-900 rounded-lg">
           <svg
-            className="w-5 h-5 text-green-600 dark:text-green-400"
+            className="w-4 h-4 text-green-600 dark:text-green-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -31,22 +31,25 @@ export default function TablePaymentForm({
           </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h3 className="text-sm font-bold sm:text-base text-gray-800 dark:text-gray-200">
             Pagamento na Mesa
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Preencha para receber o status do seu pedido.
           </p>
         </div>
       </div>
 
       <div>
-        <label 
-          htmlFor="table-customer-name" 
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Nome Completo
-        </label>
+        <div className="flex items-center gap-1.5 mb-1">
+          <label 
+            htmlFor="table-customer-name" 
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Nome Completo
+          </label>
+          <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+        </div>
         <input
           id="table-customer-name"
           type="text"
@@ -54,7 +57,7 @@ export default function TablePaymentForm({
           onChange={(e) => updateName(e.target.value)}
           placeholder="Digite seu nome completo"
           className="
-            w-full px-4 py-3 
+            w-full px-3 py-2 
             border border-gray-300 dark:border-gray-600 
             rounded-lg 
             bg-white dark:bg-gray-800 
@@ -67,12 +70,15 @@ export default function TablePaymentForm({
       </div>
 
       <div>
-        <label 
-          htmlFor="table-customer-whatsapp" 
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          WhatsApp
-        </label>
+        <div className="flex items-center gap-1.5 mb-1">
+          <label 
+            htmlFor="table-customer-whatsapp" 
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            WhatsApp
+          </label>
+          <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.whatsapp?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+        </div>
         <input
           id="table-customer-whatsapp"
           type="tel"
@@ -80,7 +86,7 @@ export default function TablePaymentForm({
           onChange={(e) => updateWhatsApp(e.target.value)}
           placeholder="(11) 99999-9999"
           className="
-            w-full px-4 py-3 
+            w-full px-3 py-2 
             border border-gray-300 dark:border-gray-600 
             rounded-lg 
             bg-white dark:bg-gray-800 
@@ -90,17 +96,9 @@ export default function TablePaymentForm({
             transition-colors duration-200
           "
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-[10px] text-gray-500 dark:text-gray-450 mt-1">
           💡 Seu número será usado para contato sobre o pedido
         </p>
-      </div>
-
-      <div className="flex items-center gap-2 text-sm flex-wrap">
-        <div className={`w-2 h-2 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-        <span className={`transition-colors ${customerData.name?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>Nome</span>
-        
-        <div className={`w-2 h-2 rounded-full transition-colors ${customerData.whatsapp?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-        <span className={`transition-colors ${customerData.whatsapp?.trim() ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>WhatsApp</span>
       </div>
     </div>
   );
