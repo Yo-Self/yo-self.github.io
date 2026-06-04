@@ -20,6 +20,7 @@ import { useRestaurantAddressActive } from '../hooks/useRestaurantAddressActive'
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import { useRestaurantPixPayment } from '../hooks/useRestaurantPixPayment';
+import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import { usePathname } from 'next/navigation';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { formatOperatingHours } from '../utils/hoursFormatter';
@@ -64,7 +65,11 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
   const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
   const { pixPaymentEnabled } = useRestaurantPixPayment(restaurantId);
+  const { config: whatsAppConfig } = useWhatsAppConfig(restaurantId);
   const { restaurant } = useRestaurantBySlug(restaurantId || "");
+  /** WhatsApp + PIX share one row (50/50); either alone spans full width. */
+  const messengerCheckoutPairActive =
+    pixPaymentEnabled && whatsAppConfig.enabled;
   const { activeOrderIds, getOrderAccessToken } = useActiveOrders(restaurant?.id);
 
   const pathname = usePathname();
@@ -604,7 +609,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                 ) : isDeliveryRoute ? (
                   !isMinOrderNotMet && (
                     <div className="grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3">
-                      <div className={checkoutActionButtonCellClass}>
+                      <div
+                        className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}
+                      >
                         <CartWhatsAppButton
                           restaurantId={restaurantId}
                           deliveryMode={deliveryMode}
@@ -612,7 +619,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                         />
                       </div>
                       {pixPaymentEnabled && (
-                        <div className={checkoutActionButtonCellClass}>
+                        <div
+                          className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}
+                        >
                           <InfinitePayPixButton
                             restaurantId={restaurantId}
                             deliveryMode={deliveryMode}
