@@ -64,6 +64,7 @@ export type Restaurant = {
   longitude?: number;
   address?: string;
   open?: boolean;
+  is_open_for_orders?: boolean;
   operating_hours?: {
     id: string;
     restaurant_id: string;

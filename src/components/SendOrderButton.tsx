@@ -7,7 +7,8 @@ import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
 import { Order, OrderItem } from '../types/order';
-import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
+import Analytics from '../lib/analytics';
+import { paymentContextFromCart } from '../lib/paymentAnalytics';
 import { useActiveOrders } from '../hooks/useActiveOrders';
 
 interface SendOrderButtonProps {
@@ -52,6 +53,18 @@ export default function SendOrderButton({
       return;
     }
 
+    const paymentCtx = paymentContextFromCart({
+      restaurant,
+      items,
+      subtotalValue: totalPrice,
+      totalValue: totalPrice,
+      paymentMethod: 'send_order_direct',
+      tableId: tableNumber,
+      customerData,
+    });
+
+    Analytics.trackPaymentMethodClicked(paymentCtx);
+
     setIsSending(true);
 
     try {
@@ -91,14 +104,10 @@ export default function SendOrderButton({
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
 
       // Save order id for tracking
-      addActiveOrderId(newOrder.id, newOrder.customer_access_token);
+      addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
 
-      // Track analytics
-      const currentRestaurantId = getCurrentRestaurantId();
-      if (currentRestaurantId) {
-        Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'send_order_direct');
-        Analytics.trackPurchaseCompleted(restaurant.id, restaurant.slug || '', items.length, totalPrice);
-      }
+      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id });
+      Analytics.trackPaymentCompleted({ ...paymentCtx, orderId: newOrder.id });
 
       // Mostrar modal de sucesso
       setShowSuccessModal(true);

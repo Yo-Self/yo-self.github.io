@@ -7,36 +7,33 @@ import { useRestaurantBySlug } from './useRestaurantBySlug';
 import { useCustomerCoordinates } from './useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 import { createOrder } from '../services/orderService';
-import { createCheckoutSession } from '../services/stripeService';
+import { createInfinitePayCheckout } from '../services/infinitepayService';
 import { Order, OrderItem } from '../types/order';
 import Analytics from '../lib/analytics';
 import { paymentContextFromCart } from '../lib/paymentAnalytics';
 import { useActiveOrders } from './useActiveOrders';
 
-interface UseStripeCheckoutOptions {
+interface UseInfinitePayCheckoutOptions {
   restaurantId: string;
   onError?: (error: Error) => void;
   deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }
 
-interface UseStripeCheckoutReturn {
-  initiateCheckout: () => Promise<void>;
+interface UseInfinitePayCheckoutReturn {
+  initiatePixCheckout: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
 
 /**
- * Hook para gerenciar o fluxo de checkout Stripe.
- * 
- * 1. Cria order no Supabase com status 'pending_payment'
- * 2. Chama Edge Function para criar Stripe Checkout Session
- * 3. Redireciona o usuário para a página do Stripe
+ * PIX checkout via InfinitePay (opt-in per restaurant).
+ * Mirrors useStripeCheckout without modifying the Stripe flow.
  */
-export function useStripeCheckout({ 
-  restaurantId, 
+export function useInfinitePayCheckout({
+  restaurantId,
   onError,
-  deliveryMode
-}: UseStripeCheckoutOptions): UseStripeCheckoutReturn {
+  deliveryMode,
+}: UseInfinitePayCheckoutOptions): UseInfinitePayCheckoutReturn {
   const { items, totalPrice, isEmpty } = useCart();
   const { customerData } = useCustomerData();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
@@ -45,7 +42,7 @@ export function useStripeCheckout({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const initiateCheckout = useCallback(async () => {
+  const initiatePixCheckout = useCallback(async () => {
     if (isEmpty || isLoading || isLoadingRestaurant) return;
 
     if (!restaurant?.id) {
@@ -74,12 +71,12 @@ export function useStripeCheckout({
             ? `Endereço indisponível para entrega na região: ${deliveryCalc.zoneName}`
             : deliveryCalc.reason === 'waiting_location'
               ? 'Por favor, informe seu endereço de entrega antes de pagar.'
-              : `Endereço fora da área de entrega do restaurante (limite de ${restaurant.delivery_max_distance || 10} km).`
+              : `Endereço fora da área de entrega do restaurante (limite de ${restaurant.delivery_max_distance || 10} km).`,
         );
       }
 
       const deliveryFee = deliveryCalc.fee / 100;
-      const fullDeliveryAddress = isActuallyDelivery 
+      const fullDeliveryAddress = isActuallyDelivery
         ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
         : undefined;
 
@@ -104,7 +101,7 @@ export function useStripeCheckout({
         delivery_address_details: isActuallyDelivery ? {
           street: customerData.address,
           number: customerData.number,
-          complement: customerData.complement
+          complement: customerData.complement,
         } : null,
       };
 
@@ -122,7 +119,7 @@ export function useStripeCheckout({
                 name: complementName,
                 price: Math.round(parseFloat(complement?.price.replace(',', '.') || '0') * 100),
               };
-            })
+            }),
         ),
         sent_to_kitchen: item.dish.needs_preparation !== false,
       }));
@@ -137,7 +134,7 @@ export function useStripeCheckout({
         items,
         subtotalValue: totalPrice,
         totalValue: totalWithDelivery,
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'infinitepay_pix',
         deliveryMode,
         isDeliveryRoute,
         deliveryFeeCents: isActuallyDelivery && deliveryCalc.covered ? deliveryCalc.fee : 0,
@@ -153,12 +150,12 @@ export function useStripeCheckout({
       const tokenParam = newOrder.customer_access_token
         ? `&order_token=${newOrder.customer_access_token}`
         : '';
-      const successUrl = `${currentUrl}?payment_success=true&payment_method=stripe_card&order_id=${newOrder.id}${tokenParam}`;
-      const cancelUrl = `${currentUrl}?payment_cancelled=true&payment_method=stripe_card&order_id=${newOrder.id}${tokenParam}`;
+      const successUrl = `${currentUrl}?payment_success=true&payment_provider=infinitepay&payment_method=infinitepay_pix&capture_method=pix&order_id=${newOrder.id}${tokenParam}`;
+      const cancelUrl = `${currentUrl}?payment_cancelled=true&payment_provider=infinitepay&payment_method=infinitepay_pix&order_id=${newOrder.id}${tokenParam}`;
 
       addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
 
-      const session = await createCheckoutSession({
+      const session = await createInfinitePayCheckout({
         orderId: newOrder.id,
         restaurantId: restaurant.id,
         customerName: customerData.name,
@@ -170,15 +167,14 @@ export function useStripeCheckout({
       Analytics.trackPaymentCheckoutSessionCreated({
         ...paymentCtx,
         orderId: newOrder.id,
-        sessionId: session.session_id,
+        sessionId: session.slug ?? undefined,
       });
 
       Analytics.trackPaymentRedirectStarted({ ...paymentCtx, orderId: newOrder.id });
 
       window.location.href = session.checkout_url;
-
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao iniciar pagamento.';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao iniciar pagamento PIX.';
       setError(errorMessage);
       onError?.(err instanceof Error ? err : new Error(errorMessage));
 
@@ -189,7 +185,7 @@ export function useStripeCheckout({
             items,
             subtotalValue: totalPrice,
             totalValue: totalPrice,
-            paymentMethod: 'stripe_card',
+            paymentMethod: 'infinitepay_pix',
             deliveryMode,
             isDeliveryRoute:
               typeof window !== 'undefined' &&
@@ -202,17 +198,29 @@ export function useStripeCheckout({
       }
 
       Analytics.trackError(err instanceof Error ? err : new Error(errorMessage), {
-        component: 'useStripeCheckout',
-        action: 'initiate_checkout',
+        component: 'useInfinitePayCheckout',
+        action: 'initiate_pix_checkout',
         restaurantId: restaurant?.id,
         itemCount: items.length,
         totalPrice,
-        payment_method: 'stripe_card',
+        payment_method: 'infinitepay_pix',
       });
     } finally {
       setIsLoading(false);
     }
-  }, [isEmpty, isLoading, isLoadingRestaurant, restaurant, customerData, items, totalPrice, customerCoordinates, onError, deliveryMode, addActiveOrderId]);
+  }, [
+    isEmpty,
+    isLoading,
+    isLoadingRestaurant,
+    restaurant,
+    customerData,
+    items,
+    totalPrice,
+    customerCoordinates,
+    onError,
+    deliveryMode,
+    addActiveOrderId,
+  ]);
 
-  return { initiateCheckout, isLoading, error };
+  return { initiatePixCheckout, isLoading, error };
 }

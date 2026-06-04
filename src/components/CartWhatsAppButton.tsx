@@ -8,15 +8,25 @@ import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useRestaurantCoordinates } from '../hooks/useRestaurantCoordinates';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
-import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import { usePathname } from 'next/navigation';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
 import { Order, OrderItem } from '../types/order';
-import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
+import Analytics from '../lib/analytics';
 import { useActiveOrders } from '../hooks/useActiveOrders';
+import { paymentContextFromCart } from '../lib/paymentAnalytics';
+import {
+  checkoutActionButtonMinHeightClass,
+  checkoutActionButtonPaddingClass,
+  checkoutActionContentClass,
+  checkoutActionIconClass,
+  checkoutActionLabelClass,
+  checkoutActionLabelWrapMobileClass,
+  checkoutActionSubtitleClass,
+  checkoutActionTextColumnClass,
+} from './cart/checkoutButtonLayout';
 
 interface CartWhatsAppButtonProps {
   restaurantId?: string;
@@ -41,7 +51,6 @@ export default function CartWhatsAppButton({
   const { coordinates: restaurantCoordinates } = useRestaurantCoordinates(restaurantId);
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
-  const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
 
   const pathname = usePathname();
@@ -117,21 +126,12 @@ export default function CartWhatsAppButton({
 
   const generateCartWhatsAppMessage = (order: Order) => {
     let message = `🛒 *PEDIDO COMPLETO*\n\n*ID do Pedido:* ${order.id}\n\n`;
-    
-    // Debug: Log das coordenadas disponíveis
-    console.log('🔍 Debug - Coordenadas do restaurante:', restaurantCoordinates);
-    console.log('🔍 Debug - Coordenadas do cliente:', customerCoordinates);
-    console.log('🔍 Debug - Modo pagamento na mesa:', tablePayment);
-    
-    // Calcular distância de entrega se coordenadas estiverem disponíveis (apenas para delivery)
-    // Calcular distância de entrega se coordenadas estiverem disponíveis (apenas para delivery)
+
     const deliveryDistance = isActuallyDelivery ? calculateDeliveryDistance(
       restaurantCoordinates,
       customerCoordinates.coordinates
     ) : null;
-    
-    console.log('🔍 Debug - Distância calculada:', deliveryDistance);
-    
+
     // Dados do cliente
     const hasCustomerData = customerData.name?.trim() || customerData.address?.trim() || customerData.number?.trim() || customerData.complement?.trim() || customerData.whatsapp?.trim();
     
@@ -240,7 +240,6 @@ export default function CartWhatsAppButton({
   const handleCreateOrderAndSendWhatsApp = async () => {
     // Verificação 1: Validações básicas de estado
     if (isLoading || isCreatingOrder || isEmpty) {
-      console.log('[CartWhatsAppButton] Operação bloqueada - isLoading:', isLoading, 'isCreatingOrder:', isCreatingOrder, 'isEmpty:', isEmpty);
       return;
     }
 
@@ -331,6 +330,23 @@ export default function CartWhatsAppButton({
     // Após a criação do pedido, navegamos a janela já aberta para a URL do WhatsApp.
     const whatsappWindow = window.open('', '_blank');
 
+    const paymentCtx = paymentContextFromCart({
+      restaurant,
+      items,
+      subtotalValue: totalPrice,
+      totalValue: totalPriceWithShipping,
+      paymentMethod: 'whatsapp',
+      deliveryMode,
+      isDeliveryRoute,
+      deliveryFeeCents: isActuallyDelivery && deliveryCovered ? deliveryCalc.fee : 0,
+      deliveryCovered,
+      deliveryReason: deliveryCalc.reason,
+      tableId: typeof window !== 'undefined' ? localStorage.getItem('table_id') : null,
+      customerData,
+    });
+
+    Analytics.trackPaymentMethodClicked(paymentCtx);
+
     setIsCreatingOrder(true);
 
     try {
@@ -380,31 +396,32 @@ export default function CartWhatsAppButton({
 
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
 
-      // Save order id for tracking
-      addActiveOrderId(newOrder.id, newOrder.customer_access_token);
+      addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
+
+      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id });
 
       const message = generateCartWhatsAppMessage(newOrder);
-
       const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
 
-      const currentRestaurantId = getCurrentRestaurantId();
-      if (currentRestaurantId) {
-        Analytics.trackCartCheckout(items, totalPrice, currentRestaurantId, 'whatsapp');
-      }
-
       if (whatsappWindow && !whatsappWindow.closed) {
-        // Navegar a janela já aberta para a URL do WhatsApp
         whatsappWindow.location.href = whatsappUrl;
 
-        // Rastrear sucesso na abertura do WhatsApp
-        Analytics.trackCartWhatsAppOpenedSuccessfully(restaurant.id, restaurant.slug || '', items.length, totalPrice);
-        Analytics.trackPurchaseCompleted(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+        Analytics.trackCartWhatsAppOpenedSuccessfully(restaurant.id, restaurant.slug || '', items.length, totalPriceWithShipping);
+        Analytics.trackPaymentCompleted({
+          ...paymentCtx,
+          orderId: newOrder.id,
+          popupBlocked: false,
+          whatsappChannel: 'popup',
+        });
         Analytics.trackSurveyOpportunity('post_checkout', restaurant.id, restaurant.slug || '');
       } else {
-        // Fallback: janela foi fechada pelo usuário antes do pedido ser criado,
-        // ou ainda foi bloqueada (ex: navegadores muito restritivos).
-        // Redirecionar a aba atual como último recurso.
-        Analytics.trackCartWhatsAppPopupBlocked(restaurant.id, restaurant.slug || '', items.length, totalPrice);
+        Analytics.trackCartWhatsAppPopupBlocked(restaurant.id, restaurant.slug || '', items.length, totalPriceWithShipping);
+        Analytics.trackPaymentRedirectStarted({
+          ...paymentCtx,
+          orderId: newOrder.id,
+          popupBlocked: true,
+          whatsappChannel: 'same_tab_fallback',
+        });
         window.location.href = whatsappUrl;
       }
 
@@ -452,8 +469,9 @@ export default function CartWhatsAppButton({
       onClick={handleCreateOrderAndSendWhatsApp}
       disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')}
       className={`
-        w-full flex items-center justify-center gap-2 sm:gap-3 
-        px-3 sm:px-6 py-3.5 sm:py-4 
+        relative w-full min-w-0 flex items-center justify-center
+        ${checkoutActionButtonMinHeightClass}
+        ${checkoutActionButtonPaddingClass}
         bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
         text-white font-semibold 
         rounded-xl shadow-lg hover:shadow-xl
@@ -465,53 +483,37 @@ export default function CartWhatsAppButton({
       `}
       aria-label={`Enviar pedido com ${totalItems} ${totalItems === 1 ? 'item' : 'itens'} pelo WhatsApp`}
     >
-      {/* Ícone do WhatsApp */}
-      <svg 
-        className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" 
-        fill="currentColor" 
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-      </svg>
+      <span className={checkoutActionContentClass}>
+        <svg
+          className={checkoutActionIconClass}
+          fill="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+        </svg>
 
-      {/* Texto do botão */}
-      <div className="flex flex-col items-start min-w-0">
-        <span className="text-base sm:text-lg font-bold whitespace-nowrap">
-          {isLoadingRestaurant 
-            ? 'Carregando...' 
-            : isCreatingOrder 
-              ? 'Criando...' 
-              : isDeliveryOutsideCoverage 
-                ? 'Sem Cobertura' 
-                : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location') 
-                  ? 'Informe o Endereço' 
-                  : (onlinePayment ? 'Pedir pelo Whatsapp por Pix' : 'Pedir pelo Whatsapp')}
+        <span className={checkoutActionTextColumnClass}>
+          <span className={`${checkoutActionLabelClass} ${checkoutActionLabelWrapMobileClass}`}>
+            {isLoadingRestaurant
+              ? 'Carregando...'
+              : isCreatingOrder
+                ? 'Criando...'
+                : isDeliveryOutsideCoverage
+                  ? 'Sem Cobertura'
+                  : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
+                    ? 'Informe o Endereço'
+                    : 'Pedir pelo WhatsApp'}
+          </span>
+          <span className={checkoutActionSubtitleClass}>
+            {isDeliveryOutsideCoverage
+              ? 'Endereço fora da área de entrega'
+              : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
+                ? 'Preencha os dados acima'
+                : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isActuallyDelivery && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
+          </span>
         </span>
-        <span className="text-xs opacity-90 truncate hidden sm:block">
-          {isDeliveryOutsideCoverage
-            ? 'Endereço fora da área de entrega'
-            : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
-              ? 'Preencha os dados acima'
-              : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isActuallyDelivery && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
-        </span>
-      </div>
-
-      {/* Ícone de seta */}
-      <svg 
-        className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 hidden sm:block" 
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={2} 
-          d="M14 5l7 7m0 0l-7 7m7-7H3" 
-        />
-      </svg>
+      </span>
 
       {/* Efeito de brilho */}
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white to-transparent opacity-0 hover:opacity-10 transition-opacity duration-300 -skew-x-12 transform translate-x-[-100%] hover:translate-x-[100%]" />

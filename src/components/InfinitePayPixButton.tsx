@@ -2,12 +2,16 @@
 
 import React from 'react';
 import { useCart } from '../hooks/useCart';
-import { useStripeCheckout } from '../hooks/useStripeCheckout';
+import { useInfinitePayCheckout } from '../hooks/useInfinitePayCheckout';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { usePathname } from 'next/navigation';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import PixIcon from './icons/PixIcon';
+import Analytics from '../lib/analytics';
+import { paymentContextFromCart } from '../lib/paymentAnalytics';
+import { trackPaymentFormValidationFailed } from '../lib/trackPaymentButtonValidation';
 import {
   checkoutActionButtonMinHeightClass,
   checkoutActionButtonPaddingClass,
@@ -18,27 +22,23 @@ import {
   checkoutActionSubtitleClass,
   checkoutActionTextColumnClass,
 } from './cart/checkoutButtonLayout';
-import Analytics from '../lib/analytics';
-import { paymentContextFromCart } from '../lib/paymentAnalytics';
-import { trackPaymentFormValidationFailed } from '../lib/trackPaymentButtonValidation';
 
-interface StripeCheckoutButtonProps {
+interface InfinitePayPixButtonProps {
   restaurantId?: string;
   className?: string;
   deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }
 
-export default function StripeCheckoutButton({
+export default function InfinitePayPixButton({
   restaurantId = "default",
   className = "",
   deliveryMode,
-}: StripeCheckoutButtonProps) {
+}: InfinitePayPixButtonProps) {
   const { items, totalPrice, totalItems, formattedTotalPrice, isEmpty } = useCart();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const pathname = usePathname();
   const isDeliveryRoute = pathname ? pathname.startsWith('/delivery') : true;
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
-  const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
   const { customerCoordinates } = useCustomerCoordinates();
   const { customerData } = useCustomerData();
 
@@ -53,12 +53,11 @@ export default function StripeCheckoutButton({
 
   const isMinOrderNotMet = isActuallyDelivery && restaurant?.min_order_value && totalPrice < restaurant.min_order_value && restaurant?.open !== false;
 
-  const { initiateCheckout, isLoading, error } = useStripeCheckout({
+  const { initiatePixCheckout, isLoading, error } = useInfinitePayCheckout({
     restaurantId,
     deliveryMode,
     onError: (err) => {
-      // Error is already tracked in the hook, just show alert
-      alert(`Erro no pagamento: ${err.message}`);
+      alert(`Erro no pagamento PIX: ${err.message}`);
     },
   });
 
@@ -70,7 +69,7 @@ export default function StripeCheckoutButton({
         restaurant,
         items,
         totalPrice,
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'infinitepay_pix',
         validationField: field,
         deliveryMode,
         isDeliveryRoute,
@@ -114,7 +113,7 @@ export default function StripeCheckoutButton({
         items,
         subtotalValue: totalPrice,
         totalValue: totalWithShipping,
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'infinitepay_pix',
         deliveryMode,
         isDeliveryRoute,
         deliveryFeeCents: isActuallyDelivery && deliveryCovered ? deliveryCalc.fee : 0,
@@ -124,22 +123,16 @@ export default function StripeCheckoutButton({
       }),
     );
 
-    initiateCheckout();
+    initiatePixCheckout();
   };
 
-  // Don't render if cart is empty
-  if (isEmpty) {
-    return null;
-  }
-
-  // Don't render while still loading restaurant info
-  if (isLoadingRestaurant) {
+  if (isEmpty || isLoadingRestaurant) {
     return null;
   }
 
   const totalPriceWithShipping = totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0);
 
-  const isCustomerDataValid = isActuallyDelivery 
+  const isCustomerDataValid = isActuallyDelivery
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
@@ -147,6 +140,7 @@ export default function StripeCheckoutButton({
 
   return (
     <button
+      type="button"
       onClick={handleCheckoutClick}
       disabled={isNativelyDisabled}
       className={`
@@ -154,35 +148,22 @@ export default function StripeCheckoutButton({
         ${checkoutActionButtonMinHeightClass}
         ${checkoutActionButtonPaddingClass}
         font-semibold rounded-xl shadow-lg hover:shadow-xl
-        transition-all duration-200 
+        transition-all duration-200
         transform hover:scale-[1.02] active:scale-[0.98]
-        focus:outline-none focus:ring-4 focus:ring-violet-300
+        focus:outline-none focus:ring-4 focus:ring-emerald-300
         disabled:cursor-not-allowed disabled:transform-none disabled:opacity-50
-        ${isNativelyDisabled 
-          ? 'bg-gray-300 text-gray-500 border border-transparent' 
-          : (!isCustomerDataValid 
+        ${isNativelyDisabled
+          ? 'bg-gray-300 text-gray-500 border border-transparent'
+          : (!isCustomerDataValid
               ? 'bg-gray-300 text-gray-600 border border-transparent'
-              : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white')
+              : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white')
         }
         ${className}
       `}
-      aria-label={`Pagar pedido com ${totalItems} ${totalItems === 1 ? 'item' : 'itens'} via cartão`}
+      aria-label={`Pagar por pix — ${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`}
     >
       <span className={checkoutActionContentClass}>
-        <svg
-          className={checkoutActionIconClass}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
+        <PixIcon className={checkoutActionIconClass} />
 
         <span className={checkoutActionTextColumnClass}>
           <span className={`${checkoutActionLabelClass} ${checkoutActionLabelWrapMobileClass}`}>
@@ -192,7 +173,7 @@ export default function StripeCheckoutButton({
                 ? 'Sem Cobertura'
                 : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
                   ? 'Informe o Endereço'
-                  : 'Pagar com cartão'}
+                  : 'Pagar por pix'}
           </span>
           <span className={checkoutActionSubtitleClass}>
             {isDeliveryOutsideCoverage
@@ -204,9 +185,8 @@ export default function StripeCheckoutButton({
         </span>
       </span>
 
-      {/* Loading spinner overlay */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-violet-700/50 rounded-xl">
+        <div className="absolute inset-0 flex items-center justify-center bg-emerald-700/50 rounded-xl">
           <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -214,7 +194,6 @@ export default function StripeCheckoutButton({
         </div>
       )}
 
-      {/* Error indicator */}
       {error && (
         <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
       )}

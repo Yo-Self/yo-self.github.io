@@ -21,6 +21,7 @@ Uma aplicação moderna, interativa e premium de cardápio digital para restaura
   - **Integração Completa de Checkout**:
     - **WhatsApp Checkout**: Atualiza o preço final, salva os metadados completos de delivery (`order_type: 'delivery'`, distância, taxa, coordenadas, e detalhes do endereço) no Supabase, e formata a mensagem do WhatsApp para detalhar a taxa e o total.
     - **Stripe Checkout**: Mapeia o frete como uma linha separada ("Taxa de Entrega") na transação online, atualizando o banco de dados em tempo real ao concluir o pagamento.
+    - **PIX (InfinitePay, opt-in)**: Botão verde "Pagar com PIX" quando `pix_payment_enabled` está ativo no restaurante. Usa Edge Functions `infinitepay-checkout` e `infinitepay-webhook`. Não altera restaurantes sem a flag (padrão `false`).
 
 ### 💰 Configuração e Bloqueio de Pedido Mínimo
 - **Validação de Subtotal**: Exibição de um banner visual e amigável no carrinho de compras quando o valor mínimo estipulado pelo restaurante não for atingido.
@@ -44,6 +45,28 @@ Uma aplicação moderna, interativa e premium de cardápio digital para restaura
 - 📱 **Interface Responsiva**: Design moderno, adaptável e extremamente polido (com suporte completo a tema escuro).
 - 📦 **PWA Instalável**: Service worker (`sw.js`) e manifesto atualizado em tempo real para permitir instalação como aplicativo no celular.
 - 📊 **Analytics Avançado**: Integração com PostHog (eventos, LLM analytics, taxas de cliques) e OpenReplay.
+
+### 📈 Funil de pagamento no PostHog
+
+Todos os meios de checkout disparam eventos normalizados (`src/lib/paymentAnalytics.ts`) com propriedades compartilhadas para funis e dashboards:
+
+| Evento | Quando |
+|--------|--------|
+| `payment_checkout_options_viewed` | Comanda aberta com botões de pagamento visíveis |
+| `payment_method_clicked` | Clique em WhatsApp, PIX, cartão ou wallet |
+| `payment_validation_failed` | Formulário incompleto antes do checkout |
+| `payment_order_created` | Pedido criado no Supabase (`pending_payment` ou equivalente) |
+| `payment_checkout_session_created` | Sessão Stripe / checkout InfinitePay criada |
+| `payment_redirect_started` | Redirecionamento para gateway ou WhatsApp |
+| `payment_return_received` | Retorno com `?payment_success` ou cancelamento |
+| `payment_verification_*` | Confirmação pós-retorno (Stripe polling / PIX NSU) |
+| `payment_completed` | Pagamento confirmado (também dispara `purchase_completed`) |
+| `payment_cancelled` / `payment_failed` | Abandono ou erro |
+| `payment_wallet_available` / `payment_wallet_unavailable` | Apple Pay / Google Pay no carrinho |
+
+Propriedades úteis em breakdowns: `payment_method`, `payment_provider`, `funnel_step`, `order_id`, `restaurant_id`, `order_type`, `delivery_mode`, `total_value_cents`, `delivery_fee_cents`, `duration_ms`, `wallet_apple_pay`, `wallet_google_pay`.
+
+Métodos: `whatsapp`, `infinitepay_pix`, `stripe_card`, `stripe_express`, `send_order_direct`.
 
 ## 🚀 Chatbot com Google Gemini AI
 
@@ -215,6 +238,27 @@ supabase functions deploy ai-chat
 | `NEXT_PUBLIC_POSTHOG_KEY` | Chave do PostHog | ❌ |
 | `NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY` | Chave do OpenReplay | ❌ |
 | `GOOGLE_AI_API_KEY` | Chave da API do Google AI (Supabase) | ✅ |
+| `NEXT_PUBLIC_INFINITEPAY_DEV_ENABLED` | `true` em dev local para exibir botão PIX sem alterar o banco | ❌ |
+| `NEXT_PUBLIC_INFINITEPAY_DEV_HANDLE` | InfiniteTag de testes (ex.: `jessemonteiro`) | ❌ |
+| `INFINITEPAY_DEV_HANDLE` | Secret na Edge Function `infinitepay-checkout` (mesmo handle, só staging) | ❌ |
+| `INFINITEPAY_WEBHOOK_SECRET` | Secret do webhook InfinitePay (`X-Callback-Signature`, HMAC-SHA256 do body). Se definido, requisições sem assinatura válida são rejeitadas | ❌ |
+
+### PIX InfinitePay (opt-in)
+
+```bash
+supabase functions deploy infinitepay-checkout
+supabase functions deploy infinitepay-webhook --no-verify-jwt
+```
+
+Habilitar por restaurante no Supabase:
+
+```sql
+UPDATE restaurants
+SET infinitepay_handle = 'jessemonteiro', pix_payment_enabled = true
+WHERE slug = 'meu-teste';
+```
+
+Cadastre a URL do site em **InfinitePay → Configurações → Link integrado**.
 
 ## 🤝 Contribuindo
 

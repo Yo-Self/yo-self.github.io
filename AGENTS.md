@@ -125,6 +125,15 @@ Located in `supabase-functions/`:
 - Only renders when `restaurant.waiter_call_enabled` is true
 - Components: `WaiterCallButton`, `WaiterCallNotifications`, `useWaiterCalls`
 
+## PIX checkout (InfinitePay, opt-in)
+
+- **Opt-in only**: `restaurants.pix_payment_enabled` defaults to `false`; production restaurants are unchanged until enabled in DB.
+- Edge Functions: `infinitepay-checkout` (JWT on), `infinitepay-webhook` (JWT off — called by InfinitePay).
+- Client: `InfinitePayPixButton`, `useInfinitePayCheckout`, `useRestaurantPixPayment` — shown only when PIX is enabled for the restaurant.
+- Stripe/WhatsApp flows are untouched; PIX button is additive in `CartModal`.
+- Deploy: `supabase functions deploy infinitepay-checkout` and `infinitepay-webhook --no-verify-jwt`.
+- Optional secret `INFINITEPAY_WEBHOOK_SECRET` on `infinitepay-webhook` validates `X-Callback-Signature` (HMAC-SHA256 of raw body). Omit to keep legacy behavior until the secret is configured in InfinitePay.
+
 ## Checkout flow (WhatsApp)
 
 1. User fills cart → opens `CartModal`

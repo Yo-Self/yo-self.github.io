@@ -1,6 +1,15 @@
 'use client'
 
 import posthog from 'posthog-js'
+import {
+  buildPaymentEventProperties,
+  clearPaymentAttemptMark,
+  getPaymentAttemptDurationMs,
+  markPaymentAttemptStart,
+  PAYMENT_FUNNEL_EVENT_NAMES,
+  type PaymentAnalyticsBase,
+  type PaymentMethod,
+} from './paymentAnalytics'
 
 // Analytics utility for tracking custom events throughout the app
 export class Analytics {
@@ -86,7 +95,140 @@ export class Analytics {
       total_value: totalValue,
       restaurant_id: restaurantId,
       checkout_method: method,
-      unique_dishes: items.length
+      payment_method: method,
+      unique_dishes: items.length,
+    })
+  }
+
+  /** Full payment funnel event with normalized properties (see paymentAnalytics.ts). */
+  static trackPaymentFunnel(base: PaymentAnalyticsBase): void {
+    const eventName = PAYMENT_FUNNEL_EVENT_NAMES[base.funnelStep]
+    this.track(eventName, buildPaymentEventProperties(base))
+  }
+
+  static trackPaymentOptionsViewed(
+    base: Omit<PaymentAnalyticsBase, 'funnelStep' | 'paymentMethod'> & {
+      availableCheckoutMethods: string[]
+      paymentMethod?: PaymentMethod
+    },
+  ): void {
+    this.trackPaymentFunnel({
+      ...base,
+      paymentMethod: base.paymentMethod ?? 'whatsapp',
+      funnelStep: 'options_viewed',
+    })
+  }
+
+  static trackPaymentMethodClicked(base: Omit<PaymentAnalyticsBase, 'funnelStep'>): void {
+    markPaymentAttemptStart(base.paymentMethod)
+    this.trackPaymentFunnel({ ...base, funnelStep: 'method_clicked' })
+  }
+
+  static trackPaymentValidationFailed(
+    base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { validationField: string },
+  ): void {
+    this.trackPaymentFunnel({ ...base, funnelStep: 'validation_failed' })
+  }
+
+  static trackPaymentOrderCreated(base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { orderId: string }): void {
+    this.trackPaymentFunnel({
+      ...base,
+      funnelStep: 'order_created',
+      durationMs: getPaymentAttemptDurationMs(),
+    })
+  }
+
+  static trackPaymentCheckoutSessionCreated(
+    base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { orderId: string },
+  ): void {
+    this.trackPaymentFunnel({
+      ...base,
+      funnelStep: 'checkout_session_created',
+      durationMs: getPaymentAttemptDurationMs(),
+    })
+  }
+
+  static trackPaymentRedirectStarted(base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { orderId: string }): void {
+    const durationMs = getPaymentAttemptDurationMs()
+    this.trackPaymentFunnel({ ...base, funnelStep: 'redirect_started', durationMs })
+    if (base.items) {
+      this.trackCartCheckout(base.items, base.totalValue, base.restaurantId, base.paymentMethod)
+    }
+  }
+
+  static trackPaymentReturnReceived(base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { orderId: string }): void {
+    this.trackPaymentFunnel({
+      ...base,
+      funnelStep: 'return_received',
+      durationMs: getPaymentAttemptDurationMs(),
+    })
+  }
+
+  static trackPaymentVerification(
+    base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { orderId: string },
+    step: 'verification_started' | 'verification_confirmed' | 'verification_failed' | 'verification_processing',
+  ): void {
+    this.trackPaymentFunnel({
+      ...base,
+      funnelStep: step,
+      durationMs: getPaymentAttemptDurationMs(),
+    })
+  }
+
+  static trackPaymentCompleted(base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { orderId?: string }): void {
+    const durationMs = getPaymentAttemptDurationMs()
+    this.trackPaymentFunnel({ ...base, funnelStep: 'completed', durationMs })
+    clearPaymentAttemptMark()
+    this.trackPurchaseCompleted(
+      base.restaurantId,
+      base.restaurantSlug || '',
+      base.items?.length ?? 0,
+      base.totalValue,
+      base.paymentMethod,
+    )
+  }
+
+  static trackPaymentCancelled(base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { orderId?: string }): void {
+    this.trackPaymentFunnel({
+      ...base,
+      funnelStep: 'cancelled',
+      durationMs: getPaymentAttemptDurationMs(),
+    })
+    clearPaymentAttemptMark()
+  }
+
+  static trackPaymentFailed(base: Omit<PaymentAnalyticsBase, 'funnelStep'> & { errorMessage: string }): void {
+    this.trackPaymentFunnel({
+      ...base,
+      funnelStep: 'failed',
+      durationMs: getPaymentAttemptDurationMs(),
+    })
+  }
+
+  private static lastWalletAvailabilitySignature: string | null = null
+
+  static trackPaymentWalletAvailability(
+    base: Omit<PaymentAnalyticsBase, 'funnelStep' | 'paymentMethod'> & {
+      available: boolean
+      walletApplePay?: boolean
+      walletGooglePay?: boolean
+    },
+  ): void {
+    const signature = [
+      base.restaurantId,
+      base.available ? '1' : '0',
+      base.walletApplePay ? '1' : '0',
+      base.walletGooglePay ? '1' : '0',
+    ].join(':')
+    if (Analytics.lastWalletAvailabilitySignature === signature) {
+      return
+    }
+    Analytics.lastWalletAvailabilitySignature = signature
+
+    this.trackPaymentFunnel({
+      ...base,
+      paymentMethod: 'stripe_express',
+      funnelStep: base.available ? 'wallet_available' : 'wallet_unavailable',
     })
   }
 
@@ -371,14 +513,22 @@ export class Analytics {
   }
 
   // Final Conversion & Surveys
-  static trackPurchaseCompleted(restaurantId: string, restaurantSlug: string, itemCount: number, totalPrice: number): void {
+  static trackPurchaseCompleted(
+    restaurantId: string,
+    restaurantSlug: string,
+    itemCount: number,
+    totalPrice: number,
+    paymentMethod: PaymentMethod | string = 'whatsapp',
+  ): void {
     this.track('purchase_completed', {
       restaurant_id: restaurantId,
       restaurant_slug: restaurantSlug,
       item_count: itemCount,
       total_price: totalPrice,
-      checkout_method: 'whatsapp',
-      checkout_step: 'purchase_completed'
+      total_value: totalPrice,
+      checkout_method: paymentMethod,
+      payment_method: paymentMethod,
+      checkout_step: 'purchase_completed',
     })
   }
 

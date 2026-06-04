@@ -56,6 +56,8 @@ export interface Restaurant {
   longitude?: number;
   address?: string;
   open?: boolean;
+  /** When false, RPC create_customer_order rejects new checkouts (independent of display `open`). */
+  is_open_for_orders?: boolean;
   operating_hours?: {
     id: string;
     restaurant_id: string;

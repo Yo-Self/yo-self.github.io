@@ -11,6 +11,9 @@ export interface Order {
   customer_access_token?: string;
   stripe_payment_intent_id?: string;
   stripe_checkout_session_id?: string;
+  infinitepay_invoice_slug?: string;
+  infinitepay_transaction_nsu?: string;
+  payment_provider?: 'stripe' | 'infinitepay';
   created_at: string;
   updated_at: string;
   

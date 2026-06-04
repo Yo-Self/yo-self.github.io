@@ -15,8 +15,14 @@ import { createOrder } from '../services/orderService';
 import { createExpressPaymentIntent } from '../services/stripeService';
 import { Order, OrderItem } from '../types/order';
 import Analytics from '../lib/analytics';
+import { paymentContextFromCart } from '../lib/paymentAnalytics';
+import { trackPaymentFormValidationFailed } from '../lib/trackPaymentButtonValidation';
 import { usePathname } from 'next/navigation';
 import { useActiveOrders } from '../hooks/useActiveOrders';
+import {
+  checkoutActionButtonMinHeightClass,
+  checkoutExpressWalletButtonHeightPx,
+} from './cart/checkoutButtonLayout';
 
 interface StripeExpressCheckoutButtonProps {
   restaurantId?: string;
@@ -139,7 +145,21 @@ const ExpressCheckoutInner = ({
       }));
 
       const newOrder = await createOrder(orderToCreate, itemsToCreate);
-      addActiveOrderId(newOrder.id, newOrder.customer_access_token);
+      addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
+
+      const paymentCtx = paymentContextFromCart({
+        restaurant,
+        items,
+        subtotalValue: totalPrice,
+        totalValue: totalPrice,
+        paymentMethod: 'stripe_express',
+        deliveryMode,
+        isDeliveryRoute,
+        tableId,
+        customerData,
+      });
+
+      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id });
 
       const piResponse = await createExpressPaymentIntent({
         orderId: newOrder.id,
@@ -148,13 +168,19 @@ const ExpressCheckoutInner = ({
         customerPhone: customerData.whatsapp,
       });
 
-      Analytics.trackCartCheckout(items, totalPrice, restaurant.id, 'stripe_express');
+      Analytics.trackPaymentCheckoutSessionCreated({
+        ...paymentCtx,
+        orderId: newOrder.id,
+        sessionId: undefined,
+      });
 
       const currentUrl = window.location.href.split('?')[0];
       const tokenParam = newOrder.customer_access_token
         ? `&order_token=${newOrder.customer_access_token}`
         : '';
-      const returnUrl = `${currentUrl}?payment_success=true&order_id=${newOrder.id}${tokenParam}`;
+      const returnUrl = `${currentUrl}?payment_success=true&payment_method=stripe_express&order_id=${newOrder.id}${tokenParam}`;
+
+      Analytics.trackPaymentRedirectStarted({ ...paymentCtx, orderId: newOrder.id });
 
       const { error } = await stripe.confirmPayment({
         elements,
@@ -167,15 +193,60 @@ const ExpressCheckoutInner = ({
       if (error) {
         const message = error.message || 'Erro ao processar pagamento';
         setErrorMessage(message);
+        Analytics.trackPaymentFailed({
+          ...paymentContextFromCart({
+            restaurant,
+            items,
+            subtotalValue: totalPrice,
+            totalValue: totalPrice,
+            paymentMethod: 'stripe_express',
+            deliveryMode,
+            isDeliveryRoute,
+            tableId,
+            customerData,
+          }),
+          orderId: newOrder.id,
+          errorMessage: message,
+        });
         event.paymentFailed({ message });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro interno ao processar';
       console.error('Express Checkout Error:', err);
       setErrorMessage(message);
+      if (restaurant) {
+        Analytics.trackPaymentFailed({
+          ...paymentContextFromCart({
+            restaurant,
+            items,
+            subtotalValue: totalPrice,
+            totalValue: totalPrice,
+            paymentMethod: 'stripe_express',
+            deliveryMode,
+            isDeliveryRoute,
+            tableId: typeof window !== 'undefined' ? localStorage.getItem('table_id') : null,
+            customerData,
+          }),
+          errorMessage: message,
+        });
+      }
       event.paymentFailed({ message });
     }
-  }, [stripe, elements, restaurant, items, totalPrice, customerData, isMinOrderNotMet, minOrderMessage, isDeliveryRoute, isActuallyDelivery, isActuallyRetirada, addActiveOrderId]);
+  }, [
+    stripe,
+    elements,
+    restaurant,
+    items,
+    totalPrice,
+    customerData,
+    isMinOrderNotMet,
+    minOrderMessage,
+    isDeliveryRoute,
+    isActuallyDelivery,
+    isActuallyRetirada,
+    deliveryMode,
+    addActiveOrderId,
+  ]);
 
   if (isEmpty) return null;
     
@@ -184,32 +255,89 @@ const ExpressCheckoutInner = ({
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
   return (
-    <div className={`h-full min-h-[52px] w-full flex flex-col justify-center transition-all duration-200 ${!isCustomerDataValid ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
+    <div className={`w-full flex flex-col justify-center transition-all duration-200 ${checkoutActionButtonMinHeightClass} ${!isCustomerDataValid ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
       <ExpressCheckoutElement
         onClick={({ resolve }) => {
-          const throwError = (msg: string) => {
+          if (!restaurant) return;
+
+          const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
+          const expressCtx = paymentContextFromCart({
+            restaurant,
+            items,
+            subtotalValue: totalPrice,
+            totalValue: totalPrice,
+            paymentMethod: 'stripe_express',
+            deliveryMode,
+            isDeliveryRoute,
+            tableId,
+            customerData,
+          });
+
+          const throwError = (field: string, msg: string) => {
+            trackPaymentFormValidationFailed({
+              restaurant,
+              items,
+              totalPrice,
+              paymentMethod: 'stripe_express',
+              validationField: field,
+              deliveryMode,
+              isDeliveryRoute,
+              customerData,
+            });
             alert(msg);
             resolve({
               applePay: { error: { message: msg } },
-              googlePay: { error: { message: msg } }
+              googlePay: { error: { message: msg } },
             } as any);
           };
 
           if (isActuallyDelivery) {
-            if (!customerData.name?.trim()) return throwError('Por favor, informe seu Nome antes de continuar com o pagamento.');
-            if (!customerData.address?.trim()) return throwError('Por favor, informe seu Endereço antes de continuar com o pagamento.');
-            if (!customerData.number?.trim()) return throwError('Por favor, informe o Número do endereço antes de continuar com o pagamento.');
-            if (!customerData.whatsapp?.trim()) return throwError('Por favor, informe seu Telefone antes de continuar com o pagamento.');
+            if (!customerData.name?.trim()) {
+              return throwError('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
+            }
+            if (!customerData.address?.trim()) {
+              return throwError('customer_address', 'Por favor, informe seu Endereço antes de continuar com o pagamento.');
+            }
+            if (!customerData.number?.trim()) {
+              return throwError('customer_number', 'Por favor, informe o Número do endereço antes de continuar com o pagamento.');
+            }
+            if (!customerData.whatsapp?.trim()) {
+              return throwError('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
+            }
           } else {
-            if (!customerData.name?.trim()) return throwError('Por favor, informe seu Nome antes de continuar com o pagamento.');
-            if (!customerData.whatsapp?.trim()) return throwError('Por favor, informe seu Telefone antes de continuar com o pagamento.');
+            if (!customerData.name?.trim()) {
+              return throwError('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
+            }
+            if (!customerData.whatsapp?.trim()) {
+              return throwError('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
+            }
           }
+
+          Analytics.trackPaymentMethodClicked(expressCtx);
           resolve();
         }}
         onConfirm={handleConfirm}
         onAvailablePaymentMethodsChange={(event) => {
           const walletAvailable = isWalletPayAvailable(event.paymentMethods) && !isMinOrderNotMet;
           onAvailabilityChange(walletAvailable, event.paymentMethods);
+          if (restaurant) {
+            Analytics.trackPaymentWalletAvailability({
+              ...paymentContextFromCart({
+                restaurant,
+                items,
+                subtotalValue: totalPrice,
+                totalValue: totalPrice,
+                paymentMethod: 'stripe_express',
+                deliveryMode,
+                isDeliveryRoute,
+                tableId: typeof window !== 'undefined' ? localStorage.getItem('table_id') : null,
+                customerData,
+              }),
+              available: walletAvailable,
+              walletApplePay: event.paymentMethods?.applePay?.available === true,
+              walletGooglePay: event.paymentMethods?.googlePay?.available === true,
+            });
+          }
         }}
         options={{
           paymentMethods: {
@@ -228,7 +356,7 @@ const ExpressCheckoutInner = ({
             applePay: 'black',
             googlePay: 'black',
           },
-          buttonHeight: 52,
+          buttonHeight: checkoutExpressWalletButtonHeightPx,
           layout: {
             maxColumns: 1,
             maxRows: 1,
@@ -306,7 +434,7 @@ export default function StripeExpressCheckoutButton({
 
   return (
     <div
-      className={`flex flex-col min-w-0 ${isVisible ? className : 'hidden'}`}
+      className={`flex h-full w-full min-w-0 flex-col ${checkoutActionButtonMinHeightClass} ${isVisible ? className : 'hidden'}`}
       aria-hidden={!isVisible}
     >
       <Elements

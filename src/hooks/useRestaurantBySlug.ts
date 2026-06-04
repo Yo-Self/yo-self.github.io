@@ -513,6 +513,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         slug: restaurant.slug || '',
         name: restaurant.name || '',
         open: restaurant.open,
+        is_open_for_orders: restaurant.is_open_for_orders ?? false,
         operating_hours: hours.map(h => ({
           id: String(h.id),
           restaurant_id: String(h.restaurant_id),

@@ -6,7 +6,12 @@ import { useCart } from '../hooks/useCart';
 import { useWhatsAppConfig } from '../hooks/useWhatsAppConfig';
 import Analytics from '../lib/analytics';
 import { useActiveOrders } from '../hooks/useActiveOrders';
+import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { waitForCustomerOrderPayment } from '../services/orderTrackingService';
+import {
+  paymentContextFromCart,
+  type PaymentMethod,
+} from '../lib/paymentAnalytics';
 
 interface PaymentSuccessHandlerProps {
   restaurantId?: string;
@@ -15,22 +20,102 @@ interface PaymentSuccessHandlerProps {
 type VerificationState = 'idle' | 'verifying' | 'confirmed' | 'processing' | 'failed';
 
 /**
- * Detects Stripe return via query params and verifies payment server-side
- * before showing the success modal.
+ * Detects payment return (Stripe or InfinitePay PIX) via query params and
+ * shows the success modal after verification.
  */
 export default function PaymentSuccessHandler({ restaurantId = "default" }: PaymentSuccessHandlerProps) {
   const searchParams = useSearchParams();
-  const { items, formattedTotalPrice, totalItems, clearCart } = useCart();
+  const { items, totalPrice, formattedTotalPrice, totalItems, clearCart } = useCart();
   const { addActiveOrderId, getOrderAccessToken } = useActiveOrders();
   const { config } = useWhatsAppConfig(restaurantId);
+  const { restaurant } = useRestaurantBySlug(restaurantId);
 
   const [showModal, setShowModal] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [verificationState, setVerificationState] = useState<VerificationState>('idle');
   const [isClosing, setIsClosing] = useState(false);
-  const handledRef = useRef(false);
+  const returnTrackedRef = useRef<string | null>(null);
+  const completedTrackedRef = useRef<string | null>(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
+
+  const resolvePaymentMethod = useCallback(
+    (
+      paymentMethodParam: string | null,
+      paymentProvider: string | null,
+      captureMethod: string | null,
+    ): PaymentMethod => {
+      if (
+        paymentMethodParam === 'infinitepay_pix' ||
+        paymentProvider === 'infinitepay' ||
+        captureMethod === 'pix'
+      ) {
+        return 'infinitepay_pix';
+      }
+      if (paymentMethodParam === 'stripe_express') return 'stripe_express';
+      return 'stripe_card';
+    },
+    [],
+  );
+
+  const buildPaymentCtx = useCallback(
+    (paymentMethod: PaymentMethod, orderIdForTrack: string) => {
+      const restaurantIdForCtx = restaurant?.id || restaurantId;
+      return {
+        ...paymentContextFromCart({
+          restaurant: {
+            id: restaurantIdForCtx,
+            slug: restaurant?.slug,
+            min_order_value: restaurant?.min_order_value,
+          },
+          items: itemsRef.current,
+          subtotalValue: totalPrice,
+          totalValue: totalPrice,
+          paymentMethod,
+          isDeliveryRoute:
+            typeof window !== 'undefined' &&
+            window.location.pathname.startsWith('/delivery'),
+        }),
+        orderId: orderIdForTrack,
+      };
+    },
+    [restaurant, restaurantId, totalPrice],
+  );
+
+  const trackReturnOnce = useCallback(
+    (
+      orderIdForTrack: string,
+      paymentMethod: PaymentMethod,
+      extras?: {
+        redirectStatus?: string | null;
+        captureMethod?: string | null;
+        paymentProviderParam?: string | null;
+        transactionNsu?: string | null;
+        sessionId?: string | null;
+      },
+    ) => {
+      if (returnTrackedRef.current === orderIdForTrack) return;
+      returnTrackedRef.current = orderIdForTrack;
+      Analytics.trackPaymentReturnReceived({
+        ...buildPaymentCtx(paymentMethod, orderIdForTrack),
+        redirectStatus: extras?.redirectStatus,
+        captureMethod: extras?.captureMethod,
+        paymentProviderParam: extras?.paymentProviderParam,
+        transactionNsu: extras?.transactionNsu,
+        sessionId: extras?.sessionId,
+      });
+    },
+    [buildPaymentCtx],
+  );
+
+  const trackCompletedOnce = useCallback(
+    (orderIdForTrack: string, paymentMethod: PaymentMethod) => {
+      if (completedTrackedRef.current === orderIdForTrack) return;
+      completedTrackedRef.current = orderIdForTrack;
+      Analytics.trackPaymentCompleted(buildPaymentCtx(paymentMethod, orderIdForTrack));
+    },
+    [buildPaymentCtx],
+  );
 
   const cleanPaymentParamsFromUrl = useCallback(() => {
     const url = new URL(window.location.href);
@@ -42,20 +127,44 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
     url.searchParams.delete('redirect_status');
     url.searchParams.delete('payment_intent');
     url.searchParams.delete('payment_intent_client_secret');
+    url.searchParams.delete('payment_provider');
+    url.searchParams.delete('payment_method');
+    url.searchParams.delete('capture_method');
+    url.searchParams.delete('transaction_nsu');
+    url.searchParams.delete('transaction_id');
+    url.searchParams.delete('order_nsu');
+    url.searchParams.delete('slug');
+    url.searchParams.delete('receipt_url');
     window.history.replaceState({}, '', url.toString());
   }, []);
 
   useEffect(() => {
-    if (handledRef.current) return;
-
     const paymentSuccess = searchParams.get('payment_success');
     const orderIdParam = searchParams.get('order_id');
     const orderTokenParam = searchParams.get('order_token');
     const paymentCancelled = searchParams.get('payment_cancelled');
     const redirectStatus = searchParams.get('redirect_status');
+    const paymentProvider = searchParams.get('payment_provider');
+    const paymentMethodParam = searchParams.get('payment_method');
+    const captureMethod = searchParams.get('capture_method');
+    const sessionId = searchParams.get('session_id');
+    const transactionNsu =
+      searchParams.get('transaction_nsu') || searchParams.get('transaction_id');
+    const isInfinitePayReturn =
+      paymentProvider === 'infinitepay' || captureMethod === 'pix';
+    const paymentMethod = resolvePaymentMethod(
+      paymentMethodParam,
+      paymentProvider,
+      captureMethod,
+    );
 
     if (paymentCancelled === 'true') {
-      handledRef.current = true;
+      Analytics.trackPaymentCancelled({
+        ...buildPaymentCtx(paymentMethod, orderIdParam || 'unknown'),
+        orderId: orderIdParam || undefined,
+        paymentProviderParam: paymentProvider,
+        captureMethod,
+      });
       cleanPaymentParamsFromUrl();
       return;
     }
@@ -64,36 +173,93 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
       return;
     }
 
-    handledRef.current = true;
-
     const accessToken =
       orderTokenParam || getOrderAccessToken(orderIdParam);
 
     setOrderId(orderIdParam);
     setShowModal(true);
-    addActiveOrderId(orderIdParam, accessToken || undefined);
+    addActiveOrderId(orderIdParam, accessToken || undefined, restaurantId);
+
+    trackReturnOnce(orderIdParam, paymentMethod, {
+      redirectStatus,
+      captureMethod,
+      paymentProviderParam: paymentProvider,
+      transactionNsu,
+      sessionId,
+    });
 
     if (redirectStatus === 'succeeded') {
       setVerificationState('confirmed');
-      Analytics.trackCartCheckout(itemsRef.current, 0, restaurantId, 'stripe_completed');
+      Analytics.trackPaymentVerification(
+        buildPaymentCtx(paymentMethod, orderIdParam),
+        'verification_confirmed',
+      );
+      trackCompletedOnce(orderIdParam, paymentMethod);
       cleanPaymentParamsFromUrl();
       return;
     }
 
     if (redirectStatus === 'failed') {
       setVerificationState('failed');
+      Analytics.trackPaymentVerification(
+        buildPaymentCtx(paymentMethod, orderIdParam),
+        'verification_failed',
+      );
+      Analytics.trackPaymentFailed({
+        ...buildPaymentCtx(paymentMethod, orderIdParam),
+        errorMessage: 'stripe_redirect_status_failed',
+        redirectStatus,
+      });
       cleanPaymentParamsFromUrl();
+      return;
+    }
+
+    if (isInfinitePayReturn && transactionNsu) {
+      setVerificationState('confirmed');
+      Analytics.trackPaymentVerification(
+        buildPaymentCtx(paymentMethod, orderIdParam),
+        'verification_confirmed',
+      );
+      trackCompletedOnce(orderIdParam, paymentMethod);
+      cleanPaymentParamsFromUrl();
+
+      if (accessToken) {
+        let cancelled = false;
+        (async () => {
+          try {
+            await waitForCustomerOrderPayment(orderIdParam, accessToken, {
+              maxAttempts: 15,
+              intervalMs: 2000,
+            });
+          } catch (err) {
+            if (!cancelled) {
+              console.error('InfinitePay background order sync failed:', err);
+            }
+          }
+        })();
+        return () => {
+          cancelled = true;
+        };
+      }
       return;
     }
 
     if (!accessToken) {
       setVerificationState('processing');
+      Analytics.trackPaymentVerification(
+        buildPaymentCtx(paymentMethod, orderIdParam),
+        'verification_processing',
+      );
       cleanPaymentParamsFromUrl();
       return;
     }
 
-    let isActive = true;
+    let cancelled = false;
     setVerificationState('verifying');
+    Analytics.trackPaymentVerification(
+      buildPaymentCtx(paymentMethod, orderIdParam),
+      'verification_started',
+    );
 
     (async () => {
       try {
@@ -102,42 +268,85 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
           intervalMs: 2000,
         });
 
-        if (!isActive) return;
+        if (cancelled) return;
 
         cleanPaymentParamsFromUrl();
 
         if (!result) {
           setVerificationState('failed');
+          Analytics.trackPaymentVerification(
+            buildPaymentCtx(paymentMethod, orderIdParam),
+            'verification_failed',
+          );
           return;
         }
 
         if (result.status === 'cancelled') {
           setVerificationState('failed');
+          Analytics.trackPaymentCancelled(buildPaymentCtx(paymentMethod, orderIdParam));
           return;
         }
 
         if (result.is_paid) {
           setVerificationState('confirmed');
-          Analytics.trackCartCheckout(itemsRef.current, 0, restaurantId, 'stripe_completed');
+          Analytics.trackPaymentVerification(
+            buildPaymentCtx(paymentMethod, orderIdParam),
+            'verification_confirmed',
+          );
+          trackCompletedOnce(orderIdParam, paymentMethod);
           return;
         }
 
         setVerificationState('processing');
+        Analytics.trackPaymentVerification(
+          buildPaymentCtx(paymentMethod, orderIdParam),
+          'verification_processing',
+        );
       } catch (err) {
         console.error('Payment verification failed:', err);
-        if (isActive) {
+        if (!cancelled) {
           cleanPaymentParamsFromUrl();
           setVerificationState('processing');
+          Analytics.trackPaymentVerification(
+            buildPaymentCtx(paymentMethod, orderIdParam),
+            'verification_processing',
+          );
+          Analytics.trackError(err instanceof Error ? err : new Error('payment_verification_error'), {
+            component: 'PaymentSuccessHandler',
+            order_id: orderIdParam,
+            payment_method: paymentMethod,
+          });
         }
       }
     })();
 
     return () => {
-      isActive = false;
+      cancelled = true;
     };
-  }, [searchParams, restaurantId, addActiveOrderId, getOrderAccessToken, cleanPaymentParamsFromUrl]);
+  }, [
+    searchParams,
+    restaurantId,
+    addActiveOrderId,
+    getOrderAccessToken,
+    cleanPaymentParamsFromUrl,
+    buildPaymentCtx,
+    resolvePaymentMethod,
+    trackReturnOnce,
+    trackCompletedOnce,
+  ]);
 
   const handleClose = useCallback(() => {
+    if (orderId && verificationState === 'confirmed') {
+      const paymentMethod = resolvePaymentMethod(
+        searchParams.get('payment_method'),
+        searchParams.get('payment_provider'),
+        searchParams.get('capture_method'),
+      );
+      Analytics.trackPaymentFunnel({
+        ...buildPaymentCtx(paymentMethod, orderId),
+        funnelStep: 'success_modal_closed',
+      });
+    }
     setIsClosing(true);
     setTimeout(() => {
       setShowModal(false);
@@ -146,17 +355,47 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
         clearCart();
       }
     }, 300);
-  }, [clearCart, verificationState]);
+  }, [
+    buildPaymentCtx,
+    clearCart,
+    orderId,
+    resolvePaymentMethod,
+    searchParams,
+    verificationState,
+  ]);
 
   const handleTrackOrder = useCallback(() => {
+    if (orderId) {
+      const paymentMethod = resolvePaymentMethod(
+        searchParams.get('payment_method'),
+        searchParams.get('payment_provider'),
+        searchParams.get('capture_method'),
+      );
+      Analytics.trackPaymentFunnel({
+        ...buildPaymentCtx(paymentMethod, orderId),
+        funnelStep: 'track_order_clicked',
+      });
+    }
     handleClose();
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('open-order-tracking'));
     }, 400);
-  }, [handleClose]);
+  }, [buildPaymentCtx, handleClose, orderId, resolvePaymentMethod, searchParams]);
 
   const handleContactRestaurant = useCallback(() => {
     if (!config.phoneNumber) return;
+
+    if (orderId) {
+      const paymentMethod = resolvePaymentMethod(
+        searchParams.get('payment_method'),
+        searchParams.get('payment_provider'),
+        searchParams.get('capture_method'),
+      );
+      Analytics.trackPaymentFunnel({
+        ...buildPaymentCtx(paymentMethod, orderId),
+        funnelStep: 'contact_restaurant_clicked',
+      });
+    }
 
     let message = config.customMessage || 'Olá! Gostaria de entrar em contato sobre meu pedido.';
     if (orderId) {
@@ -176,13 +415,19 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
         window.location.href = whatsappUrl;
       }
     }
-  }, [config.phoneNumber, config.customMessage, orderId]);
+  }, [buildPaymentCtx, config.customMessage, config.phoneNumber, orderId, resolvePaymentMethod, searchParams]);
 
   if (!showModal) return null;
 
   const isConfirmed = verificationState === 'confirmed';
   const isVerifying = verificationState === 'verifying';
   const isFailed = verificationState === 'failed';
+  const isInfinitePayReturn =
+    searchParams.get('payment_provider') === 'infinitepay' ||
+    searchParams.get('capture_method') === 'pix';
+  const verifyingMessage = isInfinitePayReturn
+    ? 'Aguarde enquanto confirmamos seu pagamento PIX.'
+    : 'Aguarde enquanto verificamos com o Stripe.';
 
   return (
     <div
@@ -241,7 +486,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
             {!isVerifying && !isFailed && !isConfirmed && 'Processando pagamento'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {isVerifying && 'Aguarde enquanto verificamos com o Stripe.'}
+            {isVerifying && verifyingMessage}
             {isFailed && 'Não foi possível confirmar o pagamento deste pedido.'}
             {isConfirmed && 'Seu pedido foi pago com sucesso.'}
             {!isVerifying && !isFailed && !isConfirmed && 'Seu pagamento está sendo processado. Você pode acompanhar o pedido em instantes.'}

@@ -10,6 +10,7 @@ import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
 import StripeCheckoutButton from './StripeCheckoutButton';
 import StripeExpressCheckoutButton from './StripeExpressCheckoutButton';
+import InfinitePayPixButton from './InfinitePayPixButton';
 import SendOrderButton from './SendOrderButton';
 import { getTableId } from './TableParamHandler';
 import CartIcon from './CartIcon';
@@ -18,6 +19,7 @@ import TablePaymentForm from './TablePaymentForm';
 import { useRestaurantAddressActive } from '../hooks/useRestaurantAddressActive';
 import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
+import { useRestaurantPixPayment } from '../hooks/useRestaurantPixPayment';
 import { usePathname } from 'next/navigation';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { formatOperatingHours } from '../utils/hoursFormatter';
@@ -25,6 +27,10 @@ import { useActiveOrders } from '../hooks/useActiveOrders';
 import OrderStatusModal from './OrderStatusModal';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { canRestaurantAcceptOrders } from '../utils/restaurantOrders';
+import { checkoutActionButtonCellClass } from './cart/checkoutButtonLayout';
+import Analytics from '../lib/analytics';
+import { paymentContextFromCart } from '../lib/paymentAnalytics';
 
 import { useGeolocationSafariIOSFinal } from '../hooks/useGeolocationSafariIOSFinal';
 import { StoreIcon, DeliveryScooterIcon } from './icons/MenuIcons';
@@ -48,7 +54,6 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
     incrementQuantity,
     decrementQuantity
   } = useCart();
-  const { activeOrderIds, getOrderAccessToken } = useActiveOrders();
   const { getCurrentPosition, permissionStatus, isLoading: isGeolocationLoading, error: geolocationError, isSupported, isBlocked, isSafariIOS, checkPermissionStatus, position } = useGeolocationSafariIOSFinal();
 
   // Usar o restaurantId passado como prop ou detectar automaticamente
@@ -58,7 +63,9 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const { addressActive: dbAddressActive } = useRestaurantAddressActive(restaurantId);
   const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
   const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
+  const { pixPaymentEnabled } = useRestaurantPixPayment(restaurantId);
   const { restaurant } = useRestaurantBySlug(restaurantId || "");
+  const { activeOrderIds, getOrderAccessToken } = useActiveOrders(restaurant?.id);
 
   const pathname = usePathname();
   const isDeliveryRoute = pathname?.startsWith('/delivery');
@@ -67,7 +74,8 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const addressActive = isDeliveryRoute && deliveryMode === 'delivery';
 
   const minOrderValue = restaurant?.min_order_value || 0;
-  const isMinOrderNotMet = isDeliveryRoute && deliveryMode === 'delivery' && totalPrice < minOrderValue && restaurant?.open !== false;
+  const isAcceptingOrders = canRestaurantAcceptOrders(restaurant);
+  const isMinOrderNotMet = isDeliveryRoute && deliveryMode === 'delivery' && totalPrice < minOrderValue && isAcceptingOrders;
 
   const { customerCoordinates } = useCustomerCoordinates();
 
@@ -105,6 +113,85 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
       setWalletPayVisible(false);
     }
   }, [isCartOpen]);
+
+  const paymentOptionsViewedRef = useRef(false);
+  const prevWalletPayVisibleRef = useRef(false);
+  const lastTrackedMethodsRef = useRef('');
+
+  useEffect(() => {
+    if (!isCartOpen || isEmpty || !isAcceptingOrders || isMinOrderNotMet || !restaurant?.id) {
+      paymentOptionsViewedRef.current = false;
+      prevWalletPayVisibleRef.current = false;
+      lastTrackedMethodsRef.current = '';
+      return;
+    }
+
+    const methods: string[] = [];
+    if (isDeliveryRoute || restaurant?.table_ordering) {
+      methods.push('whatsapp');
+    }
+    if (pixPaymentEnabled) methods.push('infinitepay_pix');
+    if (onlinePayment || tablePayment) {
+      methods.push('stripe_card');
+      if (walletPayVisible) methods.push('stripe_express');
+    }
+    if (!methods.length) return;
+
+    const methodsKey = methods.slice().sort().join(',');
+    const walletJustBecameVisible = walletPayVisible && !prevWalletPayVisibleRef.current;
+    prevWalletPayVisibleRef.current = walletPayVisible;
+
+    const shouldTrack =
+      !paymentOptionsViewedRef.current ||
+      (walletJustBecameVisible && !lastTrackedMethodsRef.current.includes('stripe_express'));
+
+    if (!shouldTrack || methodsKey === lastTrackedMethodsRef.current) {
+      return;
+    }
+
+    paymentOptionsViewedRef.current = true;
+    lastTrackedMethodsRef.current = methodsKey;
+
+    Analytics.trackPaymentOptionsViewed({
+      ...paymentContextFromCart({
+        restaurant,
+        items,
+        subtotalValue: totalPrice,
+        totalValue: totalPriceWithShipping,
+        paymentMethod: 'whatsapp',
+        deliveryMode: isDeliveryRoute ? deliveryMode : undefined,
+        isDeliveryRoute,
+        deliveryFeeCents:
+          isDeliveryRoute && deliveryMode === 'delivery' && deliveryCovered
+            ? deliveryCalc.fee
+            : 0,
+        deliveryCovered,
+        deliveryReason: deliveryCalc.reason,
+        tableId: tableNumber || getTableId(),
+        customerData: undefined,
+      }),
+      availableCheckoutMethods: methods,
+    });
+  }, [
+    isCartOpen,
+    isEmpty,
+    isAcceptingOrders,
+    isMinOrderNotMet,
+    restaurant,
+    items,
+    totalPrice,
+    totalPriceWithShipping,
+    isDeliveryRoute,
+    deliveryMode,
+    pixPaymentEnabled,
+    onlinePayment,
+    tablePayment,
+    walletPayVisible,
+    deliveryCalc.fee,
+    deliveryCovered,
+    deliveryReason,
+    tableNumber,
+  ]);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -493,19 +580,21 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
 
                 {/* Botões de ação */}
-                {restaurant?.open === false ? (
+                {!isAcceptingOrders ? (
                   <div className="w-full mt-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-xl text-center shadow-sm">
                     <p className="text-red-700 dark:text-red-400 font-bold mb-1 flex items-center justify-center gap-1.5">
-                      Estabelecimento Fechado
+                      {restaurant?.open === false ? 'Estabelecimento Fechado' : 'Pedidos pausados'}
                     </p>
                     <p className="text-xs text-gray-655 dark:text-gray-405 leading-relaxed mb-3">
-                      Não é possível finalizar ou enviar novos pedidos enquanto o restaurante estiver fechado.
+                      {restaurant?.open === false
+                        ? 'Não é possível finalizar ou enviar novos pedidos enquanto o restaurante estiver fechado.'
+                        : 'Este restaurante não está aceitando novos pedidos no momento. Ative os pedidos no painel do gestor para testar o checkout.'}
                     </p>
                     <div className="text-[11px] text-gray-500 dark:text-gray-400 pt-2.5 border-t border-red-200/50 dark:border-red-900/30 text-center max-w-sm mx-auto">
                       <p className="font-bold text-gray-700 dark:text-gray-300 mb-1">Horário de Funcionamento (Hoje):</p>
                       <p className="font-medium text-gray-600 dark:text-gray-450">
                         {(() => {
-                          const formattedHours = formatOperatingHours(restaurant.operating_hours);
+                          const formattedHours = formatOperatingHours(restaurant?.operating_hours);
                           const todayDayOfWeek = new Date().getDay();
                           return formattedHours.length === 7 ? formattedHours[todayDayOfWeek] : formattedHours[0];
                         })()}
@@ -514,22 +603,43 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   </div>
                 ) : isDeliveryRoute ? (
                   !isMinOrderNotMet && (
-                    <div className="flex flex-col gap-2 sm:gap-3 w-full">
-                      <CartWhatsAppButton restaurantId={restaurantId} deliveryMode={deliveryMode} className="w-full" />
-                      {onlinePayment && (
-                        <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
-                          <StripeCheckoutButton
+                    <div className="grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3">
+                      <div className={checkoutActionButtonCellClass}>
+                        <CartWhatsAppButton
+                          restaurantId={restaurantId}
+                          deliveryMode={deliveryMode}
+                          className="w-full"
+                        />
+                      </div>
+                      {pixPaymentEnabled && (
+                        <div className={checkoutActionButtonCellClass}>
+                          <InfinitePayPixButton
                             restaurantId={restaurantId}
                             deliveryMode={deliveryMode}
-                            className={walletPayVisible ? 'flex-1 min-w-0' : 'w-full min-w-0'}
-                          />
-                          <StripeExpressCheckoutButton
-                            restaurantId={restaurantId}
-                            deliveryMode={deliveryMode}
-                            className="flex-1 min-w-0"
-                            onWalletAvailabilityChange={setWalletPayVisible}
+                            className="w-full"
                           />
                         </div>
+                      )}
+                      {onlinePayment && (
+                        <>
+                          <div
+                            className={`${checkoutActionButtonCellClass}${walletPayVisible ? '' : ' col-span-2'}`}
+                          >
+                            <StripeCheckoutButton
+                              restaurantId={restaurantId}
+                              deliveryMode={deliveryMode}
+                              className="w-full"
+                            />
+                          </div>
+                          <div className={walletPayVisible ? checkoutActionButtonCellClass : 'hidden'}>
+                            <StripeExpressCheckoutButton
+                              restaurantId={restaurantId}
+                              deliveryMode={deliveryMode}
+                              className="w-full"
+                              onWalletAvailabilityChange={setWalletPayVisible}
+                            />
+                          </div>
+                        </>
                       )}
                     </div>
                   )
@@ -539,17 +649,33 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     null
                   ) : (
                     <div className="flex gap-2 sm:gap-3">
-                      {(onlinePayment || tablePayment) && (
-                        <div className="flex-1 flex flex-row gap-2 items-stretch min-w-0">
-                          <StripeCheckoutButton
-                            restaurantId={restaurantId}
-                            className={walletPayVisible ? 'flex-1 min-w-0' : 'w-full min-w-0'}
-                          />
-                          <StripeExpressCheckoutButton
-                            restaurantId={restaurantId}
-                            className="flex-1 min-w-0"
-                            onWalletAvailabilityChange={setWalletPayVisible}
-                          />
+                      {(pixPaymentEnabled || onlinePayment || tablePayment) && (
+                        <div className="flex-1 flex flex-col gap-2 min-w-0">
+                          {pixPaymentEnabled && (
+                            <div className={checkoutActionButtonCellClass}>
+                              <InfinitePayPixButton
+                                restaurantId={restaurantId}
+                                className="w-full"
+                              />
+                            </div>
+                          )}
+                          {(onlinePayment || tablePayment) && (
+                            <div className="flex flex-row gap-2 items-stretch w-full min-w-0">
+                              <div className={walletPayVisible ? checkoutActionButtonCellClass : 'w-full min-w-0 flex'}>
+                                <StripeCheckoutButton
+                                  restaurantId={restaurantId}
+                                  className="w-full"
+                                />
+                              </div>
+                              <div className={checkoutActionButtonCellClass}>
+                                <StripeExpressCheckoutButton
+                                  restaurantId={restaurantId}
+                                  className="w-full"
+                                  onWalletAvailabilityChange={setWalletPayVisible}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                       {restaurant?.table_ordering && !onlinePayment && (
