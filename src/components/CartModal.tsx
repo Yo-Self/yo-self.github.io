@@ -605,13 +605,15 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   ) : isDeliveryRoute ? (
                     !isMinOrderNotMet && (
                       <div className="grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3">
-                        <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
-                          <CartWhatsAppButton
-                            restaurantId={restaurantId}
-                            deliveryMode={deliveryMode}
-                            className="w-full"
-                          />
-                        </div>
+                        {whatsAppConfig.enabled && (
+                          <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
+                            <CartWhatsAppButton
+                              restaurantId={restaurantId}
+                              deliveryMode={deliveryMode}
+                              className="w-full"
+                            />
+                          </div>
+                        )}
                         {pixPaymentEnabled && (
                           <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
                             <InfinitePayPixButton

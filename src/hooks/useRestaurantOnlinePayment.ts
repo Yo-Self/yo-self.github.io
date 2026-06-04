@@ -32,7 +32,7 @@ export function useRestaurantOnlinePayment(restaurantIdOrSlug?: string): UseRest
 
         // Try by slug first
         let response = await fetch(
-          `${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=online_payment`,
+          `${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=online_ordering_enabled,online_payment`,
           {
             headers: {
               apikey: supabaseKey,
@@ -49,7 +49,7 @@ export function useRestaurantOnlinePayment(restaurantIdOrSlug?: string): UseRest
 
         if (!response.ok || !data || data.length === 0) {
           response = await fetch(
-            `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=online_payment`,
+            `${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=online_ordering_enabled,online_payment`,
             {
               headers: {
                 apikey: supabaseKey,
@@ -70,7 +70,7 @@ export function useRestaurantOnlinePayment(restaurantIdOrSlug?: string): UseRest
 
         if (data && data.length > 0) {
           const row = data[0];
-          setOnlinePayment(row?.online_payment === true);
+          setOnlinePayment(row?.online_ordering_enabled !== false && row?.online_payment === true);
         } else {
           // Default to false if restaurant not found
           setOnlinePayment(false);

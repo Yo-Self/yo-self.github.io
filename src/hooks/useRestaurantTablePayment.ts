@@ -32,7 +32,7 @@ export function useRestaurantTablePayment(restaurantIdOrSlug?: string): UseResta
 
         // Try by slug first
         let response = await fetch(
-          `${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=table_payment`,
+          `${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=table_payment`,
           {
             headers: {
               apikey: supabaseKey,
@@ -49,7 +49,7 @@ export function useRestaurantTablePayment(restaurantIdOrSlug?: string): UseResta
 
         if (!response.ok || !data || data.length === 0) {
           response = await fetch(
-            `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=table_payment`,
+            `${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=table_payment`,
             {
               headers: {
                 apikey: supabaseKey,

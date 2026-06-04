@@ -18,10 +18,11 @@ Uma aplicação moderna, interativa e premium de cardápio digital para restaura
     - Exibe um banner visual premium em vermelho alertando sobre a falta de cobertura.
     - **Bloqueia e desabilita completamente as opções de checkout** por WhatsApp e Stripe.
     - Se o cliente estiver dentro de uma zona com taxa especial cadastrada, o sistema aplica a taxa fixa correspondente no subtotal.
-  - **Integração Completa de Checkout**:
-    - **WhatsApp Checkout**: Atualiza o preço final, salva os metadados completos de delivery (`order_type: 'delivery'`, distância, taxa, coordenadas, e detalhes do endereço) no Supabase, e formata a mensagem do WhatsApp para detalhar a taxa e o total.
-    - **Stripe Checkout**: Mapeia o frete como uma linha separada ("Taxa de Entrega") na transação online, atualizando o banco de dados em tempo real ao concluir o pagamento.
-    - **PIX (InfinitePay, opt-in)**: Botão verde "Pagar com PIX" quando `pix_payment_enabled` está ativo no restaurante. Usa Edge Functions `infinitepay-checkout` e `infinitepay-webhook`. Não altera restaurantes sem a flag (padrão `false`).
+  - **Integração Completa de Checkout & Feature Flags**:
+    - Os meios de pagamento online (Stripe e InfinitePay PIX) são controlados de forma centralizada pelo switch **Permitir Fazer Pedidos Online** (`online_ordering_enabled`). Se desligado no gestor, ambos os meios de pagamento online são ocultados do carrinho.
+    - **WhatsApp Checkout**: Disponível caso ativado pelo switch independente **Pedir pelo WhatsApp** (`whatsapp_enabled`) e configurado número de telefone. Envia os dados completos de pedido e delivery formatados no WhatsApp.
+    - **Stripe Checkout**: Mapeia o frete como uma linha separada na transação online, atualizando o banco de dados ao concluir o pagamento.
+    - **PIX (InfinitePay)**: Exibido sob a flag `pix_payment_enabled` (e se o master de Pedidos Online estiver ativo), integrando com as Edge Functions para checkout dinâmico.
 
 ### 💰 Configuração e Bloqueio de Pedido Mínimo
 - **Validação de Subtotal**: Exibição de um banner visual e amigável no carrinho de compras quando o valor mínimo estipulado pelo restaurante não for atingido.

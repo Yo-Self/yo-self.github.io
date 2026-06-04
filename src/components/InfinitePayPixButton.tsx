@@ -9,6 +9,7 @@ import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 import PixIcon from './icons/PixIcon';
+import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import Analytics from '../lib/analytics';
 import { paymentContextFromCart } from '../lib/paymentAnalytics';
 import { trackPaymentFormValidationFailed } from '../lib/trackPaymentButtonValidation';
@@ -36,6 +37,8 @@ export default function InfinitePayPixButton({
 }: InfinitePayPixButtonProps) {
   const { items, totalPrice, totalItems, formattedTotalPrice, isEmpty } = useCart();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
+  const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
+  const isCombinedMode = !onlinePayment;
   const pathname = usePathname();
   const isDeliveryRoute = pathname ? pathname.startsWith('/delivery') : true;
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
@@ -160,10 +163,32 @@ export default function InfinitePayPixButton({
         }
         ${className}
       `}
-      aria-label={`Pagar por pix — ${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`}
+      aria-label={isCombinedMode
+        ? `Pagar agora (Cartão e Pix via InfinitePay) — ${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`
+        : `Pagar por pix — ${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`}
     >
       <span className={checkoutActionContentClass}>
-        <PixIcon className={checkoutActionIconClass} />
+        {isCombinedMode ? (
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <svg
+              className={checkoutActionIconClass}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <PixIcon className={checkoutActionIconClass} />
+          </div>
+        ) : (
+          <PixIcon className={checkoutActionIconClass} />
+        )}
 
         <span className={checkoutActionTextColumnClass}>
           <span className={`${checkoutActionLabelClass} ${checkoutActionLabelWrapMobileClass}`}>
@@ -173,14 +198,16 @@ export default function InfinitePayPixButton({
                 ? 'Sem Cobertura'
                 : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
                   ? 'Informe o Endereço'
-                  : 'Pagar por pix'}
+                  : (isCombinedMode ? 'Pagar agora' : 'Pagar por pix')}
           </span>
           <span className={checkoutActionSubtitleClass}>
             {isDeliveryOutsideCoverage
               ? 'Endereço fora da área de entrega'
               : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
                 ? 'Preencha os dados acima'
-                : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isActuallyDelivery && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`}
+                : (isCombinedMode
+                    ? 'Pagar online pelo InfinitePay por cartão e pix'
+                    : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isActuallyDelivery && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`)}
           </span>
         </span>
       </span>

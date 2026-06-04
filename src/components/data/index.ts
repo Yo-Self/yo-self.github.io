@@ -52,6 +52,9 @@ export type Restaurant = {
   whatsapp_custom_message?: string;
   online_payment?: boolean;
   table_ordering?: boolean;
+  online_ordering_enabled?: boolean;
+  pix_payment_enabled?: boolean;
+  infinitepay_handle?: string;
   user_id?: string;
   min_order_value?: number;
   stripe_connect_id?: string;

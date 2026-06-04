@@ -39,7 +39,7 @@ export function useWhatsAppConfig(restaurantId?: string) {
         }
         
         // Tentar buscar por slug primeiro (mais comum), depois por ID
-        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message,name`, {
+        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message,name`, {
           headers: {
             'apikey': supabaseKey,
             'Authorization': `Bearer ${supabaseKey}`,
@@ -54,7 +54,7 @@ export function useWhatsAppConfig(restaurantId?: string) {
         
         // Se não encontrar por slug (erro ou array vazio), tentar por ID
         if (!response.ok || !data || data.length === 0) {
-          response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message,name`, {
+          response = await fetch(`${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantId)}&select=whatsapp_phone,whatsapp_enabled,whatsapp_custom_message,name`, {
             headers: {
               'apikey': supabaseKey,
               'Authorization': `Bearer ${supabaseKey}`,

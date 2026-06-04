@@ -51,10 +51,10 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
           return;
         }
 
-        const select = 'pix_payment_enabled,infinitepay_handle';
+        const select = 'online_ordering_enabled,pix_payment_enabled,infinitepay_handle';
 
         let response = await fetch(
-          `${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=${select}`,
+          `${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=${select}`,
           {
             headers: {
               apikey: supabaseKey,
@@ -64,14 +64,14 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
           },
         );
 
-        let data: { pix_payment_enabled?: boolean; infinitepay_handle?: string }[] | null = null;
+        let data: { online_ordering_enabled?: boolean; pix_payment_enabled?: boolean; infinitepay_handle?: string }[] | null = null;
         if (response.ok) {
           data = await response.json();
         }
 
         if (!response.ok || !data || data.length === 0) {
           response = await fetch(
-            `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=${select}`,
+            `${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=${select}`,
             {
               headers: {
                 apikey: supabaseKey,
@@ -93,7 +93,7 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
         if (data && data.length > 0) {
           const row = data[0];
           const handle = row.infinitepay_handle?.replace(/^\$/, '').trim() || null;
-          setPixPaymentEnabled(row.pix_payment_enabled === true && !!handle);
+          setPixPaymentEnabled(row.online_ordering_enabled !== false && row.pix_payment_enabled === true && !!handle);
           setInfinitepayHandle(handle);
         } else {
           setPixPaymentEnabled(false);

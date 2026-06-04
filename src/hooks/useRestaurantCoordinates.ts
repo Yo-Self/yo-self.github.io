@@ -37,7 +37,7 @@ export function useRestaurantCoordinates(restaurantId?: string): RestaurantCoord
         }
         
         // Buscar coordenadas do restaurante
-        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${encodeURIComponent(restaurantId)}&select=latitude,longitude,address`, {
+        let response = await fetch(`${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantId)}&select=latitude,longitude,address`, {
           headers: {
             'apikey': supabaseKey,
             'Authorization': `Bearer ${supabaseKey}`,
@@ -53,7 +53,7 @@ export function useRestaurantCoordinates(restaurantId?: string): RestaurantCoord
         
         // Se não encontrar por slug, tentar por ID
         if (!response.ok || !data || data.length === 0) {
-          response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}&select=latitude,longitude,address`, {
+          response = await fetch(`${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantId)}&select=latitude,longitude,address`, {
             headers: {
               'apikey': supabaseKey,
               'Authorization': `Bearer ${supabaseKey}`,

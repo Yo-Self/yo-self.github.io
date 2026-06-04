@@ -34,6 +34,9 @@ export interface Restaurant {
   whatsapp_custom_message?: string;
   online_payment?: boolean;
   table_ordering?: boolean;
+  online_ordering_enabled?: boolean;
+  pix_payment_enabled?: boolean;
+  infinitepay_handle?: string;
   
   /** ID da organização/usuário proprietário */
   user_id?: string;
