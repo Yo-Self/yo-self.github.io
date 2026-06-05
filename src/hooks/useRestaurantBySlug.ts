@@ -299,14 +299,10 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       return;
     }
 
-    // Eager fallback when Supabase client is not configured
+    // If Supabase client is not configured
     if (!supabase) {
-      console.log('🧪 Using mock/fallback restaurant data for slug:', slug);
-      setRestaurant({
-        ...MOCK_RESTAURANT,
-        slug: slug,
-        name: slug === 'auri-monteiro' ? 'Auri Monteiro' : (slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '))
-      });
+      console.error('Supabase client is not configured');
+      setRestaurant(null);
       setIsLoading(false);
       return;
     }
@@ -681,13 +677,8 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       slugCache.set(slug, { restaurant: transformedRestaurant, fetchedAt: Date.now() });
       return transformedRestaurant;
     } catch (err) {
-      console.warn('⚠️ Error fetching restaurant, falling back to mock data:', err);
-      const fallback = {
-        ...MOCK_RESTAURANT,
-        slug: slug,
-        name: slug === 'auri-monteiro' ? 'Auri Monteiro' : (slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '))
-      };
-      return fallback;
+      console.error('Error fetching restaurant:', err);
+      return null;
     }
     })();
 
@@ -731,10 +722,9 @@ export function useRestaurantList() {
     setIsLoading(true);
     setError(null);
 
-    // Eager mock/fallback if Supabase client is not configured
     if (!supabase) {
-      console.log('🧪 Using mock fallback list of restaurants');
-      setRestaurants([MOCK_RESTAURANT]);
+      console.error('Supabase client is not configured');
+      setRestaurants([]);
       setIsLoading(false);
       return;
     }
@@ -755,7 +745,7 @@ export function useRestaurantList() {
 
       const restaurants = restaurantData || [];
       if (restaurants.length === 0) {
-        setRestaurants([MOCK_RESTAURANT]);
+        setRestaurants([]);
         setIsLoading(false);
         return;
       }
@@ -785,9 +775,9 @@ export function useRestaurantList() {
 
       setRestaurants(transformedRestaurants);
     } catch (err) {
-      console.warn('⚠️ Error fetching restaurants list, using mock fallback list:', err);
-      setRestaurants([MOCK_RESTAURANT]);
-      setError(null);
+      console.error('Error fetching restaurants list:', err);
+      setRestaurants([]);
+      setError(err instanceof Error ? err.message : 'Erro ao carregar restaurantes');
     } finally {
       setIsLoading(false);
     }

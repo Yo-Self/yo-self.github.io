@@ -120,7 +120,7 @@ O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:
    cp env.example .env.local
    ```
    
-   Edite `.env.local` com suas configurações:
+   Edite `.env.local` com suas configurações da produção:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -131,10 +131,15 @@ O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:
    
    **📚 [Veja o guia completo de configuração da Google AI API](GOOGLE_AI_SETUP.md)**
 
-4. **Configure o Supabase**:
-   - Crie um projeto no [Supabase](https://supabase.com)
-   - Configure a Edge Function `ai-chat`
-   - Adicione a variável `GOOGLE_AI_API_KEY` nas configurações
+4. **(Opcional) Configurar Supabase Local (Recomendado para evitar custos de Egress de Imagens em Dev)**:
+   Se quiser testar localmente sem consumir a quota de egress/cached egress do Supabase de produção com o download repetido de imagens pesadas a cada reload:
+   - Certifique-se de que o **Docker** está rodando em sua máquina.
+   - Execute o script de setup automático:
+     ```bash
+     node scripts/setup-local-supabase.js
+     ```
+   - O script iniciará os contêineres locais do Supabase, aplicará o esquema e as sementes (seed) automaticamente, e criará o arquivo `.env.development` apontando para o banco local (`http://127.0.0.1:54321`).
+   - Por padrão, em desenvolvimento, as imagens de pratos usarão o modo `unsplash-fallback` para carregar fotos leves do Unsplash via CDN gratuito, consumindo zero bytes do seu Supabase.
 
 5. **Execute o projeto**:
    ```bash

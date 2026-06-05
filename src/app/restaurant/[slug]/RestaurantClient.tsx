@@ -143,7 +143,7 @@ export default function RestaurantClient({ slug }: { slug: string }) {
 
   useEffect(() => {
     // 3. Quando o carregamento terminar e o tempo mínimo passar, inicia saída
-    if (!isLoading && minTimeElapsed && restaurant) {
+    if (!isLoading && minTimeElapsed) {
       setSplashPhase('exiting');
       
       // 4. Remover completamente do DOM após a animação de saída
@@ -153,15 +153,15 @@ export default function RestaurantClient({ slug }: { slug: string }) {
 
       return () => clearTimeout(exitTimer);
     }
-  }, [isLoading, minTimeElapsed, restaurant]);
+  }, [isLoading, minTimeElapsed]);
 
   // Se houver erro ANTES do carregamento inicial, exibe a tela de erro
   if (error && !restaurant) {
     return <RestaurantError error={error} onRetry={refetch} />;
   }
 
-  // Se o carregamento terminou e o restaurante não existe, exibe 404
-  if (!isLoading && !restaurant && minTimeElapsed) {
+  // Se o carregamento terminou, o restaurante não existe e o splash terminou, exibe 404
+  if (!isLoading && !restaurant && minTimeElapsed && !showSplash) {
     return <RestaurantNotFound />;
   }
 
