@@ -128,6 +128,7 @@ export default function ImageWithLoading({
           onLoad={handleImageLoad}
           onError={handleImageError}
           loading="lazy"
+          decoding="async"
           onClick={handleImageClick}
         />
         

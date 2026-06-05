@@ -11,7 +11,9 @@
     "postbuild": "touch out/.nojekyll",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "gh-pages -d out"
+    "deploy": "gh-pages -d out",
+    "recompress-images": "node scripts/recompress-storage-images.js",
+    "recompress-images:execute": "node scripts/recompress-storage-images.js --execute"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

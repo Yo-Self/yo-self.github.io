@@ -12,9 +12,50 @@ interface UseRestaurantBySlugResult {
   refetch: () => void;
 }
 
-const RESTAURANT_CACHE_TTL_MS = 90_000;
+const RESTAURANT_CACHE_TTL_MS =
+  process.env.NODE_ENV === 'development' ? 30_000 : 5 * 60_000;
+const SESSION_CACHE_PREFIX = 'yo-self:restaurant:v1:';
 const slugCache = new Map<string, { restaurant: Restaurant; fetchedAt: number }>();
 const inflightFetches = new Map<string, Promise<Restaurant | null>>();
+
+function readSessionRestaurantCache(
+  slug: string
+): { restaurant: Restaurant; fetchedAt: number } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(`${SESSION_CACHE_PREFIX}${slug}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { restaurant: Restaurant; fetchedAt: number };
+    if (Date.now() - parsed.fetchedAt > RESTAURANT_CACHE_TTL_MS) {
+      sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${slug}`);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionRestaurantCache(slug: string, restaurant: Restaurant) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(
+      `${SESSION_CACHE_PREFIX}${slug}`,
+      JSON.stringify({ restaurant, fetchedAt: Date.now() })
+    );
+  } catch {
+    // sessionStorage quota exceeded — memory cache still works
+  }
+}
+
+function clearSessionRestaurantCache(slug: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.removeItem(`${SESSION_CACHE_PREFIX}${slug}`);
+  } catch {
+    // ignore
+  }
+}
 
 const MOCK_RESTAURANT: Restaurant = {
   id: '1',
@@ -284,9 +325,17 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
     setIsLoading(true);
     setError(null);
 
-    const cached = slugCache.get(slug);
-    if (cached && Date.now() - cached.fetchedAt < RESTAURANT_CACHE_TTL_MS) {
-      setRestaurant(cached.restaurant);
+    const memoryCached = slugCache.get(slug);
+    if (memoryCached && Date.now() - memoryCached.fetchedAt < RESTAURANT_CACHE_TTL_MS) {
+      setRestaurant(memoryCached.restaurant);
+      setIsLoading(false);
+      return;
+    }
+
+    const sessionCached = readSessionRestaurantCache(slug);
+    if (sessionCached) {
+      slugCache.set(slug, sessionCached);
+      setRestaurant(sessionCached.restaurant);
       setIsLoading(false);
       return;
     }
@@ -674,7 +723,9 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         })
       };
 
-      slugCache.set(slug, { restaurant: transformedRestaurant, fetchedAt: Date.now() });
+      const cacheEntry = { restaurant: transformedRestaurant, fetchedAt: Date.now() };
+      slugCache.set(slug, cacheEntry);
+      writeSessionRestaurantCache(slug, transformedRestaurant);
       return transformedRestaurant;
     } catch (err) {
       console.error('Error fetching restaurant:', err);
@@ -698,6 +749,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
 
   const refetch = () => {
     slugCache.delete(slug);
+    clearSessionRestaurantCache(slug);
     fetchRestaurant(slug);
   };
 

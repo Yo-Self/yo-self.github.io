@@ -21,6 +21,10 @@
 # production
 /build
 
+# storage recompression script artifacts
+/scripts/.recompress-backups/
+/scripts/recompress-manifest-*.json
+
 # misc
 .DS_Store
 *.pem

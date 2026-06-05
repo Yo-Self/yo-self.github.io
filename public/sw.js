@@ -31,9 +31,9 @@ function isStaleResponse(response, requestUrl) {
   const cacheTime = new Date(cacheDate).getTime();
   const now = Date.now();
 
-  // Supabase Storage: cache 7 days to reduce repeated egress
+  // Supabase Storage filenames are immutable — keep cached copies longer
   if (requestUrl.includes('.supabase.co/storage/v1/')) {
-    return (now - cacheTime) > 7 * 24 * 60 * 60 * 1000;
+    return (now - cacheTime) > 30 * 24 * 60 * 60 * 1000;
   }
   
   const oneHour = 60 * 60 * 1000;
@@ -121,6 +121,45 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('manifest.json')) {
     console.log('SW: Skipping manifest interception for Safari compatibility');
     event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Supabase Storage: cache-first + stale-while-revalidate (immutable image paths)
+  if (requestUrl.includes('.supabase.co/storage/v1/') && event.request.method === 'GET') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(event.request);
+
+        const fetchAndCache = async () => {
+          const networkResponse = await fetch(event.request);
+          if (networkResponse.ok) {
+            try {
+              const headers = new Headers(networkResponse.headers);
+              headers.set('sw-cache-date', new Date().toISOString());
+              await cache.put(
+                event.request,
+                new Response(networkResponse.clone().body, {
+                  status: networkResponse.status,
+                  statusText: networkResponse.statusText,
+                  headers,
+                })
+              );
+            } catch (cacheError) {
+              console.error('SW: Error caching Supabase image:', cacheError);
+              await cache.put(event.request, networkResponse.clone());
+            }
+          }
+          return networkResponse;
+        };
+
+        if (cached) {
+          event.waitUntil(fetchAndCache().catch(() => {}));
+          return cached;
+        }
+
+        return fetchAndCache();
+      })
+    );
     return;
   }
   
