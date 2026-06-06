@@ -1,3 +1,4 @@
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { useState, useEffect } from 'react';
 import { Coordinates } from '../utils/distanceCalculator';
 
@@ -26,8 +27,8 @@ export function useRestaurantCoordinates(restaurantId?: string): RestaurantCoord
       setError(null);
       
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const supabaseUrl = getSupabaseUrl();
+        const supabaseKey = getSupabasePublishableKey();
         
         if (!supabaseUrl || !supabaseKey) {
           console.warn('Configuração do Supabase não encontrada');

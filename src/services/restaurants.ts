@@ -116,13 +116,15 @@ export type DbComplement = {
   is_active: boolean;
 };
 
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
+
 // Verificar se as variáveis de ambiente estão definidas
 function getSupabaseConfig() {
-  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const SUPABASE_URL = getSupabaseUrl();
+  const SUPABASE_ANON_KEY = getSupabasePublishableKey();
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.warn('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined in environment variables');
+    console.warn('Supabase URL and publishable key must be defined in environment variables');
     return null;
   }
 

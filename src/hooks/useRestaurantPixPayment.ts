@@ -1,3 +1,4 @@
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { useEffect, useState } from 'react';
 
 interface UseRestaurantPixPaymentResult {
@@ -42,8 +43,8 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
       setError(null);
 
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const supabaseUrl = getSupabaseUrl();
+        const supabaseKey = getSupabasePublishableKey();
 
         if (!supabaseUrl || !supabaseKey) {
           setPixPaymentEnabled(false);

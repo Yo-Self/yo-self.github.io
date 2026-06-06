@@ -1,14 +1,15 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getSupabasePublishableKey, getSupabaseUrl } from './config';
 
 export function createClient() {
   const cookieStore = cookies();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseKey = getSupabasePublishableKey();
 
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined in environment variables');
+    console.warn('Supabase URL and publishable key must be defined in environment variables');
     return null;
   }
 
@@ -38,11 +39,11 @@ export function createClient() {
 
 // Client for static generation (no cookies)
 export function createStaticClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseKey = getSupabasePublishableKey();
 
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined in environment variables');
+    console.warn('Supabase URL and publishable key must be defined in environment variables');
     return null;
   }
 

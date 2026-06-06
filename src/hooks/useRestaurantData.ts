@@ -1,3 +1,4 @@
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { useState, useEffect } from 'react';
 import { Restaurant } from '@/types/restaurant';
 
@@ -18,8 +19,8 @@ export function useRestaurantData(restaurantId?: string) {
       
       try {
         // Buscar dados completos do restaurante do banco de dados
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const supabaseUrl = getSupabaseUrl();
+        const supabaseKey = getSupabasePublishableKey();
         
         if (!supabaseUrl || !supabaseKey) {
           console.warn('Configuração do Supabase não encontrada');

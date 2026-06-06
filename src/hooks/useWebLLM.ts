@@ -1,3 +1,4 @@
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { useState, useCallback, useMemo } from 'react';
 import { usePostHog } from 'posthog-js/react';
 
@@ -117,8 +118,8 @@ export function useWebLLM(): UseWebLLMReturn {
 
     try {
       // URL da Edge Function do Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = getSupabaseUrl();
+      const supabaseKey = getSupabasePublishableKey();
       
       if (!supabaseUrl || !supabaseKey) {
         console.warn('Configuração do Supabase não encontrada - funcionalidade de IA desabilitada');

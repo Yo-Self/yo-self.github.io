@@ -130,7 +130,10 @@ serve(async (req) => {
     console.log(`Received Stripe event: ${event.type} (${event.id})`)
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseServiceKey =
+      Deno.env.get('SB_SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing Supabase environment variables')
       return new Response(JSON.stringify({ error: 'Server configuration error' }), {

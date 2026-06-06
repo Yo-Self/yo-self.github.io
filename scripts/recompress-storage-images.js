@@ -60,9 +60,9 @@ const fileArg = args.includes('--file') ? args[args.indexOf('--file') + 1] : nul
 
 function getAdminApiKey() {
   const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SB_SECRET_KEY ||
     process.env.SUPABASE_SECRET_KEY ||
-    process.env.SB_SECRET_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!key) {
     console.error('❌ Missing admin API key in .env.local');

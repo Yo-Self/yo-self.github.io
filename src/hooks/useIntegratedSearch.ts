@@ -1,3 +1,4 @@
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { useState, useCallback } from 'react';
 import { MenuItem } from '../components/data';
 
@@ -135,8 +136,8 @@ export function useIntegratedSearch(): UseIntegratedSearchReturn {
         let data;
         let usedFallback = false;
         
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const supabaseUrl = getSupabaseUrl();
+        const supabaseKey = getSupabasePublishableKey();
         
         // Tentar Edge Function primeiro
         if (supabaseUrl && supabaseKey) {

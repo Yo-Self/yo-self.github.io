@@ -1,3 +1,4 @@
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { useState, useEffect } from 'react';
 
 export interface WhatsAppConfig {
@@ -29,8 +30,8 @@ export function useWhatsAppConfig(restaurantId?: string) {
       
       try {
         // Buscar configuração do WhatsApp do banco de dados
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const supabaseUrl = getSupabaseUrl();
+        const supabaseKey = getSupabasePublishableKey();
         
         if (!supabaseUrl || !supabaseKey) {
           console.warn('Configuração do Supabase não encontrada - WhatsApp indisponível');
@@ -138,8 +139,8 @@ export function useWhatsAppConfig(restaurantId?: string) {
     
     try {
       // Atualizar configuração no banco de dados
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = getSupabaseUrl();
+      const supabaseKey = getSupabasePublishableKey();
       
       if (!supabaseUrl || !supabaseKey) {
         console.warn('Configuração do Supabase não encontrada - não é possível salvar configuração');

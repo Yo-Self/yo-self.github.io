@@ -1,3 +1,4 @@
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { useState, useCallback } from 'react';
 
 export interface WaiterCall {
@@ -39,8 +40,8 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
     setError(null);
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = getSupabaseUrl();
+      const supabaseKey = getSupabasePublishableKey();
       
       if (!supabaseUrl || !supabaseKey) {
         console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
@@ -95,8 +96,8 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
     setError(null);
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = getSupabaseUrl();
+      const supabaseKey = getSupabasePublishableKey();
       
       if (!supabaseUrl || !supabaseKey) {
         console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
@@ -143,8 +144,8 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
     setError(null);
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = getSupabaseUrl();
+      const supabaseKey = getSupabasePublishableKey();
       
       if (!supabaseUrl || !supabaseKey) {
         console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');

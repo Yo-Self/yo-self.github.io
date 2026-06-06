@@ -6,7 +6,10 @@
  * Only used when restaurant has pix_payment_enabled = true.
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
+
+const supabaseUrl = getSupabaseUrl();
+const supabasePublishableKey = getSupabasePublishableKey();
 
 export interface CreateInfinitePayCheckoutParams {
   orderId: string;
@@ -34,7 +37,7 @@ export async function createInfinitePayCheckout(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+      'Authorization': `Bearer ${supabasePublishableKey}`,
     },
     body: JSON.stringify({
       order_id: params.orderId,
