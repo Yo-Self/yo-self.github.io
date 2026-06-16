@@ -37,7 +37,26 @@ export default function Navigation() {
             >
               Início
             </Link>
-
+            <Link
+              href="/suporte"
+              className={`text-sm font-medium transition-colors ${
+                pathname === '/suporte'
+                  ? 'text-cyan-600 dark:text-cyan-400'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400'
+              }`}
+            >
+              Suporte
+            </Link>
+            <Link
+              href="/privacidade"
+              className={`text-sm font-medium transition-colors ${
+                pathname === '/privacidade'
+                  ? 'text-cyan-600 dark:text-cyan-400'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400'
+              }`}
+            >
+              Privacidade
+            </Link>
           </div>
         </div>
       </div>
