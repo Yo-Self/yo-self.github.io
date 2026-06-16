@@ -1,18 +1,4 @@
 {
-  "appclips": {
-    "apps": [
-      "LT25K3QV5V.com.jessemonteiro.YoSelf.Clip"
-    ],
-    "details": [
-      {
-        "appID": "LT25K3QV5V.com.jessemonteiro.YoSelf.Clip",
-        "paths": [
-          "/restaurant/*",
-          "/restaurante/*"
-        ]
-      }
-    ]
-  },
   "applinks": {
     "apps": [],
     "details": [
@@ -20,9 +6,15 @@
         "appID": "LT25K3QV5V.com.jessemonteiro.YoSelf",
         "paths": [
           "/restaurant/*",
-          "/restaurante/*"
+          "/restaurante/*",
+          "/delivery/*"
         ]
       }
+    ]
+  },
+  "appclips": {
+    "apps": [
+      "LT25K3QV5V.com.jessemonteiro.YoSelf.Clip"
     ]
   }
 }

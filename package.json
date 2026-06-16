@@ -8,7 +8,7 @@
     "dev:test": "next dev -p 3000",
     "prebuild": "node scripts/update-sw-cache.js",
     "build": "next build",
-    "postbuild": "touch out/.nojekyll",
+    "postbuild": "node scripts/verify-aasa.js",
     "start": "next start",
     "lint": "next lint",
     "deploy": "gh-pages -d out",
