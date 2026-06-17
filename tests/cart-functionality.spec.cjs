@@ -18,7 +18,7 @@ test.describe('Funcionalidade do Carrinho de Compras', () => {
   });
   
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/restaurant/${testRestaurant.slug}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`/restaurant/${testRestaurant.slug}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000); // Aguardar 2s para JavaScript executar
     await page.waitForTimeout(1000);
@@ -561,7 +561,7 @@ test.describe('Funcionalidade do Carrinho de Compras', () => {
       }
       
       // Navegar para outra página
-      await page.goto(`/restaurant/${testRestaurant.slug}`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`/restaurant/${testRestaurant.slug}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000); // Aguardar 2s para JavaScript executar
       await page.waitForTimeout(1000);

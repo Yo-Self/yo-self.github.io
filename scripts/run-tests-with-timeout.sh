@@ -161,6 +161,12 @@ fi
 
 echo "✅ Servidor principal pronto (PID: $MAIN_SERVER_PID)"
 
+# Pré-compilar rota dinâmica do restaurante (cold-start do Next.js dev pode levar >10s no CI)
+echo "🔥 Pré-compilando rota do restaurante para evitar timeout no primeiro teste..."
+if ! timeout 90s bash -c 'until curl -sf http://localhost:3000/restaurant/auri-monteiro > /dev/null; do sleep 2; done'; then
+  echo "⚠️  Warmup da rota do restaurante não concluiu em 90s; continuando mesmo assim..."
+fi
+
 # Executar testes principais com timeout geral (sem webServer do Playwright)
 echo "🚀 Executando testes principais..."
 if timeout $TEST_TIMEOUT bash -c '

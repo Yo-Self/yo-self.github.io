@@ -26,7 +26,7 @@ module.exports = defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: process.env.CI ? 8000 : 5000, // Shorter action timeout
-    navigationTimeout: process.env.CI ? 10000 : 10000, // Shorter navigation timeout
+    navigationTimeout: process.env.CI ? 30000 : 15000, // Allow cold-start route compilation in dev
     headless: true,
     contextOptions: {
       serviceWorkers: 'block'
