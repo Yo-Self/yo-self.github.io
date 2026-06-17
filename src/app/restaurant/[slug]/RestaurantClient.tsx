@@ -4,6 +4,7 @@ import React, { Suspense, useState, useEffect } from "react";
 import RestaurantClientPage from "./RestaurantClientPage";
 import { useRestaurantBySlug, useRestaurantList } from "@/hooks/useRestaurantBySlug";
 import SetCurrentRestaurant from "@/components/SetCurrentRestaurant";
+import AndroidAppBanner from "@/components/AndroidAppBanner";
 
 // Loading component for better UX
 function RestaurantLoading() {
@@ -74,7 +75,13 @@ function RestaurantNotFound() {
 }
 
 // Main restaurant client component
-export default function RestaurantClient({ slug }: { slug: string }) {
+export default function RestaurantClient({
+  slug,
+  isDelivery = false,
+}: {
+  slug: string;
+  isDelivery?: boolean;
+}) {
   const { restaurant, isLoading, error, refetch } = useRestaurantBySlug(slug);
   const { restaurants } = useRestaurantList();
 
@@ -168,6 +175,7 @@ export default function RestaurantClient({ slug }: { slug: string }) {
   return (
     <>
       <SetCurrentRestaurant />
+      <AndroidAppBanner slug={slug} isDelivery={isDelivery} />
       
       {/* Renderiza a página em background se os dados já estiverem disponíveis */}
       {restaurant && (

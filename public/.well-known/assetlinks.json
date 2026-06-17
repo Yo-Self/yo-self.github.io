@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.yoself.app",
+      "sha256_cert_fingerprints": [
+        "07:76:15:15:EE:A8:40:02:6A:F4:2D:75:A8:D4:D3:53:60:25:72:7E:2A:7A:22:B5:97:BF:69:1B:A4:42:C7:70"
+      ]
+    }
+  }
+]

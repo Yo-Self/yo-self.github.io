@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const origin = process.env.NEXT_PUBLIC_SITE_URL || '';
   const path = `/restaurant/${decoded}`;
   const absolute = origin ? `${origin}${path}` : path;
-  
+
   return {
     title: `Cardápio digital ${restaurant.name}`,
     description: `Cardápio digital do ${restaurant.name}`,

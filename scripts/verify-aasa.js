@@ -56,3 +56,31 @@ if (!fs.existsSync(noJekyllPath)) {
 console.log('✅ apple-app-site-association verified in out/.well-known/');
 console.log(`   applinks paths: ${paths.join(', ')}`);
 console.log(`   appclips apps: ${parsed.appclips.apps.join(', ')}`);
+
+const assetlinksPath = path.join(__dirname, '..', 'out', '.well-known', 'assetlinks.json');
+
+if (!fs.existsSync(assetlinksPath)) {
+  fail(`Missing ${assetlinksPath}. Ensure the file exists at public/.well-known/assetlinks.json`);
+}
+
+const assetlinksRaw = fs.readFileSync(assetlinksPath, 'utf8');
+let assetlinks;
+
+try {
+  assetlinks = JSON.parse(assetlinksRaw);
+} catch {
+  fail('assetlinks.json is not valid JSON');
+}
+
+const target = assetlinks[0]?.target;
+if (target?.package_name !== 'com.yoself.app') {
+  fail('assetlinks.json must target package com.yoself.app');
+}
+
+if (!target?.sha256_cert_fingerprints?.length) {
+  fail('assetlinks.json is missing sha256_cert_fingerprints');
+}
+
+console.log('✅ assetlinks.json verified in out/.well-known/');
+console.log(`   package: ${target.package_name}`);
+console.log(`   fingerprints: ${target.sha256_cert_fingerprints.length}`);

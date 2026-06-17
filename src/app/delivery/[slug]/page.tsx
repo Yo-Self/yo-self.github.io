@@ -30,5 +30,5 @@ export default function DeliveryMenuPage({ params }: { params: { slug: string } 
     return notFound();
   }
   
-  return <RestaurantClient slug={decoded} />;
+  return <RestaurantClient slug={decoded} isDelivery />;
 }

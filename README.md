@@ -2,6 +2,21 @@
 
 Uma aplicação moderna, interativa e premium de cardápio digital para restaurantes, com chatbot inteligente alimentado pela API oficial do **Google Gemini 2.5 Flash**.
 
+## 🏠 Homepage (Landing Page)
+
+A página inicial (`src/app/page.tsx`) apresenta o ecossistema completo Yoself em seções modulares (`src/components/landing/`):
+
+| Seção | Conteúdo |
+|-------|----------|
+| **Hero** | Cardápio digital + gestor integrados, com mock animado de prato e badge de IA |
+| **Como funciona** | 3 passos: Configure no gestor → Cliente pede → Gerencie em tempo real |
+| **Cardápio digital** (`#cardapio`) | 8 features com mocks: IA, carrinho, checkout multicanal, delivery, garçom, QR mesa, rastreamento, PWA |
+| **Pagamentos** | WhatsApp, Stripe (cartão/wallet), PIX InfinitePay, envio direto para cozinha |
+| **Gestor** (`#gestor`) | 7 features com mocks: Kanban, PDV, modo garçom, delivery, import iFood, menu físico, relatórios |
+| **Carousel demo** | Destaques interativos com `DynamicCarousel` |
+| **Galeria UI** | Cards, grid, modo jornal e modo delivery |
+| **CTA** | Link para [gestor.yo-self.com](https://gestor.yo-self.com) |
+
 ## ✨ Funcionalidades de Destaque
 
 ### 🛵 Canais de Atendimento Separados (Mesa vs. Delivery)
