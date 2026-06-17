@@ -21,6 +21,18 @@ function mapOrderCreationError(error: { message?: string; details?: string; code
   if (msg.includes('invalid_payload')) {
     return new Error('Não foi possível criar o pedido: carrinho inválido.');
   }
+  if (msg.includes('invalid_dish') || msg.includes('invalid_item') || msg.includes('invalid_complement')) {
+    return new Error('Um ou mais itens do carrinho não estão mais disponíveis. Atualize o cardápio e tente novamente.');
+  }
+  if (msg.includes('delivery_not_covered')) {
+    return new Error('Endereço fora da área de entrega.');
+  }
+  if (msg.includes('min_order_value_not_met')) {
+    return new Error('O valor mínimo do pedido não foi atingido.');
+  }
+  if (msg.includes('complement_max_exceeded')) {
+    return new Error('Seleção de complementos inválida. Revise seu pedido.');
+  }
 
   return new Error('Não foi possível criar o pedido. Tente novamente.');
 }

@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
+import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
 
 const corsHeaders = {
@@ -29,10 +30,11 @@ interface CheckoutRequest {
 }
 
 interface OrderItemRow {
+  dish_id: string
   quantity: number
   price_at_time_of_order: number
-  selected_complements: { name?: string; price?: number }[] | null
-  dishes: { name: string } | { name: string }[] | null
+  selected_complements: { complement_id?: string; name?: string; price?: number }[] | null
+  dishes: { name: string; price: number } | { name: string; price: number }[] | null
 }
 
 interface ValidatedCheckout {
@@ -74,17 +76,6 @@ function encodeStripeParams(params: Record<string, unknown>, prefix = ''): strin
   return parts.filter(Boolean).join('&')
 }
 
-function dishNameFromRelation(dishes: OrderItemRow['dishes']): string {
-  if (!dishes) return 'Item'
-  if (Array.isArray(dishes)) return dishes[0]?.name || 'Item'
-  return dishes.name || 'Item'
-}
-
-function complementTotal(complements: OrderItemRow['selected_complements']): number {
-  if (!complements || !Array.isArray(complements)) return 0
-  return complements.reduce((sum, c) => sum + (Number(c.price) || 0), 0)
-}
-
 function complementDescription(complements: OrderItemRow['selected_complements']): string | undefined {
   if (!complements || !Array.isArray(complements) || complements.length === 0) return undefined
   return complements.map((c) => c.name).filter(Boolean).join(', ')
@@ -123,10 +114,11 @@ async function loadAndValidateCheckout(
       delivery_fee,
       order_type,
       order_items (
+        dish_id,
         quantity,
         price_at_time_of_order,
         selected_complements,
-        dishes ( name )
+        dishes ( name, price )
       )
     `)
     .eq('id', orderId)
@@ -153,17 +145,19 @@ async function loadAndValidateCheckout(
     return { ok: false, response: jsonResponse({ error: 'Order has no items' }, 400) }
   }
 
-  const lineItems: LineItem[] = orderItems.map((item) => {
-    const unitCents = item.price_at_time_of_order + complementTotal(item.selected_complements)
-    return {
-      name: dishNameFromRelation(item.dishes),
-      description: complementDescription(item.selected_complements),
-      quantity: item.quantity,
-      price_cents: unitCents,
-    }
-  })
+  const priced = await priceOrderItemsFromMenu(supabase, restaurantId, orderItems)
+  if (!priced.ok) {
+    console.error('Menu price validation failed:', { orderId, error: priced.error })
+    return { ok: false, response: jsonResponse({ error: 'Order total validation failed' }, 400) }
+  }
 
-  const itemsTotal = lineItems.reduce((sum, item) => sum + item.price_cents * item.quantity, 0)
+  const lineItems: LineItem[] = priced.items.map((item, index) => ({
+    name: item.description,
+    description: complementDescription(orderItems[index]?.selected_complements ?? null),
+    quantity: item.quantity,
+    price_cents: item.unitCents,
+  }))
+
   const deliveryFee = Number(order.delivery_fee) || 0
 
   if (deliveryFee > 0) {
@@ -175,7 +169,7 @@ async function loadAndValidateCheckout(
     })
   }
 
-  const computedTotal = itemsTotal + deliveryFee
+  const computedTotal = priced.itemsTotalCents + deliveryFee
   if (computedTotal !== order.total_price) {
     console.error('Order total mismatch:', {
       orderId,

@@ -126,7 +126,7 @@ serve(async (req) => {
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, status, total_price')
+      .select('id, status, total_price, infinitepay_invoice_slug, payment_provider')
       .eq('id', orderId)
       .single()
 
@@ -142,6 +142,24 @@ serve(async (req) => {
         transaction_nsu: transactionNsu ?? null,
       })
       return jsonResponse({ received: true, skipped: true }, 200)
+    }
+
+    const storedSlug = typeof order.infinitepay_invoice_slug === 'string'
+      ? order.infinitepay_invoice_slug
+      : null
+
+    if (!storedSlug) {
+      console.error('InfinitePay webhook rejected: order has no checkout invoice slug', orderId)
+      return jsonResponse({ error: 'Order not linked to InfinitePay checkout' }, 400)
+    }
+
+    if (!invoiceSlug || invoiceSlug !== storedSlug) {
+      console.error('InfinitePay webhook rejected: invoice_slug mismatch', {
+        orderId,
+        expected: storedSlug,
+        received: invoiceSlug ?? null,
+      })
+      return jsonResponse({ error: 'Invoice slug mismatch' }, 400)
     }
 
     const paidAmount = typeof payload.paid_amount === 'number'
@@ -169,7 +187,6 @@ serve(async (req) => {
       payment_provider: 'infinitepay',
     }
     if (transactionNsu) updateData.infinitepay_transaction_nsu = transactionNsu
-    if (invoiceSlug) updateData.infinitepay_invoice_slug = invoiceSlug
 
     const { error: updateError } = await supabase
       .from('orders')
