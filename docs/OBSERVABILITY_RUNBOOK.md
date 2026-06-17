@@ -11,9 +11,6 @@ Guia operacional para configurar secrets, alertas e dashboards após o deploy do
 | Secret | Valor |
 |--------|-------|
 | `NEXT_PUBLIC_SENTRY_DSN` | DSN do projeto **yo-self-cardapio** |
-| `SENTRY_AUTH_TOKEN` | Token em Sentry → Settings → Auth Tokens (scope: `project:releases`) |
-| `SENTRY_ORG` | Slug da org (ex: `yo-self`) |
-| `SENTRY_PROJECT` | `yo-self-cardapio` |
 | `NEXT_PUBLIC_POSTHOG_KEY` | Já existente |
 
 ### menu-mestre-facil (gestor)
@@ -23,9 +20,8 @@ Guia operacional para configurar secrets, alertas e dashboards após o deploy do
 | `VITE_POSTHOG_KEY` | API key do projeto PostHog do gestor |
 | `VITE_POSTHOG_HOST` | `https://us.i.posthog.com` |
 | `VITE_SENTRY_DSN` | DSN do projeto **yo-self-gestor-web** |
-| `SENTRY_AUTH_TOKEN` | Mesmo token ou token dedicado |
-| `SENTRY_ORG` | Slug da org |
-| `SENTRY_PROJECT` | `yo-self-gestor-web` (build web) — desktop usa mesmo DSN |
+
+Secrets privados como `SENTRY_AUTH_TOKEN`, tokens de Telegram, Stripe secret keys, service role e `GOOGLE_AI_API_KEY` não devem entrar no environment de build estático do GitHub Pages. Use-os apenas em jobs separados de upload/release, no gitnode/plataforma de segredos ou em Supabase Edge Function Secrets.
 
 ---
 

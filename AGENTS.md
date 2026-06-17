@@ -18,13 +18,14 @@ npx next lint            # Linting
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-GOOGLE_AI_API_KEY=your_google_ai_api_key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
 NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_key
 NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY=your_openreplay_key
 ```
+
+`NEXT_PUBLIC_*` values are always public in the static browser bundle. Do not put `GOOGLE_AI_API_KEY`, Stripe secret keys, Supabase service role/`sb_secret_*`, webhook secrets, CI tokens, or Telegram bot tokens in public env vars or the GitHub Pages build environment. Runtime secrets for AI, payments, and observability belong in Supabase Edge Function Secrets or the approved secrets platform.
 
 ## Tech stack
 
@@ -118,7 +119,7 @@ Located in `supabase-functions/`:
 - Uses Google Generative AI SDK with system prompt containing full menu context
 - Integrates PostHog LLM Analytics (tracks latency, tokens, cost)
 - Deploy: `supabase functions deploy ai-chat`
-- Required secrets: `GOOGLE_AI_API_KEY`, `POSTHOG_API_KEY`, `POSTHOG_HOST`
+- Required Supabase Edge Function secrets: `GOOGLE_AI_API_KEY`, `POSTHOG_API_KEY`, `POSTHOG_HOST`
 
 ### `waiter-calls/index.ts`
 - Manages waiter call requests for dine-in tables

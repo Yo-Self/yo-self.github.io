@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "next dev",
     "dev:test": "next dev -p 3000",
-    "prebuild": "node scripts/update-sw-cache.js",
+    "prebuild": "npm run security:env && node scripts/update-sw-cache.js",
     "build": "next build",
     "postbuild": "node scripts/verify-aasa.js",
     "start": "next start",
     "lint": "next lint",
+    "security:env": "node scripts/validate-public-env.js",
     "deploy": "gh-pages -d out",
     "recompress-images": "node scripts/recompress-storage-images.js",
     "recompress-images:execute": "node scripts/recompress-storage-images.js --execute"

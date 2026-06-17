@@ -138,11 +138,14 @@ O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:
    Edite `.env.local` com suas configurações da produção:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   GOOGLE_AI_API_KEY=your_google_ai_api_key
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key_here
    NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
    NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY=your_openreplay_key
    ```
+
+   Variáveis `NEXT_PUBLIC_*` são públicas no bundle do navegador. Nunca coloque `GOOGLE_AI_API_KEY`, `STRIPE_SECRET_KEY`, service role, `sb_secret_*`, webhooks ou tokens de CI com esse prefixo ou no environment de build estático do GitHub Pages.
+
+   O chatbot em produção deve usar a Supabase Edge Function `ai-chat`; configure `GOOGLE_AI_API_KEY` em Supabase Edge Function Secrets ou no gitnode/plataforma de segredos antes do deploy da função.
    
    **📚 [Veja o guia completo de configuração da Google AI API](GOOGLE_AI_SETUP.md)**
 
@@ -254,11 +257,11 @@ supabase functions deploy ai-chat
 
 | Variável | Descrição | Obrigatória |
 |----------|-----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase | ✅ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase | ✅ |
-| `NEXT_PUBLIC_POSTHOG_KEY` | Chave do PostHog | ❌ |
-| `NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY` | Chave do OpenReplay | ❌ |
-| `GOOGLE_AI_API_KEY` | Chave da API do Google AI (Supabase) | ✅ |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL pública do projeto Supabase; deve usar HTTPS em produção | ✅ |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Chave publishable do Supabase; fallback legado para anon key ainda é suportado | ✅ |
+| `NEXT_PUBLIC_POSTHOG_KEY` | Chave pública do PostHog | ❌ |
+| `NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY` | Chave pública do OpenReplay | ❌ |
+| `GOOGLE_AI_API_KEY` | Secret da Supabase Edge Function `ai-chat`; não configure no build do GitHub Pages | ✅ |
 | `NEXT_PUBLIC_INFINITEPAY_DEV_ENABLED` | `true` em dev local para exibir botão PIX sem alterar o banco | ❌ |
 | `NEXT_PUBLIC_INFINITEPAY_DEV_HANDLE` | InfiniteTag de testes (ex.: `jessemonteiro`) | ❌ |
 | `INFINITEPAY_DEV_HANDLE` | Secret na Edge Function `infinitepay-checkout` (mesmo handle, só staging) | ❌ |
