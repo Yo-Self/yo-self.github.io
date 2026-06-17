@@ -12,8 +12,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
         ui_host: "https://us.posthog.com",
         
-        // Exception Autocapture - automatically capture unhandled errors
-        capture_exceptions: true,
+        // Exception capture handled by Sentry (see src/lib/observability.ts)
+        capture_exceptions: false,
         
         // Page tracking
         capture_pageview: false, // Disable automatic pageview capture as we'll do this manually

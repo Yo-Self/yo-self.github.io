@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { GoogleGenerativeAI } from 'npm:@google/generative-ai@0.11.2'
+import { captureEdgeException } from '../_shared/sentry.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -359,6 +360,10 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('Erro na Edge Function:', error)
+    await captureEdgeException(error, {
+      functionName: 'ai-chat',
+      tags: { handled_with_fallback: 'true' },
+    })
 
     // Fallback de emergência no catch global
     const body = await req.json().catch(() => ({}))

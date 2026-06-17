@@ -1,6 +1,7 @@
 'use client'
 
 import posthog from 'posthog-js'
+import { captureError } from './observability'
 import {
   buildPaymentEventProperties,
   clearPaymentAttemptMark,
@@ -449,25 +450,38 @@ export class Analytics {
     })
   }
 
+  static trackMenuLoadCompleted(
+    slug: string,
+    properties: { dish_count: number; duration_ms: number; from_cache?: boolean },
+  ): void {
+    this.track('menu_load_completed', {
+      restaurant_slug: slug,
+      ...properties,
+    })
+  }
+
+  static trackMenuLoadFailed(
+    slug: string,
+    properties: { error_message: string; duration_ms: number },
+  ): void {
+    this.track('menu_load_failed', {
+      restaurant_slug: slug,
+      ...properties,
+    })
+  }
+
   static trackError(error: Error, context?: Record<string, any>): void {
-    // Registra como evento customizado
     this.track('app_error', {
       error_message: error.message,
-      error_stack: error.stack,
+      error_name: error.name,
       ...context
     })
 
-    // Captura como Exception oficial do PostHog para o Error Tracking no client-side
-    if (this.isInitialized()) {
-      try {
-        posthog.captureException(error, {
-          extra: context,
-          tags: { source: 'Analytics.trackError' }
-        });
-      } catch (e) {
-        console.warn('[Analytics] Failed to captureException:', e);
-      }
-    }
+    captureError(error, {
+      feature: 'analytics_track_error',
+      ...context,
+      tags: { source: 'Analytics.trackError' },
+    })
   }
 
   // Cart Checkout Error Analytics

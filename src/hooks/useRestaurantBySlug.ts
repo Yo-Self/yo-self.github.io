@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Restaurant } from '@/components/data';
 import { supabase } from '@/lib/supabase/client';
 import { getOptimizedImageUrl } from '@/utils/imageUrl';
+import { Analytics } from '@/lib/analytics';
 
 interface UseRestaurantBySlugResult {
   restaurant: Restaurant | null;
@@ -322,6 +323,9 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       return;
     }
 
+    const loadStartedAt = Date.now();
+    let loadedFromCache = false;
+
     setIsLoading(true);
     setError(null);
 
@@ -329,6 +333,12 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
     if (memoryCached && Date.now() - memoryCached.fetchedAt < RESTAURANT_CACHE_TTL_MS) {
       setRestaurant(memoryCached.restaurant);
       setIsLoading(false);
+      loadedFromCache = true;
+      Analytics.trackMenuLoadCompleted(slug, {
+        dish_count: memoryCached.restaurant.menu_items?.length ?? 0,
+        duration_ms: Date.now() - loadStartedAt,
+        from_cache: true,
+      });
       return;
     }
 
@@ -337,6 +347,12 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       slugCache.set(slug, sessionCached);
       setRestaurant(sessionCached.restaurant);
       setIsLoading(false);
+      loadedFromCache = true;
+      Analytics.trackMenuLoadCompleted(slug, {
+        dish_count: sessionCached.restaurant.menu_items?.length ?? 0,
+        duration_ms: Date.now() - loadStartedAt,
+        from_cache: true,
+      });
       return;
     }
 
@@ -345,6 +361,18 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       const result = await inflight;
       setRestaurant(result);
       setIsLoading(false);
+      if (result) {
+        Analytics.trackMenuLoadCompleted(slug, {
+          dish_count: result.menu_items?.length ?? 0,
+          duration_ms: Date.now() - loadStartedAt,
+          from_cache: true,
+        });
+      } else {
+        Analytics.trackMenuLoadFailed(slug, {
+          error_message: 'restaurant_not_found',
+          duration_ms: Date.now() - loadStartedAt,
+        });
+      }
       return;
     }
 
@@ -738,9 +766,26 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       const result = await fetchPromise;
       setRestaurant(result);
       setError(null);
+      if (result) {
+        Analytics.trackMenuLoadCompleted(slug, {
+          dish_count: result.menu_items?.length ?? 0,
+          duration_ms: Date.now() - loadStartedAt,
+          from_cache: loadedFromCache,
+        });
+      } else {
+        Analytics.trackMenuLoadFailed(slug, {
+          error_message: 'restaurant_not_found',
+          duration_ms: Date.now() - loadStartedAt,
+        });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
       setRestaurant(null);
+      Analytics.trackMenuLoadFailed(slug, {
+        error_message: message,
+        duration_ms: Date.now() - loadStartedAt,
+      });
     } finally {
       inflightFetches.delete(slug);
       setIsLoading(false);

@@ -1,26 +1,22 @@
 let tracker: any = null
 
-// Only run on client side
+// OpenReplay is disabled when Sentry is configured (use Sentry Replay + PostHog session replay instead)
 if (typeof window !== 'undefined') {
   import('@openreplay/tracker').then(({ default: Tracker }) => {
     const isProduction = process.env.NODE_ENV === 'production'
-    const areEnvValid = process.env.NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY
+    const openReplayKey = process.env.NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY
+    const sentryEnabled = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN)
 
-    // Check that OpenReplay is client-side and only in production
-    if (isProduction && areEnvValid) {
+    if (isProduction && openReplayKey && !sentryEnabled) {
       tracker = new Tracker({
-        projectKey: process.env.NEXT_PUBLIC_OPENREPLAY_PROJECT_KEY!,
-        // Disable in development by default
+        projectKey: openReplayKey,
         respectDoNotTrack: true,
-        // Capture network requests
         captureIFrames: true,
       })
 
-      // Start tracking
       tracker.start()
     }
   }).catch(() => {
-    // Silently fail if OpenReplay is not available
     console.log('OpenReplay not available')
   })
 }

@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { captureEdgeException } from '../_shared/sentry.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -255,6 +256,10 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('Unexpected error in stripe-webhook:', error)
+    await captureEdgeException(error, {
+      functionName: 'stripe-webhook',
+      extra: { path: req.url, method: req.method },
+    })
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

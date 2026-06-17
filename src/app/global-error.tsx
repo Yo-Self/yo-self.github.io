@@ -3,13 +3,12 @@
 /**
  * Global Error Component
  * Catches errors in the root layout
- * Automatically captures errors to PostHog
+ * Automatically captures errors to Sentry
  * Documentation: https://nextjs.org/docs/app/building-your-application/routing/error-handling#handling-global-errors
  */
 
 import { useEffect } from 'react'
-import posthog from 'posthog-js'
-import NextError from 'next/error'
+import { captureError } from '@/lib/observability'
 
 export default function GlobalError({
   error,
@@ -19,20 +18,18 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Capture error in PostHog
     try {
-      posthog.captureException(error, {
-        extra: {
-          digest: error.digest,
-        },
+      captureError(error, {
+        feature: 'next_global_error_component',
+        digest: error.digest,
         tags: {
           error_boundary: 'global',
           source: 'next_global_error_component',
         },
       })
-      console.error('Global error captured by PostHog:', error)
-    } catch (captureError) {
-      console.error('Failed to capture error in PostHog:', captureError)
+      console.error('Global error captured:', error)
+    } catch (reportError) {
+      console.error('Failed to capture global error:', reportError)
     }
   }, [error])
 

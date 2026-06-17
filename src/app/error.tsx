@@ -3,12 +3,12 @@
 /**
  * Error Component for App Router
  * Catches errors during rendering and displays a fallback UI
- * Automatically captures errors to PostHog
+ * Automatically captures errors to Sentry
  * Documentation: https://nextjs.org/docs/app/building-your-application/routing/error-handling
  */
 
 import { useEffect } from 'react'
-import posthog from 'posthog-js'
+import { captureError } from '@/lib/observability'
 
 export default function Error({
   error,
@@ -18,20 +18,18 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    // Capture error in PostHog
     try {
-      posthog.captureException(error, {
-        extra: {
-          digest: error.digest,
-        },
+      captureError(error, {
+        feature: 'next_error_component',
+        digest: error.digest,
         tags: {
           error_boundary: 'route',
           source: 'next_error_component',
         },
       })
-      console.error('Route error captured by PostHog:', error)
-    } catch (captureError) {
-      console.error('Failed to capture error in PostHog:', captureError)
+      console.error('Route error captured:', error)
+    } catch (reportError) {
+      console.error('Failed to capture route error:', reportError)
     }
   }, [error])
 

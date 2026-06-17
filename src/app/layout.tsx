@@ -11,6 +11,7 @@ import { CustomerDataProvider } from "@/contexts/CustomerDataContext";
 import { CustomerCoordinatesProvider } from "@/contexts/CustomerCoordinatesContext";
 import Analytics from "@/components/Analytics";
 import PageViewTracker from "@/components/PageViewTracker";
+import ObservabilityContextSync from "@/components/ObservabilityContextSync";
 import SessionTracker from "@/components/SessionTracker";
 import Navigation from "@/components/Navigation";
 import ThemeScript from "@/components/ThemeScript";
@@ -124,6 +125,7 @@ export default function RootLayout({
                       </Suspense>
                       <CartRestaurantValidator />
                       <PageViewTracker />
+                      <ObservabilityContextSync />
                       <SessionTracker />
                       <Navigation />
                       {children}
