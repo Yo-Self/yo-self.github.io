@@ -132,7 +132,7 @@ Located in `supabase-functions/`:
 - Client: `InfinitePayPixButton`, `useInfinitePayCheckout`, `useRestaurantPixPayment` — shown only when PIX is enabled for the restaurant.
 - Stripe/WhatsApp flows are untouched; PIX button is additive in `CartModal`.
 - Deploy: `supabase functions deploy infinitepay-checkout` and `infinitepay-webhook --no-verify-jwt`.
-- Optional secret `INFINITEPAY_WEBHOOK_SECRET` on `infinitepay-webhook` validates `X-Callback-Signature` (HMAC-SHA256 of raw body). Omit to keep legacy behavior until the secret is configured in InfinitePay.
+- Webhook security (official docs): validates `order_nsu` + `invoice_slug`, then calls InfinitePay `payment_check` API before marking order paid. See https://www.infinitepay.io/checkout-documentacao
 
 ## Checkout flow (WhatsApp)
 
