@@ -262,13 +262,18 @@ supabase functions deploy ai-chat
 | `NEXT_PUBLIC_INFINITEPAY_DEV_ENABLED` | `true` em dev local para exibir botão PIX sem alterar o banco | ❌ |
 | `NEXT_PUBLIC_INFINITEPAY_DEV_HANDLE` | InfiniteTag de testes (ex.: `jessemonteiro`) | ❌ |
 | `INFINITEPAY_DEV_HANDLE` | Secret na Edge Function `infinitepay-checkout` (mesmo handle, só staging) | ❌ |
-| `INFINITEPAY_WEBHOOK_SECRET` | Secret do webhook InfinitePay (`X-Callback-Signature`, HMAC-SHA256 do body). Se definido, requisições sem assinatura válida são rejeitadas | ❌ |
 
 ### PIX InfinitePay (opt-in)
 
+A segurança do webhook segue a [documentação oficial](https://www.infinitepay.io/checkout-documentacao):
+- Valida `order_nsu` e `invoice_slug` contra o pedido no banco
+- Confirma o pagamento via `POST https://api.checkout.infinitepay.io/payment_check` antes de marcar como pago
+
 ```bash
+supabase db push
 supabase functions deploy infinitepay-checkout
 supabase functions deploy infinitepay-webhook --no-verify-jwt
+supabase functions deploy stripe-checkout
 ```
 
 Habilitar por restaurante no Supabase:
