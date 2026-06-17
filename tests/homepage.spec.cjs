@@ -69,7 +69,7 @@ test.describe('Página Inicial', () => {
     expect(await navLinks.count()).toBeGreaterThan(0);
     await expect(page.locator('nav a:has-text("Início")')).toBeVisible();
     await expect(page.locator('nav a:has-text("Cardápio")')).toBeVisible();
-    await expect(page.locator('nav a:has-text("Gestor")')).toBeVisible();
+    await expect(page.locator('nav a[href="#gestor"]')).toBeVisible();
   });
 
   test('deve ter seção de destaque do carrossel', async ({ page }) => {

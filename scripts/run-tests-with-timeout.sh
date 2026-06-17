@@ -60,6 +60,26 @@ TEST_TIMEOUT=10m  # 10 minutos máximo para todos os testes
 INDIVIDUAL_TIMEOUT=2m  # 2 minutos máximo para cada teste individual
 MAX_RETRIES=2
 
+stop_server_on_port() {
+    local pid="${1:-}"
+
+    if [ -n "$pid" ]; then
+        kill "$pid" 2>/dev/null || true
+        pkill -P "$pid" 2>/dev/null || true
+    fi
+
+    if command -v lsof >/dev/null 2>&1 && lsof -t -i:3000 > /dev/null 2>&1; then
+        echo "🧹 Forçando encerramento de processos na porta 3000..."
+        lsof -t -i:3000 | xargs kill -9 2>/dev/null || true
+    elif [ "$(uname -s)" = "Linux" ] && command -v fuser >/dev/null 2>&1; then
+        fuser -k 3000/tcp 2>/dev/null || true
+    fi
+
+    # Fallback for CI runners where npm exits but the Next child process keeps the port.
+    pkill -f "next dev -p 3000" 2>/dev/null || true
+    sleep 2
+}
+
 # Função para executar testes com timeout
 run_test_with_timeout() {
     local test_command="$1"
@@ -97,11 +117,7 @@ run_test_with_timeout() {
 
 # Garantir que a porta 3000 está livre antes de iniciar
 echo "🧹 Garantindo que a porta 3000 está livre..."
-if lsof -t -i:3000 > /dev/null; then
-  echo "⚠️ Porta 3000 ocupada. Encerrando processos..."
-  lsof -t -i:3000 | xargs kill -9 || true
-  sleep 1
-fi
+stop_server_on_port
 
 # Iniciar servidor de desenvolvimento para testes standalone
 echo "🟢 Iniciando servidor de desenvolvimento para testes standalone..."
@@ -112,10 +128,7 @@ DEV_SERVER_PID=$!
 echo "⏳ Aguardando servidor (http://localhost:3000) ficar pronto..."
 if ! timeout 60s bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'; then
   echo "❌ Servidor não ficou pronto em 60s. Encerrando."
-  kill $DEV_SERVER_PID || true
-  if lsof -t -i:3000 > /dev/null; then
-    lsof -t -i:3000 | xargs kill -9 || true
-  fi
+  stop_server_on_port "$DEV_SERVER_PID"
   exit 1
 fi
 
@@ -129,12 +142,7 @@ run_test_with_timeout \
 
 # Parar servidor standalone
 echo "🛑 Encerrando servidor de desenvolvimento (standalone)"
-kill $DEV_SERVER_PID || true
-if lsof -t -i:3000 > /dev/null; then
-  echo "🧹 Forçando encerramento de processos na porta 3000..."
-  lsof -t -i:3000 | xargs kill -9 || true
-fi
-sleep 2
+stop_server_on_port "$DEV_SERVER_PID"
 
 # Iniciar servidor para suíte principal (também sem webServer do Playwright)
 echo "🟢 Iniciando servidor de desenvolvimento para suíte principal..."
@@ -147,10 +155,7 @@ MAIN_SERVER_PID=$!
 echo "⏳ Aguardando servidor (http://localhost:3000) ficar pronto..."
 if ! timeout 60s bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'; then
   echo "❌ Servidor (principal) não ficou pronto em 60s. Encerrando."
-  kill $MAIN_SERVER_PID || true
-  if lsof -t -i:3000 > /dev/null; then
-    lsof -t -i:3000 | xargs kill -9 || true
-  fi
+  stop_server_on_port "$MAIN_SERVER_PID"
   exit 1
 fi
 
@@ -162,10 +167,7 @@ if timeout $TEST_TIMEOUT bash -c '
     DISABLE_API_CALLS=true NEXT_PUBLIC_DISABLE_SW=true NODE_ENV=test npx playwright test --config=playwright.config.ci-standalone.cjs --project=chromium --grep="^(?!.*Standalone).*"
 '; then
     echo "🎉 Todos os testes executaram com sucesso!"
-    kill $MAIN_SERVER_PID || true
-    if lsof -t -i:3000 > /dev/null; then
-      lsof -t -i:3000 | xargs kill -9 || true
-    fi
+    stop_server_on_port "$MAIN_SERVER_PID"
     exit 0
 else
     exit_code=$?
@@ -178,17 +180,11 @@ else
             echo "📋 Resultados parciais disponíveis em test-results/"
             ls -la test-results/
         fi
-        kill $MAIN_SERVER_PID || true
-        if lsof -t -i:3000 > /dev/null; then
-          lsof -t -i:3000 | xargs kill -9 || true
-        fi
+        stop_server_on_port "$MAIN_SERVER_PID"
         exit 1
     else
         echo "❌ Testes falharam com código $exit_code"
-        kill $MAIN_SERVER_PID || true
-        if lsof -t -i:3000 > /dev/null; then
-          lsof -t -i:3000 | xargs kill -9 || true
-        fi
+        stop_server_on_port "$MAIN_SERVER_PID"
         exit $exit_code
     fi
 fi

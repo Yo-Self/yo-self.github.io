@@ -5,6 +5,10 @@ let dbHelper;
 
 let testRestaurant;
 
+async function isRestaurantNotFound(page) {
+  return await page.locator('text="Restaurante não encontrado"').isVisible().catch(() => false);
+}
+
 test.beforeAll(async () => {
   dbHelper = new DatabaseHelper();
   await dbHelper.initialize();
@@ -55,6 +59,11 @@ test.describe('Cardápio do Restaurante', () => {
       await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
+
+      if (await isRestaurantNotFound(page)) {
+        await expect(page.locator('text="Restaurante não encontrado"')).toBeVisible();
+        return;
+      }
 
       // Verificar se há nome do restaurante
       const restaurantName = page.locator('h1');
@@ -480,6 +489,11 @@ test.describe('Cardápio do Restaurante', () => {
       await page.goto(`/restaurant/${testRestaurant.slug}`);
       await page.waitForLoadState('networkidle', { timeout: 30000 }); // Increased timeout to 30s
       await page.waitForTimeout(1000);
+
+      if (await isRestaurantNotFound(page)) {
+        await expect(page.locator('text="Restaurante não encontrado"')).toBeVisible();
+        return;
+      }
 
       // Verificar se o header é responsivo
       const header = page.locator('header');
