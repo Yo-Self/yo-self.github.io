@@ -27,6 +27,9 @@ function mapOrderCreationError(error: { message?: string; details?: string; code
   if (msg.includes('delivery_not_covered')) {
     return new Error('Endereço fora da área de entrega.');
   }
+  if (msg.includes('missing_coordinates')) {
+    return new Error('Selecione um endereço válido no mapa para continuar.');
+  }
   if (msg.includes('min_order_value_not_met')) {
     return new Error('O valor mínimo do pedido não foi atingido.');
   }

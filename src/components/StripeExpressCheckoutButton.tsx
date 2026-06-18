@@ -11,6 +11,9 @@ import { Elements, ExpressCheckoutElement, useStripe, useElements } from '@strip
 import { useCart } from '../hooks/useCart';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
+import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
+import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import { createOrder } from '../services/orderService';
 import { createExpressPaymentIntent } from '../services/stripeService';
 import { Order, OrderItem } from '../types/order';
@@ -82,6 +85,7 @@ const ExpressCheckoutInner = ({
   const elements = useElements();
   const { items, totalPrice, isEmpty } = useCart();
   const { customerData } = useCustomerData();
+  const { customerCoordinates } = useCustomerCoordinates();
   const { restaurant } = useRestaurantBySlug(restaurantId);
   const { addActiveOrderId } = useActiveOrders();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -110,6 +114,21 @@ const ExpressCheckoutInner = ({
 
       const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
 
+      const deliveryCalc = isActuallyDelivery
+        ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
+        : { covered: true, fee: 0, reason: undefined, distanceKm: null };
+
+      assertDeliveryReadyForCheckout({
+        isDelivery: isActuallyDelivery,
+        coordinates: customerCoordinates?.coordinates,
+        deliveryCalc,
+      });
+
+      const deliveryFee = deliveryCalc.fee / 100;
+      const fullDeliveryAddress = isActuallyDelivery
+        ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
+        : undefined;
+
       const isRetirada = isActuallyRetirada || (!isDeliveryRoute && tableId === 'retirada');
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
         restaurant_id: restaurant.id,
@@ -120,9 +139,19 @@ const ExpressCheckoutInner = ({
           delivery_type: isActuallyDelivery ? 'delivery' : (isRetirada ? 'takeout' : 'dine_in'),
           address: isActuallyDelivery ? (customerData.address || null) : (tableId ? (isRetirada ? 'Retirada' : `Mesa ${tableId}`) : null),
         },
-        total_price: Math.round(totalPrice * 100),
+        total_price: Math.round((totalPrice + (isActuallyDelivery && deliveryCalc.covered ? deliveryFee : 0)) * 100),
         status: 'pending_payment',
         order_type: isActuallyDelivery ? 'delivery' : (isRetirada ? 'pickup' : 'dine_in'),
+        delivery_fee: isActuallyDelivery && deliveryCalc.covered ? deliveryCalc.fee : 0,
+        delivery_distance: isActuallyDelivery && deliveryCalc.covered ? deliveryCalc.distanceKm : null,
+        delivery_address: fullDeliveryAddress ?? null,
+        delivery_coords_lat: isActuallyDelivery && customerCoordinates?.coordinates ? customerCoordinates.coordinates.latitude : null,
+        delivery_coords_lng: isActuallyDelivery && customerCoordinates?.coordinates ? customerCoordinates.coordinates.longitude : null,
+        delivery_address_details: isActuallyDelivery ? {
+          street: customerData.address,
+          number: customerData.number,
+          complement: customerData.complement,
+        } : null,
       };
 
       const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item => ({
@@ -245,6 +274,7 @@ const ExpressCheckoutInner = ({
     isActuallyDelivery,
     isActuallyRetirada,
     deliveryMode,
+    customerCoordinates,
     addActiveOrderId,
   ]);
 

@@ -14,7 +14,7 @@ export interface DeliveryZone {
 export interface DeliveryCalculationResult {
   covered: boolean;
   fee: number; // em centavos (R$)
-  reason?: 'delivery_disabled' | 'waiting_location' | 'distance_exceeded' | 'exclusion_zone' | 'no_restaurant_coords';
+  reason?: 'delivery_disabled' | 'waiting_location' | 'missing_coordinates' | 'distance_exceeded' | 'exclusion_zone' | 'no_restaurant_coords';
   zoneName?: string;
   distanceKm?: number;
 }
@@ -69,12 +69,12 @@ export function calculateDeliveryFeeAndCoverage(
     };
   }
 
-  // 2. Se não temos a localização do cliente, assumimos coberto com taxa 0 por enquanto
+  // 2. Sem coordenadas do cliente — não permitir checkout de entrega
   if (!customerCoords) {
     return {
-      covered: true,
+      covered: false,
       fee: 0,
-      reason: 'waiting_location'
+      reason: 'missing_coordinates'
     };
   }
 

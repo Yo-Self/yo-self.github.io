@@ -121,13 +121,22 @@ async function tryModelsSequentially(
 export async function POST(request: NextRequest) {
   let distinctId = 'anonymous';
   try {
-    const { message, restaurantData, chatHistory, distinct_id, trace_id } = await request.json();
+    const body = await request.json();
+    const { message, restaurantData, chatHistory, distinct_id, trace_id, restaurant_id } = body;
     if (distinct_id) {
       distinctId = distinct_id;
     }
 
+    if (typeof message !== 'string' || !message.trim() || message.length > 2000) {
+      return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
+    }
+
+    const resolvedRestaurantId = restaurant_id || restaurantData?.id;
+    if (!resolvedRestaurantId || typeof resolvedRestaurantId !== 'string') {
+      return NextResponse.json({ error: 'restaurant_id is required' }, { status: 403 });
+    }
+
     if (!process.env.GOOGLE_AI_API_KEY) {
-      // Fallback imediato se não tiver API key
       const fallbackText = searchFallback(message, restaurantData);
       return NextResponse.json({
         message: fallbackText,
@@ -137,7 +146,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Criar contexto baseado nos dados do restaurante
     const restaurantContext = `
       Você é um assistente especializado em gastronomia para o restaurante "${restaurantData?.name || 'Restaurante'}".
       

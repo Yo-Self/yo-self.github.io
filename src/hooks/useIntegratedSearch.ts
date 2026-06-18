@@ -152,10 +152,14 @@ export function useIntegratedSearch(): UseIntegratedSearchReturn {
               },
               body: JSON.stringify({
                 message: query,
-                restaurantData,
+                restaurant_id: restaurantData?.id,
                 chatHistory: [],
               }),
             });
+
+            if (response.status === 429) {
+              throw new Error('Muitas mensagens em sequência. Aguarde um momento.');
+            }
 
             if (!response.ok) {
               // Tentar extrair detalhes do erro da resposta
@@ -191,6 +195,7 @@ export function useIntegratedSearch(): UseIntegratedSearchReturn {
                 },
                 body: JSON.stringify({
                   message: query,
+                  restaurant_id: restaurantData?.id,
                   restaurantData,
                   chatHistory: [],
                 }),
@@ -220,6 +225,7 @@ export function useIntegratedSearch(): UseIntegratedSearchReturn {
             },
             body: JSON.stringify({
               message: query,
+              restaurant_id: restaurantData?.id,
               restaurantData,
               chatHistory: [],
             }),

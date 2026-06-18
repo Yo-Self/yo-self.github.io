@@ -11,6 +11,7 @@ import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { usePathname } from 'next/navigation';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import { CartUtils } from '../types/cart';
 import { createOrder } from '../services/orderService';
 import { Order, OrderItem } from '../types/order';
@@ -70,7 +71,7 @@ export default function CartWhatsAppButton({
   const deliveryFee = deliveryCalc.fee / 100;
   const deliveryCovered = deliveryCalc.covered;
   const totalPriceWithShipping = totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0);
-  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'missing_coordinates';
   const restaurantIdRef = React.useRef(restaurantId);
 
   // Monitorar mudanças no restaurantId e cancelar operações em andamento
@@ -322,6 +323,12 @@ export default function CartWhatsAppButton({
     setIsCreatingOrder(true);
 
     try {
+      assertDeliveryReadyForCheckout({
+        isDelivery: isActuallyDelivery,
+        coordinates: customerCoordinates?.coordinates,
+        deliveryCalc,
+      });
+
       const orderToCreate: Omit<Order, 'id' | 'created_at' | 'updated_at'> = {
         restaurant_id: restaurant.id,
         table_name: isActuallyRetirada ? 'Retirada' : (tablePayment ? customerData.address : undefined),
@@ -439,7 +446,7 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')}
+      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered)}
       className={`
         relative w-full min-w-0 flex items-center justify-center
         ${checkoutActionButtonMinHeightClass}

@@ -6,6 +6,7 @@ import { useCustomerData } from './useCustomerData';
 import { useRestaurantBySlug } from './useRestaurantBySlug';
 import { useCustomerCoordinates } from './useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import { createOrder } from '../services/orderService';
 import { createCheckoutSession } from '../services/stripeService';
 import { Order, OrderItem } from '../types/order';
@@ -68,15 +69,11 @@ export function useStripeCheckout({
         ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
         : { covered: true, fee: 0, reason: undefined, distanceKm: null };
 
-      if (isActuallyDelivery && !deliveryCalc.covered) {
-        throw new Error(
-          deliveryCalc.reason === 'exclusion_zone'
-            ? `Endereço indisponível para entrega na região: ${deliveryCalc.zoneName}`
-            : deliveryCalc.reason === 'waiting_location'
-              ? 'Por favor, informe seu endereço de entrega antes de pagar.'
-              : `Endereço fora da área de entrega do restaurante (limite de ${restaurant.delivery_max_distance || 10} km).`
-        );
-      }
+      assertDeliveryReadyForCheckout({
+        isDelivery: isActuallyDelivery,
+        coordinates: customerCoordinates?.coordinates,
+        deliveryCalc,
+      });
 
       const deliveryFee = deliveryCalc.fee / 100;
       const fullDeliveryAddress = isActuallyDelivery 

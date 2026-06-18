@@ -52,7 +52,7 @@ export default function InfinitePayPixButton({
 
   const deliveryFee = deliveryCalc.fee / 100;
   const deliveryCovered = deliveryCalc.covered;
-  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'missing_coordinates';
 
   const isMinOrderNotMet = isActuallyDelivery && restaurant?.min_order_value && totalPrice < restaurant.min_order_value && restaurant?.open !== false;
 
@@ -139,7 +139,7 @@ export default function InfinitePayPixButton({
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
-  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && deliveryCalc.reason === 'waiting_location');
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered);
 
   return (
     <button

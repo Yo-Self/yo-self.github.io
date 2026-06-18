@@ -1,6 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { GoogleGenerativeAI } from 'npm:@google/generative-ai@0.11.2'
 import { captureEdgeException } from '../_shared/sentry.ts'
+import { createServiceSupabase, enforceRateLimit, getClientIp } from '../_shared/rateLimit.ts'
+import { getUserFromRequest, isValidUuid } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -151,6 +153,105 @@ function searchFallback(message: string, restaurantData: any): string {
   return "A IA está indisponível no momento e não encontrei pratos exatos com esses termos. Tente buscar por ingredientes como 'camarão', 'carne' ou 'doce'."
 }
 
+function jsonResponse(body: Record<string, unknown>, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
+function validateMessage(message: unknown): string | null {
+  if (typeof message !== 'string') return 'Message must be a string'
+  const trimmed = message.trim()
+  if (!trimmed) return 'Message is required'
+  if (trimmed.length > 2000) return 'Message too long (max 2000 characters)'
+  return null
+}
+
+function normalizeHistory(raw: unknown): any[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.slice(-20).flatMap((item) => {
+    if (!item || typeof item !== 'object') return []
+
+    const record = item as { role?: unknown; content?: unknown; parts?: unknown[] }
+    let content = typeof record.content === 'string' ? record.content : ''
+
+    if (!content && Array.isArray(record.parts)) {
+      content = record.parts
+        .map((part) => (part && typeof part === 'object' && 'text' in part ? String((part as { text?: unknown }).text ?? '') : ''))
+        .filter(Boolean)
+        .join('')
+    }
+
+    if (!content.trim()) return []
+
+    const role = record.role === 'assistant' || record.role === 'model' ? 'model' : 'user'
+    return [{ role, content }]
+  })
+}
+
+async function loadRestaurantFromDb(
+  supabase: ReturnType<typeof createServiceSupabase>,
+  restaurantId: string,
+) {
+  const { data: restaurant, error } = await supabase
+    .from('restaurants')
+    .select('id, name, slug, description, open, is_open_for_orders')
+    .eq('id', restaurantId)
+    .single()
+
+  if (error || !restaurant || restaurant.open !== true || restaurant.is_open_for_orders !== true) {
+    return null
+  }
+
+  const { data: dishes } = await supabase
+    .from('dishes')
+    .select('name, description, price, is_available')
+    .eq('restaurant_id', restaurantId)
+    .eq('is_available', true)
+    .order('name')
+    .limit(200)
+
+  const menu_items = (dishes ?? []).map((d) => ({
+    name: d.name,
+    description: d.description ?? '',
+    price: d.price,
+  }))
+
+  return { ...restaurant, menu_items }
+}
+
+function buildPublicRestaurantContext(restaurantData: {
+  name?: string
+  description?: string
+  menu_items?: Array<{ name: string; description?: string; price?: unknown }>
+}): string {
+  return `
+      Você é um assistente especializado em gastronomia para o restaurante "${restaurantData?.name || 'Restaurante'}".
+      
+      Informações do restaurante:
+      - Nome: ${restaurantData?.name || 'N/A'}
+      - Descrição: ${restaurantData?.description || 'N/A'}
+      
+      Cardápio disponível:
+      ${
+    restaurantData?.menu_items?.map(
+      (item) => `- ${item.name}: ${item.description || ''} (R$ ${item.price})`,
+    ).join('\n') || 'Nenhum item disponível'
+  }
+      
+      Instruções:
+      1. Responda de forma amigável e útil sobre os pratos do restaurante
+      2. Ajude os clientes a escolherem pratos baseado em suas preferências
+      3. Forneça informações sobre ingredientes, sabores e combinações
+      4. Seja específico sobre preços e disponibilidade
+      5. Responda em português brasileiro
+      6. Mantenha as respostas concisas mas informativas
+      7. Quando mencionar pratos específicos, use exatamente os nomes do cardápio
+    `
+}
+
 // Função para retry com backoff exponencial
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
@@ -271,93 +372,148 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  try {
-    const body = await req.json()
-    const { message, restaurantData, chatHistory, distinct_id, trace_id } = body
+  let body: Record<string, unknown> = {}
 
-    if (!message) {
-      return new Response(
-        JSON.stringify({ error: 'Mensagem é obrigatória' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        },
+  try {
+    const supabase = createServiceSupabase()
+    const clientIp = getClientIp(req)
+
+    const ipLimitResponse = await enforceRateLimit(supabase, 'ai-chat:ip', clientIp, 20, 60)
+    if (ipLimitResponse) {
+      return new Response(ipLimitResponse.body, {
+        status: ipLimitResponse.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    body = await req.json()
+    const {
+      message,
+      restaurant_id,
+      restaurantData: _clientRestaurantData,
+      chatHistory,
+      history,
+      systemInstruction,
+      distinct_id,
+      trace_id,
+    } = body as {
+      message?: unknown
+      restaurant_id?: unknown
+      restaurantData?: unknown
+      chatHistory?: unknown
+      history?: unknown
+      systemInstruction?: unknown
+      distinct_id?: unknown
+      trace_id?: unknown
+    }
+
+    const messageError = validateMessage(message)
+    if (messageError) {
+      return jsonResponse({ error: messageError }, 400)
+    }
+
+    const normalizedMessage = (message as string).trim()
+    const normalizedHistory = normalizeHistory(chatHistory ?? history)
+
+    const authUser = await getUserFromRequest(req)
+    let restaurantContext: string
+    let restaurantDataForFallback: Record<string, unknown> | null = null
+    let trackingProps: Record<string, unknown> = {
+      message_length: normalizedMessage.length,
+      history_length: normalizedHistory.length,
+    }
+
+    if (authUser) {
+      const userLimitResponse = await enforceRateLimit(
+        supabase,
+        'ai-chat:user',
+        authUser.userId,
+        60,
+        60,
       )
+      if (userLimitResponse) {
+        return new Response(userLimitResponse.body, {
+          status: userLimitResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      if (typeof systemInstruction === 'string' && systemInstruction.length > 4000) {
+        return jsonResponse({ error: 'systemInstruction too long' }, 400)
+      }
+
+      restaurantContext = typeof systemInstruction === 'string' && systemInstruction.trim()
+        ? systemInstruction.trim()
+        : 'Você é um assistente útil para gestores de restaurantes. Responda em português brasileiro de forma concisa.'
+      trackingProps = { ...trackingProps, profile: 'manager', user_id: authUser.userId }
+    } else {
+      if (!isValidUuid(restaurant_id)) {
+        return jsonResponse({ error: 'restaurant_id is required for public chat' }, 403)
+      }
+
+      const restaurantLimitResponse = await enforceRateLimit(
+        supabase,
+        'ai-chat:restaurant',
+        `${clientIp}:${restaurant_id}`,
+        20,
+        60,
+      )
+      if (restaurantLimitResponse) {
+        return new Response(restaurantLimitResponse.body, {
+          status: restaurantLimitResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const loadedRestaurant = await loadRestaurantFromDb(supabase, restaurant_id)
+      if (!loadedRestaurant) {
+        return jsonResponse({ error: 'Restaurant not found or not accepting orders' }, 403)
+      }
+
+      restaurantDataForFallback = loadedRestaurant
+      restaurantContext = buildPublicRestaurantContext(loadedRestaurant)
+      trackingProps = {
+        ...trackingProps,
+        profile: 'public_menu',
+        restaurant_id,
+        restaurant_name: loadedRestaurant.name,
+        restaurant_slug: loadedRestaurant.slug,
+      }
     }
 
     // Verificar se a API key está configurada
     const apiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!apiKey) {
-      // Fallback imediato se não tiver API key
-      const fallbackText = searchFallback(message, restaurantData)
-      return new Response(
-        JSON.stringify({
-          message: fallbackText,
-          timestamp: new Date().toISOString(),
-          model: 'local-search-no-key',
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
+      const fallbackText = searchFallback(normalizedMessage, restaurantDataForFallback ?? _clientRestaurantData)
+      return jsonResponse({
+        message: fallbackText,
+        timestamp: new Date().toISOString(),
+        model: 'local-search-no-key',
+      }, 200)
     }
 
-    // Inicializar o cliente do Google AI
     const genAI = new GoogleGenerativeAI(apiKey)
 
-    // Criar contexto baseado nos dados do restaurante
-    const restaurantContext = `
-      Você é um assistente especializado em gastronomia para o restaurante "${
-      restaurantData?.name || 'Restaurante'
-    }".
-      
-      Informações do restaurante:
-      - Nome: ${restaurantData?.name || 'N/A'}
-      - Descrição: ${restaurantData?.description || 'N/A'}
-      
-      Cardápio disponível:
-      ${
-      restaurantData?.menu_items?.map(
-        (item: any) => `- ${item.name}: ${item.description} (R$ ${item.price})`,
-      ).join('\n') || 'Nenhum item disponível'
-    }
-      
-      Instruções:
-      1. Responda de forma amigável e útil sobre os pratos do restaurante
-      2. Ajude os clientes a escolherem pratos baseado em suas preferências
-      3. Forneça informações sobre ingredientes, sabores e combinações
-      4. Seja específico sobre preços e disponibilidade
-      5. Responda em português brasileiro
-      6. Mantenha as respostas concisas mas informativas
-      7. Quando mencionar pratos específicos, use exatamente os nomes do cardápio
-    `
-
-    // Enviar mensagem com retry e fallback de modelos (agora com tracking PostHog)
     const { result, modelName } = await tryModelWithFallback(
       genAI,
-      message,
+      normalizedMessage,
       restaurantContext,
-      chatHistory,
-      distinct_id || 'anonymous',
-      trace_id,
-      {
-        restaurant_name: restaurantData?.name,
-        restaurant_slug: restaurantData?.slug,
-        message_length: message.length,
-        history_length: chatHistory?.length || 0,
-      },
-      restaurantData, // Passando dados para fallback
+      normalizedHistory,
+      typeof distinct_id === 'string' ? distinct_id : (authUser?.userId ?? 'anonymous'),
+      typeof trace_id === 'string' ? trace_id : undefined,
+      trackingProps,
+      restaurantDataForFallback ?? _clientRestaurantData,
     )
 
     const response = await result.response
     const text = response.text()
 
-    return new Response(
-      JSON.stringify({
-        message: text,
-        timestamp: new Date().toISOString(),
-        model: modelName, // Indica qual modelo foi usado dinamicamente
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
+    return jsonResponse({
+      message: text,
+      response: text,
+      timestamp: new Date().toISOString(),
+      model: modelName,
+    }, 200)
   } catch (error) {
     console.error('Erro na Edge Function:', error)
     await captureEdgeException(error, {
@@ -365,24 +521,16 @@ serve(async (req) => {
       tags: { handled_with_fallback: 'true' },
     })
 
-    // Fallback de emergência no catch global
-    const body = await req.json().catch(() => ({}))
     const fallbackText = searchFallback(
-      body.message || '',
-      body.restaurantData || {},
+      typeof body.message === 'string' ? body.message : '',
+      body.restaurantData ?? {},
     )
 
-    return new Response(
-      JSON.stringify({
-        message: fallbackText,
-        model: 'local-search-error',
-        timestamp: new Date().toISOString(),
-      }),
-      {
-        status: 200, // Retornar 200 para o frontend exibir a mensagem
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
-    )
+    return jsonResponse({
+      message: fallbackText,
+      model: 'local-search-error',
+      timestamp: new Date().toISOString(),
+    }, 200)
   }
 })
 

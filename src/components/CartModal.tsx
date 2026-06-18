@@ -91,7 +91,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
 
   const deliveryFee = deliveryCalc.fee / 100; // converter centavos para reais
   const deliveryCovered = deliveryCalc.covered;
-  const isDeliveryOutsideCoverage = isDeliveryRoute && deliveryMode === 'delivery' && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const isDeliveryOutsideCoverage = isDeliveryRoute && deliveryMode === 'delivery' && !deliveryCovered && deliveryCalc.reason !== 'missing_coordinates';
   const deliveryReason = deliveryCalc.reason;
   const deliveryZoneName = deliveryCalc.zoneName;
 
@@ -260,8 +260,8 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const getDeliveryOrLocationText = () => {
     if (isDeliveryRoute) {
       if (deliveryMode === 'delivery') {
-        if (deliveryReason === 'waiting_location') {
-          return 'Aguardando endereço...';
+        if (deliveryReason === 'missing_coordinates' || deliveryReason === 'waiting_location') {
+          return 'Selecione seu endereço no mapa';
         }
         if (!deliveryCovered) {
           return 'Entrega indisponível';

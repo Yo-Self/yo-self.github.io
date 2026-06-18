@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import {
   checkoutActionButtonMinHeightClass,
   checkoutActionButtonPaddingClass,
@@ -49,7 +50,7 @@ export default function StripeCheckoutButton({
 
   const deliveryFee = deliveryCalc.fee / 100;
   const deliveryCovered = deliveryCalc.covered;
-  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'waiting_location';
+  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'missing_coordinates';
 
   const isMinOrderNotMet = isActuallyDelivery && restaurant?.min_order_value && totalPrice < restaurant.min_order_value && restaurant?.open !== false;
 
@@ -94,6 +95,17 @@ export default function StripeCheckoutButton({
       }
       if (!customerData.whatsapp?.trim()) {
         fail('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
+        return;
+      }
+
+      try {
+        assertDeliveryReadyForCheckout({
+          isDelivery: isActuallyDelivery,
+          coordinates: customerCoordinates?.coordinates,
+          deliveryCalc,
+        });
+      } catch (err) {
+        fail('delivery_coordinates', err instanceof Error ? err.message : 'Endereço de entrega inválido.');
         return;
       }
     } else {
@@ -143,7 +155,7 @@ export default function StripeCheckoutButton({
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
-  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && deliveryCalc.reason === 'waiting_location');
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered);
 
   return (
     <button

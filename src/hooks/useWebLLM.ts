@@ -136,16 +136,19 @@ export function useWebLLM(): UseWebLLMReturn {
         },
         body: JSON.stringify({
           message,
-          restaurantData,
+          restaurant_id: restaurantData?.id,
           chatHistory: messages.map(msg => ({
             role: msg.role,
             content: msg.content,
           })),
-          // Passar informações do PostHog para tracking no servidor
           distinct_id: posthog?.get_distinct_id?.() || 'anonymous',
           trace_id: traceId,
         }),
       });
+
+      if (response.status === 429) {
+        throw new Error('Muitas mensagens em sequência. Aguarde um momento.');
+      }
 
       if (!response.ok) {
         throw new Error('Erro na comunicação com a IA');

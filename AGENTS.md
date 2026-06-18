@@ -139,9 +139,17 @@ Located in `supabase-functions/`:
 
 1. User fills cart → opens `CartModal`
 2. `CartWhatsAppButton` validates: restaurant loaded → WhatsApp enabled → phone number configured
-3. Creates order via `orderService.createOrder()` (Supabase insert)
-4. Generates formatted WhatsApp message with order details
-5. Opens `wa.me/{phone}?text={message}` — with popup-blocked fallback via `window.location.href`
+3. Creates order via `orderService.createOrder()` → RPC `create_customer_order` (server-validated prices)
+4. **Delivery:** `assertDeliveryReadyForCheckout()` exige coordenadas (Google Places) antes do RPC; taxa calculada no servidor.
+5. Generates formatted WhatsApp message with order details
+6. Opens `wa.me/{phone}?text={message}` — with popup-blocked fallback via `window.location.href`
+
+## Security (coordenado com menu-mestre-facil)
+
+- Migrations compartilhadas em `supabase/migrations/` — aplicar uma vez no projeto Supabase.
+- Entrega sem `delivery_coords_lat/lng` → erro `missing_coordinates` (cliente e servidor).
+- INSERT anônimo direto em `orders`/`order_items` foi removido; único caminho público é o RPC.
+- **AI Chat:** enviar `restaurant_id` para `/functions/v1/ai-chat`; menu carregado no servidor. Tratar HTTP 429.
 
 ## Service worker & caching
 
