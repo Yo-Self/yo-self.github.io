@@ -5,7 +5,7 @@ import { useCart } from './useCart';
 import { useCustomerData } from './useCustomerData';
 import { useRestaurantBySlug } from './useRestaurantBySlug';
 import { useCustomerCoordinates } from './useCustomerCoordinates';
-import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { calculateDeliveryFeeAndCoverage, NON_DELIVERY_DELIVERY_CALC } from '../utils/deliveryCalculator';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import { createOrder } from '../services/orderService';
 import { createCheckoutSession } from '../services/stripeService';
@@ -67,7 +67,7 @@ export function useStripeCheckout({
 
       const deliveryCalc = isActuallyDelivery
         ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
-        : { covered: true, fee: 0, reason: undefined, distanceKm: null };
+        : NON_DELIVERY_DELIVERY_CALC;
 
       assertDeliveryReadyForCheckout({
         isDelivery: isActuallyDelivery,

@@ -12,7 +12,7 @@ import { useCart } from '../hooks/useCart';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
-import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { calculateDeliveryFeeAndCoverage, NON_DELIVERY_DELIVERY_CALC } from '../utils/deliveryCalculator';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import { createOrder } from '../services/orderService';
 import { createExpressPaymentIntent } from '../services/stripeService';
@@ -116,7 +116,7 @@ const ExpressCheckoutInner = ({
 
       const deliveryCalc = isActuallyDelivery
         ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
-        : { covered: true, fee: 0, reason: undefined, distanceKm: null };
+        : NON_DELIVERY_DELIVERY_CALC;
 
       assertDeliveryReadyForCheckout({
         isDelivery: isActuallyDelivery,

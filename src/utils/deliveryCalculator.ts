@@ -19,6 +19,12 @@ export interface DeliveryCalculationResult {
   distanceKm?: number;
 }
 
+/** Fallback when checkout is not delivery — satisfies DeliveryCalculationResult without coords. */
+export const NON_DELIVERY_DELIVERY_CALC: DeliveryCalculationResult = {
+  covered: true,
+  fee: 0,
+};
+
 /**
  * Verifica se um ponto geográfico está dentro de um polígono usando o algoritmo de Ray-Casting
  */
