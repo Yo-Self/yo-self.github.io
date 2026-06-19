@@ -1,5 +1,6 @@
 import { fetchRestaurantBySlugWithData } from "@/services/restaurants";
 import { Metadata } from "next";
+import { APPLE_ITUNES_APP_META } from "@/lib/appClipMeta";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -44,6 +45,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     description: `Cardápio digital do ${restaurant.name}`,
     alternates: {
       canonical: absolute,
+    },
+    other: {
+      "apple-itunes-app": APPLE_ITUNES_APP_META,
     },
     // Use restaurant image for icons without forcing type/sizes
     icons: restaurant.image

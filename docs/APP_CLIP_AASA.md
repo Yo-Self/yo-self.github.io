@@ -31,8 +31,10 @@ Esperado: `HTTP/2 200` e JSON com `applinks` + `appclips`.
 | Arquivo | Função |
 |---------|--------|
 | `public/.well-known/apple-app-site-association` | Configuração Apple (sem extensão) |
+| `public/_headers` | Content-Type `application/json` (Cloudflare Pages / Netlify; GitHub Pages puro ignora) |
 | `public/.nojekyll` | Evita que o Jekyll ignore `.well-known` |
 | `public/CNAME` | Domínio customizado `yo-self.com` no Pages |
+| `src/lib/appClipMeta.ts` | Meta `apple-itunes-app` com App Clip card nas páginas de cardápio |
 | `scripts/verify-aasa.js` | Falha o build se o AASA não estiver em `out/` |
 
 ## Rotas cobertas
