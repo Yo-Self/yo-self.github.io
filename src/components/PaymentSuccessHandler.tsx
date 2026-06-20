@@ -188,18 +188,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
       sessionId,
     });
 
-    if (redirectStatus === 'succeeded') {
-      setVerificationState('confirmed');
-      Analytics.trackPaymentVerification(
-        buildPaymentCtx(paymentMethod, orderIdParam),
-        'verification_confirmed',
-      );
-      trackCompletedOnce(orderIdParam, paymentMethod);
-      cleanPaymentParamsFromUrl();
-      return;
-    }
-
-    if (redirectStatus === 'failed') {
+    if (!accessToken) {
       setVerificationState('failed');
       Analytics.trackPaymentVerification(
         buildPaymentCtx(paymentMethod, orderIdParam),
@@ -207,49 +196,9 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
       );
       Analytics.trackPaymentFailed({
         ...buildPaymentCtx(paymentMethod, orderIdParam),
-        errorMessage: 'stripe_redirect_status_failed',
+        errorMessage: 'missing_order_access_token',
         redirectStatus,
       });
-      cleanPaymentParamsFromUrl();
-      return;
-    }
-
-    if (isInfinitePayReturn && transactionNsu) {
-      setVerificationState('confirmed');
-      Analytics.trackPaymentVerification(
-        buildPaymentCtx(paymentMethod, orderIdParam),
-        'verification_confirmed',
-      );
-      trackCompletedOnce(orderIdParam, paymentMethod);
-      cleanPaymentParamsFromUrl();
-
-      if (accessToken) {
-        let cancelled = false;
-        (async () => {
-          try {
-            await waitForCustomerOrderPayment(orderIdParam, accessToken, {
-              maxAttempts: 15,
-              intervalMs: 2000,
-            });
-          } catch (err) {
-            if (!cancelled) {
-              console.error('InfinitePay background order sync failed:', err);
-            }
-          }
-        })();
-        return () => {
-          cancelled = true;
-        };
-      }
-      return;
-    }
-
-    if (!accessToken) {
-      setVerificationState('processing');
-      Analytics.trackPaymentVerification(
-        buildPaymentCtx(paymentMethod, orderIdParam),
-        'verification_processing',
-      );
       cleanPaymentParamsFromUrl();
       return;
     }
@@ -264,7 +213,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
     (async () => {
       try {
         const result = await waitForCustomerOrderPayment(orderIdParam, accessToken, {
-          maxAttempts: 20,
+          maxAttempts: isInfinitePayReturn ? 25 : 20,
           intervalMs: 2000,
         });
 
@@ -278,6 +227,11 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
             buildPaymentCtx(paymentMethod, orderIdParam),
             'verification_failed',
           );
+          Analytics.trackPaymentFailed({
+            ...buildPaymentCtx(paymentMethod, orderIdParam),
+            errorMessage: 'order_not_found_or_token_invalid',
+            redirectStatus,
+          });
           return;
         }
 

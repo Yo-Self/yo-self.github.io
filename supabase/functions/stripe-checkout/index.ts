@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
 import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
+import { assertAllowedCheckoutUrl, CheckoutUrlError } from '../_shared/checkoutUrls.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -277,6 +278,16 @@ serve(async (req) => {
     }
     if (!use_payment_sheet && !is_express_checkout && !apple_pay_payment_data && !cancel_url) {
       return jsonResponse({ error: 'cancel_url is required' }, 400)
+    }
+
+    try {
+      if (success_url) assertAllowedCheckoutUrl(success_url, 'success_url')
+      if (cancel_url) assertAllowedCheckoutUrl(cancel_url, 'cancel_url')
+    } catch (err) {
+      if (err instanceof CheckoutUrlError) {
+        return jsonResponse({ error: err.message }, 400)
+      }
+      throw err
     }
 
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')

@@ -24,7 +24,7 @@ export function useOrganizationBySlug(slug: string) {
 
       // Buscar a organização
       const { data: organizationData, error: orgError } = await supabase
-        .from('profiles')
+        .from('profiles_public')
         .select('*')
         .eq('slug', slug)
         .eq('is_organization', true)
@@ -103,7 +103,7 @@ export function useOrganizationList() {
       }
 
       const { data: organizationsData, error: queryError } = await supabase
-        .from('profiles')
+        .from('profiles_public')
         .select('*')
         .eq('is_organization', true)
         .order('full_name');

@@ -34,7 +34,7 @@ export class OrganizationService {
     }
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('slug', slug)
       .eq('is_organization', true)
@@ -59,7 +59,7 @@ export class OrganizationService {
     }
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('slug', slug)
       .eq('is_organization', true)
@@ -85,7 +85,7 @@ export class OrganizationService {
     
     // Buscar a organização
     const { data: organization, error: orgError } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('slug', slug)
       .eq('is_organization', true)
@@ -131,7 +131,7 @@ export class OrganizationService {
     
     // Buscar a organização
     const { data: organization, error: orgError } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('slug', slug)
       .eq('is_organization', true)
@@ -170,7 +170,7 @@ export class OrganizationService {
     }
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('is_organization', true)
       .order('full_name');
@@ -201,7 +201,7 @@ export class OrganizationService {
     }
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('is_organization', true)
       .order('full_name');
@@ -224,7 +224,7 @@ export class OrganizationService {
     }
     
     const { data, error } = await clientSupabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('is_organization', true)
       .order('full_name');
@@ -247,7 +247,7 @@ export class OrganizationService {
     }
     
     const { data, error } = await clientSupabase
-      .from('profiles')
+      .from('profiles_public')
       .select('*')
       .eq('slug', slug)
       .eq('is_organization', true)

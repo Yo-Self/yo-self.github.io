@@ -233,13 +233,13 @@ web-version/
 
 Ordem obrigatória no **mesmo projeto Supabase** compartilhado com o painel:
 
-1. Deploy deste frontend (cardápio) — leitura via `dishes_public`, RPC `create_waiter_call`.
-2. Migrations via [menu-mestre-facil](https://github.com/Yo-Self/menu-mestre-facil) (`supabase db push`).
+1. Deploy deste frontend (cardápio) — leitura via `dishes_public` e `profiles_public`, RPC `create_waiter_call`, `PaymentSuccessHandler` só confirma pagamento após RPC server-side.
+2. Migrations via [menu-mestre-facil](https://github.com/Yo-Self/menu-mestre-facil) (`supabase db push`), incluindo `20260620140000_security_cardapio_rls_hardening.sql`.
 3. Edge Functions:
-   - **Deste repo:** `stripe-checkout`, `infinitepay-checkout`
+   - **Deste repo:** `stripe-checkout`, `infinitepay-checkout` (validação de redirect URLs)
    - **menu-mestre-facil:** `scrape-ifood`, `ai-chat`, `ai-analyze-dish`, `infinitepay-checkout`
 
-Pré-requisito no Supabase: extensão `http` habilitada para geocodificação de entregas.
+Pré-requisito no Supabase: extensão `http` habilitada para geocodificação de entregas. Opcional: `CHECKOUT_ALLOWED_HOST_SUFFIXES` para hosts de staging nos checkouts.
 
 ### GitHub Pages
 

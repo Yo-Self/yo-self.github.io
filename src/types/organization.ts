@@ -2,8 +2,8 @@ export interface Organization {
   /** ID único da organização (mesmo ID do usuário) */
   id: string;
   
-  /** Email da organização */
-  email: string;
+  /** Email da organização (disponível apenas em contexto autenticado) */
+  email?: string;
   
   /** Nome completo da organização */
   full_name: string;
@@ -85,7 +85,7 @@ export function isValidOrganization(obj: any): obj is Organization {
     typeof obj === 'object' &&
     obj !== null &&
     typeof obj.id === 'string' &&
-    typeof obj.email === 'string' &&
+    (obj.email === undefined || typeof obj.email === 'string') &&
     typeof obj.full_name === 'string' &&
     typeof obj.slug === 'string' &&
     typeof obj.is_organization === 'boolean' &&

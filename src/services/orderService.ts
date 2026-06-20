@@ -36,6 +36,12 @@ function mapOrderCreationError(error: { message?: string; details?: string; code
   if (msg.includes('delivery_coords_mismatch')) {
     return new Error('O endereço informado não corresponde à localização selecionada no mapa.');
   }
+  if (msg.includes('table_order_rate_limited')) {
+    return new Error('Muitos pedidos em pouco tempo. Aguarde alguns minutos e tente novamente.');
+  }
+  if (msg.includes('missing_table_name')) {
+    return new Error('Informe o número ou nome da mesa para continuar.');
+  }
   if (msg.includes('online_ordering_disabled')) {
     return new Error('Este restaurante não está aceitando pedidos online no momento.');
   }

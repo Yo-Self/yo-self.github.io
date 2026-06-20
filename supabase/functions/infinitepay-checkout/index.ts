@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
 import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
+import { assertAllowedCheckoutUrl, CheckoutUrlError } from '../_shared/checkoutUrls.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -300,6 +301,16 @@ serve(async (req) => {
     }
     if (!success_url) {
       return jsonResponse({ error: 'success_url is required' }, 400)
+    }
+
+    try {
+      assertAllowedCheckoutUrl(success_url, 'success_url')
+      if (body.cancel_url) assertAllowedCheckoutUrl(body.cancel_url, 'cancel_url')
+    } catch (err) {
+      if (err instanceof CheckoutUrlError) {
+        return jsonResponse({ error: err.message }, 400)
+      }
+      throw err
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
