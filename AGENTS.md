@@ -124,7 +124,7 @@ Located in `supabase-functions/`:
 ### `waiter-calls/index.ts`
 - Manages waiter call requests for dine-in tables
 - Only renders when `restaurant.waiter_call_enabled` is true
-- Components: `WaiterCallButton`, `WaiterCallNotifications`, `useWaiterCalls`
+- Components: `WaiterCallButton`, `useWaiterCalls` (apenas `createCall` no cardápio público; gestão no painel menu-mestre-facil)
 
 ## PIX checkout (InfinitePay, opt-in)
 

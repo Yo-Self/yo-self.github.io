@@ -229,6 +229,18 @@ web-version/
 
 ## 🚀 Deploy
 
+### Hardening de segurança (branch `fix/sec/security-issues`)
+
+Ordem obrigatória no **mesmo projeto Supabase** compartilhado com o painel:
+
+1. Deploy deste frontend (cardápio) — leitura via `dishes_public`, RPC `create_waiter_call`.
+2. Migrations via [menu-mestre-facil](https://github.com/Yo-Self/menu-mestre-facil) (`supabase db push`).
+3. Edge Functions:
+   - **Deste repo:** `stripe-checkout`, `infinitepay-checkout`
+   - **menu-mestre-facil:** `scrape-ifood`, `ai-chat`, `ai-analyze-dish`, `infinitepay-checkout`
+
+Pré-requisito no Supabase: extensão `http` habilitada para geocodificação de entregas.
+
 ### GitHub Pages
 
 ```bash

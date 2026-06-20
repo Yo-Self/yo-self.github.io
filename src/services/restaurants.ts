@@ -190,7 +190,7 @@ async function fetchCategoriesRows(restaurantId: number | string): Promise<DbCat
 }
 
 async function fetchDishesRows(restaurantId: number | string): Promise<DbDish[]> {
-  const cacheKey = `sb:dishes:${restaurantId}`;
+  const cacheKey = `sb:dishes_public:${restaurantId}`;
   const cached = getCache<DbDish[]>(cacheKey);
   if (cached) return cached;
   const rows = await sbFetch<DbDish[]>(`dishes_public?select=*&restaurant_id=eq.${encodeURIComponent(String(restaurantId))}&order=created_at.asc`);
