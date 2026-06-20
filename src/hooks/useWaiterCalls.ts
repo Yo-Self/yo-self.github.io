@@ -1,4 +1,4 @@
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
+import { supabase } from '@/lib/supabase/client';
 import { useState, useCallback } from 'react';
 
 export interface WaiterCall {
@@ -22,6 +22,22 @@ export interface UseWaiterCallsReturn {
   clearError: () => void;
 }
 
+function mapWaiterCallError(error: { message?: string; details?: string }): string {
+  const msg = `${error.message || ''} ${error.details || ''}`.toLowerCase();
+
+  if (msg.includes('waiter_call_rate_limited')) {
+    return 'Já existe uma chamada pendente para esta mesa';
+  }
+  if (msg.includes('waiter_call_disabled')) {
+    return 'Chamada de garçom não está habilitada neste restaurante';
+  }
+  if (msg.includes('invalid_payload')) {
+    return 'Dados da chamada inválidos';
+  }
+
+  return 'Erro ao criar chamada de garçom';
+}
+
 export function useWaiterCalls(): UseWaiterCallsReturn {
   const [calls, setCalls] = useState<WaiterCall[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,50 +48,33 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
   }, []);
 
   const createCall = useCallback(async (
-    restaurantId: string, 
-    tableNumber: number, 
+    restaurantId: string,
+    tableNumber: number,
     notes?: string
   ): Promise<WaiterCall | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const supabaseUrl = getSupabaseUrl();
-      const supabaseKey = getSupabasePublishableKey();
-      
-      if (!supabaseUrl || !supabaseKey) {
+      if (!supabase) {
         console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
         return null;
       }
-      
-      const functionUrl = `${supabaseUrl}/functions/v1/waiter-calls`;
-      
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({
-          restaurant_id: restaurantId,
-          table_number: tableNumber,
-          notes: notes || null,
-        }),
+
+      const { data, error: rpcError } = await supabase.rpc('create_waiter_call', {
+        p_restaurant_id: restaurantId,
+        p_table_number: tableNumber,
+        p_notes: notes?.trim() || null,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          // Já existe uma chamada pendente
-          throw new Error(data.error || 'Já existe uma chamada pendente para esta mesa');
-        }
-        throw new Error(data.error || 'Erro ao criar chamada de garçom');
+      if (rpcError) {
+        throw new Error(mapWaiterCallError(rpcError));
       }
 
-      if (data.success && data.call) {
-        setCalls(prev => [data.call, ...prev]);
-        return data.call;
+      const call = data as WaiterCall;
+      if (call?.id) {
+        setCalls(prev => [call, ...prev]);
+        return call;
       }
 
       return null;
@@ -89,42 +88,32 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
   }, []);
 
   const fetchCalls = useCallback(async (
-    restaurantId: string, 
+    restaurantId: string,
     status: string = 'pending'
   ): Promise<WaiterCall[]> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const supabaseUrl = getSupabaseUrl();
-      const supabaseKey = getSupabasePublishableKey();
-      
-      if (!supabaseUrl || !supabaseKey) {
+      if (!supabase) {
         console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
         return [];
       }
-      
-      const functionUrl = `${supabaseUrl}/functions/v1/waiter-calls?restaurant_id=${restaurantId}&status=${status}`;
-      
-      const response = await fetch(functionUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-      });
 
-      const data = await response.json();
+      const { data, error: queryError } = await supabase
+        .from('waiter_calls')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .eq('status', status)
+        .order('created_at', { ascending: false });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao buscar chamadas de garçom');
+      if (queryError) {
+        throw queryError;
       }
 
-      if (data.success && data.calls) {
-        setCalls(data.calls);
-        return data.calls;
-      }
-
-      return [];
+      const result = (data || []) as WaiterCall[];
+      setCalls(result);
+      return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
@@ -135,53 +124,45 @@ export function useWaiterCalls(): UseWaiterCallsReturn {
   }, []);
 
   const updateCall = useCallback(async (
-    callId: string, 
-    status: string, 
-    attendedBy?: string, 
+    callId: string,
+    status: string,
+    attendedBy?: string,
     notes?: string
   ): Promise<WaiterCall | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const supabaseUrl = getSupabaseUrl();
-      const supabaseKey = getSupabasePublishableKey();
-      
-      if (!supabaseUrl || !supabaseKey) {
+      if (!supabase) {
         console.warn('Configuração do Supabase não encontrada - funcionalidade de chamada de garçom desabilitada');
         return null;
       }
-      
-      const functionUrl = `${supabaseUrl}/functions/v1/waiter-calls`;
-      
-      const response = await fetch(functionUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({
-          call_id: callId,
-          status,
-          attended_by: attendedBy || null,
-          notes: notes || null,
-        }),
-      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao atualizar chamada de garçom');
+      const updateData: Record<string, unknown> = { status };
+      if (status === 'attended') {
+        updateData.attended_at = new Date().toISOString();
+        if (attendedBy) {
+          updateData.attended_by = attendedBy;
+        }
+      }
+      if (notes) {
+        updateData.notes = notes;
       }
 
-      if (data.success && data.call) {
-        setCalls(prev => prev.map(call => 
-          call.id === callId ? data.call : call
-        ));
-        return data.call;
+      const { data, error: updateError } = await supabase
+        .from('waiter_calls')
+        .update(updateData)
+        .eq('id', callId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw updateError;
       }
 
-      return null;
+      const call = data as WaiterCall;
+      setCalls(prev => prev.map(item => (item.id === callId ? call : item)));
+      return call;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);

@@ -30,6 +30,18 @@ function mapOrderCreationError(error: { message?: string; details?: string; code
   if (msg.includes('missing_coordinates')) {
     return new Error('Selecione um endereço válido no mapa para continuar.');
   }
+  if (msg.includes('missing_delivery_address')) {
+    return new Error('Informe um endereço de entrega válido para continuar.');
+  }
+  if (msg.includes('delivery_coords_mismatch')) {
+    return new Error('O endereço informado não corresponde à localização selecionada no mapa.');
+  }
+  if (msg.includes('online_ordering_disabled')) {
+    return new Error('Este restaurante não está aceitando pedidos online no momento.');
+  }
+  if (msg.includes('geocoding_failed')) {
+    return new Error('Não foi possível validar o endereço de entrega. Tente novamente.');
+  }
   if (msg.includes('min_order_value_not_met')) {
     return new Error('O valor mínimo do pedido não foi atingido.');
   }

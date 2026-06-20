@@ -426,10 +426,9 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
           .eq('restaurant_id', restaurant.id)
           .order('position'),
         supabase
-          .from('dishes')
+          .from('dishes_public')
           .select('*')
-          .eq('restaurant_id', restaurant.id)
-          .eq('is_available', true),
+          .eq('restaurant_id', restaurant.id),
         supabase
           .from('restaurant_hours')
           .select('*')

@@ -122,7 +122,7 @@ class DatabaseHelper {
 
     try {
       const queryPromise = this.client
-        .from('dishes')
+        .from('dishes_public')
         .select('id, name, price')
         .eq('restaurant_id', restaurantId)
         .limit(5);

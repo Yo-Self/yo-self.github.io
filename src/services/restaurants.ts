@@ -193,7 +193,7 @@ async function fetchDishesRows(restaurantId: number | string): Promise<DbDish[]>
   const cacheKey = `sb:dishes:${restaurantId}`;
   const cached = getCache<DbDish[]>(cacheKey);
   if (cached) return cached;
-  const rows = await sbFetch<DbDish[]>(`dishes?select=*&restaurant_id=eq.${encodeURIComponent(String(restaurantId))}&is_available=eq.true&order=created_at.asc`);
+  const rows = await sbFetch<DbDish[]>(`dishes_public?select=*&restaurant_id=eq.${encodeURIComponent(String(restaurantId))}&order=created_at.asc`);
   setCache(cacheKey, rows);
   return rows;
 }
