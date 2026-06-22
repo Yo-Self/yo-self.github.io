@@ -9,6 +9,8 @@ interface GooglePlacesAutocompleteRobustProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** Oculta o aviso de seleção quando o endereço já foi confirmado (ex.: coordenadas definidas) */
+  addressConfirmed?: boolean;
 }
 
 // Variável global para controlar o carregamento da API
@@ -21,14 +23,17 @@ export default function GooglePlacesAutocompleteRobust({
   onCoordinatesChange,
   placeholder = "Digite seu endereço completo",
   className = "",
-  disabled = false
+  disabled = false,
+  addressConfirmed = false,
 }: GooglePlacesAutocompleteRobustProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const isInitializedRef = useRef(false);
+  const isPlaceSelectionRef = useRef(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSelectHint, setShowSelectHint] = useState(false);
 
   const loadGoogleMapsScript = useCallback(async (): Promise<void> => {
     if (typeof document === 'undefined') return;
@@ -141,7 +146,9 @@ export default function GooglePlacesAutocompleteRobust({
         const place = autocomplete.getPlace();
         
         if (place && place.formatted_address) {
+          isPlaceSelectionRef.current = true;
           onChange(place.formatted_address);
+          setShowSelectHint(false);
           
           if (place.geometry && place.geometry.location) {
             const coordinates = {
@@ -242,6 +249,24 @@ export default function GooglePlacesAutocompleteRobust({
     }
   }, [value]);
 
+  useEffect(() => {
+    if (addressConfirmed || !value.trim()) {
+      setShowSelectHint(false);
+    }
+  }, [addressConfirmed, value]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    onChange(inputValue);
+
+    if (isPlaceSelectionRef.current) {
+      isPlaceSelectionRef.current = false;
+      return;
+    }
+
+    setShowSelectHint(inputValue.trim().length > 0 && !addressConfirmed);
+  };
+
   if (error) {
     return (
       <div className="text-red-500 text-sm">
@@ -252,13 +277,38 @@ export default function GooglePlacesAutocompleteRobust({
 
   return (
     <div className="relative">
+      {showSelectHint && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-2 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-200"
+        >
+          <svg
+            className="mt-0.5 h-4 w-4 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>
+            Selecione seu endereço na <strong>lista de sugestões abaixo</strong> para confirmar a entrega.
+          </span>
+        </div>
+      )}
       <input
         ref={inputRef}
         type="text"
         placeholder={placeholder}
         disabled={disabled || isLoading}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleInputChange}
         className={`
           w-full px-4 py-3 
           border border-gray-300 dark:border-gray-600 

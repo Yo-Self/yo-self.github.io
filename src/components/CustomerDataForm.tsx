@@ -37,7 +37,7 @@ export default function CustomerDataForm({
   isPickup = false,
 }: CustomerDataFormProps) {
   const { customerData, updateName, updateAddress, updateNumber, updateComplement, updateWhatsApp } = useCustomerData();
-  const { updateCoordinates } = useCustomerCoordinates();
+  const { customerCoordinates, updateCoordinates } = useCustomerCoordinates();
   const { addresses, isLoading: isReverseGeocodingLoading, error: reverseGeocodingError, getAddressesFromCoordinates, clearAddresses } = useReverseGeocodingRobust();
   const [showNearbyAddresses, setShowNearbyAddresses] = useState(false);
 
@@ -139,6 +139,7 @@ export default function CustomerDataForm({
         <div className="relative">
           <GooglePlacesAutocompleteRobust
             value={customerData.address}
+            addressConfirmed={!!customerCoordinates.coordinates}
             onChange={(address) => {
               updateAddress(address);
               // Limpar coordenadas ao alterar endereço manualmente
@@ -188,12 +189,6 @@ export default function CustomerDataForm({
               )}
             </button>
           )}
-        </div>
-        
-        <div className="mt-1 space-y-1">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            💡 Digite o endereço ou click no icone de localização e selecione uma das sugestões que aparecerem.
-          </p>
         </div>
       </div>
       )}
