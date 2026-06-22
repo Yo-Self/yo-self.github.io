@@ -67,3 +67,54 @@ export function assertAllowedCheckoutUrl(urlString: string, label = 'URL'): stri
 
   return parsed.href
 }
+
+const DEFAULT_SITE_URL = 'https://yo-self.com'
+
+function siteBaseUrl(): string {
+  const raw =
+    Deno.env.get('SITE_URL') ??
+    Deno.env.get('PUBLIC_SITE_URL') ??
+    Deno.env.get('NEXT_PUBLIC_SITE_URL') ??
+    DEFAULT_SITE_URL
+  return raw.replace(/\/$/, '')
+}
+
+function queryParamsFromUrl(urlString: string): URLSearchParams {
+  const queryIndex = urlString.indexOf('?')
+  if (queryIndex < 0) return new URLSearchParams()
+  return new URLSearchParams(urlString.slice(queryIndex + 1))
+}
+
+/** Maps native deep links (e.g. yoself-app://) to HTTPS for InfinitePay redirect_url. */
+export function resolveInfinitePayRedirectUrl(
+  successUrl: string,
+  orderId: string,
+  restaurantSlug?: string | null,
+): string {
+  try {
+    const parsed = new URL(successUrl)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return assertAllowedCheckoutUrl(parsed.href, 'success_url')
+    }
+  } catch {
+    // Custom scheme — fall through to HTTPS fallback.
+  }
+
+  const params = queryParamsFromUrl(successUrl)
+  params.set('payment_success', 'true')
+  params.set('payment_provider', 'infinitepay')
+  params.set('payment_method', 'infinitepay_pix')
+  params.set('capture_method', 'pix')
+  params.set('order_id', orderId)
+
+  const token = params.get('token')
+  if (token && !params.has('access_token')) {
+    params.set('access_token', token)
+  }
+
+  const path = restaurantSlug?.trim()
+    ? `/restaurant/${encodeURIComponent(restaurantSlug.trim())}/`
+    : '/'
+
+  return `${siteBaseUrl()}${path}?${params.toString()}`
+}

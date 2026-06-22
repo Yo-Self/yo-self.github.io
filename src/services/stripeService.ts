@@ -25,6 +25,43 @@ export interface CheckoutSessionResponse {
   session_id: string;
 }
 
+export async function confirmStripePayment(
+  orderId: string,
+  accessToken: string,
+): Promise<{ confirmed: boolean; already_paid: boolean }> {
+  if (!supabaseUrl) {
+    throw new Error('Supabase URL não configurada.');
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabasePublishableKey}`,
+    },
+    body: JSON.stringify({
+      order_id: orderId,
+      confirm_payment: true,
+      access_token: accessToken,
+    }),
+  });
+
+  if (response.status === 409) {
+    return { confirmed: false, already_paid: false };
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new Error(errorData.error || `Erro ao confirmar pagamento (${response.status})`);
+  }
+
+  const data = await response.json();
+  return {
+    confirmed: data.confirmed === true,
+    already_paid: data.already_paid === true,
+  };
+}
+
 export async function createCheckoutSession(
   params: CreateCheckoutSessionParams
 ): Promise<CheckoutSessionResponse> {

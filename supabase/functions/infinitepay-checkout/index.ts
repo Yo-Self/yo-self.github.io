@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
 import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
-import { assertAllowedCheckoutUrl, CheckoutUrlError } from '../_shared/checkoutUrls.ts'
+import { assertAllowedCheckoutUrl, CheckoutUrlError, resolveInfinitePayRedirectUrl } from '../_shared/checkoutUrls.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,6 +66,14 @@ function extractCheckoutUrl(data: Record<string, unknown>): string | null {
   const candidates = [data.url, data.checkout_url, data.link]
   for (const value of candidates) {
     if (typeof value === 'string' && value.startsWith('http')) return value
+  }
+  return null
+}
+
+function extractInvoiceSlug(data: Record<string, unknown>): string | null {
+  const candidates = [data.slug, data.invoice_slug]
+  for (const value of candidates) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
   }
   return null
 }
@@ -303,14 +311,25 @@ serve(async (req) => {
       return jsonResponse({ error: 'success_url is required' }, 400)
     }
 
-    try {
-      assertAllowedCheckoutUrl(success_url, 'success_url')
-      if (body.cancel_url) assertAllowedCheckoutUrl(body.cancel_url, 'cancel_url')
-    } catch (err) {
-      if (err instanceof CheckoutUrlError) {
-        return jsonResponse({ error: err.message }, 400)
+    if (success_url.startsWith('http://') || success_url.startsWith('https://')) {
+      try {
+        assertAllowedCheckoutUrl(success_url, 'success_url')
+      } catch (err) {
+        if (err instanceof CheckoutUrlError) {
+          return jsonResponse({ error: err.message }, 400)
+        }
+        throw err
       }
-      throw err
+    }
+    if (body.cancel_url?.startsWith('http://') || body.cancel_url?.startsWith('https://')) {
+      try {
+        assertAllowedCheckoutUrl(body.cancel_url, 'cancel_url')
+      } catch (err) {
+        if (err instanceof CheckoutUrlError) {
+          return jsonResponse({ error: err.message }, 400)
+        }
+        throw err
+      }
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -343,14 +362,25 @@ serve(async (req) => {
       }, 400)
     }
 
+    const { data: restaurantMeta } = await supabase
+      .from('restaurants')
+      .select('slug')
+      .eq('id', restaurant_id)
+      .maybeSingle()
+
     const webhookUrl = `${supabaseUrl}/functions/v1/infinitepay-webhook`
+    const redirectUrl = resolveInfinitePayRedirectUrl(
+      success_url,
+      order_id,
+      restaurantMeta?.slug,
+    )
 
     const payload: Record<string, unknown> = {
       handle,
       items,
       itens: items,
       order_nsu: order_id,
-      redirect_url: success_url,
+      redirect_url: redirectUrl,
       webhook_url: webhookUrl,
     }
 
@@ -377,7 +407,7 @@ serve(async (req) => {
       return jsonResponse({ error: 'Checkout URL not returned by InfinitePay' }, 502)
     }
 
-    const invoiceSlug = typeof linkResult.data.slug === 'string' ? linkResult.data.slug : null
+    const invoiceSlug = extractInvoiceSlug(linkResult.data)
 
     const { error: updateError } = await supabase
       .from('orders')

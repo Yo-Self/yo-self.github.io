@@ -1,5 +1,6 @@
 
 import { supabase as clientSupabase } from '@/lib/supabase/client';
+import { confirmStripePayment } from './stripeService';
 
 export interface CustomerOrderStatus {
   status: string;
@@ -52,6 +53,14 @@ export async function waitForCustomerOrderPayment(
   const intervalMs = options?.intervalMs ?? 2000;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (attempt === 0 || attempt % 3 === 0) {
+      try {
+        await confirmStripePayment(orderId, accessToken);
+      } catch (err) {
+        console.warn('Stripe payment confirmation attempt failed:', err);
+      }
+    }
+
     const status = await fetchCustomerOrderStatus(orderId, accessToken);
     if (!status) {
       return null;

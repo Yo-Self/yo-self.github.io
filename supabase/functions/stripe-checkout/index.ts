@@ -3,6 +3,7 @@ import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-
 import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
 import { assertAllowedCheckoutUrl, CheckoutUrlError } from '../_shared/checkoutUrls.ts'
+import { confirmStripeOrderPayment } from '../_shared/stripeOrderPayment.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +29,8 @@ interface CheckoutRequest {
   apple_pay_payment_data?: string
   use_payment_sheet?: boolean
   is_express_checkout?: boolean
+  confirm_payment?: boolean
+  access_token?: string
 }
 
 interface OrderItemRow {
@@ -265,11 +268,52 @@ serve(async (req) => {
       apple_pay_payment_data,
       use_payment_sheet,
       is_express_checkout,
+      confirm_payment,
+      access_token,
     } = body
 
     if (!order_id) {
       return jsonResponse({ error: 'order_id is required' }, 400)
     }
+
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    if (!stripeSecretKey) {
+      return jsonResponse({ error: 'Stripe is not configured' }, 500)
+    }
+    warnIfUnrestrictedStripeKey(stripeSecretKey)
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey =
+      Deno.env.get('SB_SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return jsonResponse({ error: 'Server configuration error' }, 500)
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    if (confirm_payment) {
+      if (!access_token) {
+        return jsonResponse({ error: 'access_token is required for payment confirmation' }, 400)
+      }
+
+      const result = await confirmStripeOrderPayment(supabase, order_id, stripeSecretKey, {
+        accessToken: access_token,
+      })
+
+      if (!result.ok) {
+        return jsonResponse({ error: result.error }, result.status ?? 400)
+      }
+
+      return jsonResponse({
+        confirmed: !result.alreadyPaid,
+        already_paid: result.alreadyPaid,
+        order_id: result.orderId,
+        payment_intent_id: result.paymentIntentId,
+      }, 200)
+    }
+
     if (!restaurant_id) {
       return jsonResponse({ error: 'restaurant_id is required' }, 400)
     }
@@ -289,23 +333,6 @@ serve(async (req) => {
       }
       throw err
     }
-
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
-    if (!stripeSecretKey) {
-      return jsonResponse({ error: 'Stripe is not configured' }, 500)
-    }
-    warnIfUnrestrictedStripeKey(stripeSecretKey)
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey =
-      Deno.env.get('SB_SECRET_KEY') ??
-      Deno.env.get('SUPABASE_SECRET_KEY') ??
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return jsonResponse({ error: 'Server configuration error' }, 500)
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const rateLimitResponse = await enforceRateLimits(supabase, order_id, getClientIp(req))
     if (rateLimitResponse) {
@@ -352,15 +379,7 @@ serve(async (req) => {
         }, piResponse.status)
       }
 
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ stripe_payment_intent_id: piData.id })
-        .eq('id', order_id)
-        .eq('status', 'pending_payment')
-
-      if (updateError) {
-        console.error('Error updating order with payment intent ID:', updateError)
-      }
+      // PI id is persisted only after payment confirmation (webhook or confirm_payment).
 
       return jsonResponse({ payment_intent_client_secret: piData.client_secret }, 200)
     }
@@ -415,15 +434,13 @@ serve(async (req) => {
         }, 200)
       }
 
-      // Status transition to 'new' is handled exclusively by stripe-webhook
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ stripe_payment_intent_id: piData.id })
-        .eq('id', order_id)
-        .eq('status', 'pending_payment')
-
-      if (updateError) {
-        console.error('Error updating order on Apple Pay success:', updateError)
+      if (piData.status === 'succeeded') {
+        const confirmResult = await confirmStripeOrderPayment(supabase, order_id, stripeSecretKey, {
+          paymentIntentId: piData.id,
+        })
+        if (!confirmResult.ok) {
+          console.error('Apple Pay succeeded but order confirm failed:', confirmResult.error)
+        }
       }
 
       return jsonResponse({ success: true, payment_intent_id: piData.id }, 200)
@@ -451,13 +468,13 @@ serve(async (req) => {
     }
 
     if (customer_email) stripeParams.customer_email = customer_email
-    if (customer_name || customer_phone) {
-      stripeParams.payment_intent_data = {
-        metadata: {
-          ...(customer_name ? { customer_name } : {}),
-          ...(customer_phone ? { customer_phone } : {}),
-        },
-      }
+    stripeParams.payment_intent_data = {
+      metadata: {
+        order_id,
+        restaurant_id,
+        ...(customer_name ? { customer_name } : {}),
+        ...(customer_phone ? { customer_phone } : {}),
+      },
     }
 
     const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {

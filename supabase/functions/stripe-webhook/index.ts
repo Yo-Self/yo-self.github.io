@@ -128,7 +128,8 @@ serve(async (req) => {
     }
 
     const event = JSON.parse(rawBody)
-    console.log(`Received Stripe event: ${event.type} (${event.id})`)
+    const connectAccount = typeof event.account === 'string' ? event.account : null
+    console.log(`Received Stripe event: ${event.type} (${event.id})${connectAccount ? ` account=${connectAccount}` : ''}`)
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey =
@@ -218,7 +219,10 @@ serve(async (req) => {
         })
       }
 
-      const updateData: Record<string, unknown> = { status: 'new' }
+      const updateData: Record<string, unknown> = {
+        status: 'new',
+        payment_provider: 'stripe',
+      }
       if (paymentIntent) {
         updateData.stripe_payment_intent_id = paymentIntent
       }
