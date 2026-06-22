@@ -293,6 +293,11 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    const rateLimitResponse = await enforceRateLimits(supabase, order_id, getClientIp(req))
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
     if (confirm_payment) {
       if (!access_token) {
         return jsonResponse({ error: 'access_token is required for payment confirmation' }, 400)
@@ -332,11 +337,6 @@ serve(async (req) => {
         return jsonResponse({ error: err.message }, 400)
       }
       throw err
-    }
-
-    const rateLimitResponse = await enforceRateLimits(supabase, order_id, getClientIp(req))
-    if (rateLimitResponse) {
-      return rateLimitResponse
     }
 
     const validation = await loadAndValidateCheckout(supabase, order_id, restaurant_id)
@@ -385,6 +385,10 @@ serve(async (req) => {
     }
 
     if (apple_pay_payment_data) {
+      if (!access_token) {
+        return jsonResponse({ error: 'access_token is required for Apple Pay confirmation' }, 400)
+      }
+
       const tokenResponse = await fetch('https://api.stripe.com/v1/tokens', {
         method: 'POST',
         headers: {
@@ -437,6 +441,7 @@ serve(async (req) => {
       if (piData.status === 'succeeded') {
         const confirmResult = await confirmStripeOrderPayment(supabase, order_id, stripeSecretKey, {
           paymentIntentId: piData.id,
+          accessToken: access_token,
         })
         if (!confirmResult.ok) {
           console.error('Apple Pay succeeded but order confirm failed:', confirmResult.error)

@@ -113,7 +113,11 @@ export async function confirmStripeOrderPayment(
     return { ok: false, error: 'Order not found', status: 404 }
   }
 
-  if (options?.accessToken && order.customer_access_token !== options.accessToken) {
+  if (!options?.accessToken) {
+    return { ok: false, error: 'access_token is required', status: 403 }
+  }
+
+  if (order.customer_access_token !== options.accessToken) {
     return { ok: false, error: 'Invalid access token', status: 403 }
   }
 

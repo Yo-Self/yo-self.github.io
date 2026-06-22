@@ -141,7 +141,8 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
   useEffect(() => {
     const paymentSuccess = searchParams.get('payment_success');
     const orderIdParam = searchParams.get('order_id');
-    const orderTokenParam = searchParams.get('order_token');
+    const orderTokenParam =
+      searchParams.get('order_token') || searchParams.get('access_token');
     const paymentCancelled = searchParams.get('payment_cancelled');
     const redirectStatus = searchParams.get('redirect_status');
     const paymentProvider = searchParams.get('payment_provider');

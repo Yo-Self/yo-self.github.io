@@ -107,10 +107,12 @@ export function resolveInfinitePayRedirectUrl(
   params.set('capture_method', 'pix')
   params.set('order_id', orderId)
 
-  const token = params.get('token')
-  if (token && !params.has('access_token')) {
-    params.set('access_token', token)
+  const token = params.get('token') || params.get('order_token') || params.get('access_token')
+  if (token && !params.has('order_token')) {
+    params.set('order_token', token)
   }
+  params.delete('access_token')
+  params.delete('token')
 
   const path = restaurantSlug?.trim()
     ? `/restaurant/${encodeURIComponent(restaurantSlug.trim())}/`
