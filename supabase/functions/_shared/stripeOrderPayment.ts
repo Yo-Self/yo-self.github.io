@@ -35,6 +35,27 @@ export async function retrieveStripePaymentIntent(
   return await response.json()
 }
 
+export async function retrieveStripeCheckoutSession(
+  sessionId: string,
+  stripeSecretKey: string,
+  stripeConnectId: string | null,
+): Promise<Record<string, unknown> | null> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${stripeSecretKey}`,
+  }
+  if (stripeConnectId) {
+    headers['Stripe-Account'] = stripeConnectId
+  }
+
+  const response = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, { headers })
+  if (!response.ok) {
+    console.error('Failed to retrieve Checkout Session:', sessionId, await response.text())
+    return null
+  }
+
+  return await response.json()
+}
+
 export async function findStripePaymentIntentByOrderId(
   orderId: string,
   stripeSecretKey: string,
@@ -77,6 +98,7 @@ async function resolvePaymentIntentForOrder(
   stripeSecretKey: string,
   stripeConnectId: string | null,
   knownPaymentIntentId?: string | null,
+  checkoutSessionId?: string | null,
 ): Promise<{ paymentIntent: Record<string, unknown>; paymentIntentId: string } | null> {
   if (knownPaymentIntentId) {
     const paymentIntent = await retrieveStripePaymentIntent(
@@ -86,6 +108,25 @@ async function resolvePaymentIntentForOrder(
     )
     if (paymentIntent && typeof paymentIntent.id === 'string') {
       return { paymentIntent, paymentIntentId: paymentIntent.id }
+    }
+  }
+
+  if (checkoutSessionId) {
+    const session = await retrieveStripeCheckoutSession(
+      checkoutSessionId,
+      stripeSecretKey,
+      stripeConnectId,
+    )
+    const sessionPaymentIntent = session?.payment_intent
+    if (typeof sessionPaymentIntent === 'string') {
+      const paymentIntent = await retrieveStripePaymentIntent(
+        sessionPaymentIntent,
+        stripeSecretKey,
+        stripeConnectId,
+      )
+      if (paymentIntent && typeof paymentIntent.id === 'string') {
+        return { paymentIntent, paymentIntentId: paymentIntent.id }
+      }
     }
   }
 
@@ -101,11 +142,11 @@ export async function confirmStripeOrderPayment(
   supabase: SupabaseClient,
   orderId: string,
   stripeSecretKey: string,
-  options?: { accessToken?: string; paymentIntentId?: string },
+  options?: { accessToken?: string; paymentIntentId?: string; checkoutSessionId?: string },
 ): Promise<ConfirmStripePaymentResult> {
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id, status, total_price, stripe_payment_intent_id, customer_access_token, restaurant_id, restaurants(stripe_connect_id)')
+    .select('id, status, total_price, stripe_payment_intent_id, stripe_checkout_session_id, customer_access_token, restaurant_id, restaurants(stripe_connect_id)')
     .eq('id', orderId)
     .single()
 
@@ -130,6 +171,7 @@ export async function confirmStripeOrderPayment(
     stripeSecretKey,
     stripeConnectId,
     options?.paymentIntentId || order.stripe_payment_intent_id,
+    options?.checkoutSessionId || order.stripe_checkout_session_id,
   )
 
   if (!resolved) {

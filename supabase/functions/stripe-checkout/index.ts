@@ -31,6 +31,7 @@ interface CheckoutRequest {
   is_express_checkout?: boolean
   confirm_payment?: boolean
   access_token?: string
+  session_id?: string
 }
 
 interface OrderItemRow {
@@ -216,6 +217,7 @@ async function enforceRateLimits(
   supabase: SupabaseClient,
   orderId: string,
   clientIp: string,
+  isConfirmPayment: boolean,
 ): Promise<Response | null> {
   const { data: ipAllowed, error: ipError } = await supabase.rpc('check_edge_function_rate_limit', {
     p_scope: 'stripe-checkout:ip',
@@ -231,9 +233,9 @@ async function enforceRateLimits(
   }
 
   const { data: orderAllowed, error: orderError } = await supabase.rpc('check_edge_function_rate_limit', {
-    p_scope: 'stripe-checkout:order',
+    p_scope: isConfirmPayment ? 'stripe-checkout:confirm' : 'stripe-checkout:order',
     p_identifier: orderId,
-    p_max_requests: 5,
+    p_max_requests: isConfirmPayment ? 30 : 5,
     p_window_seconds: 300,
   })
 
@@ -270,6 +272,7 @@ serve(async (req) => {
       is_express_checkout,
       confirm_payment,
       access_token,
+      session_id,
     } = body
 
     if (!order_id) {
@@ -293,7 +296,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const rateLimitResponse = await enforceRateLimits(supabase, order_id, getClientIp(req))
+    const rateLimitResponse = await enforceRateLimits(supabase, order_id, getClientIp(req), confirm_payment === true)
     if (rateLimitResponse) {
       return rateLimitResponse
     }
@@ -305,6 +308,7 @@ serve(async (req) => {
 
       const result = await confirmStripeOrderPayment(supabase, order_id, stripeSecretKey, {
         accessToken: access_token,
+        checkoutSessionId: session_id,
       })
 
       if (!result.ok) {

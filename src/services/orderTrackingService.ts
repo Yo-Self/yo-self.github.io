@@ -47,15 +47,16 @@ export async function fetchCustomerOrderStatus(
 export async function waitForCustomerOrderPayment(
   orderId: string,
   accessToken: string,
-  options?: { maxAttempts?: number; intervalMs?: number }
+  options?: { maxAttempts?: number; intervalMs?: number; stripeSessionId?: string }
 ): Promise<CustomerOrderStatus | null> {
   const maxAttempts = options?.maxAttempts ?? 15;
   const intervalMs = options?.intervalMs ?? 2000;
+  const stripeSessionId = options?.stripeSessionId;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt === 0 || attempt % 3 === 0) {
       try {
-        await confirmStripePayment(orderId, accessToken);
+        await confirmStripePayment(orderId, accessToken, stripeSessionId);
       } catch (err) {
         console.warn('Stripe payment confirmation attempt failed:', err);
       }

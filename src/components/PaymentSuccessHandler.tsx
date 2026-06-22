@@ -216,6 +216,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
         const result = await waitForCustomerOrderPayment(orderIdParam, accessToken, {
           maxAttempts: isInfinitePayReturn ? 25 : 20,
           intervalMs: 2000,
+          stripeSessionId: sessionId || undefined,
         });
 
         if (cancelled) return;
