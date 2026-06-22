@@ -289,7 +289,25 @@ supabase db push
 supabase functions deploy infinitepay-checkout
 supabase functions deploy infinitepay-webhook --no-verify-jwt
 supabase functions deploy stripe-checkout
+supabase functions deploy stripe-webhook --no-verify-jwt
 ```
+
+### Stripe Connect (cartão / Apple Pay)
+
+Webhook: `https://<project-ref>.supabase.co/functions/v1/stripe-webhook`
+
+Eventos tratados pela Edge Function `stripe-webhook`:
+
+| Evento | Comportamento |
+|--------|----------------|
+| `checkout.session.completed` | Marca pedido `pending_payment` → `new` (Checkout redirect) |
+| `payment_intent.succeeded` | Idem (Express Checkout / Payment Sheet) |
+| `payment_intent.payment_failed` | Mantém `pending_payment`; registra falha no Sentry |
+| `checkout.session.expired` | Cancela pedido ainda em `pending_payment` |
+| `charge.refunded` | Reembolso total → `cancelled`; parcial só registra log |
+| `account.updated` | Se Connect perder `charges_enabled`/`details_submitted`, desliga `online_payment` |
+
+No Stripe Dashboard, ao criar/editar o destino do webhook, ative **“Receber eventos de contas conectadas”** (EN: *Listen to events on Connected accounts*) — obrigatório para pagamentos via Stripe Connect.
 
 Habilitar por restaurante no Supabase:
 

@@ -1,6 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { captureEdgeException } from '../_shared/sentry.ts'
+import {
+  handleAccountUpdated,
+  handleChargeRefunded,
+  handleCheckoutSessionExpired,
+  handleStripePaymentFailed,
+  handleStripePaymentSuccess,
+} from '../_shared/stripeWebhookHandlers.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +19,7 @@ const TIMESTAMP_TOLERANCE_SECONDS = 300
 async function verifyStripeSignature(
   rawBody: string,
   signatureHeader: string,
-  webhookSecret: string
+  webhookSecret: string,
 ): Promise<boolean> {
   const elements = signatureHeader.split(',')
   let timestamp: string | null = null
@@ -48,7 +55,7 @@ async function verifyStripeSignature(
     encoder.encode(webhookSecret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign']
+    ['sign'],
   )
 
   const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload))
@@ -74,18 +81,11 @@ function timingSafeEqual(a: string, b: string): boolean {
   return result === 0
 }
 
-function getPaidAmountCents(eventType: string, stripeObj: Record<string, unknown>): number | null {
-  if (eventType === 'checkout.session.completed') {
-    const amount = stripeObj.amount_total
-    return typeof amount === 'number' ? amount : null
-  }
-
-  if (eventType === 'payment_intent.succeeded') {
-    const amount = stripeObj.amount
-    return typeof amount === 'number' ? amount : null
-  }
-
-  return null
+function jsonResponse(body: Record<string, unknown>, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
 }
 
 serve(async (req) => {
@@ -95,36 +95,24 @@ serve(async (req) => {
 
   try {
     if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-        status: 405,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ error: 'Method not allowed' }, 405)
     }
 
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
     if (!webhookSecret) {
       console.error('STRIPE_WEBHOOK_SECRET is not configured')
-      return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ error: 'Webhook secret not configured' }, 500)
     }
 
     const rawBody = await req.text()
     const signatureHeader = req.headers.get('stripe-signature')
     if (!signatureHeader) {
-      return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ error: 'Missing stripe-signature header' }, 400)
     }
 
     const isValid = await verifyStripeSignature(rawBody, signatureHeader, webhookSecret)
     if (!isValid) {
-      return new Response(JSON.stringify({ error: 'Invalid webhook signature' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ error: 'Invalid webhook signature' }, 401)
     }
 
     const event = JSON.parse(rawBody)
@@ -138,10 +126,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing Supabase environment variables')
-      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ error: 'Server configuration error' }, 500)
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -154,119 +139,36 @@ serve(async (req) => {
 
     if (existingEvent) {
       console.log(`Event ${event.id} already processed, skipping`)
-      return new Response(JSON.stringify({ received: true, duplicate: true }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ received: true, duplicate: true }, 200)
     }
 
-    if (event.type === 'checkout.session.completed' || event.type === 'payment_intent.succeeded') {
-      const stripeObj = event.data.object as Record<string, unknown>
-      const orderId = (stripeObj.metadata as Record<string, string> | undefined)?.order_id
-      const paymentIntent = event.type === 'checkout.session.completed'
-        ? stripeObj.payment_intent
-        : stripeObj.id
-
-      if (!orderId) {
-        console.error(`${event.type} event missing order_id in metadata`)
-        return new Response(JSON.stringify({
-          received: true,
-          warning: `Missing order_id in metadata for ${event.type}`,
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .select('id, status, total_price')
-        .eq('id', orderId)
-        .single()
-
-      if (orderError || !order) {
-        console.error('Order not found for webhook:', orderId, orderError)
-        return new Response(JSON.stringify({ error: 'Order not found' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      if (order.status !== 'pending_payment') {
-        console.log(`Order ${orderId} already in status '${order.status}', skipping transition`)
-        await supabase.from('stripe_webhook_events').insert({
-          event_id: event.id,
-          order_id: orderId,
-          event_type: event.type,
-        })
-        return new Response(JSON.stringify({ received: true, skipped: true }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const paidAmountCents = getPaidAmountCents(event.type, stripeObj)
-      if (paidAmountCents === null || paidAmountCents !== order.total_price) {
-        console.error('Payment amount mismatch:', {
-          orderId,
-          expected: order.total_price,
-          received: paidAmountCents,
-          eventType: event.type,
-        })
-        return new Response(JSON.stringify({ error: 'Payment amount mismatch' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const updateData: Record<string, unknown> = {
-        status: 'new',
-        payment_provider: 'stripe',
-      }
-      if (paymentIntent) {
-        updateData.stripe_payment_intent_id = paymentIntent
-      }
-
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update(updateData)
-        .eq('id', orderId)
-        .eq('status', 'pending_payment')
-
-      if (updateError) {
-        console.error('Error updating order:', updateError)
-        return new Response(JSON.stringify({ error: 'Failed to update order' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const { error: eventInsertError } = await supabase.from('stripe_webhook_events').insert({
-        event_id: event.id,
-        order_id: orderId,
-        event_type: event.type,
-      })
-
-      if (eventInsertError) {
-        console.error('Error recording webhook event:', eventInsertError)
-      }
-
-      console.log(`Order ${orderId} updated via ${event.type}: status=new, payment_intent=${paymentIntent}`)
+    const stripeObj = event.data?.object as Record<string, unknown> | undefined
+    if (!stripeObj) {
+      return jsonResponse({ error: 'Missing event data object' }, 400)
     }
 
-    return new Response(JSON.stringify({ received: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    switch (event.type) {
+      case 'checkout.session.completed':
+      case 'payment_intent.succeeded':
+        return await handleStripePaymentSuccess(supabase, event, stripeObj, jsonResponse)
+      case 'payment_intent.payment_failed':
+        return await handleStripePaymentFailed(supabase, event, stripeObj, jsonResponse)
+      case 'checkout.session.expired':
+        return await handleCheckoutSessionExpired(supabase, event, stripeObj, jsonResponse)
+      case 'charge.refunded':
+        return await handleChargeRefunded(supabase, event, stripeObj, jsonResponse)
+      case 'account.updated':
+        return await handleAccountUpdated(supabase, event, stripeObj, connectAccount, jsonResponse)
+      default:
+        console.log(`Unhandled Stripe event type: ${event.type}`)
+        return jsonResponse({ received: true, unhandled: true }, 200)
+    }
   } catch (error) {
     console.error('Unexpected error in stripe-webhook:', error)
     await captureEdgeException(error, {
       functionName: 'stripe-webhook',
       extra: { path: req.url, method: req.method },
     })
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonResponse({ error: 'Internal server error' }, 500)
   }
 })
