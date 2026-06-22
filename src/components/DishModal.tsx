@@ -8,6 +8,7 @@ import ImageWithLoading from "./ImageWithLoading";
 import { useModalScroll } from '../hooks/useModalScroll';
 import { useCart } from '../hooks/useCart';
 import { CartUtils } from '../types/cart';
+import { groupHasPreface } from '@/types/complementPreface';
 import CartIcon from './CartIcon';
 import Analytics, { getCurrentRestaurantId } from '../lib/analytics';
 import { getOptimizedImageUrl } from '@/utils/imageUrl';
@@ -25,6 +26,7 @@ type DishModalProps = {
 
 export default function DishModal({ open, dish, restaurantId = "default", restaurant, fallbackImage, onClose }: DishModalProps) {
   const [selectedComplements, setSelectedComplements] = useState<Map<string, Set<string>>>(new Map());
+  const [prefaceAnswers, setPrefaceAnswers] = useState<Map<string, string>>(new Map());
   const [isClosing, setIsClosing] = useState(false);
   const [showAddedFeedback, setShowAddedFeedback] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -60,8 +62,8 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     if (!dish) return null;
     const menuItem = convertToMenuItem(dish);
     // Gerar o mesmo ID que é usado no carrinho
-    return CartUtils.generateItemId(menuItem, selectedComplements);
-  }, [dish, selectedComplements, convertToMenuItem]);
+    return CartUtils.generateItemId(menuItem, selectedComplements, prefaceAnswers);
+  }, [dish, selectedComplements, prefaceAnswers, convertToMenuItem]);
 
   // Funções para incrementar e decrementar quantidade
   const handleIncrementQuantity = useCallback(() => {
@@ -104,6 +106,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   useEffect(() => {
     if (dish) {
       setSelectedComplements(new Map());
+      setPrefaceAnswers(new Map());
       setIsClosing(false);
       wasAddedToCart.current = false;
     }
@@ -149,6 +152,11 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   useModalScroll(open);
 
   const handleComplementToggle = (groupTitle: string, complementName: string) => {
+    const group = dish?.complement_groups?.find(g => g.title === groupTitle);
+    if (group && groupHasPreface(group) && !prefaceAnswers.get(groupTitle)) {
+      return;
+    }
+
     setSelectedComplements(prev => {
       const newMap = new Map(prev);
       const groupSelections = new Set(newMap.get(groupTitle) || []);
@@ -195,8 +203,16 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     if (!dish?.complement_groups) return false;
     
     return dish.complement_groups.some(group => {
-      if (!group.required) return false;
       const selections = selectedComplements.get(group.title) || new Set();
+      if (groupHasPreface(group)) {
+        if (group.required && (!prefaceAnswers.get(group.title) || selections.size === 0)) {
+          return true;
+        }
+        if (selections.size > 0 && !prefaceAnswers.get(group.title)) {
+          return true;
+        }
+      }
+      if (!group.required) return false;
       return selections.size === 0;
     });
   };
@@ -207,7 +223,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
     
     try {
       const menuItem = convertToMenuItem(dish);
-      addItem(menuItem, selectedComplements);
+      addItem(menuItem, selectedComplements, prefaceAnswers);
       
       wasAddedToCart.current = true;
       
@@ -225,12 +241,12 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
   // Verificar se o item atual já está na comanda
   const currentItemInCart = dish ? (() => {
     const menuItem = convertToMenuItem(dish);
-    return isItemInCart(menuItem, selectedComplements);
+    return isItemInCart(menuItem, selectedComplements, prefaceAnswers);
   })() : false;
   
   const currentItemQuantity = dish ? (() => {
     const menuItem = convertToMenuItem(dish);
-    return getItemQuantity(menuItem, selectedComplements);
+    return getItemQuantity(menuItem, selectedComplements, prefaceAnswers);
   })() : 0;
 
   if (!open || !dish) return null;
@@ -351,6 +367,14 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
                       <ComplementGrid
                         complementGroup={group}
                         selectedComplements={selectedComplements.get(group.title) || new Set()}
+                        prefaceAnswerId={prefaceAnswers.get(group.title)}
+                        onPrefaceAnswerChange={(answerId) =>
+                          setPrefaceAnswers((prev) => {
+                            const next = new Map(prev);
+                            next.set(group.title, answerId);
+                            return next;
+                          })
+                        }
                         onComplementToggle={(complementName) => handleComplementToggle(group.title, complementName)}
                         restaurantLogo={restaurant?.image}
                       />
@@ -361,13 +385,24 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
             )}
             
             {/* Resumo das seleções */}
-            {selectedComplements.size > 0 && (
+            {(selectedComplements.size > 0 || prefaceAnswers.size > 0) && (
               <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border border-blue-200 dark:border-gray-600 selection-summary">
                 <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                   <span className="mr-2">📋</span>
                   Suas Seleções:
                 </h4>
                 <div className="space-y-3">
+                  {Array.from(prefaceAnswers.entries()).map(([groupTitle, answerId]) => {
+                    const group = dish.complement_groups?.find(g => g.title === groupTitle);
+                    const answerLabel = group?.preface_options?.find(o => o.id === answerId)?.label;
+                    if (!answerLabel) return null;
+                    return (
+                      <div key={`preface-${groupTitle}`} className="bg-white dark:bg-gray-600 rounded-lg p-3">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{groupTitle}:</span>
+                        <div className="ml-2 mt-1 text-sm text-gray-600 dark:text-gray-400">{answerLabel}</div>
+                      </div>
+                    );
+                  })}
                   {Array.from(selectedComplements.entries()).map(([groupTitle, selections]) => {
                     if (selections.size === 0) return null;
                     

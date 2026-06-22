@@ -34,6 +34,12 @@ export interface OrderItem {
   quantity: number;
   price_at_time_of_order: number;
   selected_complements?: { complement_id: string; name: string; price: number }[];
+  complement_group_answers?: {
+    group_id: string;
+    group_title: string;
+    answer_id: string;
+    answer_label: string;
+  }[];
   sent_to_kitchen?: boolean;
   created_at: string;
 }

@@ -10,10 +10,13 @@ export type Complement = {
 };
 
 export type ComplementGroup = {
+  id?: string;
   title: string;
   description?: string;
   required?: boolean;
   max_selections?: number;
+  preface_question?: string | null;
+  preface_options?: { id: string; label: string; position: number }[] | null;
   complements: Complement[];
 };
 

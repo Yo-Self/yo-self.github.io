@@ -1,22 +1,40 @@
 import React from "react";
-import { ComplementGroup, Complement } from "./data";
+import { ComplementGroup } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
+import ComplementPrefaceSelector from "./ComplementPrefaceSelector";
+import { groupHasPreface } from "@/types/complementPreface";
 
 interface ComplementGridProps {
   complementGroup: ComplementGroup;
   selectedComplements: Set<string>;
   onComplementToggle: (complementName: string) => void;
-  restaurantLogo?: string; // Logo do restaurante para usar como fallback
+  prefaceAnswerId?: string;
+  onPrefaceAnswerChange?: (answerId: string) => void;
+  restaurantLogo?: string;
 }
 
 export default function ComplementGrid({ 
   complementGroup, 
   selectedComplements, 
   onComplementToggle,
+  prefaceAnswerId,
+  onPrefaceAnswerChange,
   restaurantLogo 
 }: ComplementGridProps) {
+  const prefaceActive = groupHasPreface(complementGroup);
+  const prefaceBlocked = prefaceActive && !prefaceAnswerId;
+
   return (
     <div className="mb-6">
+      {prefaceActive && onPrefaceAnswerChange && (
+        <ComplementPrefaceSelector
+          question={complementGroup.preface_question || ""}
+          options={complementGroup.preface_options}
+          selectedAnswerId={prefaceAnswerId}
+          onChange={onPrefaceAnswerChange}
+        />
+      )}
+
       <div className="mb-3">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-1">
           {complementGroup.title}
@@ -26,28 +44,31 @@ export default function ComplementGrid({
             {complementGroup.description}
           </p>
         )}
-        {/* Tag "Obrigatório" - visível em ambos os temas */}
         {complementGroup.required && (
           <span className="inline-block bg-red-500 dark:bg-red-600 text-white text-xs px-2 py-1 rounded-full mb-2 font-medium shadow-sm">
             Obrigatório
           </span>
         )}
-        {/* Tag "Máximo X opção" - visível em ambos os temas */}
         {complementGroup.max_selections && (
           <span className="inline-block bg-blue-500 dark:bg-blue-600 text-white text-xs px-2 py-1 rounded-full ml-2 mb-2 font-medium shadow-sm">
             Máximo {complementGroup.max_selections} opç{complementGroup.max_selections > 1 ? 'ões' : 'ão'}
           </span>
         )}
       </div>
+
+      {prefaceBlocked && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 italic mb-2">
+          Responda a pergunta acima para escolher os complementos.
+        </p>
+      )}
       
-      <div className="grid grid-cols-2 gap-2">
+      <div className={`grid grid-cols-2 gap-2 ${prefaceBlocked ? "opacity-50 pointer-events-none" : ""}`}>
         {complementGroup.complements.map((complement) => {
           const isSelected = selectedComplements.has(complement.name);
           const isDisabled = complementGroup.max_selections && 
             selectedComplements.size >= complementGroup.max_selections && 
             !isSelected;
           
-          // Verificar se o complemento tem descrição
           const hasDescription = complement.description && complement.description.trim() !== '';
           
           return (
@@ -59,7 +80,7 @@ export default function ComplementGrid({
                   : 'hover:shadow-md'
               } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={() => {
-                if (!isDisabled) {
+                if (!isDisabled && !prefaceBlocked) {
                   onComplementToggle(complement.name);
                 }
               }}
@@ -81,7 +102,6 @@ export default function ComplementGrid({
                   className="w-full h-full object-cover rounded-t-lg"
                   fallbackSrc={restaurantLogo || "/window.svg"}
                 >
-                  {/* Checkbox de seleção */}
                   <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center z-10 transition-all duration-200 ${
                     isSelected 
                       ? 'bg-primary dark:bg-cyan-400 text-white' 
@@ -94,14 +114,12 @@ export default function ComplementGrid({
                     )}
                   </div>
                   
-                  {/* Preço no canto inferior direito - só exibir quando for maior que 0 */}
                   {complement.price !== '0,00' && (
                     <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
                       +R${complement.price}
                     </span>
                   )}
                   
-                  {/* Nome do complemento no canto inferior esquerdo */}
                   <div className="absolute bottom-2 left-2 right-16">
                     <h4 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight" style={{
                       display: '-webkit-box',
@@ -118,7 +136,6 @@ export default function ComplementGrid({
                 </ImageWithLoading>
               </div>
               
-              {/* Detalhes abaixo da foto - só exibir quando há descrição */}
               {hasDescription && (
                 <div className="w-full px-3 pb-3 pt-2 flex flex-col justify-center items-start text-left" style={{ height: '40%', minHeight: '36px' }}>
                   <p className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0" style={{
@@ -129,7 +146,7 @@ export default function ComplementGrid({
                     textOverflow: 'ellipsis',
                     whiteSpace: 'normal',
                     lineHeight: '1.2',
-                    maxHeight: '3.6em', // Max 3 lines
+                    maxHeight: '3.6em',
                   }}>
                     {complement.description}
                   </p>
@@ -141,4 +158,4 @@ export default function ComplementGrid({
       </div>
     </div>
   );
-} 
+}

@@ -735,10 +735,13 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
                   }));
 
                 return {
+                  id: String(group.id),
                   title: group.title,
                   description: group.description || '',
                   required: group.required || false,
                   max_selections: group.max_selections || 1,
+                  preface_question: group.preface_question || null,
+                  preface_options: group.preface_options || null,
                   complements: groupComplements
                 };
               })
@@ -800,10 +803,13 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
                 }));
 
               return {
+                id: String(group.id),
                 title: group.title,
                 description: group.description || '',
                 required: group.required || false,
                 max_selections: group.max_selections || 1,
+                preface_question: group.preface_question || null,
+                preface_options: group.preface_options || null,
                 complements: groupComplements
               };
             })

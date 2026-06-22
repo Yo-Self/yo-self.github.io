@@ -82,11 +82,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const addItem = useCallback((dish: MenuItem, selectedComplements: Map<string, Set<string>>) => {
+  const addItem = useCallback((
+    dish: MenuItem,
+    selectedComplements: Map<string, Set<string>>,
+    prefaceAnswers: Map<string, string> = new Map()
+  ) => {
     if (!currentRestaurantId) return;
 
     const unitPrice = CartUtils.calculateUnitPrice(dish, selectedComplements);
-    const itemId = CartUtils.generateItemId(dish, selectedComplements);
+    const itemId = CartUtils.generateItemId(dish, selectedComplements, prefaceAnswers);
 
     const cart = allCarts[currentRestaurantId] || { items: [], totalItems: 0, totalPrice: 0 };
     const newItems = [...cart.items];
@@ -106,6 +110,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         id: itemId,
         dish,
         selectedComplements: new Map(selectedComplements),
+        prefaceAnswers: new Map(prefaceAnswers),
         quantity: 1,
         unitPrice,
         totalPrice: unitPrice,

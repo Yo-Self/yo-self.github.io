@@ -32,16 +32,37 @@ export function useCart() {
   }, [context.items]);
 
   // Verificar se um prato específico já está no carrinho
-  const isItemInCart = useCallback((dish: MenuItem, selectedComplements: Map<string, Set<string>>): boolean => {
+  const isItemInCart = useCallback((
+    dish: MenuItem,
+    selectedComplements: Map<string, Set<string>>,
+    prefaceAnswers: Map<string, string> = new Map()
+  ): boolean => {
     return context.items.some(item => 
-      CartUtils.areItemsIdentical(item.dish, item.selectedComplements, dish, selectedComplements)
+      CartUtils.areItemsIdentical(
+        item.dish,
+        item.selectedComplements,
+        dish,
+        selectedComplements,
+        item.prefaceAnswers,
+        prefaceAnswers
+      )
     );
   }, [context.items]);
 
-  // Obter quantidade de um item específico no carrinho
-  const getItemQuantity = useCallback((dish: MenuItem, selectedComplements: Map<string, Set<string>>): number => {
+  const getItemQuantity = useCallback((
+    dish: MenuItem,
+    selectedComplements: Map<string, Set<string>>,
+    prefaceAnswers: Map<string, string> = new Map()
+  ): number => {
     const item = context.items.find(item => 
-      CartUtils.areItemsIdentical(item.dish, item.selectedComplements, dish, selectedComplements)
+      CartUtils.areItemsIdentical(
+        item.dish,
+        item.selectedComplements,
+        dish,
+        selectedComplements,
+        item.prefaceAnswers,
+        prefaceAnswers
+      )
     );
     return item?.quantity || 0;
   }, [context.items]);

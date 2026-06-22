@@ -39,7 +39,11 @@ function serializeCartItems(items: CartItem[]): string {
         .flatMap(([, selections]) => Array.from(selections))
         .sort()
         .join(',');
-      return `${item.dish.id}:${item.quantity}:${complementIds}`;
+      const answerIds = Array.from(item.prefaceAnswers?.entries() || [])
+        .map(([group, answerId]) => `${group}:${answerId}`)
+        .sort()
+        .join(',');
+      return `${item.dish.id}:${item.quantity}:${complementIds}:${answerIds}`;
     })
     .sort()
     .join('|');

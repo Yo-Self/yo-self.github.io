@@ -801,8 +801,19 @@ function CartItemComponent({
         </h4>
         
         {/* Complementos selecionados */}
-        {item.selectedComplements.size > 0 && (
+        {(item.prefaceAnswers.size > 0 || item.selectedComplements.size > 0) && (
           <div className="mt-2 space-y-1">
+            {Array.from(item.prefaceAnswers.entries()).map(([groupTitle, answerId]) => {
+              const group = item.dish.complement_groups?.find(g => g.title === groupTitle);
+              const answerLabel = group?.preface_options?.find(o => o.id === answerId)?.label;
+              if (!answerLabel) return null;
+              return (
+                <div key={`preface-${groupTitle}`} className="text-sm">
+                  <span className="text-gray-600 dark:text-gray-400 font-medium">{groupTitle}:</span>
+                  <span className="ml-2 text-gray-500 dark:text-gray-500">{answerLabel}</span>
+                </div>
+              );
+            })}
             {Array.from(item.selectedComplements.entries()).map(([groupTitle, selections]) => {
               if (selections.size === 0) return null;
               

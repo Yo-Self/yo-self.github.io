@@ -113,6 +113,9 @@ export interface MenuItem {
 }
 
 export interface ComplementGroup {
+  /** ID do grupo */
+  id?: string;
+
   /** Título do grupo de complementos */
   title: string;
   
@@ -124,6 +127,12 @@ export interface ComplementGroup {
   
   /** Número máximo de itens que podem ser selecionados */
   max_selections: number;
+
+  /** Pergunta exibida antes da seleção de complementos */
+  preface_question?: string | null;
+
+  /** Opções de resposta da pergunta prévia */
+  preface_options?: import('./complementPreface').PrefaceOption[] | null;
   
   /** Lista de complementos disponíveis */
   complements: Complement[];

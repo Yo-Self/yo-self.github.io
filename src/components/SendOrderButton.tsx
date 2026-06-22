@@ -86,23 +86,9 @@ export default function SendOrderButton({
         order_type: isRetirada ? 'pickup' : 'dine_in',
       };
 
-      const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item => ({
-        dish_id: item.dish.id,
-        quantity: item.quantity,
-        price_at_time_of_order: Math.round(parseFloat(item.dish.price.replace(',', '.')) * 100),
-        selected_complements: Array.from(item.selectedComplements.entries()).flatMap(([groupTitle, selections]) =>
-          Array.from(selections).map(complementName => {
-            const group = item.dish.complement_groups?.find(g => g.title === groupTitle);
-            const complement = group?.complements.find(c => c.name === complementName);
-            return {
-              complement_id: complement?.id || 'unknown',
-              name: complementName,
-              price: Math.round(parseFloat(complement?.price.replace(',', '.') || '0') * 100),
-            };
-          })
-        ),
-        sent_to_kitchen: item.dish.needs_preparation !== false,
-      }));
+      const itemsToCreate: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[] = items.map(item =>
+        CartUtils.mapItemToOrderPayload(item)
+      );
 
       const { order: newOrder, reusedExisting } = await createOrderWithIdempotency(
         orderToCreate,
