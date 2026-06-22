@@ -12,6 +12,7 @@ import PixIcon from './icons/PixIcon';
 import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import Analytics from '../lib/analytics';
 import { paymentContextFromCart } from '../lib/paymentAnalytics';
+import { useCheckoutLock } from '../context/CheckoutContext';
 import { trackPaymentFormValidationFailed } from '../lib/trackPaymentButtonValidation';
 import {
   checkoutActionButtonMinHeightClass,
@@ -44,6 +45,7 @@ export default function InfinitePayPixButton({
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
   const { customerCoordinates } = useCustomerCoordinates();
   const { customerData } = useCustomerData();
+  const { isCheckoutInProgress } = useCheckoutLock();
 
   const deliveryCalc = React.useMemo(() => {
     if (!isActuallyDelivery || !restaurant) return { covered: true, fee: 0, reason: undefined };
@@ -139,7 +141,7 @@ export default function InfinitePayPixButton({
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
-  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered);
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress;
 
   return (
     <button

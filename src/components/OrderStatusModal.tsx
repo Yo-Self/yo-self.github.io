@@ -9,17 +9,19 @@ import {
   getProgressValue
 } from '@/utils/orderStatusMapper';
 import { useModalScroll } from '@/hooks/useModalScroll';
+import { invalidateCheckoutIdempotency } from '@/utils/checkoutIdempotency';
 import { cancelCustomerOrder, fetchCustomerOrderStatus } from '@/services/orderTrackingService';
 
 interface OrderStatusModalProps {
   orderId: string;
   accessToken?: string | null;
+  restaurantId?: string | null;
   onClose: () => void;
 }
 
 const POLL_INTERVAL_MS = 5000;
 
-export default function OrderStatusModal({ orderId, accessToken, onClose }: OrderStatusModalProps) {
+export default function OrderStatusModal({ orderId, accessToken, restaurantId, onClose }: OrderStatusModalProps) {
   const [status, setStatus] = useState<string>("pending");
   const [restaurantName, setRestaurantName] = useState<string>("Carregando...");
   const [deliveryType, setDeliveryType] = useState<string | undefined>();
@@ -83,6 +85,9 @@ export default function OrderStatusModal({ orderId, accessToken, onClose }: Orde
       }
       
       removeActiveOrderId(orderId);
+      if (restaurantId) {
+        invalidateCheckoutIdempotency(restaurantId);
+      }
       handleClose();
     } catch (err) {
       console.error("Error cancelling order:", err);

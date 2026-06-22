@@ -206,6 +206,14 @@ export class Analytics {
     })
   }
 
+  static trackCheckoutLockBlocked(source?: string): void {
+    this.track('checkout_lock_blocked', { source: source ?? 'unknown' })
+  }
+
+  static trackOrderRateLimited(restaurantId: string, tableId?: string | null): void {
+    this.track('order_rate_limited', { restaurant_id: restaurantId, table_id: tableId ?? null })
+  }
+
   private static lastWalletAvailabilitySignature: string | null = null
 
   static trackPaymentWalletAvailability(

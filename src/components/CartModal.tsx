@@ -30,6 +30,7 @@ import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 import { canRestaurantAcceptOrders } from '../utils/restaurantOrders';
 import { checkoutActionButtonCellClass } from './cart/checkoutButtonLayout';
+import { useCheckoutLock } from '../context/CheckoutContext';
 import Analytics from '../lib/analytics';
 import { paymentContextFromCart } from '../lib/paymentAnalytics';
 
@@ -41,6 +42,7 @@ interface CartModalProps {
 }
 
 export default function CartModal({ restaurantId: propRestaurantId }: CartModalProps) {
+  const { isCheckoutInProgress } = useCheckoutLock();
   const { 
     items, 
     totalItems, 
@@ -604,7 +606,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     </div>
                   ) : isDeliveryRoute ? (
                     !isMinOrderNotMet && (
-                      <div className="grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3">
+                      <div className={`grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3${isCheckoutInProgress ? ' pointer-events-none opacity-60' : ''}`}>
                         {whatsAppConfig.enabled && (
                           <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
                             <CartWhatsAppButton
@@ -647,7 +649,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   ) : (
                     // Fluxo Presencial / Na Mesa
                     (!restaurant?.table_ordering && !tablePayment) ? null : (
-                      <div className="flex gap-2 sm:gap-3">
+                      <div className={`flex gap-2 sm:gap-3${isCheckoutInProgress ? ' pointer-events-none opacity-60' : ''}`}>
                         {(pixPaymentEnabled || onlinePayment || tablePayment) && (
                           <div className="flex-1 flex flex-col gap-2 min-w-0">
                             {pixPaymentEnabled && (
@@ -757,6 +759,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
         <OrderStatusModal 
           orderId={selectedOrderId}
           accessToken={getOrderAccessToken(selectedOrderId)}
+          restaurantId={restaurant?.id}
           onClose={() => setSelectedOrderId(null)} 
         />
       )}

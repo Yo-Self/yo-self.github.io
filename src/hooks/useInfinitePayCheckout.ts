@@ -7,7 +7,8 @@ import { useRestaurantBySlug } from './useRestaurantBySlug';
 import { useCustomerCoordinates } from './useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage, NON_DELIVERY_DELIVERY_CALC } from '../utils/deliveryCalculator';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
-import { createOrder } from '../services/orderService';
+import { createOrderWithIdempotency } from '../utils/checkoutIdempotency';
+import { useCheckoutLock } from '../context/CheckoutContext';
 import { createInfinitePayCheckout } from '../services/infinitepayService';
 import { Order, OrderItem } from '../types/order';
 import Analytics from '../lib/analytics';
@@ -40,11 +41,12 @@ export function useInfinitePayCheckout({
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
   const { customerCoordinates } = useCustomerCoordinates();
   const { addActiveOrderId } = useActiveOrders();
+  const { isCheckoutInProgress, withCheckoutLock } = useCheckoutLock();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const initiatePixCheckout = useCallback(async () => {
-    if (isEmpty || isLoading || isLoadingRestaurant) return;
+    if (isEmpty || isLoading || isLoadingRestaurant || isCheckoutInProgress) return;
 
     if (!restaurant?.id) {
       const msg = 'Restaurante não encontrado. Recarregue a página.';
@@ -53,15 +55,15 @@ export function useInfinitePayCheckout({
       return;
     }
 
+    await withCheckoutLock(async () => {
     setIsLoading(true);
     setError(null);
+    const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
 
     try {
       const isDeliveryRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/delivery');
       const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
       const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
-      const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
-
       const deliveryCalc = isActuallyDelivery
         ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
         : NON_DELIVERY_DELIVERY_CALC;
@@ -121,7 +123,19 @@ export function useInfinitePayCheckout({
         sent_to_kitchen: item.dish.needs_preparation !== false,
       }));
 
-      const newOrder = await createOrder(orderToCreate, itemsToCreate);
+      const { order: newOrder, reusedExisting } = await createOrderWithIdempotency(
+        orderToCreate,
+        itemsToCreate,
+        {
+          restaurantId: restaurant.id,
+          items,
+          customerPhone: customerData.whatsapp,
+          tableId,
+          orderType: orderToCreate.order_type,
+          deliveryCoordsLat: orderToCreate.delivery_coords_lat,
+          deliveryCoordsLng: orderToCreate.delivery_coords_lng,
+        },
+      );
 
       const totalWithDelivery =
         totalPrice + (isActuallyDelivery && deliveryCalc.covered ? deliveryFee : 0);
@@ -141,7 +155,7 @@ export function useInfinitePayCheckout({
         customerData,
       });
 
-      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id });
+      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id, reusedExisting });
 
       const currentUrl = window.location.href.split('?')[0];
       const tokenParam = newOrder.customer_access_token
@@ -172,6 +186,9 @@ export function useInfinitePayCheckout({
       window.location.href = session.checkout_url;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao iniciar pagamento PIX.';
+      if (errorMessage.includes('Muitos pedidos em pouco tempo')) {
+        Analytics.trackOrderRateLimited(restaurant.id, tableId);
+      }
       setError(errorMessage);
       onError?.(err instanceof Error ? err : new Error(errorMessage));
 
@@ -205,10 +222,13 @@ export function useInfinitePayCheckout({
     } finally {
       setIsLoading(false);
     }
+    }, 'infinitepay_pix');
   }, [
     isEmpty,
     isLoading,
     isLoadingRestaurant,
+    isCheckoutInProgress,
+    withCheckoutLock,
     restaurant,
     customerData,
     items,

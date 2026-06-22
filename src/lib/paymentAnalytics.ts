@@ -68,6 +68,7 @@ export interface PaymentAnalyticsBase {
   deliveryReason?: string;
   popupBlocked?: boolean;
   whatsappChannel?: 'popup' | 'same_tab_fallback';
+  reusedExisting?: boolean;
 }
 
 const PAYMENT_ATTEMPT_STARTED_KEY = 'yoself_payment_attempt_started_at';
@@ -192,6 +193,7 @@ export function buildPaymentEventProperties(base: PaymentAnalyticsBase): Record<
     delivery_reason: base.deliveryReason,
     popup_blocked: base.popupBlocked,
     whatsapp_channel: base.whatsappChannel ?? null,
+    reused_existing: base.reusedExisting ?? null,
   };
 }
 

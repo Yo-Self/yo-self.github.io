@@ -78,11 +78,23 @@ Todos os meios de checkout disparam eventos normalizados (`src/lib/paymentAnalyt
 | `payment_verification_*` | Confirmação pós-retorno (Stripe polling / PIX NSU) |
 | `payment_completed` | Pagamento confirmado (também dispara `purchase_completed`) |
 | `payment_cancelled` / `payment_failed` | Abandono ou erro |
+| `checkout_lock_blocked` | Clique ignorado porque outro checkout já está em andamento |
+| `order_rate_limited` | Servidor bloqueou pedido repetido na mesma mesa (90s) |
 | `payment_wallet_available` / `payment_wallet_unavailable` | Apple Pay / Google Pay no carrinho |
 
-Propriedades úteis em breakdowns: `payment_method`, `payment_provider`, `funnel_step`, `order_id`, `restaurant_id`, `order_type`, `delivery_mode`, `total_value_cents`, `delivery_fee_cents`, `duration_ms`, `wallet_apple_pay`, `wallet_google_pay`.
+Propriedades úteis em breakdowns: `payment_method`, `payment_provider`, `funnel_step`, `order_id`, `restaurant_id`, `order_type`, `delivery_mode`, `total_value_cents`, `delivery_fee_cents`, `duration_ms`, `reused_existing`, `wallet_apple_pay`, `wallet_google_pay`.
 
 Métodos: `whatsapp`, `infinitepay_pix`, `stripe_card`, `stripe_express`, `send_order_direct`.
+
+### Proteção contra pedidos duplicados
+
+Checkout usa defesa em três camadas (web e iOS):
+
+1. **Lock global** (`CheckoutContext` / `CartViewModel.isCheckoutInProgress`) — impede cliques paralelos em WhatsApp + PIX + Stripe.
+2. **Idempotency key** derivada do carrinho (`checkoutIdempotency.ts` / `CheckoutIdempotency.swift`) — reutiliza o mesmo pedido `pending_payment` em retries de pagamento.
+3. **RPC `create_customer_order`** — coluna `orders.idempotency_key`, deduplicação server-side e rate limit de mesa (`table_order_rate_limited`, 90s).
+
+Migration: `supabase/migrations/20260622000000_order_idempotency.sql` (aplicar uma vez no Supabase compartilhado).
 
 ## 🚀 Chatbot com Google Gemini AI
 

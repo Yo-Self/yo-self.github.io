@@ -14,7 +14,8 @@ import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage, NON_DELIVERY_DELIVERY_CALC } from '../utils/deliveryCalculator';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
-import { createOrder } from '../services/orderService';
+import { createOrderWithIdempotency } from '../utils/checkoutIdempotency';
+import { useCheckoutLock } from '../context/CheckoutContext';
 import { createExpressPaymentIntent } from '../services/stripeService';
 import { Order, OrderItem } from '../types/order';
 import Analytics from '../lib/analytics';
@@ -88,6 +89,8 @@ const ExpressCheckoutInner = ({
   const { customerCoordinates } = useCustomerCoordinates();
   const { restaurant } = useRestaurantBySlug(restaurantId);
   const { addActiveOrderId } = useActiveOrders();
+  const { acquireCheckoutLock, releaseCheckoutLock } = useCheckoutLock();
+  const confirmInFlightRef = React.useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
@@ -98,7 +101,21 @@ const ExpressCheckoutInner = ({
       return;
     }
 
+    if (confirmInFlightRef.current) {
+      event.paymentFailed({ message: 'Pagamento já em processamento.' });
+      return;
+    }
+
+    if (!acquireCheckoutLock('stripe_express')) {
+      event.paymentFailed({ message: 'Outro checkout está em andamento.' });
+      return;
+    }
+
+    confirmInFlightRef.current = true;
+
     if (isMinOrderNotMet) {
+      releaseCheckoutLock();
+      confirmInFlightRef.current = false;
       event.paymentFailed({ message: minOrderMessage });
       return;
     }
@@ -173,7 +190,19 @@ const ExpressCheckoutInner = ({
         sent_to_kitchen: item.dish.needs_preparation !== false,
       }));
 
-      const newOrder = await createOrder(orderToCreate, itemsToCreate);
+      const { order: newOrder, reusedExisting } = await createOrderWithIdempotency(
+        orderToCreate,
+        itemsToCreate,
+        {
+          restaurantId: restaurant.id,
+          items,
+          customerPhone: customerData.whatsapp,
+          tableId,
+          orderType: orderToCreate.order_type,
+          deliveryCoordsLat: orderToCreate.delivery_coords_lat,
+          deliveryCoordsLng: orderToCreate.delivery_coords_lng,
+        },
+      );
       addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
 
       const paymentCtx = paymentContextFromCart({
@@ -188,7 +217,7 @@ const ExpressCheckoutInner = ({
         customerData,
       });
 
-      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id });
+      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id, reusedExisting });
 
       const piResponse = await createExpressPaymentIntent({
         orderId: newOrder.id,
@@ -260,6 +289,9 @@ const ExpressCheckoutInner = ({
         });
       }
       event.paymentFailed({ message });
+    } finally {
+      releaseCheckoutLock();
+      confirmInFlightRef.current = false;
     }
   }, [
     stripe,
@@ -276,6 +308,8 @@ const ExpressCheckoutInner = ({
     deliveryMode,
     customerCoordinates,
     addActiveOrderId,
+    acquireCheckoutLock,
+    releaseCheckoutLock,
   ]);
 
   if (isEmpty) return null;

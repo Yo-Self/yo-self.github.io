@@ -10,6 +10,7 @@ import {
   CartUtils
 } from '../types/cart';
 import Analytics from '../lib/analytics';
+import { invalidateCheckoutIdempotency } from '../utils/checkoutIdempotency';
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -113,6 +114,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       Analytics.trackCartItemAdded(dish, selectedComplements, 1, currentRestaurantId);
     }
     updateCart(currentRestaurantId, { ...cart, items: newItems });
+    invalidateCheckoutIdempotency(currentRestaurantId);
   }, [currentRestaurantId, allCarts, updateCart]);
 
   const removeItem = useCallback((itemId: string) => {
@@ -126,6 +128,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     const newItems = cart.items.filter(item => item.id !== itemId);
     updateCart(currentRestaurantId, { ...cart, items: newItems });
+    invalidateCheckoutIdempotency(currentRestaurantId);
   }, [currentRestaurantId, allCarts, updateCart]);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
@@ -149,6 +152,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return item;
     });
     updateCart(currentRestaurantId, { ...cart, items: newItems });
+    invalidateCheckoutIdempotency(currentRestaurantId);
   }, [currentRestaurantId, allCarts, removeItem, updateCart]);
 
   const clearCart = useCallback(() => {
@@ -158,6 +162,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       Analytics.trackCartCleared(cart.items.length, cart.totalPrice, currentRestaurantId);
     }
     updateCart(currentRestaurantId, { items: [], totalItems: 0, totalPrice: 0 });
+    invalidateCheckoutIdempotency(currentRestaurantId);
     setIsCartOpen(false);
   }, [currentRestaurantId, allCarts, updateCart]);
 

@@ -13,7 +13,8 @@ import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import { CartUtils } from '../types/cart';
-import { createOrder } from '../services/orderService';
+import { createOrderWithIdempotency } from '../utils/checkoutIdempotency';
+import { useCheckoutLock } from '../context/CheckoutContext';
 import { Order, OrderItem } from '../types/order';
 import Analytics from '../lib/analytics';
 import { useActiveOrders } from '../hooks/useActiveOrders';
@@ -44,7 +45,8 @@ export default function CartWhatsAppButton({
   onSent,
   deliveryMode
 }: CartWhatsAppButtonProps) {
-  const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty } = useCart();
+  const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty, clearCart } = useCart();
+  const { isCheckoutInProgress, withCheckoutLock } = useCheckoutLock();
   const { addActiveOrderId } = useActiveOrders();
   const { config, isLoading } = useWhatsAppConfig(restaurantId);
   const { customerData } = useCustomerData();
@@ -211,11 +213,11 @@ export default function CartWhatsAppButton({
   };
 
   const handleCreateOrderAndSendWhatsApp = async () => {
-    // Verificação 1: Validações básicas de estado
-    if (isLoading || isCreatingOrder || isEmpty) {
+    if (isLoading || isCreatingOrder || isEmpty || isCheckoutInProgress) {
       return;
     }
 
+    await withCheckoutLock(async () => {
     // Verificação 2: Aguardar carregamento do restaurante se ainda não carregou
     if (isLoadingRestaurant) {
       alert("Por favor, aguarde. Carregando informações do restaurante...");
@@ -373,11 +375,24 @@ export default function CartWhatsAppButton({
         sent_to_kitchen: item.dish.needs_preparation !== false,
       }));
 
-      const newOrder = await createOrder(orderToCreate, itemsToCreate);
+      const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
+      const { order: newOrder, reusedExisting } = await createOrderWithIdempotency(
+        orderToCreate,
+        itemsToCreate,
+        {
+          restaurantId: restaurant.id,
+          items,
+          customerPhone: customerData.whatsapp,
+          tableId: isActuallyRetirada ? 'retirada' : (tablePayment ? customerData.address : tableId),
+          orderType: orderToCreate.order_type,
+          deliveryCoordsLat: orderToCreate.delivery_coords_lat,
+          deliveryCoordsLng: orderToCreate.delivery_coords_lng,
+        },
+      );
 
       addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
 
-      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id });
+      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id, reusedExisting });
 
       const message = generateCartWhatsAppMessage(newOrder);
       const whatsappUrl = `https://wa.me/${config.phoneNumber}?text=${message}`;
@@ -407,6 +422,8 @@ export default function CartWhatsAppButton({
       if (onSent) {
         onSent();
       }
+
+      clearCart();
     } catch (error) {
       console.error("[CartWhatsAppButton] Falha ao criar o pedido:", error);
 
@@ -436,6 +453,7 @@ export default function CartWhatsAppButton({
     } finally {
       setIsCreatingOrder(false);
     }
+    }, 'whatsapp');
   };
 
   const getItemEmoji = (index: number): string => {
@@ -446,7 +464,7 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered)}
+      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress}
       className={`
         relative w-full min-w-0 flex items-center justify-center
         ${checkoutActionButtonMinHeightClass}

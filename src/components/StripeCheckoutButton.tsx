@@ -21,6 +21,7 @@ import {
 } from './cart/checkoutButtonLayout';
 import Analytics from '../lib/analytics';
 import { paymentContextFromCart } from '../lib/paymentAnalytics';
+import { useCheckoutLock } from '../context/CheckoutContext';
 import { trackPaymentFormValidationFailed } from '../lib/trackPaymentButtonValidation';
 
 interface StripeCheckoutButtonProps {
@@ -53,6 +54,8 @@ export default function StripeCheckoutButton({
   const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'missing_coordinates';
 
   const isMinOrderNotMet = isActuallyDelivery && restaurant?.min_order_value && totalPrice < restaurant.min_order_value && restaurant?.open !== false;
+
+  const { isCheckoutInProgress } = useCheckoutLock();
 
   const { initiateCheckout, isLoading, error } = useStripeCheckout({
     restaurantId,
@@ -155,7 +158,7 @@ export default function StripeCheckoutButton({
     ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
     : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
-  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered);
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress;
 
   return (
     <button

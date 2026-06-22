@@ -7,6 +7,7 @@ import "./webapp.css";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import { AccessibilityProvider } from "@/components/AccessibilityContext";
 import { CartProvider } from "@/context/CartContext";
+import { CheckoutProvider } from "@/context/CheckoutContext";
 import { CustomerDataProvider } from "@/contexts/CustomerDataContext";
 import { CustomerCoordinatesProvider } from "@/contexts/CustomerCoordinatesContext";
 import Analytics from "@/components/Analytics";
@@ -117,6 +118,7 @@ export default function RootLayout({
               <RestaurantProvider>
                 <AccessibilityProvider>
                 <CartProvider>
+                  <CheckoutProvider>
                   <CustomerDataProvider>
                     <CustomerCoordinatesProvider>
                       <ThemeScript />
@@ -136,6 +138,7 @@ export default function RootLayout({
                       <StartupRedirect />
                     </CustomerCoordinatesProvider>
                   </CustomerDataProvider>
+                  </CheckoutProvider>
                 </CartProvider>
               </AccessibilityProvider>
             </RestaurantProvider>

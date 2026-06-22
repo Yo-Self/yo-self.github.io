@@ -39,6 +39,9 @@ function mapOrderCreationError(error: { message?: string; details?: string; code
   if (msg.includes('table_order_rate_limited')) {
     return new Error('Muitos pedidos em pouco tempo. Aguarde alguns minutos e tente novamente.');
   }
+  if (msg.includes('duplicate_order')) {
+    return new Error('Este pedido já foi finalizado. Altere o carrinho ou cancele o pedido anterior para tentar novamente.');
+  }
   if (msg.includes('missing_table_name')) {
     return new Error('Informe o número ou nome da mesa para continuar.');
   }
@@ -58,9 +61,14 @@ function mapOrderCreationError(error: { message?: string; details?: string; code
   return new Error('Não foi possível criar o pedido. Tente novamente.');
 }
 
+export interface CreateOrderOptions {
+  idempotencyKey?: string;
+}
+
 export const createOrder = async (
   order: Omit<Order, 'id' | 'created_at' | 'updated_at'>,
   items: Omit<OrderItem, 'id' | 'order_id' | 'created_at'>[],
+  options?: CreateOrderOptions,
 ): Promise<Order> => {
   const supabase = getSupabase();
 
@@ -83,6 +91,7 @@ export const createOrder = async (
       delivery_coords_lng: order.delivery_coords_lng ?? null,
       delivery_address_details: order.delivery_address_details ?? null,
       stripe_payment_intent_id: order.stripe_payment_intent_id ?? null,
+      ...(options?.idempotencyKey ? { idempotency_key: options.idempotencyKey } : {}),
     },
     p_items: items.map((item) => ({
       dish_id: item.dish_id,

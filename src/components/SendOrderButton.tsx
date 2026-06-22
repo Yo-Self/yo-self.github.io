@@ -5,7 +5,8 @@ import { useCart } from '../hooks/useCart';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { CartUtils } from '../types/cart';
-import { createOrder } from '../services/orderService';
+import { createOrderWithIdempotency } from '../utils/checkoutIdempotency';
+import { useCheckoutLock } from '../context/CheckoutContext';
 import { Order, OrderItem } from '../types/order';
 import Analytics from '../lib/analytics';
 import { paymentContextFromCart } from '../lib/paymentAnalytics';
@@ -25,6 +26,7 @@ export default function SendOrderButton({
   onSent
 }: SendOrderButtonProps) {
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty, clearCart } = useCart();
+  const { isCheckoutInProgress, withCheckoutLock } = useCheckoutLock();
   const { customerData } = useCustomerData();
   const { addActiveOrderId } = useActiveOrders();
   const { restaurant, isLoading: isLoadingRestaurant } = useRestaurantBySlug(restaurantId);
@@ -36,8 +38,9 @@ export default function SendOrderButton({
   }
 
   const handleSendOrder = async () => {
-    if (isSending || isEmpty) return;
+    if (isSending || isEmpty || isCheckoutInProgress) return;
 
+    await withCheckoutLock(async () => {
     if (isLoadingRestaurant) {
       alert("Por favor, aguarde as informações do restaurante carregar...");
       return;
@@ -101,19 +104,32 @@ export default function SendOrderButton({
         sent_to_kitchen: item.dish.needs_preparation !== false,
       }));
 
-      const newOrder = await createOrder(orderToCreate, itemsToCreate);
+      const { order: newOrder, reusedExisting } = await createOrderWithIdempotency(
+        orderToCreate,
+        itemsToCreate,
+        {
+          restaurantId: restaurant.id,
+          items,
+          customerPhone: customerData.whatsapp,
+          tableId: tableNumber.trim(),
+          orderType: orderToCreate.order_type,
+        },
+      );
 
       // Save order id for tracking
       addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
 
-      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id });
+      Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id, reusedExisting });
       Analytics.trackPaymentCompleted({ ...paymentCtx, orderId: newOrder.id });
 
       // Mostrar modal de sucesso
       setShowSuccessModal(true);
     } catch (error) {
       console.error("[SendOrderButton] Falha ao enviar o pedido:", error);
-      
+      const errMsg = error instanceof Error ? error.message : '';
+      if (errMsg.includes('Muitos pedidos em pouco tempo')) {
+        Analytics.trackOrderRateLimited(restaurant?.id || 'unknown', tableNumber);
+      }
       Analytics.trackError(error as Error, {
         component: 'SendOrderButton',
         action: 'send_order_direct',
@@ -126,6 +142,7 @@ export default function SendOrderButton({
     } finally {
       setIsSending(false);
     }
+    }, 'send_order_direct');
   };
 
   const handleCloseSuccess = () => {
@@ -140,7 +157,7 @@ export default function SendOrderButton({
     <>
       <button
         onClick={handleSendOrder}
-        disabled={isSending || isEmpty || isLoadingRestaurant || !restaurant || !tableNumber.trim()}
+        disabled={isSending || isEmpty || isLoadingRestaurant || !restaurant || !tableNumber.trim() || isCheckoutInProgress}
         className={`
           w-full flex items-center justify-center gap-2 sm:gap-3 
           px-3 sm:px-6 py-3.5 sm:py-4 
