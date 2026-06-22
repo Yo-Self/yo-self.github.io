@@ -1,5 +1,5 @@
 // Cache version - increment this when you want to force cache refresh
-const CACHE_VERSION = 1781714873982; // Increment this for each deployment
+const CACHE_VERSION = 1782150528056; // Increment this for each deployment
 const CACHE_NAME = `restaurant-app-v${CACHE_VERSION}`;
 
 // URLs that should never be cached (Next.js internal files)
@@ -120,6 +120,12 @@ self.addEventListener('fetch', (event) => {
   // Safari não permite service workers servirem manifests com redirecionamentos
   if (event.request.url.includes('manifest.json')) {
     console.log('SW: Skipping manifest interception for Safari compatibility');
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Supabase REST API: never cache — open/closed status and other fields must stay fresh
+  if (requestUrl.includes('.supabase.co/rest/v1/') && event.request.method === 'GET') {
     event.respondWith(fetch(event.request));
     return;
   }

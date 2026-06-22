@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Restaurant } from '@/components/data';
 import { supabase } from '@/lib/supabase/client';
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { getOptimizedImageUrl } from '@/utils/imageUrl';
 import { Analytics } from '@/lib/analytics';
 
@@ -56,6 +57,71 @@ function clearSessionRestaurantCache(slug: string) {
   } catch {
     // ignore
   }
+}
+
+type RestaurantOrderStatus = Pick<Restaurant, 'open' | 'is_open_for_orders'>;
+
+/** Open/closed status must not be cached — it changes during the day. */
+function withoutVolatileRestaurantFields(restaurant: Restaurant): Restaurant {
+  const { open: _open, is_open_for_orders: _isOpen, ...rest } = restaurant;
+  return rest as Restaurant;
+}
+
+function mergeRestaurantOrderStatus(
+  restaurant: Restaurant,
+  status: RestaurantOrderStatus | null
+): Restaurant {
+  if (!status) return restaurant;
+  return {
+    ...restaurant,
+    open: status.open,
+    is_open_for_orders: status.is_open_for_orders,
+  };
+}
+
+async function fetchRestaurantOrderStatus(slug: string): Promise<RestaurantOrderStatus | null> {
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseKey = getSupabasePublishableKey();
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  const headers = {
+    apikey: supabaseKey,
+    Authorization: `Bearer ${supabaseKey}`,
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache',
+  };
+
+  const fetchStatus = async (filter: string) => {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/restaurants_public?${filter}&select=open,is_open_for_orders&limit=1`,
+      { headers, cache: 'no-store' }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.[0] ?? null;
+  };
+
+  try {
+    let row = await fetchStatus(`slug=eq.${encodeURIComponent(slug)}`);
+    if (!row) {
+      row = await fetchStatus(`id=eq.${encodeURIComponent(slug)}`);
+    }
+    if (!row) return null;
+    return {
+      open: row.open,
+      is_open_for_orders: row.is_open_for_orders ?? false,
+    };
+  } catch (err) {
+    console.error('Error fetching restaurant order status:', err);
+    return null;
+  }
+}
+
+function storeRestaurantCache(slug: string, restaurant: Restaurant) {
+  const cacheable = withoutVolatileRestaurantFields(restaurant);
+  const cacheEntry = { restaurant: cacheable, fetchedAt: Date.now() };
+  slugCache.set(slug, cacheEntry);
+  writeSessionRestaurantCache(slug, cacheable);
 }
 
 const MOCK_RESTAURANT: Restaurant = {
@@ -339,6 +405,10 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         duration_ms: Date.now() - loadStartedAt,
         from_cache: true,
       });
+      const status = await fetchRestaurantOrderStatus(slug);
+      if (status) {
+        setRestaurant(mergeRestaurantOrderStatus(memoryCached.restaurant, status));
+      }
       return;
     }
 
@@ -353,17 +423,24 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         duration_ms: Date.now() - loadStartedAt,
         from_cache: true,
       });
+      const status = await fetchRestaurantOrderStatus(slug);
+      if (status) {
+        setRestaurant(mergeRestaurantOrderStatus(sessionCached.restaurant, status));
+      }
       return;
     }
 
     const inflight = inflightFetches.get(slug);
     if (inflight) {
       const result = await inflight;
-      setRestaurant(result);
+      const withStatus = result
+        ? mergeRestaurantOrderStatus(result, await fetchRestaurantOrderStatus(slug))
+        : null;
+      setRestaurant(withStatus);
       setIsLoading(false);
-      if (result) {
+      if (withStatus) {
         Analytics.trackMenuLoadCompleted(slug, {
-          dish_count: result.menu_items?.length ?? 0,
+          dish_count: withStatus.menu_items?.length ?? 0,
           duration_ms: Date.now() - loadStartedAt,
           from_cache: true,
         });
@@ -750,10 +827,11 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         })
       };
 
-      const cacheEntry = { restaurant: transformedRestaurant, fetchedAt: Date.now() };
-      slugCache.set(slug, cacheEntry);
-      writeSessionRestaurantCache(slug, transformedRestaurant);
-      return transformedRestaurant;
+      storeRestaurantCache(slug, transformedRestaurant);
+      return mergeRestaurantOrderStatus(
+        transformedRestaurant,
+        await fetchRestaurantOrderStatus(slug)
+      );
     } catch (err) {
       console.error('Error fetching restaurant:', err);
       return null;
