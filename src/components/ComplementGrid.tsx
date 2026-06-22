@@ -26,15 +26,6 @@ export default function ComplementGrid({
 
   return (
     <div className="mb-6">
-      {prefaceActive && onPrefaceAnswerChange && (
-        <ComplementPrefaceSelector
-          question={complementGroup.preface_question || ""}
-          options={complementGroup.preface_options}
-          selectedAnswerId={prefaceAnswerId}
-          onChange={onPrefaceAnswerChange}
-        />
-      )}
-
       <div className="mb-3">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-1">
           {complementGroup.title}
@@ -55,6 +46,15 @@ export default function ComplementGrid({
           </span>
         )}
       </div>
+
+      {prefaceActive && onPrefaceAnswerChange && (
+        <ComplementPrefaceSelector
+          question={complementGroup.preface_question || ""}
+          options={complementGroup.preface_options}
+          selectedAnswerId={prefaceAnswerId}
+          onChange={onPrefaceAnswerChange}
+        />
+      )}
 
       {prefaceBlocked && (
         <p className="text-xs text-gray-500 dark:text-gray-400 italic mb-2">
