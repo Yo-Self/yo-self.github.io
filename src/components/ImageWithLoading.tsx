@@ -12,7 +12,17 @@ interface ImageWithLoadingProps {
   onError?: () => void;
   onLoad?: () => void;
   children?: React.ReactNode;
-  clickable?: boolean; // Nova prop para controlar se a imagem é clicável
+  clickable?: boolean;
+  loading?: 'lazy' | 'eager';
+}
+
+function resolveInitialLoadState(
+  src: string,
+  isImageLoaded: (url: string) => boolean,
+  isImageError: (url: string) => boolean,
+): boolean {
+  if (!src) return false;
+  return !isImageLoaded(src) && !isImageError(src);
 }
 
 export default function ImageWithLoading({
@@ -23,13 +33,16 @@ export default function ImageWithLoading({
   onError,
   onLoad,
   children,
-  clickable = true // Por padrão, as imagens são clicáveis
+  clickable = true,
+  loading = 'lazy',
 }: ImageWithLoadingProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  const { isImageLoaded, isImageError } = useImageCache();
+  const [isLoading, setIsLoading] = useState(() =>
+    resolveInitialLoadState(src, isImageLoaded, isImageError),
+  );
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const { isImageLoaded, isImageError } = useImageCache();
 
   const checkCache = useCallback(() => {
     if (!src) return;
@@ -45,7 +58,7 @@ export default function ImageWithLoading({
       if (fallbackSrc) {
         setCurrentSrc(fallbackSrc);
         setHasError(false);
-        setIsLoading(true);
+        setIsLoading(!isImageLoaded(fallbackSrc));
       } else {
         setIsLoading(false);
         setHasError(true);
@@ -59,44 +72,28 @@ export default function ImageWithLoading({
     setCurrentSrc(src);
   }, [src, fallbackSrc, isImageLoaded, isImageError, onError]);
 
-  // Verificar se a imagem já está no cache
   useEffect(() => {
     checkCache();
   }, [checkCache]);
 
-  // Forçar remoção do loading após 2 segundos para imagens que não disparam onLoad
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isLoading) {
-        setIsLoading(false);
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [isLoading]);
-
-  // Memoize the handleError function
   const handleError = useCallback(() => {
     if (fallbackSrc && currentSrc !== fallbackSrc) {
       setCurrentSrc(fallbackSrc);
       setHasError(false);
-      setIsLoading(true);
+      setIsLoading(!isImageLoaded(fallbackSrc));
     } else {
       setIsLoading(false);
       setHasError(true);
       onError?.();
     }
-  }, [fallbackSrc, currentSrc, onError]);
+  }, [fallbackSrc, currentSrc, isImageLoaded, onError]);
 
-  // Memoize the onLoad handler
   const handleImageLoad = useCallback(() => {
     setIsLoading(false);
     onLoad?.();
   }, [onLoad]);
 
-  // Memoize the onError handler
   const handleImageError = useCallback(() => {
-    // Só dispara onError se não estiver usando cache
     if (!isImageError(currentSrc)) {
       handleError();
     }
@@ -108,53 +105,55 @@ export default function ImageWithLoading({
     }
   };
 
+  const showSkeleton = isLoading && !isImageLoaded(currentSrc) && !hasError;
+
   return (
     <>
-      <div className={`relative ${className}`}>
-        {/* Loading skeleton - só mostra se realmente estiver carregando */}
-        {isLoading && !isImageLoaded(currentSrc) && (
-          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg z-10">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+      <div className="relative w-full h-full overflow-hidden">
+        <div
+          className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg z-10 transition-opacity duration-200 ${
+            showSkeleton ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          aria-hidden={!showSkeleton}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        )}
-        
-        {/* Image */}
+        </div>
+
         <img
           src={currentSrc}
           alt={alt}
-          className={`${className} opacity-100 ${clickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+          className={`block w-full h-full ${className} ${clickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
           onLoad={handleImageLoad}
           onError={handleImageError}
-          loading="lazy"
+          loading={loading}
           decoding="async"
           onClick={handleImageClick}
         />
-        
-        {/* Error fallback */}
+
         {hasError && (
           <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg z-20">
             <div className="text-center text-gray-500 dark:text-gray-400">
               <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-sm">Imagem não disponível</p>
+              <span className="text-sm">Imagem não disponível</span>
             </div>
           </div>
         )}
-        
-        {/* Overlay content */}
+
         {children}
       </div>
 
-      {/* Modal de imagem em tela cheia */}
-      <ImageModal
-        isOpen={isImageModalOpen}
-        imageSrc={currentSrc}
-        imageAlt={alt}
-        onClose={() => setIsImageModalOpen(false)}
-      />
+      {clickable && (
+        <ImageModal
+          isOpen={isImageModalOpen}
+          imageSrc={currentSrc}
+          imageAlt={alt}
+          onClose={() => setIsImageModalOpen(false)}
+        />
+      )}
     </>
   );
 }

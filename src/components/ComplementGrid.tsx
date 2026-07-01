@@ -1,5 +1,5 @@
 import React from "react";
-import { ComplementGroup } from "./data";
+import { Complement, ComplementGroup } from "./data";
 import ImageWithLoading from "./ImageWithLoading";
 import ComplementPrefaceSelector from "./ComplementPrefaceSelector";
 import { groupHasPreface } from "@/types/complementPreface";
@@ -13,13 +13,128 @@ interface ComplementGridProps {
   restaurantLogo?: string;
 }
 
-export default function ComplementGrid({ 
-  complementGroup, 
-  selectedComplements, 
+interface ComplementCardProps {
+  complement: Complement;
+  isSelected: boolean;
+  isDisabled: boolean;
+  prefaceBlocked: boolean;
+  restaurantLogo?: string;
+  onToggle: (complementName: string) => void;
+}
+
+const ComplementCard = React.memo(function ComplementCard({
+  complement,
+  isSelected,
+  isDisabled,
+  prefaceBlocked,
+  restaurantLogo,
+  onToggle,
+}: ComplementCardProps) {
+  const hasDescription = complement.description && complement.description.trim() !== '';
+
+  return (
+    <div
+      className={`complement-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col transition-all duration-200 ${
+        isSelected
+          ? 'ring-2 ring-primary dark:ring-cyan-400 bg-primary/5'
+          : 'hover:shadow-md'
+      } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      onClick={() => {
+        if (!isDisabled && !prefaceBlocked) {
+          onToggle(complement.name);
+        }
+      }}
+      style={{
+        height: hasDescription ? '120px' : '90px',
+        paddingBottom: 0,
+      }}
+    >
+      <div
+        className="relative w-full"
+        style={{
+          height: hasDescription ? '60%' : '100%',
+        }}
+      >
+        <ImageWithLoading
+          src={complement.image}
+          alt={complement.name}
+          clickable={false}
+          loading="eager"
+          className="object-cover rounded-t-lg"
+          fallbackSrc={restaurantLogo || "/window.svg"}
+        >
+          <div
+            className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center z-10 transition-all duration-200 ${
+              isSelected
+                ? 'bg-primary dark:bg-cyan-400 text-white'
+                : 'bg-white/80 text-gray-600'
+            }`}
+          >
+            {isSelected && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+              </svg>
+            )}
+          </div>
+
+          {complement.price !== '0,00' && (
+            <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
+              +R${complement.price}
+            </span>
+          )}
+
+          <div className="absolute bottom-2 left-2 right-16">
+            <span
+              className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight block"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'normal',
+                lineHeight: '1.1',
+              }}
+            >
+              {complement.name}
+            </span>
+          </div>
+        </ImageWithLoading>
+      </div>
+
+      {hasDescription && (
+        <div
+          className="w-full px-3 pb-3 pt-2 flex flex-col justify-center items-start text-left"
+          style={{ height: '40%', minHeight: '36px' }}
+        >
+          <span
+            className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0 block"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'normal',
+              lineHeight: '1.2',
+              maxHeight: '3.6em',
+            }}
+          >
+            {complement.description}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+});
+
+export default function ComplementGrid({
+  complementGroup,
+  selectedComplements,
   onComplementToggle,
   prefaceAnswerId,
   onPrefaceAnswerChange,
-  restaurantLogo 
+  restaurantLogo,
 }: ComplementGridProps) {
   const prefaceActive = groupHasPreface(complementGroup);
   const prefaceBlocked = prefaceActive && !prefaceAnswerId;
@@ -61,98 +176,26 @@ export default function ComplementGrid({
           Responda a pergunta acima para escolher os complementos.
         </p>
       )}
-      
+
       <div className={`grid grid-cols-2 gap-2 ${prefaceBlocked ? "opacity-50 pointer-events-none" : ""}`}>
         {complementGroup.complements.map((complement) => {
           const isSelected = selectedComplements.has(complement.name);
-          const isDisabled = complementGroup.max_selections && 
-            selectedComplements.size >= complementGroup.max_selections && 
-            !isSelected;
-          
-          const hasDescription = complement.description && complement.description.trim() !== '';
-          
+          const isDisabled = Boolean(
+            complementGroup.max_selections &&
+            selectedComplements.size >= complementGroup.max_selections &&
+            !isSelected,
+          );
+
           return (
-            <div
+            <ComplementCard
               key={complement.name}
-              className={`complement-card bg-gray-50 dark:bg-gray-900 rounded-lg shadow cursor-pointer flex flex-col transition-all duration-200 ${
-                isSelected 
-                  ? 'ring-2 ring-primary dark:ring-cyan-400 bg-primary/5' 
-                  : 'hover:shadow-md'
-              } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={() => {
-                if (!isDisabled && !prefaceBlocked) {
-                  onComplementToggle(complement.name);
-                }
-              }}
-              style={{ 
-                height: hasDescription ? '120px' : '90px', 
-                paddingBottom: 0 
-              }}
-            >
-              <div 
-                className="relative w-full" 
-                style={{ 
-                  height: hasDescription ? '60%' : '100%' 
-                }}
-              >
-                <ImageWithLoading
-                  src={complement.image}
-                  alt={complement.name}
-                  clickable={false}
-                  className="w-full h-full object-cover rounded-t-lg"
-                  fallbackSrc={restaurantLogo || "/window.svg"}
-                >
-                  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center z-10 transition-all duration-200 ${
-                    isSelected 
-                      ? 'bg-primary dark:bg-cyan-400 text-white' 
-                      : 'bg-white/80 text-gray-600'
-                  }`}>
-                    {isSelected && (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                      </svg>
-                    )}
-                  </div>
-                  
-                  {complement.price !== '0,00' && (
-                    <span className="absolute bottom-2 right-2 text-white text-sm font-bold px-0 py-0 z-10 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">
-                      +R${complement.price}
-                    </span>
-                  )}
-                  
-                  <div className="absolute bottom-2 left-2 right-16">
-                    <h4 className="text-sm font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)] leading-tight" style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'normal',
-                      lineHeight: '1.1',
-                    }}>
-                      {complement.name}
-                    </h4>
-                  </div>
-                </ImageWithLoading>
-              </div>
-              
-              {hasDescription && (
-                <div className="w-full px-3 pb-3 pt-2 flex flex-col justify-center items-start text-left" style={{ height: '40%', minHeight: '36px' }}>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 flex-shrink-0" style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'normal',
-                    lineHeight: '1.2',
-                    maxHeight: '3.6em',
-                  }}>
-                    {complement.description}
-                  </p>
-                </div>
-              )}
-            </div>
+              complement={complement}
+              isSelected={isSelected}
+              isDisabled={isDisabled}
+              prefaceBlocked={prefaceBlocked}
+              restaurantLogo={restaurantLogo}
+              onToggle={onComplementToggle}
+            />
           );
         })}
       </div>
