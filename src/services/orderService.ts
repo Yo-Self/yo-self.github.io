@@ -57,6 +57,9 @@ function mapOrderCreationError(error: { message?: string; details?: string; code
   if (msg.includes('complement_max_exceeded')) {
     return new Error('Seleção de complementos inválida. Revise seu pedido.');
   }
+  if (msg.includes('invalid_preface_answer')) {
+    return new Error('Resposta inválida para uma pergunta do item. Revise as opções selecionadas e tente novamente.');
+  }
 
   return new Error('Não foi possível criar o pedido. Tente novamente.');
 }
@@ -98,6 +101,9 @@ export const createOrder = async (
       quantity: item.quantity,
       price_at_time_of_order: item.price_at_time_of_order,
       selected_complements: item.selected_complements ?? [],
+      ...(item.complement_group_answers && item.complement_group_answers.length > 0
+        ? { complement_group_answers: item.complement_group_answers }
+        : {}),
       sent_to_kitchen: item.sent_to_kitchen !== false,
     })),
   });
