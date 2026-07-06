@@ -13,7 +13,14 @@ import { useCustomerData } from '../hooks/useCustomerData';
 import { useRestaurantBySlug } from '../hooks/useRestaurantBySlug';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage, NON_DELIVERY_DELIVERY_CALC } from '../utils/deliveryCalculator';
+import { buildFullDeliveryAddress } from '../utils/deliveryAddress';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
+import {
+  getCustomerFormValidationError,
+  isCustomerFormComplete,
+  resolveCustomerFormMode,
+} from '../utils/customerFormValidation';
+import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { createOrderWithIdempotency } from '../utils/checkoutIdempotency';
 import { useCheckoutLock } from '../context/CheckoutContext';
 import { createExpressPaymentIntent } from '../services/stripeService';
@@ -89,6 +96,13 @@ const ExpressCheckoutInner = ({
   const { customerData } = useCustomerData();
   const { customerCoordinates } = useCustomerCoordinates();
   const { restaurant } = useRestaurantBySlug(restaurantId);
+  const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
+  const tablePayment = isDeliveryRoute ? false : dbTablePayment;
+  const customerFormMode = resolveCustomerFormMode({
+    isDeliveryRoute,
+    deliveryMode,
+    tablePayment,
+  });
   const { addActiveOrderId } = useActiveOrders();
   const { acquireCheckoutLock, releaseCheckoutLock } = useCheckoutLock();
   const confirmInFlightRef = React.useRef(false);
@@ -96,6 +110,18 @@ const ExpressCheckoutInner = ({
 
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
   const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
+
+  const deliveryCalc = React.useMemo(() => {
+    if (!isActuallyDelivery || !restaurant) return NON_DELIVERY_DELIVERY_CALC;
+    return calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null);
+  }, [isActuallyDelivery, restaurant, customerCoordinates?.coordinates]);
+
+  const deliveryCovered = deliveryCalc.covered;
+  const isDeliveryOutsideCoverage = isActuallyDelivery && !deliveryCovered && deliveryCalc.reason !== 'missing_coordinates';
+
+  const isCustomerDataValid = isCustomerFormComplete(customerFormMode, customerData, {
+    hasCoordinates: !!customerCoordinates?.coordinates,
+  }) && !(isActuallyDelivery && (!deliveryCovered || isDeliveryOutsideCoverage));
 
   const handleConfirm = useCallback(async (event: StripeExpressCheckoutElementConfirmEvent) => {
     if (!stripe || !elements || !restaurant) {
@@ -122,6 +148,15 @@ const ExpressCheckoutInner = ({
     }
 
     try {
+      const formError = getCustomerFormValidationError(customerFormMode, customerData, {
+        hasCoordinates: !!customerCoordinates?.coordinates,
+      });
+      if (formError) {
+        setErrorMessage(formError.message);
+        event.paymentFailed({ message: formError.message });
+        return;
+      }
+
       const { error: submitError } = await elements.submit();
       if (submitError) {
         const message = submitError.message || 'Erro ao validar os detalhes do pagamento';
@@ -132,10 +167,6 @@ const ExpressCheckoutInner = ({
 
       const tableId = typeof window !== 'undefined' ? localStorage.getItem('table_id') : null;
 
-      const deliveryCalc = isActuallyDelivery
-        ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
-        : NON_DELIVERY_DELIVERY_CALC;
-
       assertDeliveryReadyForCheckout({
         isDelivery: isActuallyDelivery,
         coordinates: customerCoordinates?.coordinates,
@@ -144,7 +175,7 @@ const ExpressCheckoutInner = ({
 
       const deliveryFee = deliveryCalc.fee / 100;
       const fullDeliveryAddress = isActuallyDelivery
-        ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
+        ? buildFullDeliveryAddress(customerData.address, customerData.number, customerData.complement)
         : undefined;
 
       const isRetirada = isActuallyRetirada || (!isDeliveryRoute && tableId === 'retirada');
@@ -294,16 +325,14 @@ const ExpressCheckoutInner = ({
     isActuallyRetirada,
     deliveryMode,
     customerCoordinates,
+    customerFormMode,
+    deliveryCalc,
     addActiveOrderId,
     acquireCheckoutLock,
     releaseCheckoutLock,
   ]);
 
   if (isEmpty) return null;
-    
-  const isCustomerDataValid = isActuallyDelivery 
-    ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
-    : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
 
   return (
     <div className={`w-full flex flex-col justify-center transition-all duration-200 ${checkoutActionButtonMinHeightClass} ${!isCustomerDataValid ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
@@ -342,26 +371,11 @@ const ExpressCheckoutInner = ({
             } as any);
           };
 
-          if (isActuallyDelivery) {
-            if (!customerData.name?.trim()) {
-              return throwError('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
-            }
-            if (!customerData.address?.trim()) {
-              return throwError('customer_address', 'Por favor, informe seu Endereço antes de continuar com o pagamento.');
-            }
-            if (!customerData.number?.trim()) {
-              return throwError('customer_number', 'Por favor, informe o Número do endereço antes de continuar com o pagamento.');
-            }
-            if (!customerData.whatsapp?.trim()) {
-              return throwError('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
-            }
-          } else {
-            if (!customerData.name?.trim()) {
-              return throwError('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
-            }
-            if (!customerData.whatsapp?.trim()) {
-              return throwError('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
-            }
+          const formError = getCustomerFormValidationError(customerFormMode, customerData, {
+            hasCoordinates: !!customerCoordinates?.coordinates,
+          });
+          if (formError) {
+            return throwError(formError.field, formError.message);
           }
 
           Analytics.trackPaymentMethodClicked(expressCtx);

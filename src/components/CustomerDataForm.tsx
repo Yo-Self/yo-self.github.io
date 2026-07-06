@@ -5,6 +5,7 @@ import GooglePlacesAutocompleteRobust from './GooglePlacesAutocompleteRobust';
 import NearbyAddresses from './NearbyAddresses';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
+import { useRefineDeliveryCoordinates } from '../hooks/useRefineDeliveryCoordinates';
 import { useReverseGeocodingRobust } from '../hooks/useReverseGeocodingRobust';
 import { AddressResult } from '../hooks/useReverseGeocoding';
 
@@ -40,6 +41,8 @@ export default function CustomerDataForm({
   const { customerCoordinates, updateCoordinates } = useCustomerCoordinates();
   const { addresses, isLoading: isReverseGeocodingLoading, error: reverseGeocodingError, getAddressesFromCoordinates, clearAddresses } = useReverseGeocodingRobust();
   const [showNearbyAddresses, setShowNearbyAddresses] = useState(false);
+
+  useRefineDeliveryCoordinates(addressActive && !isPickup);
 
   const handleUseLocation = async () => {
     try {
@@ -101,7 +104,7 @@ export default function CustomerDataForm({
             htmlFor="customer-name" 
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Nome Completo
+            Nome Completo *
           </label>
           <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
         </div>
@@ -131,7 +134,7 @@ export default function CustomerDataForm({
             htmlFor="customer-address" 
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Endereço Completo
+            Endereço Completo *
           </label>
           <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.address?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
         </div>

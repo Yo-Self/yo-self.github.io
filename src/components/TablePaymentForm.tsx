@@ -46,7 +46,7 @@ export default function TablePaymentForm({
             htmlFor="table-customer-name" 
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Nome Completo
+            Nome Completo *
           </label>
           <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.name?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
         </div>
@@ -75,7 +75,7 @@ export default function TablePaymentForm({
             htmlFor="table-customer-whatsapp" 
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            WhatsApp
+            WhatsApp *
           </label>
           <div className={`w-1.5 h-1.5 rounded-full transition-colors ${customerData.whatsapp?.trim() ? 'bg-green-500' : 'bg-gray-300'}`}></div>
         </div>

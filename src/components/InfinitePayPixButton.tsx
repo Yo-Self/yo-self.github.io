@@ -8,6 +8,12 @@ import { usePathname } from 'next/navigation';
 import { useCustomerCoordinates } from '../hooks/useCustomerCoordinates';
 import { useCustomerData } from '../hooks/useCustomerData';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import {
+  getCustomerFormValidationError,
+  isCustomerFormComplete,
+  resolveCustomerFormMode,
+} from '../utils/customerFormValidation';
+import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import PixIcon from './icons/PixIcon';
 import { useRestaurantOnlinePayment } from '../hooks/useRestaurantOnlinePayment';
 import Analytics from '../lib/analytics';
@@ -45,6 +51,16 @@ export default function InfinitePayPixButton({
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
   const { customerCoordinates } = useCustomerCoordinates();
   const { customerData } = useCustomerData();
+  const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
+  const tablePayment = isDeliveryRoute ? false : dbTablePayment;
+  const customerFormMode = resolveCustomerFormMode({
+    isDeliveryRoute,
+    deliveryMode,
+    tablePayment,
+  });
+  const isCustomerDataValid = isCustomerFormComplete(customerFormMode, customerData, {
+    hasCoordinates: !!customerCoordinates?.coordinates,
+  });
   const { isCheckoutInProgress } = useCheckoutLock();
 
   const deliveryCalc = React.useMemo(() => {
@@ -83,32 +99,12 @@ export default function InfinitePayPixButton({
       alert(message);
     };
 
-    if (isActuallyDelivery) {
-      if (!customerData.name?.trim()) {
-        fail('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.address?.trim()) {
-        fail('customer_address', 'Por favor, informe seu Endereço antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.number?.trim()) {
-        fail('customer_number', 'Por favor, informe o Número do endereço antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.whatsapp?.trim()) {
-        fail('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
-        return;
-      }
-    } else {
-      if (!customerData.name?.trim()) {
-        fail('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.whatsapp?.trim()) {
-        fail('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
-        return;
-      }
+    const formError = getCustomerFormValidationError(customerFormMode, customerData, {
+      hasCoordinates: !!customerCoordinates?.coordinates,
+    });
+    if (formError) {
+      fail(formError.field, formError.message);
+      return;
     }
 
     const totalWithShipping = totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0);
@@ -137,11 +133,7 @@ export default function InfinitePayPixButton({
 
   const totalPriceWithShipping = totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0);
 
-  const isCustomerDataValid = isActuallyDelivery
-    ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
-    : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
-
-  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress;
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress || !isCustomerDataValid;
 
   return (
     <button
@@ -159,9 +151,7 @@ export default function InfinitePayPixButton({
         disabled:cursor-not-allowed disabled:transform-none disabled:opacity-50
         ${isNativelyDisabled
           ? 'bg-gray-300 text-gray-500 border border-transparent'
-          : (!isCustomerDataValid
-              ? 'bg-gray-300 text-gray-600 border border-transparent'
-              : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white')
+          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white'
         }
         ${className}
       `}

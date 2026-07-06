@@ -11,7 +11,13 @@ import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
 import { usePathname } from 'next/navigation';
 import { calculateDeliveryDistance } from '../utils/distanceCalculator';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
+import { buildFullDeliveryAddress } from '../utils/deliveryAddress';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
+import {
+  getCustomerFormValidationError,
+  isCustomerFormComplete,
+  resolveCustomerFormMode,
+} from '../utils/customerFormValidation';
 import { CartUtils } from '../types/cart';
 import { createOrderWithIdempotency } from '../utils/checkoutIdempotency';
 import { useCheckoutLock } from '../context/CheckoutContext';
@@ -61,6 +67,14 @@ export default function CartWhatsAppButton({
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
   const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
   const tablePayment = isDeliveryRoute ? false : dbTablePayment;
+  const customerFormMode = resolveCustomerFormMode({
+    isDeliveryRoute,
+    deliveryMode,
+    tablePayment,
+  });
+  const isCustomerDataValid = isCustomerFormComplete(customerFormMode, customerData, {
+    hasCoordinates: !!customerCoordinates?.coordinates,
+  });
 
   const minOrderValue = restaurant?.min_order_value || 0;
   const isMinOrderNotMet = isActuallyDelivery && totalPrice < minOrderValue && restaurant?.open !== false;
@@ -86,8 +100,6 @@ export default function CartWhatsAppButton({
     }
   }, [restaurantId, isCreatingOrder]);
 
-
-  // O botão agora está sempre habilitado, então a verificação de dados do cliente foi removida.
 
   // Não renderizar se carrinho estiver vazio
   if (isEmpty) {
@@ -298,11 +310,15 @@ export default function CartWhatsAppButton({
       return;
     }
 
+    const formError = getCustomerFormValidationError(customerFormMode, customerData, {
+      hasCoordinates: !!customerCoordinates?.coordinates,
+    });
+    if (formError) {
+      alert(formError.message);
+      return;
+    }
+
     // 🔑 CORREÇÃO CRÍTICA: Abrir janela em branco SINCRONAMENTE antes de qualquer await.
-    // Browsers bloqueiam window.open() quando chamado após operações assíncronas (await),
-    // pois o gesto do usuário (clique) é considerado "expirado" após o primeiro await.
-    // Ao abrir a janela aqui (na mesma call stack do clique), garantimos que não será bloqueada.
-    // Após a criação do pedido, navegamos a janela já aberta para a URL do WhatsApp.
     const whatsappWindow = window.open('', '_blank');
 
     const paymentCtx = paymentContextFromCart({
@@ -345,8 +361,8 @@ export default function CartWhatsAppButton({
         order_type: isActuallyDelivery ? 'delivery' : (isActuallyRetirada ? 'pickup' : 'dine_in'),
         delivery_fee: isActuallyDelivery && deliveryCovered ? deliveryCalc.fee : 0,
         delivery_distance: isActuallyDelivery && deliveryCovered ? deliveryCalc.distanceKm : null,
-        delivery_address: isActuallyDelivery 
-          ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
+        delivery_address: isActuallyDelivery
+          ? buildFullDeliveryAddress(customerData.address, customerData.number, customerData.complement)
           : null,
         delivery_coords_lat: isActuallyDelivery && customerCoordinates.coordinates ? customerCoordinates.coordinates.latitude : null,
         delivery_coords_lng: isActuallyDelivery && customerCoordinates.coordinates ? customerCoordinates.coordinates.longitude : null,
@@ -450,7 +466,7 @@ export default function CartWhatsAppButton({
   return (
     <button
       onClick={handleCreateOrderAndSendWhatsApp}
-      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress}
+      disabled={isLoading || isCreatingOrder || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress || !isCustomerDataValid}
       className={`
         relative w-full min-w-0 flex items-center justify-center
         ${checkoutActionButtonMinHeightClass}

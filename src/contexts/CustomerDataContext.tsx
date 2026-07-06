@@ -136,7 +136,7 @@ export function CustomerDataProvider({ children }: CustomerDataProviderProps) {
     }
   }, []);
 
-  // Todos os campos são opcionais
+  // Validação de campos obrigatórios é feita por customerFormValidation nos fluxos de checkout.
   const isCustomerDataComplete = true;
 
   const value: CustomerDataContextType = {

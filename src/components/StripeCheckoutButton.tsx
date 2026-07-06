@@ -10,6 +10,12 @@ import { useCustomerData } from '../hooks/useCustomerData';
 import { calculateDeliveryFeeAndCoverage } from '../utils/deliveryCalculator';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
 import {
+  getCustomerFormValidationError,
+  isCustomerFormComplete,
+  resolveCustomerFormMode,
+} from '../utils/customerFormValidation';
+import { useRestaurantTablePayment } from '../hooks/useRestaurantTablePayment';
+import {
   checkoutActionButtonMinHeightClass,
   checkoutActionButtonPaddingClass,
   checkoutActionContentClass,
@@ -40,9 +46,18 @@ export default function StripeCheckoutButton({
   const pathname = usePathname();
   const isDeliveryRoute = pathname ? pathname.startsWith('/delivery') : true;
   const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
-  const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
   const { customerCoordinates } = useCustomerCoordinates();
   const { customerData } = useCustomerData();
+  const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
+  const tablePayment = isDeliveryRoute ? false : dbTablePayment;
+  const customerFormMode = resolveCustomerFormMode({
+    isDeliveryRoute,
+    deliveryMode,
+    tablePayment,
+  });
+  const isCustomerDataValid = isCustomerFormComplete(customerFormMode, customerData, {
+    hasCoordinates: !!customerCoordinates?.coordinates,
+  });
 
   const deliveryCalc = React.useMemo(() => {
     if (!isActuallyDelivery || !restaurant) return { covered: true, fee: 0, reason: undefined };
@@ -83,24 +98,15 @@ export default function StripeCheckoutButton({
       alert(message);
     };
 
-    if (isActuallyDelivery) {
-      if (!customerData.name?.trim()) {
-        fail('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.address?.trim()) {
-        fail('customer_address', 'Por favor, informe seu Endereço antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.number?.trim()) {
-        fail('customer_number', 'Por favor, informe o Número do endereço antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.whatsapp?.trim()) {
-        fail('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
-        return;
-      }
+    const formError = getCustomerFormValidationError(customerFormMode, customerData, {
+      hasCoordinates: !!customerCoordinates?.coordinates,
+    });
+    if (formError) {
+      fail(formError.field, formError.message);
+      return;
+    }
 
+    if (isActuallyDelivery) {
       try {
         assertDeliveryReadyForCheckout({
           isDelivery: isActuallyDelivery,
@@ -109,15 +115,6 @@ export default function StripeCheckoutButton({
         });
       } catch (err) {
         fail('delivery_coordinates', err instanceof Error ? err.message : 'Endereço de entrega inválido.');
-        return;
-      }
-    } else {
-      if (!customerData.name?.trim()) {
-        fail('customer_name', 'Por favor, informe seu Nome antes de continuar com o pagamento.');
-        return;
-      }
-      if (!customerData.whatsapp?.trim()) {
-        fail('customer_phone', 'Por favor, informe seu Telefone antes de continuar com o pagamento.');
         return;
       }
     }
@@ -154,11 +151,7 @@ export default function StripeCheckoutButton({
 
   const totalPriceWithShipping = totalPrice + (isActuallyDelivery && deliveryCovered ? deliveryFee : 0);
 
-  const isCustomerDataValid = isActuallyDelivery 
-    ? (!!customerData.name?.trim() && !!customerData.address?.trim() && !!customerData.number?.trim() && !!customerData.whatsapp?.trim())
-    : (!!customerData.name?.trim() && !!customerData.whatsapp?.trim());
-
-  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress;
+  const isNativelyDisabled = isLoading || isEmpty || isLoadingRestaurant || !restaurant || isMinOrderNotMet || isDeliveryOutsideCoverage || (isActuallyDelivery && !deliveryCovered) || isCheckoutInProgress || !isCustomerDataValid;
 
   return (
     <button
@@ -175,9 +168,7 @@ export default function StripeCheckoutButton({
         disabled:cursor-not-allowed disabled:transform-none disabled:opacity-50
         ${isNativelyDisabled 
           ? 'bg-gray-300 text-gray-500 border border-transparent' 
-          : (!isCustomerDataValid 
-              ? 'bg-gray-300 text-gray-600 border border-transparent'
-              : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white')
+          : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white'
         }
         ${className}
       `}

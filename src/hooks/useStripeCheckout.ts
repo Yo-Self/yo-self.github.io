@@ -6,7 +6,12 @@ import { useCustomerData } from './useCustomerData';
 import { useRestaurantBySlug } from './useRestaurantBySlug';
 import { useCustomerCoordinates } from './useCustomerCoordinates';
 import { calculateDeliveryFeeAndCoverage, NON_DELIVERY_DELIVERY_CALC } from '../utils/deliveryCalculator';
+import { buildFullDeliveryAddress } from '../utils/deliveryAddress';
 import { assertDeliveryReadyForCheckout } from '../utils/deliveryCheckoutGuard';
+import {
+  getCustomerFormValidationError,
+  resolveCustomerFormMode,
+} from '../utils/customerFormValidation';
 import { createOrderWithIdempotency } from '../utils/checkoutIdempotency';
 import { useCheckoutLock } from '../context/CheckoutContext';
 import { createCheckoutSession } from '../services/stripeService';
@@ -68,6 +73,17 @@ export function useStripeCheckout({
       const isDeliveryRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/delivery');
       const isActuallyDelivery = isDeliveryRoute && deliveryMode === 'delivery';
       const isActuallyRetirada = isDeliveryRoute && deliveryMode === 'retirada';
+      const customerFormMode = resolveCustomerFormMode({
+        isDeliveryRoute,
+        deliveryMode,
+      });
+      const formError = getCustomerFormValidationError(customerFormMode, customerData, {
+        hasCoordinates: !!customerCoordinates?.coordinates,
+      });
+      if (formError) {
+        throw new Error(formError.message);
+      }
+
       const deliveryCalc = isActuallyDelivery
         ? calculateDeliveryFeeAndCoverage(restaurant, customerCoordinates?.coordinates || null)
         : NON_DELIVERY_DELIVERY_CALC;
@@ -79,8 +95,8 @@ export function useStripeCheckout({
       });
 
       const deliveryFee = deliveryCalc.fee / 100;
-      const fullDeliveryAddress = isActuallyDelivery 
-        ? `${customerData.address || ''}${customerData.number ? ', ' + customerData.number : ''}${customerData.complement ? ' - ' + customerData.complement : ''}`
+      const fullDeliveryAddress = isActuallyDelivery
+        ? buildFullDeliveryAddress(customerData.address, customerData.number, customerData.complement)
         : undefined;
 
       const isRetirada = isActuallyRetirada || (!isDeliveryRoute && tableId === 'retirada');
