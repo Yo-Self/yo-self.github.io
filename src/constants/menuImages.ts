@@ -1,6 +1,14 @@
 /** Exact URLs that return 404/403 and must not be used (gestor default + broken hotlinks). */
 export const DEAD_MENU_IMAGE_URLS = [
   'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=400',
+  'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80',
+] as const;
+
+/** Unsplash photo IDs used as generic gestor placeholders — never show on the public cardápio. */
+export const GENERIC_PLACEHOLDER_PHOTO_IDS = [
+  'photo-1565299624946',
+  'photo-1498837167922',
 ] as const;
 
 /** Hosts that block hotlinking from the public cardápio. */
@@ -9,13 +17,15 @@ export const BLOCKED_MENU_IMAGE_HOSTS = [
   'static.ifood-static.com.br',
 ] as const;
 
-/** Verified working generic dish placeholder (Unsplash, 200 OK). */
-export const DEFAULT_DISH_IMAGE_URL =
-  'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=400';
+export function isGenericPlaceholderImageUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return GENERIC_PLACEHOLDER_PHOTO_IDS.some((id) => url.includes(id));
+}
 
 export function isDeadMenuImageUrl(url: string | null | undefined): boolean {
   if (!url) return false;
   if ((DEAD_MENU_IMAGE_URLS as readonly string[]).includes(url)) return true;
+  if (isGenericPlaceholderImageUrl(url)) return true;
   try {
     const host = new URL(url).hostname;
     return BLOCKED_MENU_IMAGE_HOSTS.some((blocked) => host === blocked || host.endsWith(`.${blocked}`));

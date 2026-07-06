@@ -98,3 +98,14 @@ export function getOptimizedImageUrl(
 export function isSupabaseStorageUrl(url: string): boolean {
   return SUPABASE_IMAGE_PATH.test(url);
 }
+
+/** Dish/complement image, or restaurant logo when the stored URL is missing or a generic placeholder. */
+export function resolveMenuItemImageUrl(
+  itemUrl: string | null | undefined,
+  restaurantLogoUrl: string | null | undefined,
+  width: number = 400,
+): string {
+  const itemImage = getOptimizedImageUrl(itemUrl, width);
+  if (itemImage) return itemImage;
+  return getOptimizedImageUrl(restaurantLogoUrl, width);
+}

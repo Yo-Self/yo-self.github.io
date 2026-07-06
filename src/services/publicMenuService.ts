@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { Restaurant, Dish, MenuItem, ComplementGroup } from '@/components/data';
-import { getOptimizedImageUrl } from '@/utils/imageUrl';
+import { getOptimizedImageUrl, resolveMenuItemImageUrl } from '@/utils/imageUrl';
 import { parsePrefaceOptions } from '@/types/complementPreface';
 
 export interface PublicMenuPayload {
@@ -51,7 +51,8 @@ function buildComplementGroups(
   dishId: string,
   complementGroups: Record<string, unknown>[],
   complements: Record<string, unknown>[],
-  associations: Map<string, Array<{ groupId: string; position: number | null }>>
+  associations: Map<string, Array<{ groupId: string; position: number | null }>>,
+  restaurantLogoUrl: string,
 ): ComplementGroup[] {
   const dishAssociations = associations.get(String(dishId)) || [];
   const sortedAssociations = [...dishAssociations].sort((a, b) => {
@@ -76,7 +77,7 @@ function buildComplementGroups(
           name: String(comp.name ?? ''),
           description: String(comp.description ?? ''),
           price: comp.price ? Number(comp.price).toFixed(2).replace('.', ',') : '0,00',
-          image: getOptimizedImageUrl(comp.image_url as string | null | undefined, 200),
+          image: resolveMenuItemImageUrl(comp.image_url as string | null | undefined, restaurantLogoUrl, 200),
           ingredients: String(comp.ingredients ?? ''),
           allergens: String(comp.allergens ?? ''),
           portion: String(comp.portion ?? ''),
@@ -105,7 +106,8 @@ function mapFeaturedDish(
   dishCategories: Record<string, unknown>[],
   complementGroups: Record<string, unknown>[],
   complements: Record<string, unknown>[],
-  associations: Map<string, Array<{ groupId: string; position: number | null }>>
+  associations: Map<string, Array<{ groupId: string; position: number | null }>>,
+  restaurantLogoUrl: string,
 ): Dish {
   const dishCats = dishCategories
     .filter((dc) => dc.dish_id === dish.id)
@@ -116,7 +118,8 @@ function mapFeaturedDish(
     String(dish.id),
     complementGroups,
     complements,
-    associations
+    associations,
+    restaurantLogoUrl,
   );
 
   return {
@@ -124,7 +127,7 @@ function mapFeaturedDish(
     name: String(dish.name ?? ''),
     description: String(dish.description ?? ''),
     price: dish.price ? Number(dish.price).toFixed(2).replace('.', ',') : '0,00',
-    image: getOptimizedImageUrl(dish.image_url as string | null | undefined, 400),
+    image: resolveMenuItemImageUrl(dish.image_url as string | null | undefined, restaurantLogoUrl, 400),
     tags: (dish.tags as string[]) || [],
     ingredients: String(dish.ingredients ?? ''),
     allergens: String(dish.allergens ?? ''),
@@ -140,7 +143,8 @@ function mapMenuItem(
   dishCategories: Record<string, unknown>[],
   complementGroups: Record<string, unknown>[],
   complements: Record<string, unknown>[],
-  associations: Map<string, Array<{ groupId: string; position: number | null }>>
+  associations: Map<string, Array<{ groupId: string; position: number | null }>>,
+  restaurantLogoUrl: string,
 ): MenuItem {
   const featured = mapFeaturedDish(
     dish,
@@ -148,7 +152,8 @@ function mapMenuItem(
     dishCategories,
     complementGroups,
     complements,
-    associations
+    associations,
+    restaurantLogoUrl,
   );
   const dishCats = featured.categories ?? [];
 
@@ -179,14 +184,35 @@ export function transformPublicMenuPayload(payload: PublicMenuPayload): Restaura
     associations.set(dishId, existing);
   }
 
+  const restaurantLogoUrl = getOptimizedImageUrl(
+    restaurant.image_url as string | null | undefined,
+    800,
+  );
+
   const featured_dishes = dishes
     .filter((dish) => dish.is_featured)
     .map((dish) =>
-      mapFeaturedDish(dish, categories, dishCategories, complementGroups, complements, associations)
+      mapFeaturedDish(
+        dish,
+        categories,
+        dishCategories,
+        complementGroups,
+        complements,
+        associations,
+        restaurantLogoUrl,
+      ),
     );
 
   const menu_items = dishes.map((dish) =>
-    mapMenuItem(dish, categories, dishCategories, complementGroups, complements, associations)
+    mapMenuItem(
+      dish,
+      categories,
+      dishCategories,
+      complementGroups,
+      complements,
+      associations,
+      restaurantLogoUrl,
+    ),
   );
 
   return {
@@ -204,7 +230,7 @@ export function transformPublicMenuPayload(payload: PublicMenuPayload): Restaura
       is_closed: Boolean(h.is_closed),
     })),
     welcome_message: String(restaurant.description || `Bem-vindo ao ${restaurant.name}!`),
-    image: getOptimizedImageUrl(restaurant.image_url as string | null | undefined, 800),
+    image: restaurantLogoUrl,
     waiter_call_enabled: Boolean(restaurant.waiter_call_enabled),
     whatsapp_enabled: Boolean(restaurant.whatsapp_enabled),
     whatsapp_phone: String(restaurant.whatsapp_phone ?? ''),

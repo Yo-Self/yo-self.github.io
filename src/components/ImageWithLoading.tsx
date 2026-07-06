@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useImageCache } from '../hooks/useImageCache';
+import { normalizeMenuImageUrl } from '@/constants/menuImages';
 import ImageModal from './ImageModal';
 
 interface ImageWithLoadingProps {
@@ -37,11 +38,12 @@ export default function ImageWithLoading({
   loading = 'lazy',
 }: ImageWithLoadingProps) {
   const { isImageLoaded, isImageError } = useImageCache();
+  const resolvedSrc = src && normalizeMenuImageUrl(src) ? src : '';
   const [isLoading, setIsLoading] = useState(() =>
-    resolveInitialLoadState(src, isImageLoaded, isImageError),
+    resolveInitialLoadState(resolvedSrc || fallbackSrc || '', isImageLoaded, isImageError),
   );
   const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(src);
+  const [currentSrc, setCurrentSrc] = useState(() => resolvedSrc || fallbackSrc || '');
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +58,9 @@ export default function ImageWithLoading({
   }, [currentSrc]);
 
   const checkCache = useCallback(() => {
-    if (!src) {
+    const normalizedSrc = src && normalizeMenuImageUrl(src) ? src : '';
+
+    if (!normalizedSrc) {
       if (fallbackSrc) {
         setCurrentSrc(fallbackSrc);
         setHasError(false);
@@ -68,14 +72,14 @@ export default function ImageWithLoading({
       return;
     }
 
-    if (isImageLoaded(src)) {
+    if (isImageLoaded(normalizedSrc)) {
       setIsLoading(false);
       setHasError(false);
-      setCurrentSrc(src);
+      setCurrentSrc(normalizedSrc);
       return;
     }
 
-    if (isImageError(src)) {
+    if (isImageError(normalizedSrc)) {
       if (fallbackSrc) {
         setCurrentSrc(fallbackSrc);
         setHasError(false);
@@ -90,7 +94,7 @@ export default function ImageWithLoading({
 
     setIsLoading(true);
     setHasError(false);
-    setCurrentSrc(src);
+    setCurrentSrc(normalizedSrc);
   }, [src, fallbackSrc, isImageLoaded, isImageError, onError]);
 
   useEffect(() => {
