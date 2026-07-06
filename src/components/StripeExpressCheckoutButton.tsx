@@ -208,6 +208,7 @@ const ExpressCheckoutInner = ({
       const piResponse = await createExpressPaymentIntent({
         orderId: newOrder.id,
         restaurantId: restaurant.id,
+        accessToken: newOrder.customer_access_token!,
         customerName: customerData.name,
         customerPhone: customerData.whatsapp,
       });

@@ -14,6 +14,7 @@ const supabasePublishableKey = getSupabasePublishableKey();
 export interface CreateCheckoutSessionParams {
   orderId: string;
   restaurantId: string;
+  accessToken: string;
   customerName?: string;
   customerPhone?: string;
   successUrl: string;
@@ -82,6 +83,7 @@ export async function createCheckoutSession(
     body: JSON.stringify({
       order_id: params.orderId,
       restaurant_id: params.restaurantId,
+      access_token: params.accessToken,
       customer_name: params.customerName,
       customer_phone: params.customerPhone,
       success_url: params.successUrl,
@@ -113,6 +115,7 @@ export interface ExpressPaymentIntentResponse {
 export interface CreateExpressPaymentIntentParams {
   orderId: string;
   restaurantId: string;
+  accessToken: string;
   customerName?: string;
   customerPhone?: string;
 }
@@ -133,6 +136,7 @@ export async function createExpressPaymentIntent(
     body: JSON.stringify({
       order_id: params.orderId,
       restaurant_id: params.restaurantId,
+      access_token: params.accessToken,
       customer_name: params.customerName,
       customer_phone: params.customerPhone,
       is_express_checkout: true,

@@ -150,13 +150,13 @@ serve(async (req) => {
     switch (event.type) {
       case 'checkout.session.completed':
       case 'payment_intent.succeeded':
-        return await handleStripePaymentSuccess(supabase, event, stripeObj, jsonResponse)
+        return await handleStripePaymentSuccess(supabase, event, stripeObj, connectAccount, jsonResponse)
       case 'payment_intent.payment_failed':
-        return await handleStripePaymentFailed(supabase, event, stripeObj, jsonResponse)
+        return await handleStripePaymentFailed(supabase, event, stripeObj, connectAccount, jsonResponse)
       case 'checkout.session.expired':
-        return await handleCheckoutSessionExpired(supabase, event, stripeObj, jsonResponse)
+        return await handleCheckoutSessionExpired(supabase, event, stripeObj, connectAccount, jsonResponse)
       case 'charge.refunded':
-        return await handleChargeRefunded(supabase, event, stripeObj, jsonResponse)
+        return await handleChargeRefunded(supabase, event, stripeObj, connectAccount, jsonResponse)
       case 'account.updated':
         return await handleAccountUpdated(supabase, event, stripeObj, connectAccount, jsonResponse)
       default:

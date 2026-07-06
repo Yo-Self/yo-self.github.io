@@ -87,6 +87,32 @@ function complementDescription(complements: OrderItemRow['selected_complements']
   return complements.map((c) => c.name).filter(Boolean).join(', ')
 }
 
+async function validateOrderAccessToken(
+  supabase: SupabaseClient,
+  orderId: string,
+  accessToken: string | undefined,
+): Promise<Response | null> {
+  if (!accessToken) {
+    return jsonResponse({ error: 'access_token is required' }, 403)
+  }
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('customer_access_token')
+    .eq('id', orderId)
+    .single()
+
+  if (error || !order) {
+    return jsonResponse({ error: 'Order not found' }, 404)
+  }
+
+  if (order.customer_access_token !== accessToken) {
+    return jsonResponse({ error: 'Invalid access token' }, 403)
+  }
+
+  return null
+}
+
 async function loadAndValidateCheckout(
   supabase: SupabaseClient,
   orderId: string,
@@ -285,6 +311,7 @@ serve(async (req) => {
     if (!stripeSecretKey) {
       return jsonResponse({ error: 'Stripe is not configured' }, 500)
     }
+    const stripePublishableKey = Deno.env.get('STRIPE_PUBLISHABLE_KEY') ?? ''
     warnIfUnrestrictedStripeKey(stripeSecretKey)
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -329,6 +356,12 @@ serve(async (req) => {
     if (!restaurant_id) {
       return jsonResponse({ error: 'restaurant_id is required' }, 400)
     }
+
+    const accessTokenError = await validateOrderAccessToken(supabase, order_id, access_token)
+    if (accessTokenError) {
+      return accessTokenError
+    }
+
     if (!use_payment_sheet && !is_express_checkout && !apple_pay_payment_data && !success_url) {
       return jsonResponse({ error: 'success_url is required' }, 400)
     }
@@ -394,19 +427,17 @@ serve(async (req) => {
 
       if (piUpdateError) {
         console.error('Error saving PaymentIntent id on order:', piUpdateError)
+        return jsonResponse({ error: 'Failed to bind payment intent to order' }, 500)
       }
 
       return jsonResponse({
         payment_intent_client_secret: piData.client_secret,
         payment_intent_id: piData.id,
+        ...(stripePublishableKey ? { publishable_key: stripePublishableKey } : {}),
       }, 200)
     }
 
     if (apple_pay_payment_data) {
-      if (!access_token) {
-        return jsonResponse({ error: 'access_token is required for Apple Pay confirmation' }, 400)
-      }
-
       const tokenResponse = await fetch('https://api.stripe.com/v1/tokens', {
         method: 'POST',
         headers: {
@@ -527,6 +558,7 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating order with session ID:', updateError)
+      return jsonResponse({ error: 'Failed to bind checkout session to order' }, 500)
     }
 
     return jsonResponse({ checkout_url: session.url, session_id: session.id }, 200)

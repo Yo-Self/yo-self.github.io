@@ -175,7 +175,9 @@ export default function RestaurantClient({
   return (
     <>
       <SetCurrentRestaurant />
-      <AndroidAppBanner slug={slug} isDelivery={isDelivery} />
+      {restaurant?.slug && (
+        <AndroidAppBanner slug={restaurant.slug} isDelivery={isDelivery} />
+      )}
       
       {/* Renderiza a página em background se os dados já estiverem disponíveis */}
       {restaurant && (

@@ -158,6 +158,7 @@ export function useStripeCheckout({
       const session = await createCheckoutSession({
         orderId: newOrder.id,
         restaurantId: restaurant.id,
+        accessToken: newOrder.customer_access_token!,
         customerName: customerData.name,
         customerPhone: customerData.whatsapp,
         successUrl,

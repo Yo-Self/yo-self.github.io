@@ -326,6 +326,10 @@ Eventos tratados pela Edge Function `stripe-webhook`:
 | `charge.refunded` | Reembolso total → `cancelled`; parcial só registra log |
 | `account.updated` | Se Connect perder `charges_enabled`/`details_submitted`, desliga `online_payment` |
 
+**Hardening (jul/2026):** handlers de pagamento exigem que `event.account` corresponda ao `stripe_connect_id` do restaurante do pedido; eventos de Checkout Session validam `stripe_checkout_session_id` gravado no pedido (com auto-bind se o webhook chegar antes da gravação); `payment_intent.succeeded` só aceita PI já vinculado ao pedido ou sessão de checkout. A Edge Function `stripe-checkout` exige `access_token` (`customer_access_token`) em toda criação de sessão/PI — não apenas na confirmação; falha com HTTP 500 se não conseguir gravar `stripe_checkout_session_id` / `stripe_payment_intent_id` no pedido. Payment Sheet retorna `publishable_key` quando `STRIPE_PUBLISHABLE_KEY` está configurada nos secrets da function.
+
+**Android app banner:** `AndroidAppBanner` só renderiza após carregar o restaurante (slug do banco), valida charset `^[a-z0-9]+(?:-[a-z0-9]+)*$` e codifica o slug em URLs `intent://` / `android-app://`.
+
 No Stripe Dashboard, ao criar/editar o destino do webhook, ative **“Receber eventos de contas conectadas”** (EN: *Listen to events on Connected accounts*) — obrigatório para pagamentos via Stripe Connect.
 
 Habilitar por restaurante no Supabase:

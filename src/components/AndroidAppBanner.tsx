@@ -7,6 +7,13 @@ const PLAY_STORE_BASE =
   "https://play.google.com/store/apps/details?id=com.yoself.app";
 const DISMISS_KEY = "yoself_android_banner_dismissed";
 
+/** Matches restaurant slugs created in the gestor (lowercase alphanumeric + hyphens). */
+export const RESTAURANT_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function isValidRestaurantSlug(slug: string): boolean {
+  return RESTAURANT_SLUG_PATTERN.test(slug);
+}
+
 function isAndroidDevice(): boolean {
   if (typeof navigator === "undefined") return false;
   return /android/i.test(navigator.userAgent);
@@ -14,7 +21,7 @@ function isAndroidDevice(): boolean {
 
 function buildRestaurantPath(slug: string, isDelivery: boolean): string {
   const segment = isDelivery ? "delivery" : "restaurant";
-  return `/${segment}/${slug}`;
+  return `/${segment}/${encodeURIComponent(slug)}`;
 }
 
 function buildPlayStoreUrl(slug: string, isDelivery: boolean): string {
@@ -44,41 +51,43 @@ export default function AndroidAppBanner({
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  const safeSlug = isValidRestaurantSlug(slug) ? slug : null;
+
   const appUrl = useMemo(
-    () => `https://yo-self.com${buildRestaurantPath(slug, isDelivery)}`,
-    [slug, isDelivery]
+    () => (safeSlug ? `https://yo-self.com${buildRestaurantPath(safeSlug, isDelivery)}` : ""),
+    [safeSlug, isDelivery]
   );
   const playStoreUrl = useMemo(
-    () => buildPlayStoreUrl(slug, isDelivery),
-    [slug, isDelivery]
+    () => (safeSlug ? buildPlayStoreUrl(safeSlug, isDelivery) : ""),
+    [safeSlug, isDelivery]
   );
   const intentUrl = useMemo(
-    () => buildIntentUrl(slug, isDelivery),
-    [slug, isDelivery]
+    () => (safeSlug ? buildIntentUrl(safeSlug, isDelivery) : ""),
+    [safeSlug, isDelivery]
   );
 
   useEffect(() => {
-    if (!isAndroidDevice()) return;
+    if (!safeSlug || !isAndroidDevice()) return;
     if (typeof window === "undefined") return;
     if (window.localStorage.getItem(DISMISS_KEY) === "1") {
       setDismissed(true);
       return;
     }
     setVisible(true);
-  }, []);
+  }, [safeSlug]);
 
   useEffect(() => {
-    if (!isAndroidDevice() || !slug) return;
+    if (!safeSlug || !isAndroidDevice()) return;
     const link = document.createElement("link");
     link.rel = "alternate";
-    link.href = `android-app://${ANDROID_PACKAGE}/https/yo-self.com${buildRestaurantPath(slug, isDelivery)}`;
+    link.href = `android-app://${ANDROID_PACKAGE}/https/yo-self.com${buildRestaurantPath(safeSlug, isDelivery)}`;
     document.head.appendChild(link);
     return () => {
       document.head.removeChild(link);
     };
-  }, [slug, isDelivery]);
+  }, [safeSlug, isDelivery]);
 
-  if (!visible || dismissed) return null;
+  if (!safeSlug || !visible || dismissed) return null;
 
   const handleDismiss = () => {
     window.localStorage.setItem(DISMISS_KEY, "1");
