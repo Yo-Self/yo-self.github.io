@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useImageCache } from '../hooks/useImageCache';
 import ImageModal from './ImageModal';
 
@@ -43,9 +43,30 @@ export default function ImageWithLoading({
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const syncCompleteImageState = useCallback(() => {
+    const img = containerRef.current?.querySelector('img');
+    if (!img || !currentSrc) return;
+
+    if (img.complete && img.naturalWidth > 0) {
+      setIsLoading(false);
+      setHasError(false);
+    }
+  }, [currentSrc]);
 
   const checkCache = useCallback(() => {
-    if (!src) return;
+    if (!src) {
+      if (fallbackSrc) {
+        setCurrentSrc(fallbackSrc);
+        setHasError(false);
+        setIsLoading(!isImageLoaded(fallbackSrc));
+      } else {
+        setIsLoading(false);
+        setHasError(true);
+      }
+      return;
+    }
 
     if (isImageLoaded(src)) {
       setIsLoading(false);
@@ -75,6 +96,17 @@ export default function ImageWithLoading({
   useEffect(() => {
     checkCache();
   }, [checkCache]);
+
+  useEffect(() => {
+    if (isImageLoaded(currentSrc)) {
+      setIsLoading(false);
+      setHasError(false);
+    }
+  }, [currentSrc, isImageLoaded]);
+
+  useEffect(() => {
+    syncCompleteImageState();
+  }, [syncCompleteImageState, currentSrc]);
 
   const handleError = useCallback(() => {
     if (fallbackSrc && currentSrc !== fallbackSrc) {
@@ -109,7 +141,7 @@ export default function ImageWithLoading({
 
   return (
     <>
-      <div className="relative w-full h-full overflow-hidden">
+      <div ref={containerRef} className="relative w-full h-full overflow-hidden">
         <div
           className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg z-10 transition-opacity duration-200 ${
             showSkeleton ? 'opacity-100' : 'opacity-0 pointer-events-none'

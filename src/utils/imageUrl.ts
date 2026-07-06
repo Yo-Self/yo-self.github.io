@@ -1,3 +1,5 @@
+import { normalizeMenuImageUrl } from '@/constants/menuImages';
+
 const SUPABASE_IMAGE_PATH =
   /^(https?:\/\/[^/]+\.supabase\.co)\/storage\/v1\/(?:object|render\/image)\/public\/images\/([^?]+)/;
 
@@ -57,6 +59,10 @@ export function getOptimizedImageUrl(
   width: number = 400
 ): string {
   if (!url) return '';
+
+  const normalized = normalizeMenuImageUrl(url);
+  if (!normalized) return '';
+  url = normalized;
 
   const match = url.match(SUPABASE_IMAGE_PATH);
   if (!match) return url;
