@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 import { getOptimizedImageUrl } from '@/utils/imageUrl';
 import { Analytics } from '@/lib/analytics';
+import { fetchPublicMenuRpc, transformPublicMenuPayload } from '@/services/publicMenuService';
 
 interface UseRestaurantBySlugResult {
   restaurant: Restaurant | null;
@@ -463,7 +464,23 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
 
     const fetchPromise = (async (): Promise<Restaurant | null> => {
     try {
-      // First try to fetch by slug
+      try {
+        const rpcPayload = await fetchPublicMenuRpc(slug);
+        if (rpcPayload) {
+          const transformed = transformPublicMenuPayload(rpcPayload);
+          if (transformed) {
+            storeRestaurantCache(slug, transformed);
+            return mergeRestaurantOrderStatus(
+              transformed,
+              await fetchRestaurantOrderStatus(slug)
+            );
+          }
+        }
+      } catch (rpcError) {
+        console.warn('get_public_menu RPC unavailable, falling back to multi-query fetch:', rpcError);
+      }
+
+      // Legacy multi-query fallback (pre-RPC or migration not yet applied)
       let { data: restaurants, error: queryError } = await supabase
         .from('restaurants_public')
         .select('*')

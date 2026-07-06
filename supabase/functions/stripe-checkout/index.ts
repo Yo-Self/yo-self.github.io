@@ -32,6 +32,7 @@ interface CheckoutRequest {
   confirm_payment?: boolean
   access_token?: string
   session_id?: string
+  payment_intent_id?: string
 }
 
 interface OrderItemRow {
@@ -273,6 +274,7 @@ serve(async (req) => {
       confirm_payment,
       access_token,
       session_id,
+      payment_intent_id,
     } = body
 
     if (!order_id) {
@@ -309,6 +311,7 @@ serve(async (req) => {
       const result = await confirmStripeOrderPayment(supabase, order_id, stripeSecretKey, {
         accessToken: access_token,
         checkoutSessionId: session_id,
+        paymentIntentId: payment_intent_id,
       })
 
       if (!result.ok) {
@@ -383,9 +386,20 @@ serve(async (req) => {
         }, piResponse.status)
       }
 
-      // PI id is persisted only after payment confirmation (webhook or confirm_payment).
+      const { error: piUpdateError } = await supabase
+        .from('orders')
+        .update({ stripe_payment_intent_id: piData.id })
+        .eq('id', order_id)
+        .eq('status', 'pending_payment')
 
-      return jsonResponse({ payment_intent_client_secret: piData.client_secret }, 200)
+      if (piUpdateError) {
+        console.error('Error saving PaymentIntent id on order:', piUpdateError)
+      }
+
+      return jsonResponse({
+        payment_intent_client_secret: piData.client_secret,
+        payment_intent_id: piData.id,
+      }, 200)
     }
 
     if (apple_pay_payment_data) {

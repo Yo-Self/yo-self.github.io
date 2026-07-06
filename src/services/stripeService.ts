@@ -29,6 +29,7 @@ export async function confirmStripePayment(
   orderId: string,
   accessToken: string,
   sessionId?: string,
+  paymentIntentId?: string,
 ): Promise<{ confirmed: boolean; already_paid: boolean }> {
   if (!supabaseUrl) {
     throw new Error('Supabase URL não configurada.');
@@ -45,6 +46,7 @@ export async function confirmStripePayment(
       confirm_payment: true,
       access_token: accessToken,
       ...(sessionId ? { session_id: sessionId } : {}),
+      ...(paymentIntentId ? { payment_intent_id: paymentIntentId } : {}),
     }),
   });
 

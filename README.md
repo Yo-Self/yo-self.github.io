@@ -171,6 +171,13 @@ O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:
    - O script iniciará os contêineres locais do Supabase, aplicará o esquema e as sementes (seed) automaticamente, e criará o arquivo `.env.development` apontando para o banco local (`http://127.0.0.1:54321`).
    - Por padrão, em desenvolvimento, as imagens de pratos usarão o modo `unsplash-fallback` para carregar fotos leves do Unsplash via CDN gratuito, consumindo zero bytes do seu Supabase.
 
+### 📉 Otimização de Egress API (cardápio público)
+
+- **Carregamento do menu**: RPC `get_public_menu(p_slug)` — **1 round-trip** em vez de 8–15 queries REST (fallback automático para multi-query se a migration ainda não estiver aplicada). Payload mapeado em `src/services/publicMenuService.ts` com tipos `Restaurant` / `Dish` / `MenuItem` / `ComplementGroup` e `parsePrefaceOptions`.
+- **Cache em camadas**: memória (5 min) + `sessionStorage` + status aberto/fechado sempre via fetch leve separado (`cache: no-store`).
+- **Tracking de pedido**: polling com backoff (3s → 5s → 10s → 15s) e parada em status terminal (`ready`, `finished`, `cancelled`).
+- **Meta operacional**: contribuir para <2 GB/mês de egress API REST no projeto Supabase compartilhado com o gestor.
+
 5. **Execute o projeto**:
    ```bash
    npm run dev

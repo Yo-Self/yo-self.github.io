@@ -12,14 +12,15 @@ import { useModalScroll } from '@/hooks/useModalScroll';
 import { invalidateCheckoutIdempotency } from '@/utils/checkoutIdempotency';
 import { cancelCustomerOrder, fetchCustomerOrderStatus } from '@/services/orderTrackingService';
 
+const TERMINAL_STATUSES = new Set(['finished', 'cancelled', 'ready']);
+const POLL_INTERVALS_MS = [3000, 5000, 10000, 15000];
+
 interface OrderStatusModalProps {
   orderId: string;
   accessToken?: string | null;
   restaurantId?: string | null;
   onClose: () => void;
 }
-
-const POLL_INTERVAL_MS = 5000;
 
 export default function OrderStatusModal({ orderId, accessToken, restaurantId, onClose }: OrderStatusModalProps) {
   const [status, setStatus] = useState<string>("pending");
@@ -35,37 +36,61 @@ export default function OrderStatusModal({ orderId, accessToken, restaurantId, o
 
   useModalScroll(true);
 
-  const fetchOrderDetails = useCallback(async () => {
+  const fetchOrderDetails = useCallback(async (): Promise<string | null> => {
     if (!resolvedToken) {
       setAccessError('Não foi possível verificar este pedido. Token de acesso ausente.');
       setIsLoading(false);
-      return;
+      return null;
     }
 
     try {
       const data = await fetchCustomerOrderStatus(orderId, resolvedToken);
       if (!data) {
         setAccessError('Pedido não encontrado ou token inválido.');
-        return;
+        return null;
       }
 
       setAccessError(null);
       setStatus(data.status);
       setRestaurantName(data.restaurant_name);
       setDeliveryType(data.delivery_type);
+      return data.status;
     } catch (err) {
       console.error("Error fetching order:", err);
       setAccessError('Erro ao buscar status do pedido.');
+      return null;
     } finally {
       setIsLoading(false);
     }
   }, [orderId, resolvedToken]);
 
   useEffect(() => {
-    fetchOrderDetails();
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let attempt = 0;
 
-    const interval = setInterval(fetchOrderDetails, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    const scheduleNextPoll = (currentStatus: string | null) => {
+      if (cancelled) return;
+      if (currentStatus && TERMINAL_STATUSES.has(currentStatus)) return;
+
+      const delay = POLL_INTERVALS_MS[Math.min(attempt, POLL_INTERVALS_MS.length - 1)];
+      attempt += 1;
+      timeoutId = setTimeout(() => {
+        void runPoll();
+      }, delay);
+    };
+
+    const runPoll = async () => {
+      const currentStatus = await fetchOrderDetails();
+      scheduleNextPoll(currentStatus);
+    };
+
+    void runPoll();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [fetchOrderDetails]);
 
   const handleClose = () => {
@@ -246,7 +271,7 @@ export default function OrderStatusModal({ orderId, accessToken, restaurantId, o
             )}
 
             <p className="text-[10px] text-center text-gray-400 mt-4">
-              Status atualizado automaticamente a cada {POLL_INTERVAL_MS / 1000}s.
+              Status atualizado automaticamente (intervalo adaptativo).
             </p>
           </div>
         )}
