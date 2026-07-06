@@ -50,7 +50,7 @@ export async function geocodeDeliveryAddress(address: string): Promise<Coordinat
   return new Promise((resolve) => {
     geocoder.geocode(
       { address: query, componentRestrictions: { country: 'br' } },
-      (results, status) => {
+      (results: any, status: any) => {
         if (status !== 'OK' || !results?.[0]?.geometry?.location) {
           resolve(null);
           return;
