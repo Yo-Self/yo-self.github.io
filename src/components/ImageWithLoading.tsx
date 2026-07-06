@@ -143,8 +143,10 @@ export default function ImageWithLoading({
     <>
       <div ref={containerRef} className="relative w-full h-full overflow-hidden">
         <div
-          className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg z-10 transition-opacity duration-200 ${
-            showSkeleton ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg z-10 transition-opacity duration-200 ${
+            showSkeleton
+              ? 'animate-pulse opacity-100'
+              : 'opacity-0 pointer-events-none'
           }`}
           aria-hidden={!showSkeleton}
         >
