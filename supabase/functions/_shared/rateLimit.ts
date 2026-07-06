@@ -29,7 +29,10 @@ export async function enforceRateLimit(
 
   if (error) {
     console.error(`Rate limit check failed (${scope}):`, error)
-    return null
+    return new Response(
+      JSON.stringify({ error: 'Service temporarily unavailable' }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } },
+    )
   }
 
   if (allowed !== true) {

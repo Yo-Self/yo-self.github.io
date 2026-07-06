@@ -79,6 +79,27 @@ function siteBaseUrl(): string {
   return raw.replace(/\/$/, '')
 }
 
+const SENSITIVE_QUERY_PARAMS = [
+  'order_token',
+  'access_token',
+  'token',
+  'session_id',
+  'payment_intent',
+  'payment_intent_client_secret',
+]
+
+export function stripSensitiveQueryParams(urlString: string): string {
+  try {
+    const parsed = new URL(urlString)
+    for (const key of SENSITIVE_QUERY_PARAMS) {
+      parsed.searchParams.delete(key)
+    }
+    return parsed.href
+  } catch {
+    return urlString
+  }
+}
+
 function queryParamsFromUrl(urlString: string): URLSearchParams {
   const queryIndex = urlString.indexOf('?')
   if (queryIndex < 0) return new URLSearchParams()
@@ -94,7 +115,7 @@ export function resolveInfinitePayRedirectUrl(
   try {
     const parsed = new URL(successUrl)
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-      return assertAllowedCheckoutUrl(parsed.href, 'success_url')
+      return assertAllowedCheckoutUrl(stripSensitiveQueryParams(parsed.href), 'success_url')
     }
   } catch {
     // Custom scheme — fall through to HTTPS fallback.
@@ -107,12 +128,9 @@ export function resolveInfinitePayRedirectUrl(
   params.set('capture_method', 'pix')
   params.set('order_id', orderId)
 
-  const token = params.get('token') || params.get('order_token') || params.get('access_token')
-  if (token && !params.has('order_token')) {
-    params.set('order_token', token)
+  for (const key of SENSITIVE_QUERY_PARAMS) {
+    params.delete(key)
   }
-  params.delete('access_token')
-  params.delete('token')
 
   const path = restaurantSlug?.trim()
     ? `/restaurant/${encodeURIComponent(restaurantSlug.trim())}/`

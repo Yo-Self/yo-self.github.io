@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
 import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
-import { assertAllowedCheckoutUrl, CheckoutUrlError } from '../_shared/checkoutUrls.ts'
+import { assertAllowedCheckoutUrl, CheckoutUrlError, stripSensitiveQueryParams } from '../_shared/checkoutUrls.ts'
 import { confirmStripeOrderPayment } from '../_shared/stripeOrderPayment.ts'
 
 const corsHeaders = {
@@ -379,6 +379,9 @@ serve(async (req) => {
       throw err
     }
 
+    const sanitizedSuccessUrl = success_url ? stripSensitiveQueryParams(success_url) : undefined
+    const sanitizedCancelUrl = cancel_url ? stripSensitiveQueryParams(cancel_url) : undefined
+
     const validation = await loadAndValidateCheckout(supabase, order_id, restaurant_id)
     if (!validation.ok) {
       return validation.response
@@ -503,10 +506,10 @@ serve(async (req) => {
     const stripeParams: Record<string, unknown> = {
       payment_method_types: ['card'],
       mode: 'payment',
-      success_url: success_url!.includes('{CHECKOUT_SESSION_ID}')
-        ? success_url
-        : `${success_url}${success_url!.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancel_url,
+      success_url: sanitizedSuccessUrl!.includes('{CHECKOUT_SESSION_ID}')
+        ? sanitizedSuccessUrl
+        : `${sanitizedSuccessUrl}${sanitizedSuccessUrl!.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: sanitizedCancelUrl,
       metadata: { order_id, restaurant_id },
       line_items: lineItems.map((item) => ({
         price_data: {

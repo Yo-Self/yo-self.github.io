@@ -160,11 +160,8 @@ export function useInfinitePayCheckout({
       Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id, reusedExisting });
 
       const currentUrl = window.location.href.split('?')[0];
-      const tokenParam = newOrder.customer_access_token
-        ? `&order_token=${newOrder.customer_access_token}`
-        : '';
-      const successUrl = `${currentUrl}?payment_success=true&payment_provider=infinitepay&payment_method=infinitepay_pix&capture_method=pix&order_id=${newOrder.id}${tokenParam}`;
-      const cancelUrl = `${currentUrl}?payment_cancelled=true&payment_provider=infinitepay&payment_method=infinitepay_pix&order_id=${newOrder.id}${tokenParam}`;
+      const successUrl = `${currentUrl}?payment_success=true&payment_provider=infinitepay&payment_method=infinitepay_pix&capture_method=pix&order_id=${newOrder.id}`;
+      const cancelUrl = `${currentUrl}?payment_cancelled=true&payment_provider=infinitepay&payment_method=infinitepay_pix&order_id=${newOrder.id}`;
 
       addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
 

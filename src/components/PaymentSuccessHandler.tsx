@@ -123,6 +123,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
     url.searchParams.delete('payment_cancelled');
     url.searchParams.delete('order_id');
     url.searchParams.delete('order_token');
+    url.searchParams.delete('access_token');
     url.searchParams.delete('session_id');
     url.searchParams.delete('redirect_status');
     url.searchParams.delete('payment_intent');
@@ -141,7 +142,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
   useEffect(() => {
     const paymentSuccess = searchParams.get('payment_success');
     const orderIdParam = searchParams.get('order_id');
-    const orderTokenParam =
+    const orderTokenFromUrl =
       searchParams.get('order_token') || searchParams.get('access_token');
     const paymentCancelled = searchParams.get('payment_cancelled');
     const redirectStatus = searchParams.get('redirect_status');
@@ -159,6 +160,14 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
       captureMethod,
     );
 
+    const hasPaymentParams =
+      paymentSuccess === 'true' ||
+      paymentCancelled === 'true';
+
+    if (hasPaymentParams) {
+      cleanPaymentParamsFromUrl();
+    }
+
     if (paymentCancelled === 'true') {
       Analytics.trackPaymentCancelled({
         ...buildPaymentCtx(paymentMethod, orderIdParam || 'unknown'),
@@ -175,7 +184,7 @@ export default function PaymentSuccessHandler({ restaurantId = "default" }: Paym
     }
 
     const accessToken =
-      orderTokenParam || getOrderAccessToken(orderIdParam);
+      (orderIdParam ? getOrderAccessToken(orderIdParam) : null) || orderTokenFromUrl;
 
     setOrderId(orderIdParam);
     setShowModal(true);

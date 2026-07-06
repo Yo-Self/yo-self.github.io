@@ -3,6 +3,7 @@
 import posthog from "posthog-js"
 import { PostHogProvider as PHProvider } from "posthog-js/react"
 import { useEffect } from "react"
+import { redactSensitiveProperties } from "../lib/sanitizeUrl"
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -59,8 +60,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         
         // Sanitize properties to avoid leaking sensitive data (usando before_send)
         before_send: (event) => {
-          // Remove sensitive data if needed
-          // You can modify event.properties here
+          if (!event) return event
+          if (event.properties) {
+            event.properties = redactSensitiveProperties(event.properties as Record<string, unknown>) ?? event.properties
+          }
           return event
         },
       })

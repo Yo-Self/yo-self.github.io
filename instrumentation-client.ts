@@ -37,6 +37,11 @@ if (dsn) {
           url.searchParams.delete('phone')
           url.searchParams.delete('email')
           url.searchParams.delete('address')
+          url.searchParams.delete('order_token')
+          url.searchParams.delete('access_token')
+          url.searchParams.delete('token')
+          url.searchParams.delete('session_id')
+          url.searchParams.delete('payment_intent_client_secret')
           event.request.url = url.toString()
         } catch {
           // keep original url

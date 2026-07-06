@@ -251,10 +251,7 @@ const ExpressCheckoutInner = ({
       });
 
       const currentUrl = window.location.href.split('?')[0];
-      const tokenParam = newOrder.customer_access_token
-        ? `&order_token=${newOrder.customer_access_token}`
-        : '';
-      const returnUrl = `${currentUrl}?payment_success=true&payment_method=stripe_express&order_id=${newOrder.id}${tokenParam}`;
+      const returnUrl = `${currentUrl}?payment_success=true&payment_method=stripe_express&order_id=${newOrder.id}`;
 
       Analytics.trackPaymentRedirectStarted({ ...paymentCtx, orderId: newOrder.id });
 

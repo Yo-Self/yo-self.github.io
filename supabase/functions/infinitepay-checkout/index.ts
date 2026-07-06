@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
 import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
-import { assertAllowedCheckoutUrl, CheckoutUrlError, resolveInfinitePayRedirectUrl } from '../_shared/checkoutUrls.ts'
+import { assertAllowedCheckoutUrl, CheckoutUrlError, resolveInfinitePayRedirectUrl, stripSensitiveQueryParams } from '../_shared/checkoutUrls.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -207,6 +207,7 @@ async function enforceRateLimits(
 
   if (ipError) {
     console.error('Rate limit check failed (ip):', ipError)
+    return jsonResponse({ error: 'Service temporarily unavailable' }, 503)
   } else if (ipAllowed !== true) {
     return jsonResponse({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -220,6 +221,7 @@ async function enforceRateLimits(
 
   if (orderError) {
     console.error('Rate limit check failed (order):', orderError)
+    return jsonResponse({ error: 'Service temporarily unavailable' }, 503)
   } else if (orderAllowed !== true) {
     return jsonResponse({ error: 'Too many checkout attempts for this order.' }, 429)
   }
@@ -332,6 +334,9 @@ serve(async (req) => {
       }
     }
 
+    const sanitizedSuccessUrl = stripSensitiveQueryParams(success_url)
+    const sanitizedCancelUrl = body.cancel_url ? stripSensitiveQueryParams(body.cancel_url) : undefined
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey =
       Deno.env.get('SB_SECRET_KEY') ??
@@ -370,7 +375,7 @@ serve(async (req) => {
 
     const webhookUrl = `${supabaseUrl}/functions/v1/infinitepay-webhook`
     const redirectUrl = resolveInfinitePayRedirectUrl(
-      success_url,
+      sanitizedSuccessUrl,
       order_id,
       restaurantMeta?.slug,
     )

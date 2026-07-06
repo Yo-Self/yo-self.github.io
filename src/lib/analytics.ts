@@ -2,6 +2,7 @@
 
 import posthog from 'posthog-js'
 import { captureError } from './observability'
+import { redactSensitiveProperties, stripSensitiveQueryParams } from './sanitizeUrl'
 import {
   buildPaymentEventProperties,
   clearPaymentAttemptMark,
@@ -27,13 +28,13 @@ export class Analytics {
     }
 
     try {
-      posthog.capture(event, {
+      posthog.capture(event, redactSensitiveProperties({
         ...properties,
         timestamp: new Date().toISOString(),
         user_agent: navigator.userAgent,
-        page_url: window.location.href,
+        page_url: stripSensitiveQueryParams(window.location.href),
         page_path: window.location.pathname
-      })
+      }))
     } catch (error) {
       console.warn('[Analytics] Failed to track event:', event, error)
     }
