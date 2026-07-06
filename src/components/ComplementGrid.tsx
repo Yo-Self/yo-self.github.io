@@ -60,7 +60,7 @@ const ComplementCard = React.memo(function ComplementCard({
           alt={complement.name}
           clickable={false}
           loading="eager"
-          className="object-cover rounded-t-lg"
+          className="w-full h-full object-cover rounded-t-lg"
           fallbackSrc={restaurantLogo || "/window.svg"}
         >
           <div

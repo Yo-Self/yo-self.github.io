@@ -141,7 +141,7 @@ export default function ImageWithLoading({
 
   return (
     <>
-      <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+      <div ref={containerRef} className={`relative overflow-hidden ${className}`}>
         <div
           className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg z-10 transition-opacity duration-200 ${
             showSkeleton
@@ -158,7 +158,7 @@ export default function ImageWithLoading({
         <img
           src={currentSrc}
           alt={alt}
-          className={`block w-full h-full ${className} ${clickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+          className={`absolute inset-0 w-full h-full object-cover ${clickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
           onLoad={handleImageLoad}
           onError={handleImageError}
           loading={loading}
