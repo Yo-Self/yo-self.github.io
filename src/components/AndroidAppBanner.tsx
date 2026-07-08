@@ -83,7 +83,8 @@ export default function AndroidAppBanner({
     link.href = `android-app://${ANDROID_PACKAGE}/https/yo-self.com${buildRestaurantPath(safeSlug, isDelivery)}`;
     document.head.appendChild(link);
     return () => {
-      document.head.removeChild(link);
+      // Guard against DOM races (prevents NotFoundError removeChild)
+      link.remove();
     };
   }, [safeSlug, isDelivery]);
 

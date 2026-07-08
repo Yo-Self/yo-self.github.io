@@ -564,8 +564,9 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
       let junctionRows: any[] = [];
 
       if (dishIds.length > 0) {
-        // Split dish IDs into chunks of 20 to avoid URL length issues
-        const dishIdChunks = chunkArray(dishIds, 20);
+        // Larger chunks reduce repeated requests (helps Sentry N+1 detection),
+        // while still avoiding URL length issues in PostgREST filters.
+        const dishIdChunks = chunkArray(dishIds, 100);
         
         // Fetch dish categories in chunks
         const dishCategoryPromises = dishIdChunks.map(chunk => {
@@ -610,7 +611,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         // Now fetch the actual complement groups
         if (junctionRows.length > 0) {
           const groupIds = [...new Set(junctionRows.map(row => row.complement_group_id))];
-          const groupIdChunks = chunkArray(groupIds, 20);
+          const groupIdChunks = chunkArray(groupIds, 100);
           
           const complementGroupPromises = groupIdChunks.map(chunk => {
             if (!supabase) throw new Error('Supabase client not available');
@@ -637,7 +638,7 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
 
       if (groupIds.length > 0) {
         // Split group IDs into chunks to avoid URL length issues
-        const groupIdChunks = chunkArray(groupIds, 20);
+        const groupIdChunks = chunkArray(groupIds, 100);
         
         const complementPromises = groupIdChunks.map(chunk => {
           if (!supabase) throw new Error('Supabase client not available');

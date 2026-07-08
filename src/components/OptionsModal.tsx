@@ -95,7 +95,8 @@ const shareMenu = async (restaurant: Restaurant) => {
     textArea.focus();
     textArea.select();
     const successful = document.execCommand('copy');
-    document.body.removeChild(textArea);
+    // Guard against DOM races/unmounts (prevents NotFoundError removeChild)
+    textArea.remove();
     
     if (successful) {
       alert('Link copiado para a área de transferência!');

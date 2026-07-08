@@ -200,9 +200,19 @@ async function fetchDishesRows(restaurantId: number | string): Promise<DbDish[]>
 
 async function fetchDishCategoriesByDishIds(dishIds: string[]): Promise<DbDishCategory[]> {
   if (dishIds.length === 0) return [];
-  const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
-  const rows = await sbFetch<DbDishCategory[]>(`dish_categories?select=*&dish_id=in.(${inList})&order=position.asc`);
-  return rows ?? [];
+  // Avoid overly long URLs by chunking, but keep chunks large enough
+  // to prevent repeated-request patterns (N+1 style) in observability.
+  const CHUNK_SIZE = 100;
+  const out: DbDishCategory[] = [];
+  for (let i = 0; i < dishIds.length; i += CHUNK_SIZE) {
+    const chunk = dishIds.slice(i, i + CHUNK_SIZE);
+    const inList = chunk.map((id) => encodeURIComponent(id)).join(',');
+    const rows = await sbFetch<DbDishCategory[]>(
+      `dish_categories?select=*&dish_id=in.(${inList})&order=position.asc`
+    );
+    out.push(...(rows ?? []));
+  }
+  return out;
 }
 
 type ComplementGroupsResult = {
@@ -216,8 +226,16 @@ async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<Comple
   try {
     // Primeiro buscar os IDs dos complement groups através da tabela de junção
     // Incluir também a posição para ordenação correta
-    const inList = dishIds.map(id => encodeURIComponent(id)).join(',');
-    const junctionRows = await sbFetch<{dish_id: string, complement_group_id: string, position: number | null}[]>(`dish_complement_groups?select=dish_id,complement_group_id,position&dish_id=in.(${inList})`);
+    const CHUNK_SIZE = 100;
+    const junctionRows: Array<{dish_id: string, complement_group_id: string, position: number | null}> = [];
+    for (let i = 0; i < dishIds.length; i += CHUNK_SIZE) {
+      const chunk = dishIds.slice(i, i + CHUNK_SIZE);
+      const inList = chunk.map((id) => encodeURIComponent(id)).join(',');
+      const rows = await sbFetch<Array<{dish_id: string, complement_group_id: string, position: number | null}>>(
+        `dish_complement_groups?select=dish_id,complement_group_id,position&dish_id=in.(${inList})`
+      );
+      junctionRows.push(...(rows ?? []));
+    }
     
     if (!junctionRows || junctionRows.length === 0) {
       return { groups: [], associations: new Map() };
@@ -236,12 +254,16 @@ async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<Comple
     
     // Extrair IDs únicos dos grupos
     const groupIds = [...new Set(junctionRows.map(row => row.complement_group_id))];
-    const groupInList = groupIds.map(id => encodeURIComponent(id)).join(',');
+    // Buscar os grupos propriamente ditos (chunked)
+    const groups: DbComplementGroup[] = [];
+    for (let i = 0; i < groupIds.length; i += CHUNK_SIZE) {
+      const chunk = groupIds.slice(i, i + CHUNK_SIZE);
+      const groupInList = chunk.map((id) => encodeURIComponent(id)).join(',');
+      const rows = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&id=in.(${groupInList})`);
+      groups.push(...(rows ?? []));
+    }
     
-    // Buscar os grupos propriamente ditos
-    const groups = await sbFetch<DbComplementGroup[]>(`complement_groups?select=*&id=in.(${groupInList})`);
-    
-    return { groups: groups ?? [], associations };
+    return { groups, associations };
   } catch (error) {
     console.error('Erro ao buscar complement groups:', error);
     return { groups: [], associations: new Map() };
@@ -251,9 +273,17 @@ async function fetchComplementGroupsByDishIds(dishIds: string[]): Promise<Comple
 async function fetchComplementsByGroupIds(groupIds: string[]): Promise<DbComplement[]> {
   if (groupIds.length === 0) return [];
   // Usar cache padrão para geração estática
-  const inList = groupIds.map(id => encodeURIComponent(id)).join(',');
-  const rows = await sbFetch<DbComplement[]>(`complements?select=*&group_id=in.(${inList})&is_active=eq.true&order=position.asc`);
-  return rows ?? [];
+  const CHUNK_SIZE = 100;
+  const out: DbComplement[] = [];
+  for (let i = 0; i < groupIds.length; i += CHUNK_SIZE) {
+    const chunk = groupIds.slice(i, i + CHUNK_SIZE);
+    const inList = chunk.map((id) => encodeURIComponent(id)).join(',');
+    const rows = await sbFetch<DbComplement[]>(
+      `complements?select=*&group_id=in.(${inList})&is_active=eq.true&order=position.asc`
+    );
+    out.push(...(rows ?? []));
+  }
+  return out;
 }
 
 function composeRestaurantModel(
