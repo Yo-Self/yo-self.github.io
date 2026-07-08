@@ -606,6 +606,42 @@ export async function fetchRestaurantBySlugWithData(slug: string): Promise<Resta
   }
 }
 
+/**
+ * Lightweight restaurant metadata for SSR (no menu graph, no joins).
+ * Intended for `generateMetadata` to avoid large Supabase egress.
+ */
+export async function fetchRestaurantMetaBySlug(
+  slug: string
+): Promise<{ id: string; slug: string; name: string; image: string } | null> {
+  if (slug === '[slug]') return null;
+
+  try {
+    // Try slug first, then ID fallback
+    let rows = await sbFetch<Array<Pick<DbRestaurant, 'id' | 'slug' | 'name' | 'image_url'>>>(
+      `restaurants_public?select=id,slug,name,image_url&slug=eq.${encodeURIComponent(slug)}&limit=1`
+    );
+    let r = rows && rows[0];
+
+    if (!r) {
+      rows = await sbFetch<Array<Pick<DbRestaurant, 'id' | 'slug' | 'name' | 'image_url'>>>(
+        `restaurants_public?select=id,slug,name,image_url&id=eq.${encodeURIComponent(slug)}&limit=1`
+      );
+      r = rows && rows[0];
+    }
+
+    if (!r) return null;
+    return {
+      id: String(r.id),
+      slug: r.slug || String(r.id),
+      name: r.name,
+      image: r.image_url || '',
+    };
+  } catch (error) {
+    console.error('Erro ao buscar metadados do restaurante por slug:', error);
+    return null;
+  }
+}
+
 export async function fetchRestaurantByCuisineWithData(cuisineType: string): Promise<Restaurant | null> {
   const rows = await sbFetch<DbRestaurant[]>(`restaurants_public?select=*&cuisine_type=eq.${encodeURIComponent(cuisineType)}&limit=1`);
   const r = rows && rows[0];

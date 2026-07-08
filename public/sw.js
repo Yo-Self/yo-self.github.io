@@ -1,5 +1,5 @@
 // Cache version - increment this when you want to force cache refresh
-const CACHE_VERSION = 1783374340776; // Increment this for each deployment
+const CACHE_VERSION = 1783537586267; // Increment this for each deployment
 const CACHE_NAME = `restaurant-app-v${CACHE_VERSION}`;
 
 // URLs that should never be cached (Next.js internal files)
@@ -159,6 +159,12 @@ self.addEventListener('fetch', (event) => {
         };
 
         if (cached) {
+          // Supabase Storage object paths are immutable; avoid background revalidation
+          // unless the cached copy is stale.
+          if (!isStaleResponse(cached, requestUrl)) {
+            return cached;
+          }
+
           event.waitUntil(fetchAndCache().catch(() => {}));
           return cached;
         }

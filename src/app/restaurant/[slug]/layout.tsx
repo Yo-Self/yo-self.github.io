@@ -1,4 +1,4 @@
-import { fetchRestaurantBySlugWithData } from "@/services/restaurants";
+import { fetchRestaurantMetaBySlug } from "@/services/restaurants";
 import { Metadata } from "next";
 import { APPLE_ITUNES_APP_META } from "@/lib/appClipMeta";
 
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
   
   // Buscar restaurante por slug
-  const restaurant = await fetchRestaurantBySlugWithData(decoded);
+  const restaurant = await fetchRestaurantMetaBySlug(decoded);
   
   if (!restaurant) {
     return {

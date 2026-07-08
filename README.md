@@ -175,8 +175,12 @@ O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:
 
 - **Carregamento do menu**: RPC `get_public_menu(p_slug)` — **1 round-trip** em vez de 8–15 queries REST (fallback automático para multi-query se a migration ainda não estiver aplicada). Payload mapeado em `src/services/publicMenuService.ts` com tipos `Restaurant` / `Dish` / `MenuItem` / `ComplementGroup` e `parsePrefaceOptions`.
 - **Imagens do cardápio**: `getOptimizedImageUrl` ignora URLs externas mortas/conhecidas (`src/constants/menuImages.ts`); pratos sem foto usam o **logo do restaurante** no cardápio público. URLs genéricas do Unsplash (placeholder do gestor) são limpas pela migration `20260706200000_clear_generic_dish_placeholder_urls.sql`.
+- **Service worker (imagens)**: `public/sw.js` faz cache-first para Supabase Storage e **não** revalida em background quando o cache está “fresh” (paths de Storage são imutáveis). Isso reduz downloads repetidos de imagens.
+- **SSR metadata**: `generateMetadata` em `src/app/restaurant/[slug]/layout.tsx` usa fetch leve (`fetchRestaurantMetaBySlug`) para evitar carregar o grafo completo do menu só para meta tags.
+- **Sem fetch duplicado de meta**: `DynamicMetaTags` não faz `restaurants_public?select=*` no cliente (evita egress duplicado).
+- **Carrinho lazy**: `CartModal` só consulta configs do restaurante (pagamento/WhatsApp/delivery) quando o carrinho está aberto.
 - **Cache em camadas**: memória (5 min) + `sessionStorage` + status aberto/fechado sempre via fetch leve separado (`cache: no-store`).
-- **Tracking de pedido**: polling com backoff (3s → 5s → 10s → 15s) e parada em status terminal (`ready`, `finished`, `cancelled`).
+- **Tracking de pedido**: polling com backoff (3s → 5s → 10s → 15s), **pausa com aba oculta** e after 5 min sobe para 30s; para em status terminal (`ready`, `finished`, `cancelled`).
 - **Meta operacional**: contribuir para <2 GB/mês de egress API REST no projeto Supabase compartilhado com o gestor.
 
 5. **Execute o projeto**:

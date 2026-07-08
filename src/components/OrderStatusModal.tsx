@@ -14,6 +14,9 @@ import { cancelCustomerOrder, fetchCustomerOrderStatus } from '@/services/orderT
 
 const TERMINAL_STATUSES = new Set(['finished', 'cancelled', 'ready']);
 const POLL_INTERVALS_MS = [3000, 5000, 10000, 15000];
+const BACKOFF_AFTER_MS = 5 * 60 * 1000;
+const BACKOFF_POLL_MS = 30_000;
+const HIDDEN_TAB_POLL_MS = 60_000;
 
 interface OrderStatusModalProps {
   orderId: string;
@@ -68,12 +71,19 @@ export default function OrderStatusModal({ orderId, accessToken, restaurantId, o
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     let attempt = 0;
+    const startedAt = Date.now();
 
     const scheduleNextPoll = (currentStatus: string | null) => {
       if (cancelled) return;
       if (currentStatus && TERMINAL_STATUSES.has(currentStatus)) return;
 
-      const delay = POLL_INTERVALS_MS[Math.min(attempt, POLL_INTERVALS_MS.length - 1)];
+      const elapsed = Date.now() - startedAt;
+      const baseDelay = POLL_INTERVALS_MS[Math.min(attempt, POLL_INTERVALS_MS.length - 1)];
+      const backoffDelay = elapsed >= BACKOFF_AFTER_MS ? BACKOFF_POLL_MS : baseDelay;
+      const delay =
+        typeof document !== 'undefined' && document.visibilityState === 'hidden'
+          ? HIDDEN_TAB_POLL_MS
+          : backoffDelay;
       attempt += 1;
       timeoutId = setTimeout(() => {
         void runPoll();
@@ -81,17 +91,32 @@ export default function OrderStatusModal({ orderId, accessToken, restaurantId, o
     };
 
     const runPoll = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        scheduleNextPoll(status);
+        return;
+      }
       const currentStatus = await fetchOrderDetails();
       scheduleNextPoll(currentStatus);
     };
 
     void runPoll();
 
+    const onVisibilityChange = () => {
+      if (cancelled) return;
+      if (document.visibilityState === 'visible') {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => void runPoll(), 250);
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
       cancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [fetchOrderDetails]);
+  }, [fetchOrderDetails, status]);
 
   const handleClose = () => {
     setIsClosing(true);

@@ -63,12 +63,14 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const detectedRestaurantId = useCurrentRestaurant();
   const { restaurantId: contextRestaurantId } = useRestaurant();
   const restaurantId = propRestaurantId || detectedRestaurantId || contextRestaurantId;
-  const { addressActive: dbAddressActive } = useRestaurantAddressActive(restaurantId);
-  const { tablePayment: dbTablePayment } = useRestaurantTablePayment(restaurantId);
-  const { onlinePayment } = useRestaurantOnlinePayment(restaurantId);
-  const { pixPaymentEnabled } = useRestaurantPixPayment(restaurantId);
-  const { config: whatsAppConfig } = useWhatsAppConfig(restaurantId);
-  const { restaurant } = useRestaurantBySlug(restaurantId || "");
+  // Avoid background Supabase egress: only fetch restaurant configs while cart is open.
+  const activeRestaurantId = isCartOpen ? restaurantId : undefined;
+  const { addressActive: dbAddressActive } = useRestaurantAddressActive(activeRestaurantId);
+  const { tablePayment: dbTablePayment } = useRestaurantTablePayment(activeRestaurantId);
+  const { onlinePayment } = useRestaurantOnlinePayment(activeRestaurantId);
+  const { pixPaymentEnabled } = useRestaurantPixPayment(activeRestaurantId);
+  const { config: whatsAppConfig } = useWhatsAppConfig(activeRestaurantId);
+  const { restaurant } = useRestaurantBySlug(activeRestaurantId || "");
   /** WhatsApp + PIX share one row (50/50); either alone spans full width. */
   const messengerCheckoutPairActive =
     pixPaymentEnabled && whatsAppConfig.enabled;

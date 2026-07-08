@@ -3,12 +3,12 @@
 import { useEffect, useCallback } from 'react';
 import { useCurrentRoute } from '@/hooks/useCurrentRoute';
 import { useCurrentRestaurant } from '@/hooks/useCurrentRestaurant';
-import { useRestaurantData } from '@/hooks/useRestaurantData';
 
 export default function DynamicMetaTags() {
   const { currentRoute, isRestaurantPage, restaurantName } = useCurrentRoute();
   const restaurantId = useCurrentRestaurant();
-  const { restaurant } = useRestaurantData(restaurantId);
+  // Avoid fetching restaurant data from Supabase here — SSR metadata + page data already cover it,
+  // and repeating `restaurants_public?select=*` creates avoidable egress.
 
   const setCanonical = useCallback((absoluteUrl: string) => {
     const existing = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
@@ -100,7 +100,7 @@ export default function DynamicMetaTags() {
     }
   }, []);
 
-  const updateMetaTags = useCallback((name: string, route: string, restaurantImage?: string) => {
+  const updateMetaTags = useCallback((name: string, route: string) => {
     // Detectar tema atual
     const isDark = document.documentElement.classList.contains('dark') || 
                    document.body.classList.contains('dark');
@@ -122,14 +122,6 @@ export default function DynamicMetaTags() {
       { name: 'twitter:title', content: `${name}` },
       { name: 'twitter:description', content: `Cardápio digital de ${name}` },
     ];
-
-    // Adicionar imagem do restaurante se disponível
-    if (restaurantImage) {
-      metaTags.push(
-        { property: 'og:image', content: restaurantImage },
-        { name: 'twitter:image', content: restaurantImage }
-      );
-    }
 
     metaTags.forEach(({ name, property, content }) => {
       const selector = property ? `meta[property="${property}"]` : `meta[name="${name}"]`;
@@ -243,31 +235,18 @@ export default function DynamicMetaTags() {
   useEffect(() => {
     if (isRestaurantPage && restaurantName) {
       console.log('DynamicMetaTags: Setting meta tags for restaurant:', restaurantName);
-      
-      // Usar a imagem do restaurante se disponível
-      const restaurantImage = restaurant?.image;
-      
+
       // Atualizar meta tags para forçar o salvamento da rota atual
-      updateMetaTags(restaurantName, currentRoute, restaurantImage);
+      updateMetaTags(restaurantName, currentRoute);
       setCanonical(`${window.location.origin}${currentRoute}`);
-      
-      // Definir favicon com a imagem do restaurante se disponível
-      if (restaurantImage) {
-        setFavicon(restaurantImage);
-      } else {
-        // Fallback para imagem padrão se não houver imagem do restaurante
-        const metas = Array.from(document.querySelectorAll('meta[property="og:image"]')) as HTMLMetaElement[];
-        const imageFromMeta = metas.length > 0 ? metas[metas.length - 1].content : '';
-        const logoUrl = imageFromMeta || '';
-        if (logoUrl) setFavicon(logoUrl);
-      }
+      resetFavicon();
     } else {
       console.log('DynamicMetaTags: Resetting meta tags to default');
       resetMetaTags();
       setCanonical(window.location.origin);
       resetFavicon();
     }
-  }, [currentRoute, isRestaurantPage, restaurantName, restaurantId, restaurant, updateMetaTags, resetMetaTags, setFavicon, resetFavicon, setCanonical]);
+  }, [currentRoute, isRestaurantPage, restaurantName, restaurantId, updateMetaTags, resetMetaTags, resetFavicon, setCanonical]);
 
   // Componente não renderiza nada
   return null;
