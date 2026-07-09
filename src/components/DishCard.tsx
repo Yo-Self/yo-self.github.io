@@ -1,6 +1,6 @@
 import React from "react";
 import { Dish, MenuItem } from "./data";
-import ImageWithLoading from "./ImageWithLoading";
+import MediaWithLoading from "./MediaWithLoading";
 import { CartUtils } from "../types/cart";
 import { dishToMenuItem } from "../types/restaurant";
 
@@ -21,11 +21,13 @@ export default function DishCard({ dish, onClick, size = "large", fallbackImage 
       onClick={onClick}
     >
       <div className="relative w-full">
-        <ImageWithLoading
+        <MediaWithLoading
           src={dish.image}
           alt={dish.name}
           fallbackSrc={fallbackImage}
           clickable={false}
+          mediaType={dish.mediaType}
+          videoSrc={dish.videoMp4Url}
           className={`w-full ${size === "small" ? "h-32" : "h-48"} object-cover rounded-t-lg`}
         >
           <div 
@@ -40,7 +42,7 @@ export default function DishCard({ dish, onClick, size = "large", fallbackImage 
           >
             <h3 className="text-lg font-semibold text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.7)]">{dish.name}</h3>
           </div>
-        </ImageWithLoading>
+        </MediaWithLoading>
       </div>
       <div className="w-full p-3">
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{dish.description}</p>

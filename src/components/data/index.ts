@@ -26,6 +26,8 @@ export type Dish = {
   description: string;
   price: string;
   image: string;
+  mediaType?: 'image' | 'video';
+  videoMp4Url?: string | null;
   tags?: string[];
   ingredients: string;
   allergens: string;

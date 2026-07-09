@@ -74,6 +74,8 @@ export type DbDish = {
   description: string | null;
   price: number | null;
   image_url: string | null;
+  media_type?: string | null;
+  video_mp4_url?: string | null;
   category_id: number | string | null;
   restaurant_id: number | string;
   is_featured: boolean | null;
@@ -406,6 +408,8 @@ function composeRestaurantModel(
         description: d.description ?? '',
         price: formatPriceBR(d.price),
         image: getOptimizedImageUrl(d.image_url, 400),
+        mediaType: d.media_type === 'video' ? 'video' : 'image',
+        videoMp4Url: d.video_mp4_url ?? null,
         tags: (d.tags && Array.isArray(d.tags)) ? d.tags : [],
         ingredients: d.ingredients || '',
         allergens: d.allergens || 'Nenhum',
@@ -437,6 +441,8 @@ function composeRestaurantModel(
         description: d.description ?? '',
         price: formatPriceBR(d.price),
         image: getOptimizedImageUrl(d.image_url, 400),
+        mediaType: d.media_type === 'video' ? 'video' : 'image',
+        videoMp4Url: d.video_mp4_url ?? null,
         tags: (d.tags && d.tags.length ? d.tags : ['Destaque']),
         ingredients: d.ingredients || '',
         allergens: d.allergens || 'Nenhum',

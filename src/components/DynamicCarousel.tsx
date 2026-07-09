@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Restaurant } from "./data";
-import ImageWithLoading from "./ImageWithLoading";
+import MediaWithLoading from "./MediaWithLoading";
 
 function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTitle = false, position = 'center' }: { 
   dish: any; 
@@ -43,10 +43,12 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
       style={{ pointerEvents: size === 'main' ? 'auto' : 'none' }}
     >
       <div className={`aspect-[4/3] overflow-hidden ${getBorderRadius()} relative w-full h-full`}>
-        <ImageWithLoading
+        <MediaWithLoading
           src={dish.image || '/window.svg'}
           alt={dish.name || 'Item do cardápio'}
           clickable={false}
+          mediaType={dish.mediaType}
+          videoSrc={dish.videoMp4Url}
           className="w-full h-full object-cover animate-kenburns"
           fallbackSrc="/window.svg"
         >
@@ -64,7 +66,7 @@ function CarouselCard({ dish, onClick, size, noMargin = false, showMostOrderedTi
               {dish.name || 'Item' }
             </div>
           )}
-        </ImageWithLoading>
+        </MediaWithLoading>
       </div>
     </div>
   );

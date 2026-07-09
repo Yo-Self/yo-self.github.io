@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Dish, MenuItem } from "./data";
 import { MenuItem as MenuItemType } from "../types/restaurant";
 import ComplementGrid from "./ComplementGrid";
-import ImageWithLoading from "./ImageWithLoading";
+import MediaWithLoading from "./MediaWithLoading";
 import { useModalScroll } from '../hooks/useModalScroll';
 import { useCart } from '../hooks/useCart';
 import { CartUtils } from '../types/cart';
@@ -278,11 +278,15 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
         }}
       >
         <div className="relative modal-image-container flex-shrink-0">
-          <ImageWithLoading
-            src={getOptimizedImageUrl(dish.image, 800)}
+          <MediaWithLoading
+            src={dish.image}
             alt={dish.name}
             className="w-full h-48 object-cover"
             fallbackSrc={fallbackImage || restaurant?.image || "/window.svg"}
+            mediaType={dish.mediaType}
+            videoSrc={dish.videoMp4Url}
+            videoControls
+            clickable={false}
           >
             <button
               className="modal-close-button absolute top-3 right-3 w-12 h-12 flex items-center justify-center p-0 m-0 focus:outline-none z-10 transition-all duration-200 hover:scale-110"
@@ -297,7 +301,7 @@ export default function DishModal({ open, dish, restaurantId = "default", restau
             <div className="absolute bottom-0 left-0 w-full px-6 py-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
               <h2 className="modal-title text-3xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{dish.name}</h2>
             </div>
-          </ImageWithLoading>
+          </MediaWithLoading>
         </div>
         
         <div className="flex-1 min-h-0 overflow-y-auto p-6 modal-content">

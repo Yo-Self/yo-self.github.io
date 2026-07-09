@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Dish, Restaurant } from "./data";
 import DishModal from "./DishModal";
-import ImageWithLoading from "./ImageWithLoading";
+import MediaWithLoading from "./MediaWithLoading";
 
 interface CarouselCardProps {
   dish: Dish;
@@ -21,10 +21,12 @@ function CarouselCard({ dish, onClick, isActive, showMostOrderedTitle }: Carouse
       onClick={onClick}
     >
       <div className="aspect-[4/3] overflow-hidden rounded-2xl relative w-full h-full">
-        <ImageWithLoading
+        <MediaWithLoading
           src={dish.image || '/window.svg'}
           alt={dish.name || 'Item do cardápio'}
           clickable={false}
+          mediaType={dish.mediaType}
+          videoSrc={dish.videoMp4Url}
           className="w-full h-full object-cover"
         >
           {showMostOrderedTitle && (
@@ -39,7 +41,7 @@ function CarouselCard({ dish, onClick, isActive, showMostOrderedTitle }: Carouse
               {dish.name || 'Item'}
             </div>
           )}
-        </ImageWithLoading>
+        </MediaWithLoading>
       </div>
     </div>
   );

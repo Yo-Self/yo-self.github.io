@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Dish } from "./data";
-import ImageWithLoading from "./ImageWithLoading";
+import MediaWithLoading from "./MediaWithLoading";
 import { useCardVisibility } from "../hooks/useCardVisibility";
 import { CartUtils } from "../types/cart";
 import { dishToMenuItem } from "../types/restaurant";
@@ -42,11 +42,13 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
       style={{ paddingBottom: 0, minHeight: 144 }}
     >
       <div className="relative w-full">
-        <ImageWithLoading
+        <MediaWithLoading
           src={dish.image}
           alt={dish.name}
           fallbackSrc={fallbackImage}
           clickable={false}
+          mediaType={dish.mediaType}
+          videoSrc={dish.videoMp4Url}
           className={`w-full h-28 object-cover rounded-t-lg`}
         >
           {/* Tag no canto superior direito */}
@@ -120,7 +122,7 @@ export default function CardJornal({ dish, onClick, size = "small", fallbackImag
               {dish.name}
             </h3>
           </div>
-        </ImageWithLoading>
+        </MediaWithLoading>
       </div>
       <div className="w-full p-2 min-h-[3rem] flex items-start">
         <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-tight w-full">

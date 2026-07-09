@@ -128,6 +128,8 @@ function mapFeaturedDish(
     description: String(dish.description ?? ''),
     price: dish.price ? Number(dish.price).toFixed(2).replace('.', ',') : '0,00',
     image: resolveMenuItemImageUrl(dish.image_url as string | null | undefined, restaurantLogoUrl, 400),
+    mediaType: dish.media_type === 'video' ? 'video' : 'image',
+    videoMp4Url: (dish.video_mp4_url as string | null | undefined) ?? null,
     tags: (dish.tags as string[]) || [],
     ingredients: String(dish.ingredients ?? ''),
     allergens: String(dish.allergens ?? ''),
