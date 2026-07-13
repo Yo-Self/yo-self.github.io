@@ -60,6 +60,7 @@ export type Restaurant = {
   table_ordering?: boolean;
   online_ordering_enabled?: boolean;
   pix_payment_enabled?: boolean;
+  cash_on_delivery_enabled?: boolean;
   user_id?: string;
   min_order_value?: number;
   delivery_enabled?: boolean;

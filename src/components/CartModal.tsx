@@ -8,6 +8,7 @@ import { useCurrentRestaurant } from '../hooks/useCurrentRestaurant';
 import { CartItem, CartUtils } from '../types/cart';
 import ImageWithLoading from './ImageWithLoading';
 import CartWhatsAppButton from './CartWhatsAppButton';
+import CashPaymentButton from './CashPaymentButton';
 import StripeCheckoutButton from './StripeCheckoutButton';
 import StripeExpressCheckoutButton from './StripeExpressCheckoutButton';
 import InfinitePayPixButton from './InfinitePayPixButton';
@@ -71,9 +72,14 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
   const { pixPaymentEnabled } = useRestaurantPixPayment(activeRestaurantId);
   const { config: whatsAppConfig } = useWhatsAppConfig(activeRestaurantId);
   const { restaurant } = useRestaurantBySlug(activeRestaurantId || "");
+  /**
+   * Cash on delivery/pickup replaces the WhatsApp button entirely.
+   * Only available when the restaurant enabled it AND online payment is on.
+   */
+  const cashOnDeliveryEnabled = Boolean(restaurant?.cash_on_delivery_enabled) && onlinePayment;
+  const showWhatsApp = whatsAppConfig.enabled && !cashOnDeliveryEnabled;
   /** WhatsApp + PIX share one row (50/50); either alone spans full width. */
-  const messengerCheckoutPairActive =
-    pixPaymentEnabled && whatsAppConfig.enabled;
+  const messengerCheckoutPairActive = pixPaymentEnabled && showWhatsApp;
   const { activeOrderIds, getOrderAccessToken } = useActiveOrders(restaurant?.id);
 
   const pathname = usePathname();
@@ -609,7 +615,17 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                   ) : isDeliveryRoute ? (
                     !isMinOrderNotMet && (
                       <div className={`grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3${isCheckoutInProgress ? ' pointer-events-none opacity-60' : ''}`}>
-                        {whatsAppConfig.enabled && (
+                        {cashOnDeliveryEnabled && (
+                          <div className={`${checkoutActionButtonCellClass} col-span-2`}>
+                            <CashPaymentButton
+                              restaurantId={restaurantId}
+                              deliveryMode={deliveryMode}
+                              className="w-full"
+                              onSent={handleClose}
+                            />
+                          </div>
+                        )}
+                        {showWhatsApp && (
                           <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
                             <CartWhatsAppButton
                               restaurantId={restaurantId}

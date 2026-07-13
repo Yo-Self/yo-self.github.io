@@ -6,7 +6,8 @@ export type PaymentMethod =
   | 'infinitepay_pix'
   | 'stripe_card'
   | 'stripe_express'
-  | 'send_order_direct';
+  | 'send_order_direct'
+  | 'cash_on_delivery';
 
 export type PaymentProvider = 'whatsapp' | 'infinitepay' | 'stripe' | 'internal';
 

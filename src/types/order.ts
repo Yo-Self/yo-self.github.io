@@ -5,7 +5,17 @@ export interface Order {
   id: string;
   restaurant_id: string;
   table_name?: string;
-  customer_info?: { name?: string; phone?: string; [key: string]: any };
+  customer_info?: {
+    name?: string;
+    phone?: string;
+    /** 'cash' marks a "Dinheiro na entrega/retirada" order. */
+    payment_method?: 'cash';
+    /** Bill amount the customer will pay with, in cents (only when change is needed). */
+    received_cash?: number;
+    /** Change owed, in cents (computed server-side). */
+    change?: number;
+    [key: string]: any;
+  };
   total_price: number;
   status: OrderStatus;
   customer_access_token?: string;

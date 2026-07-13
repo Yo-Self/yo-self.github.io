@@ -38,6 +38,8 @@ export interface Restaurant {
   table_ordering?: boolean;
   online_ordering_enabled?: boolean;
   pix_payment_enabled?: boolean;
+  /** When true (and online payment enabled), shows "Dinheiro na entrega/retirada" instead of WhatsApp. */
+  cash_on_delivery_enabled?: boolean;
   
   /** ID da organização/usuário proprietário */
   user_id?: string;
