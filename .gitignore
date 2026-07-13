@@ -56,3 +56,36 @@ node_modules/
 /playwright/.cache/
 
 .env.local
+# Added by code-review-graph
+.code-review-graph/
+
+# Test artifacts
+test-results/
+coverage/
+
+# Local Supabase state
+supabase/.temp/
+
+# Graphify output
+graphify-out/
+
+# Dev & Backup Files
+check_logs.sh
+*_backup.*
+
+Agents
+*.code-review-graphignore
+*.gemini/settings.json
+*.github/code-review-graph.instruction.md
+*.vscode/mcp.json
+*.windsurfrules
+*.graphifyignore
+*.vscode/mcp.json
+*.gemini/*
+*.cursor*
+*.claude*
+*.kiro*
+*.opencode*
+*.mcp*
+*.qoder*
+.vscode/
