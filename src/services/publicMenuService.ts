@@ -247,6 +247,7 @@ export function transformPublicMenuPayload(payload: PublicMenuPayload): Restaura
     table_ordering: Boolean(restaurant.table_ordering),
     online_ordering_enabled: restaurant.online_ordering_enabled !== false,
     pix_payment_enabled: Boolean(restaurant.pix_payment_enabled),
+    cash_on_delivery_enabled: Boolean(restaurant.cash_on_delivery_enabled),
     user_id: restaurant.user_id as string | undefined,
     min_order_value:
       restaurant.min_order_value !== undefined && restaurant.min_order_value !== null
