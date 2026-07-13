@@ -695,12 +695,14 @@ export function useRestaurantBySlug(slug: string): UseRestaurantBySlugResult {
         whatsapp_enabled: restaurant.whatsapp_enabled !== false,
         whatsapp_phone: restaurant.whatsapp_phone || '',
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
-        online_payment: restaurant.online_payment || false,
+        online_payment: Boolean(restaurant.stripe_payments_ready ?? restaurant.online_payment),
+        stripe_payments_ready:
+          restaurant.stripe_payments_ready !== undefined
+            ? Boolean(restaurant.stripe_payments_ready)
+            : undefined,
         table_ordering: restaurant.table_ordering || false,
         online_ordering_enabled: restaurant.online_ordering_enabled !== false,
         pix_payment_enabled: restaurant.pix_payment_enabled || false,
-        infinitepay_handle: restaurant.infinitepay_handle || '',
-        stripe_connect_id: restaurant.stripe_connect_id || undefined,
         user_id: restaurant.user_id || undefined,
         min_order_value: restaurant.min_order_value !== undefined && restaurant.min_order_value !== null ? Number(restaurant.min_order_value) : 0,
         delivery_enabled: restaurant.delivery_enabled || false,
@@ -962,12 +964,14 @@ export function useRestaurantList() {
         whatsapp_enabled: restaurant.whatsapp_enabled !== false,
         whatsapp_phone: restaurant.whatsapp_phone || '',
         whatsapp_custom_message: restaurant.whatsapp_custom_message || '',
-        online_payment: restaurant.online_payment || false,
+        online_payment: Boolean(restaurant.stripe_payments_ready ?? restaurant.online_payment),
+        stripe_payments_ready:
+          restaurant.stripe_payments_ready !== undefined
+            ? Boolean(restaurant.stripe_payments_ready)
+            : undefined,
         table_ordering: restaurant.table_ordering || false,
         online_ordering_enabled: restaurant.online_ordering_enabled !== false,
         pix_payment_enabled: restaurant.pix_payment_enabled || false,
-        infinitepay_handle: restaurant.infinitepay_handle || '',
-        stripe_connect_id: restaurant.stripe_connect_id || undefined,
         user_id: restaurant.user_id || undefined,
         min_order_value: restaurant.min_order_value !== undefined && restaurant.min_order_value !== null ? Number(restaurant.min_order_value) : 0,
         menu_categories: [],

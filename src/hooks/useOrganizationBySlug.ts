@@ -8,6 +8,25 @@ export interface OrganizationWithRestaurants extends Organization {
   restaurants: Restaurant[];
 }
 
+/** Map RPC/public restaurant rows to the org listing shape (no payment secrets). */
+function mapPublicOrgRestaurant(row: Record<string, unknown>): Restaurant {
+  return {
+    id: String(row.id ?? ''),
+    slug: String(row.slug ?? ''),
+    name: String(row.name ?? ''),
+    cuisine_type: String(row.cuisine_type ?? ''),
+    image_url: String(row.image_url ?? ''),
+    description: row.description != null ? String(row.description) : undefined,
+    welcome_message: row.welcome_message != null ? String(row.welcome_message) : undefined,
+    created_at: String(row.created_at ?? ''),
+    updated_at: String(row.updated_at ?? ''),
+    whatsapp_phone: row.whatsapp_phone != null ? String(row.whatsapp_phone) : undefined,
+    whatsapp_enabled: row.whatsapp_enabled as boolean | undefined,
+    whatsapp_custom_message:
+      row.whatsapp_custom_message != null ? String(row.whatsapp_custom_message) : undefined,
+  };
+}
+
 export function useOrganizationBySlug(slug: string) {
   const [organization, setOrganization] = useState<OrganizationWithRestaurants | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,22 +63,23 @@ export function useOrganizationBySlug(slug: string) {
         return;
       }
 
-      // Buscar os restaurantes da organização
-      const { data: restaurantsData, error: restaurantsError } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('user_id', organizationData.id)
-        .order('name');
+      // Public org restaurants via SECURITY DEFINER RPC (no base-table user_id reads)
+      const { data: restaurantsRaw, error: restaurantsError } = await supabase.rpc(
+        'get_organization_restaurants',
+        { p_org_slug: slug },
+      );
 
       if (restaurantsError) {
         console.error('Error fetching restaurants:', restaurantsError);
-        // Não falha se não conseguir buscar restaurantes, apenas define como array vazio
       }
 
-      // Montar o objeto da organização com restaurantes
+      const restaurantsList = Array.isArray(restaurantsRaw)
+        ? restaurantsRaw.map((row) => mapPublicOrgRestaurant(row as Record<string, unknown>))
+        : [];
+
       const organizationWithRestaurants: OrganizationWithRestaurants = {
         ...organizationData,
-        restaurants: restaurantsData || []
+        restaurants: restaurantsList,
       };
 
       setOrganization(organizationWithRestaurants);

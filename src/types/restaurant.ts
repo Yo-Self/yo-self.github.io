@@ -33,19 +33,17 @@ export interface Restaurant {
   whatsapp_enabled?: boolean;
   whatsapp_custom_message?: string;
   online_payment?: boolean;
+  /** True when Stripe Connect is configured and card payments are enabled (public gate). */
+  stripe_payments_ready?: boolean;
   table_ordering?: boolean;
   online_ordering_enabled?: boolean;
   pix_payment_enabled?: boolean;
-  infinitepay_handle?: string;
   
   /** ID da organização/usuário proprietário */
   user_id?: string;
   
   /** Valor de pedido mínimo para delivery */
   min_order_value?: number;
-  
-  /** ID da conta conectada do Stripe (se houver) */
-  stripe_connect_id?: string;
 
   /** Configurações de entrega / delivery */
   delivery_enabled?: boolean;

@@ -96,6 +96,13 @@ Checkout usa defesa em três camadas (web e iOS):
 
 Migration: `supabase/migrations/20260622000000_order_idempotency.sql` (aplicar uma vez no Supabase compartilhado).
 
+### Segurança no cliente (cardápio público)
+
+- Listagem de restaurantes por organização usa a RPC `get_organization_restaurants` (não lê `restaurants` por `user_id`).
+- IDs de pagamento (`stripe_connect_id`, `infinitepay_handle`) não são mais mapeados do cardápio público; gate de cartão usa `stripe_payments_ready` (fallback `online_payment`).
+- Conta Stripe Express é carregada sob demanda via RPC `get_restaurant_stripe_account`.
+- Checkout InfinitePay envia `access_token` do pedido; config WhatsApp do cardápio é somente leitura (`restaurants_public`).
+
 ## 🚀 Chatbot com Google Gemini AI
 
 O chatbot agora usa os **modelos Gemini mais recentes** da Google, oferecendo:

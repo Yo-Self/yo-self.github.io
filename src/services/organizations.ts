@@ -95,20 +95,23 @@ export class OrganizationService {
       return null;
     }
 
-    // Buscar os restaurantes da organização
-    const { data: restaurants, error: restaurantsError } = await supabase
-      .from('restaurants')
-      .select('*')
-      .eq('user_id', organization.id)
-      .order('name');
+    // Public org restaurants via SECURITY DEFINER RPC (no base-table user_id reads)
+    const { data: restaurantsRaw, error: restaurantsError } = await supabase.rpc(
+      'get_organization_restaurants',
+      { p_org_slug: slug },
+    );
 
     if (restaurantsError) {
       console.error('Erro ao buscar restaurantes:', restaurantsError);
     }
 
+    const restaurants = Array.isArray(restaurantsRaw)
+      ? (restaurantsRaw as Restaurant[])
+      : [];
+
     return {
       organization: organization as Organization,
-      restaurants: (restaurants || []) as Restaurant[]
+      restaurants,
     };
   }
 
@@ -141,20 +144,23 @@ export class OrganizationService {
       return null;
     }
 
-    // Buscar os restaurantes da organização
-    const { data: restaurants, error: restaurantsError } = await supabase
-      .from('restaurants')
-      .select('*')
-      .eq('user_id', organization.id)
-      .order('name');
+    // Public org restaurants via SECURITY DEFINER RPC (no base-table user_id reads)
+    const { data: restaurantsRaw, error: restaurantsError } = await supabase.rpc(
+      'get_organization_restaurants',
+      { p_org_slug: slug },
+    );
 
     if (restaurantsError) {
       console.error('Erro ao buscar restaurantes para geração estática:', restaurantsError);
     }
 
+    const restaurants = Array.isArray(restaurantsRaw)
+      ? (restaurantsRaw as Restaurant[])
+      : [];
+
     return {
       organization: organization as Organization,
-      restaurants: (restaurants || []) as Restaurant[]
+      restaurants,
     };
   }
 

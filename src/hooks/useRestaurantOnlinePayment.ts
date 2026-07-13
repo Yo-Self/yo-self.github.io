@@ -7,6 +7,10 @@ interface UseRestaurantOnlinePaymentResult {
   error: string | null;
 }
 
+/**
+ * Card/online payment gate for the public menu.
+ * Prefers `stripe_payments_ready` from restaurants_public when present; falls back to `online_payment`.
+ */
 export function useRestaurantOnlinePayment(restaurantIdOrSlug?: string): UseRestaurantOnlinePaymentResult {
   const [onlinePayment, setOnlinePayment] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -31,9 +35,11 @@ export function useRestaurantOnlinePayment(restaurantIdOrSlug?: string): UseRest
           return;
         }
 
+        const select = 'online_ordering_enabled,online_payment,stripe_payments_ready';
+
         // Try by slug first
         let response = await fetch(
-          `${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=online_ordering_enabled,online_payment`,
+          `${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=${select}`,
           {
             headers: {
               apikey: supabaseKey,
@@ -43,14 +49,18 @@ export function useRestaurantOnlinePayment(restaurantIdOrSlug?: string): UseRest
           }
         );
 
-        let data: any = null;
+        let data: {
+          online_ordering_enabled?: boolean;
+          online_payment?: boolean;
+          stripe_payments_ready?: boolean;
+        }[] | null = null;
         if (response.ok) {
           data = await response.json();
         }
 
         if (!response.ok || !data || data.length === 0) {
           response = await fetch(
-            `${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=online_ordering_enabled,online_payment`,
+            `${supabaseUrl}/rest/v1/restaurants_public?id=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=${select}`,
             {
               headers: {
                 apikey: supabaseKey,
@@ -71,7 +81,11 @@ export function useRestaurantOnlinePayment(restaurantIdOrSlug?: string): UseRest
 
         if (data && data.length > 0) {
           const row = data[0];
-          setOnlinePayment(row?.online_ordering_enabled !== false && row?.online_payment === true);
+          const cardReady =
+            row.stripe_payments_ready !== undefined && row.stripe_payments_ready !== null
+              ? row.stripe_payments_ready === true
+              : row.online_payment === true;
+          setOnlinePayment(row?.online_ordering_enabled !== false && cardReady);
         } else {
           // Default to false if restaurant not found
           setOnlinePayment(false);

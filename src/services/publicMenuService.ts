@@ -237,12 +237,16 @@ export function transformPublicMenuPayload(payload: PublicMenuPayload): Restaura
     whatsapp_enabled: Boolean(restaurant.whatsapp_enabled),
     whatsapp_phone: String(restaurant.whatsapp_phone ?? ''),
     whatsapp_custom_message: String(restaurant.whatsapp_custom_message ?? ''),
-    online_payment: Boolean(restaurant.online_payment),
+    online_payment: Boolean(
+      restaurant.stripe_payments_ready ?? restaurant.online_payment,
+    ),
+    stripe_payments_ready:
+      restaurant.stripe_payments_ready !== undefined
+        ? Boolean(restaurant.stripe_payments_ready)
+        : undefined,
     table_ordering: Boolean(restaurant.table_ordering),
     online_ordering_enabled: restaurant.online_ordering_enabled !== false,
     pix_payment_enabled: Boolean(restaurant.pix_payment_enabled),
-    infinitepay_handle: String(restaurant.infinitepay_handle ?? ''),
-    stripe_connect_id: restaurant.stripe_connect_id as string | undefined,
     user_id: restaurant.user_id as string | undefined,
     min_order_value:
       restaurant.min_order_value !== undefined && restaurant.min_order_value !== null

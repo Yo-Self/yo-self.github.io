@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8'
+import { assertAllowedCheckoutUrl, CheckoutUrlError, resolveInfinitePayRedirectUrl, stripSensitiveQueryParams } from '../_shared/checkoutUrls.ts'
 import { priceOrderItemsFromMenu } from '../_shared/order-pricing.ts'
 import { captureEdgeException } from '../_shared/sentry.ts'
-import { assertAllowedCheckoutUrl, CheckoutUrlError, resolveInfinitePayRedirectUrl, stripSensitiveQueryParams } from '../_shared/checkoutUrls.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,6 +25,8 @@ interface CheckoutRequest {
   customer_name?: string
   customer_phone?: string
   customer_email?: string
+  access_token?: string
+  confirm_payment?: boolean
 }
 
 interface OrderItemRow {
@@ -75,6 +77,32 @@ function extractInvoiceSlug(data: Record<string, unknown>): string | null {
   for (const value of candidates) {
     if (typeof value === 'string' && value.trim()) return value.trim()
   }
+  return null
+}
+
+async function validateOrderAccessToken(
+  supabase: SupabaseClient,
+  orderId: string,
+  accessToken: string | undefined,
+): Promise<Response | null> {
+  if (!accessToken) {
+    return jsonResponse({ error: 'access_token is required' }, 403)
+  }
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('customer_access_token')
+    .eq('id', orderId)
+    .single()
+
+  if (error || !order) {
+    return jsonResponse({ error: 'Order not found' }, 404)
+  }
+
+  if (order.customer_access_token !== accessToken) {
+    return jsonResponse({ error: 'Invalid access token' }, 403)
+  }
+
   return null
 }
 
@@ -301,11 +329,58 @@ serve(async (req) => {
       customer_name,
       customer_phone,
       customer_email,
+      access_token,
+      confirm_payment,
     } = body
 
     if (!order_id) {
       return jsonResponse({ error: 'order_id is required' }, 400)
     }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey =
+      Deno.env.get('SB_SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SECRET_KEY') ??
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return jsonResponse({ error: 'Server configuration error' }, 500)
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const rateLimitResponse = await enforceRateLimits(supabase, order_id, getClientIp(req))
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
+    // Mirror stripe-checkout: create (and any confirm_payment caller) must prove order ownership.
+    if (confirm_payment) {
+      if (!access_token) {
+        return jsonResponse({ error: 'access_token is required for payment confirmation' }, 400)
+      }
+
+      const accessTokenError = await validateOrderAccessToken(supabase, order_id, access_token)
+      if (accessTokenError) {
+        return accessTokenError
+      }
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('id, status')
+        .eq('id', order_id)
+        .single()
+
+      if (orderError || !order) {
+        return jsonResponse({ error: 'Order not found' }, 404)
+      }
+
+      return jsonResponse({
+        confirmed: order.status !== 'pending_payment' && order.status !== 'cancelled',
+        already_paid: order.status !== 'pending_payment' && order.status !== 'cancelled',
+        order_id: order.id,
+      }, 200)
+    }
+
     if (!restaurant_id) {
       return jsonResponse({ error: 'restaurant_id is required' }, 400)
     }
@@ -334,24 +409,12 @@ serve(async (req) => {
       }
     }
 
+    const accessTokenError = await validateOrderAccessToken(supabase, order_id, access_token)
+    if (accessTokenError) {
+      return accessTokenError
+    }
+
     const sanitizedSuccessUrl = stripSensitiveQueryParams(success_url)
-    const sanitizedCancelUrl = body.cancel_url ? stripSensitiveQueryParams(body.cancel_url) : undefined
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey =
-      Deno.env.get('SB_SECRET_KEY') ??
-      Deno.env.get('SUPABASE_SECRET_KEY') ??
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return jsonResponse({ error: 'Server configuration error' }, 500)
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-    const rateLimitResponse = await enforceRateLimits(supabase, order_id, getClientIp(req))
-    if (rateLimitResponse) {
-      return rateLimitResponse
-    }
 
     const validation = await loadAndValidateCheckout(supabase, order_id, restaurant_id)
     if (!validation.ok) {

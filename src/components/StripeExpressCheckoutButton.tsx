@@ -31,6 +31,7 @@ import { paymentContextFromCart } from '../lib/paymentAnalytics';
 import { trackPaymentFormValidationFailed } from '../lib/trackPaymentButtonValidation';
 import { usePathname } from 'next/navigation';
 import { useActiveOrders } from '../hooks/useActiveOrders';
+import { supabase } from '@/lib/supabase/client';
 import {
   checkoutActionButtonMinHeightClass,
   checkoutExpressWalletButtonHeightPx,
@@ -459,10 +460,43 @@ export default function StripeExpressCheckoutButton({
   const amountCents = Math.round(totalPrice * 100);
 
   useEffect(() => {
-    if (!isLoading && restaurant) {
-      setStripePromiseObj(getStripe(restaurant.stripe_connect_id));
-    }
-  }, [isLoading, restaurant, restaurant?.stripe_connect_id]);
+    let cancelled = false;
+
+    const loadStripeAccount = async () => {
+      if (isLoading || !restaurant) return;
+
+      const restaurantRef = restaurant.id || restaurant.slug || restaurantId;
+      if (!restaurantRef || !supabase) {
+        if (!cancelled) setStripePromiseObj(getStripe());
+        return;
+      }
+
+      try {
+        const { data: stripeAccount, error } = await supabase.rpc(
+          'get_restaurant_stripe_account',
+          { p_restaurant_ref: restaurantRef },
+        );
+
+        if (error) {
+          console.error('Failed to load Stripe account:', error);
+        }
+
+        if (!cancelled) {
+          setStripePromiseObj(
+            getStripe(typeof stripeAccount === 'string' && stripeAccount ? stripeAccount : undefined),
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load Stripe account:', err);
+        if (!cancelled) setStripePromiseObj(getStripe());
+      }
+    };
+
+    void loadStripeAccount();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoading, restaurant, restaurant?.id, restaurant?.slug, restaurantId]);
 
   useEffect(() => {
     if (isMinOrderNotMet) {

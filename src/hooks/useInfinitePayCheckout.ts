@@ -168,6 +168,7 @@ export function useInfinitePayCheckout({
       const session = await createInfinitePayCheckout({
         orderId: newOrder.id,
         restaurantId: restaurant.id,
+        accessToken: newOrder.customer_access_token!,
         customerName: customerData.name,
         customerPhone: customerData.whatsapp,
         successUrl,

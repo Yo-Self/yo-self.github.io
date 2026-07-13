@@ -129,55 +129,10 @@ export function useWhatsAppConfig(restaurantId?: string) {
     loadWhatsAppConfig();
   }, [restaurantId]);
 
-  const updateConfig = async (newConfig: Partial<WhatsAppConfig>) => {
-    if (!restaurantId || restaurantId === "default") {
-      console.warn('Não é possível atualizar configuração para restaurantId padrão');
-      return;
-    }
-    
-    setConfig(prev => ({ ...prev, ...newConfig }));
-    
-    try {
-      // Atualizar configuração no banco de dados
-      const supabaseUrl = getSupabaseUrl();
-      const supabaseKey = getSupabasePublishableKey();
-      
-      if (!supabaseUrl || !supabaseKey) {
-        console.warn('Configuração do Supabase não encontrada - não é possível salvar configuração');
-        return;
-      }
-      
-      const updateData: any = {};
-      if (newConfig.phoneNumber !== undefined) updateData.whatsapp_phone = newConfig.phoneNumber;
-      if (newConfig.enabled !== undefined) updateData.whatsapp_enabled = newConfig.enabled;
-      if (newConfig.customMessage !== undefined) updateData.whatsapp_custom_message = newConfig.customMessage;
-      
-      const response = await fetch(`${supabaseUrl}/rest/v1/restaurants?id=eq.${restaurantId}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao salvar configuração do WhatsApp');
-      }
-
-    } catch (err) {
-      console.error('Erro ao salvar configuração do WhatsApp:', err);
-      setError('Erro ao salvar configuração');
-    }
-  };
-
   return {
     config,
     isLoading,
     error,
-    updateConfig,
     clearError: () => setError(null)
   };
 }

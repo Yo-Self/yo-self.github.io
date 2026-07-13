@@ -56,13 +56,12 @@ export type Restaurant = {
   whatsapp_enabled?: boolean;
   whatsapp_custom_message?: string;
   online_payment?: boolean;
+  stripe_payments_ready?: boolean;
   table_ordering?: boolean;
   online_ordering_enabled?: boolean;
   pix_payment_enabled?: boolean;
-  infinitepay_handle?: string;
   user_id?: string;
   min_order_value?: number;
-  stripe_connect_id?: string;
   delivery_enabled?: boolean;
   delivery_max_distance?: number;
   delivery_base_fee?: number;

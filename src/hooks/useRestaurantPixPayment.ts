@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 
 interface UseRestaurantPixPaymentResult {
   pixPaymentEnabled: boolean;
-  infinitepayHandle: string | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -14,11 +13,9 @@ interface UseRestaurantPixPaymentResult {
  *
  * Dev override (optional, .env.local only):
  *   NEXT_PUBLIC_INFINITEPAY_DEV_ENABLED=true
- *   NEXT_PUBLIC_INFINITEPAY_DEV_HANDLE=jessemonteiro
  */
 export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaurantPixPaymentResult {
   const [pixPaymentEnabled, setPixPaymentEnabled] = useState(false);
-  const [infinitepayHandle, setInfinitepayHandle] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,15 +23,14 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
     const fetchFlag = async () => {
       if (!restaurantIdOrSlug || restaurantIdOrSlug === 'default') {
         setPixPaymentEnabled(false);
-        setInfinitepayHandle(null);
         return;
       }
 
-      const devEnabled = process.env.NEXT_PUBLIC_INFINITEPAY_DEV_ENABLED === 'true';
-      const devHandle = process.env.NEXT_PUBLIC_INFINITEPAY_DEV_HANDLE?.replace(/^\$/, '').trim();
-      if (process.env.NODE_ENV === 'development' && devEnabled && devHandle) {
+      if (
+        process.env.NODE_ENV === 'development' &&
+        process.env.NEXT_PUBLIC_INFINITEPAY_DEV_ENABLED === 'true'
+      ) {
         setPixPaymentEnabled(true);
-        setInfinitepayHandle(devHandle);
         setIsLoading(false);
         return;
       }
@@ -48,11 +44,10 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
 
         if (!supabaseUrl || !supabaseKey) {
           setPixPaymentEnabled(false);
-          setInfinitepayHandle(null);
           return;
         }
 
-        const select = 'online_ordering_enabled,pix_payment_enabled,infinitepay_handle';
+        const select = 'online_ordering_enabled,pix_payment_enabled';
 
         let response = await fetch(
           `${supabaseUrl}/rest/v1/restaurants_public?slug=eq.${encodeURIComponent(restaurantIdOrSlug)}&select=${select}`,
@@ -65,7 +60,7 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
           },
         );
 
-        let data: { online_ordering_enabled?: boolean; pix_payment_enabled?: boolean; infinitepay_handle?: string }[] | null = null;
+        let data: { online_ordering_enabled?: boolean; pix_payment_enabled?: boolean }[] | null = null;
         if (response.ok) {
           data = await response.json();
         }
@@ -93,18 +88,16 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
 
         if (data && data.length > 0) {
           const row = data[0];
-          const handle = row.infinitepay_handle?.replace(/^\$/, '').trim() || null;
-          setPixPaymentEnabled(row.online_ordering_enabled !== false && row.pix_payment_enabled === true && !!handle);
-          setInfinitepayHandle(handle);
+          setPixPaymentEnabled(
+            row.online_ordering_enabled !== false && row.pix_payment_enabled === true,
+          );
         } else {
           setPixPaymentEnabled(false);
-          setInfinitepayHandle(null);
         }
       } catch (err) {
         console.error('Error fetching PIX payment settings:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         setPixPaymentEnabled(false);
-        setInfinitepayHandle(null);
       } finally {
         setIsLoading(false);
       }
@@ -113,5 +106,5 @@ export function useRestaurantPixPayment(restaurantIdOrSlug?: string): UseRestaur
     fetchFlag();
   }, [restaurantIdOrSlug]);
 
-  return { pixPaymentEnabled, infinitepayHandle, isLoading, error };
+  return { pixPaymentEnabled, isLoading, error };
 }

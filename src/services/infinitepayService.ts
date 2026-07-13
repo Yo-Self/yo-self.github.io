@@ -14,6 +14,7 @@ const supabasePublishableKey = getSupabasePublishableKey();
 export interface CreateInfinitePayCheckoutParams {
   orderId: string;
   restaurantId: string;
+  accessToken: string;
   customerName?: string;
   customerPhone?: string;
   customerEmail?: string;
@@ -42,6 +43,7 @@ export async function createInfinitePayCheckout(
     body: JSON.stringify({
       order_id: params.orderId,
       restaurant_id: params.restaurantId,
+      access_token: params.accessToken,
       customer_name: params.customerName,
       customer_phone: params.customerPhone,
       customer_email: params.customerEmail,
