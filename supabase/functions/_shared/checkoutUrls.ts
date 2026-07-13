@@ -128,8 +128,9 @@ export function resolveInfinitePayRedirectUrl(
   params.set('capture_method', 'pix')
   params.set('order_id', orderId)
 
-  // Client stores customer_access_token locally (Keychain/localStorage); never forward
-  // sensitive tokens in the redirect URL (browser history, referrers, InfinitePay logs).
+  // The client persists the customer access token on-device (Keychain or
+  // browser storage); never forward sensitive tokens in the redirect URL
+  // (browser history, referrers, InfinitePay logs).
   for (const key of SENSITIVE_QUERY_PARAMS) {
     params.delete(key)
   }
