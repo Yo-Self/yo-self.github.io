@@ -73,19 +73,31 @@ graphify-out/
 check_logs.sh
 *_backup.*
 
-Agents
-*.code-review-graphignore
-*.gemini/settings.json
-*.github/code-review-graph.instruction.md
-*.vscode/mcp.json
-*.windsurfrules
-*.graphifyignore
-*.vscode/mcp.json
-*.gemini/*
-*.cursor*
-*.claude*
-*.kiro*
-*.opencode*
-*.mcp*
-*.qoder*
+# --- AI assistants & local tooling (never commit) ---
+# Editor / IDE
 .vscode/
+# Assistant instruction docs
+CLAUDE.md
+GEMINI.md
+QODER.md
+# Assistant config dirs/files
+.claude/
+.cursor/
+.cursorrules
+.gemini/
+.windsurfrules
+.kiro/
+.qoder/
+.opencode/
+.opencode.json
+.aider*
+.roo/
+.continue/
+.github/copilot-instructions.md
+.mcp.json
+# code-review-graph / graphify tooling
+.code-review-graph/
+.code-review-graphignore
+.graphifyignore
+.github/code-review-graph.instruction.md
+graphify-out/
