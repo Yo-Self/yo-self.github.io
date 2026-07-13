@@ -262,12 +262,12 @@ export default function CashPaymentButton({
           relative w-full min-w-0 flex items-center justify-center
           ${checkoutActionButtonMinHeightClass}
           ${checkoutActionButtonPaddingClass}
-          bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700
+          bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
           text-white font-semibold
           rounded-xl shadow-lg hover:shadow-xl
           transition-all duration-200
           transform hover:scale-[1.02] active:scale-[0.98]
-          focus:outline-none focus:ring-4 focus:ring-amber-300
+          focus:outline-none focus:ring-4 focus:ring-green-300
           disabled:cursor-not-allowed disabled:transform-none disabled:opacity-50
           ${className}
         `}
@@ -320,8 +320,8 @@ export default function CashPaymentButton({
             className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full mx-4 relative z-10 shadow-2xl border border-gray-100 dark:border-gray-800"
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-amber-500">
-              <svg className="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-green-500">
+              <svg className="w-7 h-7 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
@@ -331,7 +331,7 @@ export default function CashPaymentButton({
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 text-center">
               Total do pedido:{' '}
-              <strong className="text-amber-600 dark:text-amber-400">
+              <strong className="text-green-600 dark:text-green-400">
                 R$ {totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </strong>
             </p>
@@ -342,7 +342,7 @@ export default function CashPaymentButton({
                 onClick={() => setNeedsChange(true)}
                 className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors border ${
                   needsChange === true
-                    ? 'bg-amber-500 border-amber-500 text-white'
+                    ? 'bg-green-500 border-green-500 text-white'
                     : 'bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
@@ -356,7 +356,7 @@ export default function CashPaymentButton({
                 }}
                 className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors border ${
                   needsChange === false
-                    ? 'bg-amber-500 border-amber-500 text-white'
+                    ? 'bg-green-500 border-green-500 text-white'
                     : 'bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
@@ -377,7 +377,7 @@ export default function CashPaymentButton({
                   onChange={e => setChangeForValue(e.target.value.replace(/[^0-9.,]/g, ''))}
                   placeholder="Ex: 50,00"
                   autoFocus
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
               </div>
             )}
@@ -395,7 +395,7 @@ export default function CashPaymentButton({
                 type="button"
                 onClick={confirmAndCreateOrder}
                 disabled={isCreatingOrder || needsChange === null}
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingOrder ? 'Enviando...' : 'Confirmar Pedido'}
               </button>
@@ -420,7 +420,7 @@ export default function CashPaymentButton({
 
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 leading-relaxed">
               O seu pedido foi enviado para o restaurante com pagamento em{' '}
-              <strong className="text-amber-600 dark:text-amber-400 font-bold">
+              <strong className="text-green-600 dark:text-green-400 font-bold">
                 {isActuallyRetirada ? 'dinheiro na retirada' : 'dinheiro na entrega'}
               </strong>
               . Agora é só aguardar!

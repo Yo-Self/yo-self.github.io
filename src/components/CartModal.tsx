@@ -78,8 +78,11 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
    */
   const cashOnDeliveryEnabled = Boolean(restaurant?.cash_on_delivery_enabled) && onlinePayment;
   const showWhatsApp = whatsAppConfig.enabled && !cashOnDeliveryEnabled;
-  /** WhatsApp + PIX share one row (50/50); either alone spans full width. */
-  const messengerCheckoutPairActive = pixPaymentEnabled && showWhatsApp;
+  /**
+   * The messenger-style button (WhatsApp, or the cash button that replaces it)
+   * shares one row (50/50) with PIX; either alone spans full width.
+   */
+  const messengerCheckoutPairActive = pixPaymentEnabled && (showWhatsApp || cashOnDeliveryEnabled);
   const { activeOrderIds, getOrderAccessToken } = useActiveOrders(restaurant?.id);
 
   const pathname = usePathname();
@@ -616,7 +619,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                     !isMinOrderNotMet && (
                       <div className={`grid w-full grid-cols-2 auto-rows-fr gap-2 sm:gap-3${isCheckoutInProgress ? ' pointer-events-none opacity-60' : ''}`}>
                         {cashOnDeliveryEnabled && (
-                          <div className={`${checkoutActionButtonCellClass} col-span-2`}>
+                          <div className={`${checkoutActionButtonCellClass}${messengerCheckoutPairActive ? '' : ' col-span-2'}`}>
                             <CashPaymentButton
                               restaurantId={restaurantId}
                               deliveryMode={deliveryMode}
