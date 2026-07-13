@@ -17,13 +17,9 @@ interface ImageWithLoadingProps {
   loading?: 'lazy' | 'eager';
 }
 
-function resolveInitialLoadState(
-  src: string,
-  isImageLoaded: (url: string) => boolean,
-  isImageError: (url: string) => boolean,
-): boolean {
-  if (!src) return false;
-  return !isImageLoaded(src) && !isImageError(src);
+function resolveDisplaySrc(src: string, fallbackSrc?: string): string {
+  const normalized = src && normalizeMenuImageUrl(src) ? src : '';
+  return normalized || fallbackSrc || '';
 }
 
 export default function ImageWithLoading({
@@ -37,103 +33,66 @@ export default function ImageWithLoading({
   clickable = true,
   loading = 'lazy',
 }: ImageWithLoadingProps) {
-  const { isImageLoaded, isImageError } = useImageCache();
-  const resolvedSrc = src && normalizeMenuImageUrl(src) ? src : '';
-  const [isLoading, setIsLoading] = useState(() =>
-    resolveInitialLoadState(resolvedSrc || fallbackSrc || '', isImageLoaded, isImageError),
-  );
-  const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(() => resolvedSrc || fallbackSrc || '');
+  const { isImageLoaded } = useImageCache();
+
+  const initialSrc = resolveDisplaySrc(src, fallbackSrc);
+  const [currentSrc, setCurrentSrc] = useState(initialSrc);
+  // The native <img> element is the source of truth for load state. We only
+  // start optimistically "loaded" when a preload cache already has the asset,
+  // which avoids a skeleton flash on already-cached images.
+  const [isLoaded, setIsLoaded] = useState(() => (initialSrc ? isImageLoaded(initialSrc) : false));
+  const [hasError, setHasError] = useState(() => !initialSrc);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  const syncCompleteImageState = useCallback(() => {
-    const img = containerRef.current?.querySelector('img');
-    if (!img || !currentSrc) return;
+  // Keep the displayed src in sync with the incoming props, but only update
+  // state when the resolved value actually changes. This prevents unrelated
+  // parent re-renders (e.g. a lazily-loaded fallback/restaurant object) from
+  // resetting the load state and causing the image to flicker back to loading.
+  useEffect(() => {
+    const nextSrc = resolveDisplaySrc(src, fallbackSrc);
+    setCurrentSrc((prev) => (prev === nextSrc ? prev : nextSrc));
+  }, [src, fallbackSrc]);
 
-    if (img.complete && img.naturalWidth > 0) {
-      setIsLoading(false);
-      setHasError(false);
-    }
-  }, [currentSrc]);
-
-  const checkCache = useCallback(() => {
-    const normalizedSrc = src && normalizeMenuImageUrl(src) ? src : '';
-
-    if (!normalizedSrc) {
-      if (fallbackSrc) {
-        setCurrentSrc(fallbackSrc);
-        setHasError(false);
-        setIsLoading(!isImageLoaded(fallbackSrc));
-      } else {
-        setIsLoading(false);
-        setHasError(true);
-      }
+  // Reset load/error state only when the src we actually display changes.
+  useEffect(() => {
+    if (!currentSrc) {
+      setIsLoaded(false);
+      setHasError(true);
       return;
     }
-
-    if (isImageLoaded(normalizedSrc)) {
-      setIsLoading(false);
-      setHasError(false);
-      setCurrentSrc(normalizedSrc);
-      return;
-    }
-
-    if (isImageError(normalizedSrc)) {
-      if (fallbackSrc) {
-        setCurrentSrc(fallbackSrc);
-        setHasError(false);
-        setIsLoading(!isImageLoaded(fallbackSrc));
-      } else {
-        setIsLoading(false);
-        setHasError(true);
-        onError?.();
-      }
-      return;
-    }
-
-    setIsLoading(true);
     setHasError(false);
-    setCurrentSrc(normalizedSrc);
-  }, [src, fallbackSrc, isImageLoaded, isImageError, onError]);
-
-  useEffect(() => {
-    checkCache();
-  }, [checkCache]);
-
-  useEffect(() => {
-    if (isImageLoaded(currentSrc)) {
-      setIsLoading(false);
-      setHasError(false);
-    }
+    setIsLoaded(isImageLoaded(currentSrc));
   }, [currentSrc, isImageLoaded]);
 
+  // Reconciles the case where the <img> is already complete (e.g. served straight
+  // from the browser/HTTP cache before React attaches onLoad). Guarded by
+  // `!isLoaded` so it can never loop.
   useEffect(() => {
-    syncCompleteImageState();
-  }, [syncCompleteImageState, currentSrc]);
-
-  const handleError = useCallback(() => {
-    if (fallbackSrc && currentSrc !== fallbackSrc) {
-      setCurrentSrc(fallbackSrc);
+    const img = imgRef.current;
+    if (!img || !currentSrc || isLoaded) return;
+    if (img.complete && img.naturalWidth > 0) {
+      setIsLoaded(true);
       setHasError(false);
-      setIsLoading(!isImageLoaded(fallbackSrc));
-    } else {
-      setIsLoading(false);
-      setHasError(true);
-      onError?.();
     }
-  }, [fallbackSrc, currentSrc, isImageLoaded, onError]);
+  }, [currentSrc, isLoaded]);
 
   const handleImageLoad = useCallback(() => {
-    setIsLoading(false);
+    setIsLoaded(true);
+    setHasError(false);
     onLoad?.();
   }, [onLoad]);
 
   const handleImageError = useCallback(() => {
-    if (!isImageError(currentSrc)) {
-      handleError();
+    if (fallbackSrc && currentSrc !== fallbackSrc) {
+      // Fall back to the alternate source; state resets via the currentSrc effect.
+      setCurrentSrc(fallbackSrc);
+      return;
     }
-  }, [currentSrc, isImageError, handleError]);
+    setIsLoaded(false);
+    setHasError(true);
+    onError?.();
+  }, [fallbackSrc, currentSrc, onError]);
 
   const handleImageClick = () => {
     if (clickable && currentSrc && !hasError) {
@@ -141,11 +100,11 @@ export default function ImageWithLoading({
     }
   };
 
-  const showSkeleton = isLoading && !isImageLoaded(currentSrc) && !hasError;
+  const showSkeleton = !!currentSrc && !isLoaded && !hasError;
 
   return (
     <>
-      <div ref={containerRef} className={`relative overflow-hidden ${className}`}>
+      <div className={`relative overflow-hidden ${className}`}>
         <div
           className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg z-10 transition-opacity duration-200 ${
             showSkeleton
@@ -160,6 +119,7 @@ export default function ImageWithLoading({
         </div>
 
         <img
+          ref={imgRef}
           src={currentSrc}
           alt={alt}
           className={`absolute inset-0 w-full h-full object-cover ${clickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}

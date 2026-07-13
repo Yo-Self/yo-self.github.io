@@ -624,7 +624,7 @@ export default function CartModal({ restaurantId: propRestaurantId }: CartModalP
                               restaurantId={restaurantId}
                               deliveryMode={deliveryMode}
                               className="w-full"
-                              onSent={handleClose}
+                              onTrackOrder={(orderId) => setSelectedOrderId(orderId)}
                             />
                           </div>
                         )}

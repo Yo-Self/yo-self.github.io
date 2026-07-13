@@ -228,7 +228,7 @@ interface HeaderProps {
 
 
 
-function TrackOrderButton({ orderId }: { orderId: string }) {
+function TrackOrderButton({ orderId, restaurantId }: { orderId: string; restaurantId?: string }) {
   const [showModal, setShowModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const { getOrderAccessToken } = useActiveOrders();
@@ -295,6 +295,7 @@ function TrackOrderButton({ orderId }: { orderId: string }) {
         <OrderStatusModal 
           orderId={orderId}
           accessToken={getOrderAccessToken(orderId)}
+          restaurantId={restaurantId}
           onClose={() => setShowModal(false)} 
         />
       )}
@@ -414,7 +415,7 @@ export default function Header({ restaurant, restaurants, selectedRestaurantId, 
         
         {restaurant && (
           <div className={`flex items-center gap-2 ${isEmpty && !hasActiveOrder ? 'w-0' : 'w-[40px]'} sm:w-[220px] shrink-0 justify-end`}>
-            {hasActiveOrder && isEmpty && <TrackOrderButton orderId={activeOrderIds[activeOrderIds.length - 1]} />}
+            {hasActiveOrder && isEmpty && <TrackOrderButton orderId={activeOrderIds[activeOrderIds.length - 1]} restaurantId={restaurant?.id} />}
             {!isEmpty && <CartIconHeader />}
           </div>
         )}

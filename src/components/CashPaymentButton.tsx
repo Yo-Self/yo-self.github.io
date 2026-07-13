@@ -35,14 +35,14 @@ import {
 interface CashPaymentButtonProps {
   restaurantId?: string;
   className?: string;
-  onSent?: () => void;
+  onTrackOrder?: (orderId: string) => void;
   deliveryMode?: 'delivery' | 'retirada' | 'dine_in';
 }
 
 export default function CashPaymentButton({
   restaurantId = 'default',
   className = '',
-  onSent,
+  onTrackOrder,
   deliveryMode,
 }: CashPaymentButtonProps) {
   const { items, totalItems, totalPrice, formattedTotalPrice, isEmpty, clearCart } = useCart();
@@ -56,6 +56,7 @@ export default function CashPaymentButton({
   const [needsChange, setNeedsChange] = React.useState<boolean | null>(null);
   const [changeForValue, setChangeForValue] = React.useState('');
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [createdOrderId, setCreatedOrderId] = React.useState<string | null>(null);
 
   const pathname = usePathname();
   const isDeliveryRoute = pathname?.startsWith('/delivery');
@@ -211,6 +212,7 @@ export default function CashPaymentButton({
         );
 
         addActiveOrderId(newOrder.id, newOrder.customer_access_token, restaurant.id);
+        setCreatedOrderId(newOrder.id);
 
         Analytics.trackPaymentOrderCreated({ ...paymentCtx, orderId: newOrder.id, reusedExisting });
         Analytics.trackPaymentCompleted({ ...paymentCtx, orderId: newOrder.id });
@@ -234,11 +236,12 @@ export default function CashPaymentButton({
     }, 'cash_on_delivery');
   };
 
-  const handleCloseSuccess = () => {
+  const handleTrackOrder = () => {
     setShowSuccessModal(false);
     clearCart();
-    if (onSent) {
-      onSent();
+    // Keep the cart open so the tracking modal (rendered by CartModal) stays mounted.
+    if (createdOrderId) {
+      onTrackOrder?.(createdOrderId);
     }
   };
 
@@ -423,14 +426,17 @@ export default function CashPaymentButton({
               <strong className="text-green-600 dark:text-green-400 font-bold">
                 {isActuallyRetirada ? 'dinheiro na retirada' : 'dinheiro na entrega'}
               </strong>
-              . Agora é só aguardar!
+              . Agora é só acompanhar!
             </p>
 
             <button
-              onClick={handleCloseSuccess}
-              className="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              onClick={handleTrackOrder}
+              className="w-full py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
             >
-              Excelente!
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Acompanhar Pedido
             </button>
           </div>
         </div>
