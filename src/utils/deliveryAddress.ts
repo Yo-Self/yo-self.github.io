@@ -11,7 +11,20 @@ export function buildFullDeliveryAddress(
   const numberTrimmed = (number || '').trim();
   const complementTrimmed = (complement || '').trim();
 
-  let result = numberTrimmed ? `${streetTrimmed}, ${numberTrimmed}` : streetTrimmed;
+  let result: string;
+  if (!numberTrimmed) {
+    result = streetTrimmed;
+  } else if (streetTrimmed.includes(',')) {
+    // Google formatted address: insert number after street name (first segment).
+    // Appending at the end breaks server geocoding (Nominatim).
+    const commaIdx = streetTrimmed.indexOf(',');
+    const streetName = streetTrimmed.slice(0, commaIdx).trim();
+    const rest = streetTrimmed.slice(commaIdx + 1).trim();
+    result = `${streetName}, ${numberTrimmed}, ${rest}`;
+  } else {
+    result = `${streetTrimmed}, ${numberTrimmed}`;
+  }
+
   if (complementTrimmed) {
     result += ` - ${complementTrimmed}`;
   }
