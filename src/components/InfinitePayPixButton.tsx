@@ -198,7 +198,7 @@ export default function InfinitePayPixButton({
               : (isActuallyDelivery && deliveryCalc.reason === 'waiting_location')
                 ? 'Preencha os dados acima'
                 : (isCombinedMode
-                    ? 'Pagar online pelo InfinitePay por cartão e pix'
+                    ? 'Pagar por Cartão ou PIX'
                     : `${totalItems} ${totalItems === 1 ? 'item' : 'itens'} • R$ ${isActuallyDelivery && deliveryCovered ? totalPriceWithShipping.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : formattedTotalPrice}`)}
           </span>
         </span>
